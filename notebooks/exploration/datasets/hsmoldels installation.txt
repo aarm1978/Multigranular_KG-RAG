@@ -1,0 +1,3 @@
+pip uninstall hsmodels -y
+
+pip install git+https://github.com/hydroshare/hsmodels.git@22b7d61

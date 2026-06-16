@@ -1,0 +1,71 @@
+# Raw corpus: third-party source artifacts (paper PDFs and converted markdown,
+# code repository archives, HydroShare dataset payloads, CIROH Hub pages).
+# Regenerable from identifiers/DOIs via the acquisition scripts.
+data/raw/
+
+# Intermediate processing outputs. Regenerable from raw data and scripts.
+data/interim/
+
+# Processed outputs. Ignored by default, with generated metadata deliverables
+# re-included explicitly.
+data/processed/
+
+# Credentials and secrets
+.env
+.env.*
+*.key
+*.pem
+secrets.*
+**/credentials.json
+**/api_key*
+
+# Agent-development local instructions
+AGENTS.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.installed.cfg
+*.egg
+pip-wheel-metadata/
+
+# Virtual environments (environment.yml definitions are tracked; env dirs are not)
+.venv/
+venv/
+env/
+ENV/
+.conda/
+
+# Jupyter
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Ontology build byproducts (the spec, build script, and generated .owl are tracked)
+*.owl.tmp
+hermit_*.log
+*.reasoner.log
+
+# OS and editor files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# Logs and caches
+*.log
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

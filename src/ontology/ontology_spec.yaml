@@ -1,0 +1,459 @@
+# =============================================================================
+# ontology_spec.yaml
+# Master specification for the CIROH multi-granular knowledge-graph ontology.
+# Faithful, machine-readable translation of docs/ontology_inventory.md
+# (Tables A, C, D). Consumed by build_ontology.py to emit the OWL TBox.
+#
+# Provenance of every entry: the stable inventory IDs (A-*, C-*, D-*) are kept
+# in `id` so each axiom traces back to the inventory.
+#
+# anchor.relation values:
+#   subClassOf    -> ciroh class is rdfs:subClassOf the reused class
+#   useDirectly   -> no ciroh class minted; the external CURIE is used as-is
+#   null/omitted  -> pure ciroh contribution (no external anchor)
+#
+# Categories (inventory Table B) are extraction scaffolding, NOT OWL classes,
+# and are intentionally excluded from this spec.
+# =============================================================================
+
+ontology:
+  iri: "https://w3id.org/ciroh/ontology#"
+  prefix: ciroh
+  title: "Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts"
+  version: "0.1"
+
+# -----------------------------------------------------------------------------
+# Namespaces / imports (v0.1 §3.1).
+#   use: import     -> owl:imports import_iri (brings the vocabulary's axioms)
+#   use: reference  -> use class IRIs only; do NOT owl:imports (avoids dragging
+#                      large dependency closures, e.g. FaBiO->FRBR, HY_Features)
+# -----------------------------------------------------------------------------
+prefixes:
+  - {prefix: ciroh,   iri: "https://w3id.org/ciroh/ontology#", use: mint}
+  - {prefix: deo,     iri: "http://purl.org/spar/deo/",   use: import,    import_iri: "http://purl.org/spar/deo"}
+  - {prefix: cito,    iri: "http://purl.org/spar/cito/",  use: import,    import_iri: "http://purl.org/spar/cito"}
+  - {prefix: datacite,iri: "http://purl.org/spar/datacite/", use: import, import_iri: "http://purl.org/spar/datacite"}
+  - {prefix: prov,    iri: "http://www.w3.org/ns/prov#",  use: import}
+  - {prefix: skos,    iri: "http://www.w3.org/2004/02/skos/core#", use: import}
+  - {prefix: p-plan,  iri: "http://purl.org/net/p-plan#", use: import}
+  - {prefix: fabio,   iri: "http://purl.org/spar/fabio/", use: reference, note: "don't import (drags FRBR)"}
+  - {prefix: doco,    iri: "http://purl.org/spar/doco/",  use: reference}
+  - {prefix: hyf,     iri: "https://www.opengis.net/def/schema/hy_features/hyf/", use: reference, note: "large; ciroh classes rdfs:subClassOf the reused class"}
+  - {prefix: geo,     iri: "http://www.opengis.net/ont/geosparql#", use: reference, note: "Feature vs Geometry"}
+  - {prefix: gn,      iri: "http://www.geonames.org/ontology#", use: reference, note: ">= 2.2.1"}
+  - {prefix: schema,  iri: "https://schema.org/",         use: reference, note: "primary for Person/Org/Software/Parameter"}
+  - {prefix: dcterms, iri: "http://purl.org/dc/terms/",   use: reference, note: "not legacy dc:"}
+  - {prefix: foaf,    iri: "http://xmlns.com/foaf/0.1/",  use: reference, note: "optional owl:equivalentClass only"}
+  - {prefix: doap,    iri: "http://usefulinc.com/ns/doap#", use: reference}
+  - {prefix: spdx,    iri: "http://spdx.org/rdf/terms#",  use: reference}
+  - {prefix: codemeta,iri: "https://codemeta.github.io/terms/", use: profile, note: "context https://doi.org/10.5063/schema/codemeta-2.0; properties only, classes are schema.org; not owl:imports"}
+  # peo: cited paper (Du & Li 2022), no OWL release — referenced in prose only, not declared here.
+
+# -----------------------------------------------------------------------------
+# Global constraints / shared properties
+# -----------------------------------------------------------------------------
+global_constraints:
+  - {applies_to: every_node_and_edge, axiom: "hasEvidence min 1", note: "provenance-first; no quote -> no node/edge"}
+  - {property: curationStatus, type: data, values: [curated, referenced], note: "externally-referenced = stub node"}
+  - {property: tendency, type: data, applies_to: discourse_units, anchor: "ciroh:"}
+  - {property: source,   type: data, applies_to: discourse_units, anchor: "ciroh:"}
+
+# =============================================================================
+# CLASSES  (inventory Table A — all parts)
+# =============================================================================
+classes:
+
+  # ---- Provenance layer (Part 1) ----
+  - {id: A-PROV01, name: EvidenceSpan, iri: ciroh:EvidenceSpan, kind: metadata, extraction: det+llm,
+     anchor: {curie: "prov:Entity", relation: subClassOf}, status: S,
+     locus: "every node/edge",
+     attributes: [{name: sourceArtifact}, {name: sourceLocation}, {name: evidenceText},
+                  {name: extractionMethod}, {name: version}]}
+
+  # ---- Identifier backbone (Part 1) ----
+  - {id: A-ID01, name: Identifier, iri: "datacite:Identifier", kind: metadata, extraction: det,
+     anchor: {curie: "datacite:Identifier", relation: useDirectly}, status: S,
+     locus: "DOI / resource_id / repo URL+SHA / page URL / ORCID / ROR / geoconnex / related DOI",
+     note: "datacite:relatedIdentifier for archived snapshots"}
+
+  # ---- Agent layer (Part 1) ----
+  - {id: A-AG01, name: Person, iri: "schema:Person", kind: agent, extraction: hybrid,
+     anchor: {curie: "schema:Person", relation: useDirectly}, optional_equivalent: "foaf:Person",
+     status: S, locus: "creators / author block / contributors.json / doc lines",
+     note: "roles: Author/Creator/Contributor; canonicalized across four identifier regimes"}
+  - {id: A-AG02, name: Organization, iri: "schema:Organization", kind: agent, extraction: det,
+     anchor: {curie: "schema:Organization", relation: useDirectly}, status: S,
+     locus: "affiliation; awards[].funding_agency", note: "+ ROR"}
+
+  # ---- Shared CIROH domain-entity layer (Part 1 — the contribution) ----
+  - {id: A-DOM01, name: SoftwareEntity, iri: ciroh:SoftwareEntity, kind: domain, abstract: true,
+     anchor: {curie: "schema:SoftwareApplication", relation: subClassOf}, status: S,
+     note: "CodeMeta = profile"}
+  - {id: A-DOM02, name: Tool, iri: ciroh:Tool, kind: domain, parent: ciroh:SoftwareEntity,
+     anchor: {curie: "schema:SoftwareApplication", relation: subClassOf}, extraction: llm, status: S,
+     locus: "prose across artifact types"}
+  - {id: A-DOM03, name: ComputationalModel, iri: ciroh:ComputationalModel, kind: domain, abstract: true,
+     parent: ciroh:SoftwareEntity,
+     anchor: {curie: "schema:SoftwareApplication", relation: subClassOf}, extraction: llm, status: S,
+     note: "ciroh: under schema:SoftwareApplication/SoftwareSourceCode"}
+  - {id: A-DOM03a, name: ProcessBasedModel, iri: ciroh:ProcessBasedModel, kind: domain, parent: ciroh:ComputationalModel,
+     anchor: null, extraction: llm, status: S, examples: [VIC, Noah-MP, NWM, SWAT, CFE]}
+  - {id: A-DOM03b, name: ConceptualModel, iri: ciroh:ConceptualModel, kind: domain, parent: ciroh:ComputationalModel,
+     anchor: null, extraction: llm, status: S, examples: ["leaky bucket", tank]}
+  - {id: A-DOM03c, name: StatisticalModel, iri: ciroh:StatisticalModel, kind: domain, parent: ciroh:ComputationalModel,
+     anchor: null, extraction: llm, status: E,
+     status_note: "vestigial — regression resolves to Method; instantiates only for a named statistical model with own identity"}
+  - {id: A-DOM03d, name: MLModel, iri: ciroh:MLModel, kind: domain, parent: ciroh:ComputationalModel,
+     anchor: null, extraction: llm, status: S, examples: [LSTM, "random forest"], note: "aka DataDrivenModel"}
+  - {id: A-DOM04, name: Variable, iri: "schema:variableMeasured", kind: domain, extraction: llm,
+     anchor: {curie: "schema:PropertyValue", relation: subClassOf}, status: E,
+     locus: "abstract/README/paper/doc prose", note: "CF Standard Names; measurable quantity (vs Concept)"}
+  - {id: A-DOM05, name: Concept, iri: "skos:Concept", kind: domain, extraction: llm,
+     anchor: {curie: "skos:Concept", relation: useDirectly}, status: S, locus: "prose"}
+  - {id: A-DOM06, name: Place, iri: "schema:Place", kind: domain, abstract: true,
+     anchor: {curie: "schema:Place", relation: useDirectly}, status: S}
+  - {id: A-DOM07, name: HydrologicFeature, iri: ciroh:HydrologicFeature, kind: domain, abstract: true,
+     parent: "schema:Place",
+     anchor: {curie: "geo:Feature", relation: subClassOf}, extraction: hybrid, status: S,
+     status_note: "S/E", locus: "prose; geoconnex", note: "typed by hyf:; geometry via geo:hasGeometry"}
+  - {id: A-DOM07a, name: Watershed, iri: ciroh:Watershed, kind: domain, parent: ciroh:HydrologicFeature,
+     anchor: {curie: "hyf:HY_Catchment", relation: subClassOf}, extraction: hybrid, status: S, status_note: "S/E",
+     locus: "prose; geospatial_relations", note: "aka HydrologicUnit (HUC); geoconnex ref/hu*"}
+  - {id: A-DOM07b, name: RiverReach, iri: ciroh:RiverReach, kind: domain, parent: ciroh:HydrologicFeature,
+     anchor: {curie: "hyf:HY_FlowPath", relation: subClassOf}, extraction: hybrid, status: S, status_note: "S/E",
+     locus: "prose; geoconnex", note: "COMID; also hyf:HY_River; geoconnex ref/mainstems"}
+  - {id: A-DOM07c, name: Gauge, iri: ciroh:Gauge, kind: domain, parent: ciroh:HydrologicFeature,
+     anchor: {curie: "hyf:HY_HydrometricFeature", relation: subClassOf}, extraction: hybrid, status: S, status_note: "S/E",
+     locus: "prose; geoconnex", note: "aka MonitoringStation; USGS Gages, SNOTEL; geoconnex ref/gages"}
+  - {id: A-DOM07d, name: WaterBody, iri: ciroh:WaterBody, kind: domain, parent: ciroh:HydrologicFeature,
+     anchor: {curie: "hyf:HY_WaterBody", relation: subClassOf}, extraction: llm, status: E, locus: "prose"}
+  - {id: A-DOM07e, name: Aquifer, iri: ciroh:Aquifer, kind: domain, parent: ciroh:HydrologicFeature,
+     anchor: null, extraction: llm, status: E, locus: "prose", note: "geoconnex ref/aquifers else ciroh:"}
+  - {id: A-DOM07f, name: VPU, iri: ciroh:VPU, kind: domain, parent: ciroh:HydrologicFeature,
+     anchor: null, extraction: hybrid, status: E, locus: "prose/config", note: "NHDPlus VPU"}
+  - {id: A-DOM08, name: NamedPlace, iri: ciroh:NamedPlace, kind: domain, parent: "schema:Place",
+     anchor: {curie: "gn:Feature", relation: subClassOf}, extraction: llm, status: E,
+     locus: "prose (Western US, Italy, Gulf Coast)", note: "NOT CIROH domain — admin places; GeoNames >= 2.2.1"}
+  - {id: A-DOM09, name: SpatialCoverage, iri: "geo:Geometry", kind: metadata, extraction: det,
+     anchor: {curie: "geo:Geometry", relation: useDirectly}, status: S,
+     locus: "spatial_coverage bbox", note: "+ dcterms:spatial; declared footprint, not a place"}
+  - {id: A-DOM10, name: TemporalCoverage, iri: ciroh:TemporalCoverage, kind: metadata, extraction: det,
+     anchor: {curie: "dcterms:temporal", relation: useDirectly}, status: S, locus: "temporal_coverage"}
+  - {id: A-DOM11, name: EvaluationMetric, iri: ciroh:EvaluationMetric, kind: domain, extraction: llm,
+     anchor: null, status: S, locus: "results prose / metric tables",
+     examples: [NSE, RMSE, MAE, KGE, "R2", "R2_Predicted", VIF, "Durbin-Watson", "sign test", bias],
+     note: "aka PerformanceMetric; value as schema:PropertyValue",
+     attributes: [{name: value, type: string, note: "schema:PropertyValue"}]}
+  - {id: A-DOM12, name: Parameter, iri: ciroh:Parameter, kind: domain, extraction: hybrid,
+     anchor: {curie: "schema:PropertyValue", relation: subClassOf}, status: S, status_note: "E at paper level",
+     locus: "param tables / config / doc",
+     attributes: [{name: range, type: string}, {name: value, type: string},
+                  {name: calibrationStatus, type: enum, values: [calibrated, default]}]}
+  - {id: A-DOM13, name: Algorithm, iri: ciroh:Algorithm, kind: domain, extraction: llm,
+     anchor: null, status: E, locus: "prose", examples: ["SCE-UA", DDS], note: "named technique"}
+
+  # ---- Module 1: Research Paper (Part 2) ----
+  - {id: A-P01, name: Paper, iri: ciroh:Paper, kind: artifact, extraction: hybrid,
+     anchor: {curie: "fabio:JournalArticle", relation: subClassOf}, alt_anchor: "schema:ScholarlyArticle",
+     status: S, note: "DataCite; fabio ref. IRI"}
+  - {id: A-P02, name: Venue, iri: ciroh:Venue, kind: metadata, extraction: det,
+     anchor: {curie: "fabio:Journal", relation: subClassOf}, status: S, note: "fabio:hasPublicationVenue; ref. IRI"}
+  - {id: A-P03, name: Author, iri: "schema:Person", kind: agent, extraction: hybrid,
+     anchor: {curie: "schema:Person", relation: useDirectly}, status: S, same_as: A-AG01}
+  - {id: A-P04, name: Subject, iri: ciroh:Subject, kind: metadata, extraction: det,
+     anchor: {curie: "skos:Concept", relation: subClassOf}, status: S,
+     note: "unified keyword/tag class across paper, dataset, doc (was A-P04/A-D06/A-DC04); dcterms:subject"}
+  - {id: A-P05, name: Background, iri: "deo:Background", kind: discourse, extraction: llm,
+     anchor: {curie: "deo:Background", relation: useDirectly}, status: S}
+  - {id: A-P06, name: Theme, iri: ciroh:Theme, kind: discourse, extraction: llm, anchor: null, status: S, note: "PEO"}
+  - {id: A-P07, name: ResearchProblem, iri: "deo:ProblemStatement", kind: discourse, extraction: llm,
+     anchor: {curie: "deo:ProblemStatement", relation: useDirectly}, status: S}
+  - {id: A-P08, name: ResearchQuestion, iri: ciroh:ResearchQuestion, kind: discourse, extraction: llm,
+     anchor: null, status: S, note: "CIROH addition — PEO uses Problem"}
+  - {id: A-P09, name: ResearchGoal, iri: "deo:Motivation", kind: discourse, extraction: llm,
+     anchor: {curie: "deo:Motivation", relation: useDirectly}, status: S}
+  - {id: A-P10, name: ResearchSignificance, iri: ciroh:ResearchSignificance, kind: discourse, extraction: llm,
+     anchor: null, status: S, note: "PEO; != Contribution"}
+  - {id: A-P11, name: Definition, iri: ciroh:Definition, kind: discourse, extraction: llm, anchor: null, status: S, note: "PEO"}
+  - {id: A-P12, name: TheoreticalBasis, iri: ciroh:TheoreticalBasis, kind: discourse, extraction: llm, anchor: null, status: S, note: "PEO"}
+  - {id: A-P13, name: Method, iri: "deo:Methods", kind: discourse, extraction: llm,
+     anchor: {curie: "deo:Methods", relation: useDirectly}, status: S}
+  - {id: A-P14, name: Experiment, iri: ciroh:Experiment, kind: discourse, extraction: llm, anchor: null, status: S, note: "PEO"}
+  - {id: A-P15, name: Examples, iri: "deo:Scenario", kind: discourse, extraction: llm,
+     anchor: {curie: "deo:Scenario", relation: useDirectly}, status: S}
+  - {id: A-P16, name: Finding, iri: "deo:Results", kind: discourse, extraction: llm,
+     anchor: {curie: "deo:Results", relation: useDirectly}, status: S, note: "aka Result"}
+  - {id: A-P17, name: Discussion, iri: "deo:Discussion", kind: discourse, extraction: llm,
+     anchor: {curie: "deo:Discussion", relation: useDirectly}, status: S}
+  - {id: A-P18, name: RelatedResearch, iri: "deo:RelatedWork", kind: discourse, extraction: llm,
+     anchor: {curie: "deo:RelatedWork", relation: useDirectly}, status: S}
+  - {id: A-P19, name: Limitation, iri: ciroh:Limitation, kind: discourse, extraction: llm, anchor: null, status: S,
+     note: "PEO Discussion-Limitation"}
+  - {id: A-P20, name: Conclusion, iri: "deo:Conclusion", kind: discourse, extraction: llm,
+     anchor: {curie: "deo:Conclusion", relation: useDirectly}, status: S}
+  - {id: A-P21, name: Contribution, iri: "deo:Contribution", kind: discourse, extraction: llm,
+     anchor: {curie: "deo:Contribution", relation: useDirectly}, status: S, note: "!= Significance"}
+  - {id: A-P22, name: FutureWork, iri: "deo:FutureWork", kind: discourse, extraction: llm,
+     anchor: {curie: "deo:FutureWork", relation: useDirectly}, status: S}
+  - {id: A-P23, name: Hypothesis, iri: ciroh:Hypothesis, kind: discourse, extraction: llm, anchor: null, status: E,
+     note: "CIROH; SAO/Micropublications"}
+  - {id: A-P24, name: Claim, iri: ciroh:Claim, kind: discourse, extraction: llm, anchor: null, status: E,
+     note: "CIROH; SAO/Micropublications"}
+  - {id: A-P25, name: DatasetMention, iri: ciroh:DatasetMention, kind: domain, extraction: hybrid,
+     anchor: {curie: "deo:ExternalResourceDescription", relation: subClassOf}, status: S, note: "DataCite"}
+  - {id: A-P26, name: DataDescription, iri: "deo:Data", kind: discourse, extraction: llm,
+     anchor: {curie: "deo:Data", relation: useDirectly}, status: S, note: "PEO Data"}
+
+  # ---- Module 2: Dataset / HydroShare (Part 3) ----
+  - {id: A-D01, name: DatasetResource, iri: ciroh:DatasetResource, kind: artifact, extraction: hybrid,
+     anchor: {curie: "schema:Dataset", relation: subClassOf}, status: S, note: "DataCite; prov:Entity; hsterms"}
+  - {id: A-D02, name: ResourceType, iri: ciroh:ResourceType, kind: metadata, extraction: det,
+     anchor: null, status: S, values: [Composite, Collection, Tool], note: "controlled"}
+  - {id: A-D03, name: DatasetFile, iri: "schema:DataDownload", kind: metadata, extraction: det,
+     anchor: {curie: "schema:DataDownload", relation: useDirectly}, status: S, note: "inventory; inventory class File (A-D03)"}
+  - {id: A-D04, name: Creator, iri: "schema:Person", kind: agent, extraction: det,
+     anchor: {curie: "schema:Person", relation: useDirectly}, status: S, same_as: A-AG01}
+  - {id: A-D05, name: License, iri: ciroh:License, kind: metadata, extraction: det,
+     anchor: {curie: "spdx:License", relation: subClassOf}, status: S,
+     note: "unified license class across dataset and code (was A-D05/A-C06); dcterms:license; SPDX"}
+  - {id: A-D09, name: Award, iri: ciroh:Award, kind: metadata, extraction: det,
+     anchor: {curie: "schema:Grant", relation: subClassOf}, status: S, note: "funding; prov"}
+  - {id: A-D10, name: ToolConfiguration, iri: ciroh:ToolConfiguration, kind: metadata, extraction: det,
+     anchor: {curie: "schema:WebApplication", relation: subClassOf}, status: S,
+     locus: "tool_config", note: "ToolResource; + schema:url",
+     attributes: [{name: launchURL, type: string, anchor: "schema:url",
+                   evidence: "app_home_page_url / app-launching URL pattern"}]}
+  - {id: A-D12, name: Measurement, iri: ciroh:Measurement, kind: domain, extraction: llm,
+     anchor: null, status: E, status_note: "coverage ~ 0 · demote-candidate", locus: "README prose"}
+  # A-D07 SpatialCoverage -> A-DOM09; A-D08 TemporalCoverage -> A-DOM10; A-D11 Variable -> A-DOM04 (refs, not redeclared)
+
+  # ---- Module 3: Code Repository (Part 4) ----
+  - {id: A-C01, name: Repository, iri: ciroh:Repository, kind: artifact, extraction: hybrid,
+     anchor: {curie: "schema:SoftwareSourceCode", relation: subClassOf}, status: S,
+     note: "CodeMeta profile; DOAP ref. IRIs; + fork flag, RepositoryPurpose, commitSHA",
+     attributes: [{name: fork, type: boolean}, {name: commitSHA, type: string}]}
+  - {id: A-C02, name: RepoFile, iri: "schema:MediaObject", kind: metadata, extraction: det,
+     anchor: {curie: "schema:MediaObject", relation: useDirectly}, status: S,
+     note: "File (A-C02); fileRole, downloaded, selectionReason",
+     attributes: [{name: fileRole, type: string}, {name: downloaded, type: boolean}, {name: selectionReason, type: string}]}
+  - {id: A-C03, name: Dependency, iri: "schema:SoftwareApplication", kind: metadata, extraction: det,
+     anchor: {curie: "schema:SoftwareApplication", relation: useDirectly}, status: S,
+     note: "target of schema:softwareRequirements"}
+  - {id: A-C04, name: ExecutionEnvironment, iri: ciroh:ExecutionEnvironment, kind: metadata, extraction: det,
+     anchor: null, status: S, note: "codemeta:runtimePlatform; Dockerfile/environment.yml"}
+  - {id: A-C07, name: RepositoryPurpose, iri: ciroh:RepositoryPurpose, kind: metadata, extraction: llm,
+     anchor: null, status: S, note: "controlled vocabulary"}
+  - {id: A-C08, name: Function, iri: ciroh:Function, kind: domain, extraction: llm, anchor: null, status: E,
+     note: "prose only; AST = future"}
+  - {id: A-C10, name: ModelVersion, iri: ciroh:ModelVersion, kind: metadata, extraction: hybrid,
+     anchor: {curie: "schema:softwareVersion", relation: useDirectly}, status: E,
+     note: "release tags / CITATION.cff / README"}
+  - {id: A-C11, name: Workflow, iri: ciroh:Workflow, kind: domain, extraction: llm,
+     anchor: {curie: "p-plan:Plan", relation: subClassOf}, alt_anchor: "schema:HowTo", status: S,
+     note: "shared with documentation"}
+  # A-C05 Person -> A-AG01; A-C09 Algorithm -> A-DOM13 (refs)
+
+  # ---- Module 4: Documentation / CIROH Hub (Part 5) ----
+  - {id: A-DC01, name: DocumentationPage, iri: ciroh:DocumentationPage, kind: artifact, extraction: hybrid,
+     anchor: {curie: "schema:TechArticle", relation: subClassOf}, alt_anchor: "schema:WebPage", status: S,
+     note: "DCMI; + pageType, datePublished?, author?",
+     attributes: [{name: pageType, type: enum,
+                   values: [product-catalog, product-doc, service-doc, policy, guide, blog-post, news, release-note]}]}
+  - {id: A-DC02, name: Section, iri: "doco:Section", kind: metadata, extraction: det,
+     anchor: {curie: "doco:Section", relation: useDirectly}, status: S}
+  - {id: A-DC03, name: Link, iri: ciroh:Link, kind: metadata, extraction: det,
+     anchor: {curie: "schema:url", relation: useDirectly}, status: S, note: "dcterms:references"}
+  - {id: A-DC05, name: Procedure, iri: ciroh:Procedure, kind: instructional, extraction: llm,
+     anchor: {curie: "schema:HowTo", relation: subClassOf}, alt_anchor: "p-plan:Plan", status: S}
+  - {id: A-DC06, name: Step, iri: ciroh:Step, kind: instructional, extraction: llm,
+     anchor: {curie: "schema:HowToStep", relation: subClassOf}, alt_anchor: "p-plan:Step", status: S}
+  - {id: A-DC08, name: Example, iri: ciroh:Example, kind: instructional, extraction: llm,
+     anchor: {curie: "schema:SoftwareSourceCode", relation: subClassOf}, status: S,
+     note: "incl. MDX admonitions"}
+  # A-DC07 Parameter -> A-DOM12; A-DC09 Creator/Person -> A-AG01 (refs)
+  # productCategory is an attribute on Tool/ComputationalModel (ciroh:), set in documentation context.
+
+# =============================================================================
+# RELATIONS  (inventory Tables C and D)
+# domain/range use the class `name`s above. Union domains/ranges are lists.
+# type: intra | cross | same | prov ; consol: true marks consolidation axis.
+# =============================================================================
+relations:
+
+  # ---- Agent layer (Part 1) ----
+  - {id: A-AG-R1, name: affiliatedWith, domain: Person, range: Organization,
+     anchor: "schema:affiliation", evidence: "affiliation block (det)", type: intra, status: S}
+  - {id: A-AG-R2, name: fundedBy, domain: [Paper, DatasetResource], range: Award,
+     anchor: "schema:funder", evidence: "acknowledgments / awards[] (det)", type: prov, status: S,
+     note: "Award -> Organization via funding_agency"}
+
+  # ---- Provenance (Part 1) ----
+  - {id: PROV-R1, name: hasEvidence, domain: owl:Thing, range: EvidenceSpan,
+     anchor: "ciroh:", cardinality: "min 1", type: intra, status: S}
+  - {id: PROV-R2, name: wasExtractedBy, domain: EvidenceSpan, range: "prov:Activity",
+     anchor: "prov:wasGeneratedBy", type: prov, status: S}
+  - {id: ID-R1, name: hasIdentifier, domain: owl:Thing, range: Identifier,
+     anchor: "datacite:hasIdentifier", type: intra, status: S}
+
+  # ---- Module 1: Research Paper (Table C) ----
+  - {id: C-P01, name: hasAuthor, domain: Paper, range: Author, anchor: "schema:author", evidence: "Zotero (det)", type: intra, status: S}
+  - {id: C-P02, name: publishedIn, domain: Paper, range: Venue, anchor: "fabio:hasPublicationVenue", evidence: "Zotero (det)", type: intra, status: S}
+  - {id: C-P03, name: hasSubject, domain: Paper, range: Subject, anchor: "dcterms:subject", evidence: "'Keywords:' (det)", type: intra, status: S}
+  - {id: C-P04, name: hasIdentifier, domain: Paper, range: Identifier, anchor: "datacite:", evidence: "Zotero/Marker (det)", type: intra, status: S, same_as: ID-R1}
+  - {id: C-P05, name: reports, domain: Paper,
+     range: [Background, Theme, ResearchProblem, ResearchQuestion, ResearchGoal, ResearchSignificance,
+             Definition, TheoreticalBasis, Method, Experiment, Examples, Finding, Discussion, RelatedResearch,
+             Limitation, Conclusion, Contribution, FutureWork, Hypothesis, Claim, DataDescription],
+     anchor: "deo:/ciroh:", evidence: "body chunk (LLM, quote)", type: intra, status: S, status_note: "E: Hypothesis/Claim",
+     note: "aka hasComponent (discourse containment)"}
+  - {id: C-P06, name: resolves, domain: [Method, Contribution, ResearchQuestion], range: ResearchProblem,
+     anchor: "ciroh:", evidence: "body", type: intra, status: S, note: "PEO resolves/leads_to; aka addresses"}
+  - {id: C-P07, name: produces, domain: [Method, Experiment], range: Finding,
+     anchor: "ciroh:", evidence: "Results prose", type: intra, status: S, note: "PEO produces, SAO"}
+  - {id: C-P08, name: testedBy, domain: [TheoreticalBasis, Hypothesis], range: [Method, Experiment],
+     anchor: "ciroh:", evidence: "body", type: intra, status: S, status_note: "E: testedBy", note: "PEO basis; testedBy CIROH"}
+  - {id: C-P09, name: supports, domain: [Finding, Claim], range: [Claim, Conclusion],
+     anchor: "ciroh:", evidence: "body", type: intra, status: E, note: "PEO/SAO; aka notSupports/argues"}
+  - {id: C-P10, name: discussesRelatedWork, domain: Paper, range: RelatedResearch,
+     anchor: "ciroh:", evidence: "Related Work", type: intra, status: S, note: "PEO review"}
+  - {id: C-P11, name: relatesTo, domain: RelatedResearch,
+     range: [Method, TheoreticalBasis, Concept, ResearchProblem, Paper],
+     anchor: "ciroh:", evidence: "Related Work prose", type: [intra, cross], status: S, note: "PEO elaboration; Paper=stub"}
+  - {id: C-P12, name: hasLimitation, domain: [Paper, Finding], range: Limitation,
+     anchor: "ciroh:", evidence: "Discussion/Conclusion", type: intra, status: S, note: "PEO; also Conclusion->Finding (summary)"}
+  - {id: C-P13, name: usesModel, domain: [Paper, Method], range: ComputationalModel,
+     anchor: "ciroh:", evidence: "Methods prose (quote)", type: [cross, same], consol: true, status: S, note: "PEO uses"}
+  - {id: C-P14, name: appliesTo, domain: Method, range: ComputationalModel,
+     anchor: "ciroh:", evidence: "Methods prose", type: [intra, cross], status: S, note: "Model/Method discriminant"}
+  - {id: C-P15, name: usesTool, domain: Paper, range: Tool,
+     anchor: "ciroh:", evidence: "prose", type: [cross, same], consol: true, status: S}
+  - {id: C-P16, name: mentionsVariable, domain: [Paper, DataDescription], range: Variable,
+     anchor: "ciroh:", evidence: "prose (quote)", type: [cross, same], consol: true, status: E}
+  - {id: C-P17, name: studiesFeature, domain: [Paper, Method], range: HydrologicFeature,
+     anchor: "ciroh:", evidence: "Study Area + geoconnex", type: [cross, same], consol: true, status: S}
+  - {id: C-P18, name: studiesPlace, domain: [Paper, Method], range: NamedPlace,
+     anchor: "ciroh:", evidence: "prose", type: [cross, same], status: E}
+  - {id: C-P19, name: hasSpatialCoverage, domain: [Paper, Place], range: SpatialCoverage,
+     anchor: "ciroh:", evidence: "declared extent", type: intra, status: E, note: "~ geo:hasGeometry"}
+  - {id: C-P20, name: usesDataset, domain: Paper, range: [DatasetMention, DatasetResource],
+     anchor: "ciroh:", evidence: "data-availability URL (det) + prose", type: cross, consol: true, status: S, maps_to: D-01}
+  - {id: C-P21, name: cites, domain: Paper, range: Paper,
+     anchor: "cito:cites", typed_subproperties: ["cito:citesAsEvidence", "cito:usesMethodIn", "cito:extends"],
+     evidence: "reference DOI (det)", type: same, status: S, maps_to: D-08, note: "range = Paper stub"}
+  - {id: C-P22, name: corrects, domain: Paper, range: Paper,
+     anchor: "cito:/ciroh:", evidence: "corrigendum record (det)", type: same, status: S, maps_to: D-09, note: "aka isCorrigendumOf"}
+  - {id: C-P23, name: mentionsModel, domain: Paper, range: ComputationalModel,
+     anchor: "ciroh:", evidence: "related-work prose (quote)", type: [cross, same], consol: true, status: S,
+     note: "mentioned, NOT used; != C-P13"}
+  - {id: C-P24, name: mentionsDataset, domain: Paper, range: [DatasetMention, DatasetResource],
+     anchor: "ciroh:", evidence: "prose (quote)", type: cross, status: S, note: "!= C-P20"}
+  - {id: C-P25, name: reportsMetric, domain: [Finding, Experiment], range: EvaluationMetric,
+     anchor: "ciroh:", evidence: "Results / metric tables (quote)", type: intra, consol: true, status: S}
+  - {id: C-P26, name: evaluates, domain: EvaluationMetric, range: [ComputationalModel, Method],
+     anchor: "ciroh:", evidence: "Results prose", type: intra, status: S}
+  - {id: C-P27, name: hasParameter, domain: [Method, Experiment, ComputationalModel], range: Parameter,
+     anchor: "schema:", evidence: "param tables / prose (quote)", type: intra, consol: true, status: S, status_note: "E paper"}
+  - {id: C-P28, name: usesAlgorithm, domain: Method, range: Algorithm,
+     anchor: "ciroh:", evidence: "Methods prose (quote)", type: intra, consol: true, status: E}
+
+  # ---- Module 2: Dataset / HydroShare (Table C) ----
+  - {id: C-D01, name: hasResourceType, domain: DatasetResource, range: ResourceType, anchor: "ciroh:", evidence: "resource_type (det)", type: intra, status: S}
+  - {id: C-D02, name: hasFile, domain: DatasetResource, range: DatasetFile, anchor: "schema:distribution", evidence: "file_inventory (det)", type: intra, status: S}
+  - {id: C-D03, name: hasCreator, domain: DatasetResource, range: Creator, anchor: "dcterms:creator", evidence: "creators[] (det)", type: intra, status: S}
+  - {id: C-D04, name: hasIdentifier, domain: DatasetResource, range: Identifier, anchor: "datacite:", evidence: "resource_id/DOI (det)", type: intra, status: S, same_as: ID-R1}
+  - {id: C-D05, name: hasLicense, domain: DatasetResource, range: License, anchor: "dcterms:license", evidence: "rights (det)", type: intra, status: S}
+  - {id: C-D06, name: hasSubject, domain: DatasetResource, range: Subject, anchor: "dcterms:subject", evidence: "subjects[] (det)", type: intra, status: S}
+  - {id: C-D07, name: hasSpatialCoverage, domain: DatasetResource, range: SpatialCoverage, anchor: "geo:hasGeometry", evidence: "spatial_coverage (det)", type: intra, status: S}
+  - {id: C-D08, name: coversPeriod, domain: DatasetResource, range: TemporalCoverage, anchor: "dcterms:temporal", evidence: "temporal_coverage (det)", type: intra, status: S}
+  - {id: C-D09, name: fundedBy, domain: DatasetResource, range: [Award, Organization], anchor: "schema:funding", evidence: "awards[] (det)", type: prov, status: S, same_as: A-AG-R2}
+  - {id: C-D10, name: hasToolConfig, domain: DatasetResource, range: ToolConfiguration, anchor: "ciroh:", evidence: "tool_config (det)", type: intra, status: S, note: "domain restricted to Tool ResourceType"}
+  - {id: C-D11, name: launchesApp, domain: ToolConfiguration, range: Tool, anchor: "ciroh:",
+     evidence: "app_home_page_url / app-launching URL pattern", type: cross, status: S, maps_to: D-12,
+     note: "Launched application entity; launchURL preserves the literal endpoint."}
+  - {id: C-D12, name: hasMember, domain: DatasetResource, range: DatasetResource, anchor: "dcterms:hasPart",
+     evidence: "members[].member_resource_id (det)", type: same, status: S, inverse_of: isMemberOf,
+     note: "domain = Collection"}
+  - {id: C-D13, name: isMemberOf, domain: DatasetResource, range: DatasetResource, anchor: "dcterms:isPartOf",
+     evidence: "hydroshare_links/target_resource_id (det)", type: same, status: S,
+     note: "Dataset membership inverse of hasMember; range = Collection"}
+  - {id: C-D14, name: derivedFrom, domain: DatasetResource, range: DatasetResource, anchor: "prov:wasDerivedFrom", evidence: "typed_relations (det)/prose", type: same, status: S, status_note: "S/E", note: "aka versionedFrom"}
+  - {id: C-D15, name: referencesFeature, domain: DatasetResource, range: HydrologicFeature, anchor: "ciroh:", evidence: "geospatial_relations geoconnex URI (det)", type: cross, consol: true, status: S}
+  - {id: C-D16, name: containsVariable, domain: DatasetResource, range: Variable, anchor: "ciroh:", evidence: "abstract/README prose (quote)", type: intra, status: E}
+  - {id: C-D17, name: hasMeasurement, domain: DatasetResource, range: Measurement, anchor: "ciroh:", evidence: "README prose", type: intra, status: E}
+  - {id: C-D18, name: mentionsModel, domain: DatasetResource, range: [ComputationalModel, Tool], anchor: "ciroh:", evidence: "abstract/README prose", type: [cross, same], consol: true, status: S, note: "aka usesTool"}
+  - {id: C-D19, name: references, domain: DatasetResource, range: [Paper, Repository, DatasetResource],
+     anchor: "cito:citesAsDataSource", alt_anchor: "dcterms:references", evidence: "README URL regex / related_resources DOI (det)", type: cross, status: S, maps_to: D-05,
+     note: "cito:citesAsDataSource for paper->dataset"}
+
+  # ---- Module 3: Code Repository (Table C) ----
+  - {id: C-C01, name: hasFile, domain: Repository, range: RepoFile, anchor: "schema:hasPart", evidence: "files_manifest (det)", type: intra, status: S}
+  - {id: C-C02, name: dependsOn, domain: Repository, range: Dependency, anchor: "schema:softwareRequirements", evidence: "dependency-manifest (det)", type: intra, status: S, note: "library dependency"}
+  - {id: C-C03, name: hasExecutionEnvironment, domain: Repository, range: ExecutionEnvironment, anchor: "codemeta:runtimePlatform", evidence: "Dockerfile/env (det)", type: intra, status: S}
+  - {id: C-C04, name: hasContributor, domain: Repository, range: Person, anchor: "schema:contributor", evidence: "contributors.json (det)", type: intra, status: S}
+  - {id: C-C05, name: hasLicense, domain: Repository, range: License, anchor: "spdx:", evidence: "repo_metadata (det)", type: intra, status: S}
+  - {id: C-C06, name: hasIdentifier, domain: Repository, range: Identifier, anchor: "schema:codeRepository", evidence: "archive_info (det)", type: intra, status: S, same_as: ID-R1}
+  - {id: C-C07, name: hasPurpose, domain: Repository, range: RepositoryPurpose, anchor: "ciroh:", evidence: "README (LLM, quote)", type: intra, status: S}
+  - {id: C-C08, name: describesFunction, domain: Repository, range: [Function, Algorithm], anchor: "ciroh:", evidence: "dossier prose (LLM, quote)", type: intra, status: E, note: "aka describesAlgorithm"}
+  - {id: C-C09, name: hasModelVersion, domain: Repository, range: ModelVersion, anchor: "schema:softwareVersion", evidence: "release tag/CITATION/README", type: intra, status: E}
+  - {id: C-C10, name: explainsWorkflow, domain: Repository, range: Workflow, anchor: "p-plan:", evidence: "README/notebook md (LLM)", type: intra, status: S, note: "aka documentsUsage"}
+  - {id: C-C11, name: usesTool, domain: Repository, range: [Tool, ComputationalModel], anchor: "ciroh:", evidence: "prose", type: [cross, same], consol: true, status: S, note: "aka mentionsModel"}
+  - {id: C-C12, name: mentionsVariable, domain: Repository, range: [Variable, Parameter], anchor: "ciroh:/schema:", evidence: "prose (quote)", type: [cross, same], consol: true, status: E, note: "aka usesParameter"}
+  - {id: C-C13, name: dependsOnRepository, domain: Repository, range: Repository, anchor: "ciroh:", evidence: "github.com links / dep files", type: same, status: S, status_note: "S/E", note: "no standard repo->repo dep"}
+  - {id: C-C14, name: forkedFrom, domain: Repository, range: Repository, anchor: "ciroh:", evidence: "fork flag (det); parent via README/Binder badge", type: same, status: S, status_note: "flag S · parent E"}
+  - {id: C-C15, name: usesDataset, domain: Repository, range: DatasetResource, anchor: "ciroh:", evidence: "README/notebook HydroShare URL", type: cross, status: S, maps_to: D-01}
+  - {id: C-C16, name: implementsMethod, domain: [Repository, Tool], range: Method, anchor: "ciroh:", typed_subproperties: ["cito:usesMethodIn"], evidence: "README + Methods prose", type: cross, status: S, maps_to: D-02, note: "Method in Paper"}
+  - {id: C-C17, name: referencePublication, domain: Repository, range: Paper, anchor: "codemeta:referencePublication", typed_subproperties: ["cito:cites"], evidence: "CITATION.cff/.md (det) / prose", type: cross, status: S, maps_to: D-07, note: "aka citesPaper"}
+  - {id: C-C18, name: archivedAs, domain: Repository, range: Identifier, anchor: "datacite:relatedIdentifier", evidence: "repo README DOI <-> paper-cited DOI (det where matched)", type: same, status: E, maps_to: D-20, note: "aka sameSoftwareAs; archived DOI snapshot; IsVersionOf/IsDerivedFrom"}
+
+  # ---- Module 4: Documentation / CIROH Hub (Table C) ----
+  - {id: C-DC01, name: hasSection, domain: DocumentationPage, range: Section, anchor: "doco:hasPart", evidence: "heading hierarchy (det)", type: intra, status: S}
+  - {id: C-DC02, name: isPartOf, domain: DocumentationPage, range: DocumentationPage, anchor: "dcterms:isPartOf", evidence: "path/folder (det)", type: same, status: S}
+  - {id: C-DC02i, name: hasSubPage, domain: DocumentationPage, range: DocumentationPage, anchor: "ciroh:",
+     evidence: "path/folder (det)", type: same, status: S, inverse_of: isPartOf,
+     note: "Inverse of documentation page hierarchy isPartOf."}
+  - {id: C-DC03, name: linksTo, domain: DocumentationPage, range: Link, anchor: "dcterms:references", evidence: "URL regex (det)", type: intra, status: S}
+  - {id: C-DC04, name: hasSubject, domain: DocumentationPage, range: Subject, anchor: "dcterms:subject", evidence: "frontmatter (det)", type: intra, status: S}
+  - {id: C-DC05, name: hasContributor, domain: DocumentationPage, range: Person, anchor: "schema:contributor", evidence: "contributor lines (det)", type: intra, status: S}
+  - {id: C-DC06, name: hasSourceFile, domain: DocumentationPage, range: RepoFile, anchor: "prov:wasDerivedFrom", evidence: "'Edit this page' .mdx (det)", type: cross, status: S, note: "file in ciroh_hub"}
+  - {id: C-DC07, name: describesTool, domain: DocumentationPage, range: Tool, anchor: "ciroh:", evidence: "body prose (LLM, quote)", type: [cross, same], consol: true, status: S, subproperty_of: describes}
+  - {id: C-DC08, name: mentionsConcept, domain: DocumentationPage, range: Concept, anchor: "skos:Concept", evidence: "body (LLM)", type: intra, status: S}
+  - {id: C-DC09, name: explainsWorkflow, domain: [DocumentationPage, Procedure], range: Workflow, anchor: "p-plan:", evidence: "body (LLM)", type: intra, status: S}
+  - {id: C-DC10, name: hasStep, domain: Procedure, range: Step, anchor: "schema:step", evidence: "body (LLM, quote)", type: intra, status: S, note: "p-plan:"}
+  - {id: C-DC11, name: hasParameter, domain: [Procedure, Step], range: Parameter, anchor: "schema:PropertyValue", evidence: "body (LLM)", type: intra, status: S}
+  - {id: C-DC12, name: hasExample, domain: [Procedure, Step], range: Example, anchor: "ciroh:", evidence: "body code block / admonition", type: intra, status: S}
+  - {id: C-DC13, name: documents, domain: DocumentationPage, range: Repository, anchor: "ciroh:", evidence: "<GitHubReadme repo file> tag (det)", type: cross, status: S, note: "aka mirrors; deterministic — repo+file explicit"}
+  - {id: C-DC14, name: referencesRepository, domain: DocumentationPage, range: Repository, anchor: "ciroh:", evidence: "github.com URL (det)", type: cross, status: S, maps_to: D-04}
+  - {id: C-DC15, name: referencesDataset, domain: DocumentationPage, range: DatasetResource, anchor: "ciroh:", evidence: "hydroshare.org/resource/{id} URL (det)", type: cross, status: S, maps_to: D-05}
+  - {id: C-DC16, name: describesModel, domain: DocumentationPage, range: ComputationalModel, anchor: "ciroh:", evidence: "body prose (LLM, quote)", type: [cross, same], consol: true, status: S, subproperty_of: describes}
+  - {id: C-DC17, name: catalogs, domain: DocumentationPage, range: [Tool, ComputationalModel], anchor: "ciroh:", evidence: "product card (det links)", type: cross, consol: true, status: S, maps_to: D-06, note: "domain = product-catalog pageType; product node"}
+  - {id: C-DC18, name: announces, domain: DocumentationPage, range: [Repository, DocumentationPage, Tool], anchor: "ciroh:", evidence: "dated entry + PR/page links (det)", type: cross, status: S, note: "domain = release-note/blog; aka references"}
+  - {id: C-DC19, name: hasComponent, domain: [Tool, ComputationalModel], range: [Tool, ComputationalModel], anchor: "ciroh:", evidence: "DocCardList / card links (det)", type: cross, status: S, maps_to: D-06, note: "hierarchical aggregation; product node -> component/distribution"}
+  - {id: C-DC20, name: hasProcedure, domain: DocumentationPage, range: Procedure, anchor: "schema:hasPart", evidence: "body (LLM)", type: intra, status: S}
+
+  # ---- Global cross-artifact relations unique to Table D (not already a module C row) ----
+  - {id: D-17, name: generatedBy, domain: DatasetResource, range: Repository, anchor: "prov:wasGeneratedBy", evidence: "explicit metadata/README (det/quote)", type: cross, status: S, status_note: "S explicit · F inferred"}
+  - {id: D-16, name: consolidatesTo, domain: owl:Thing,
+     range: [ComputationalModel, Tool, Variable, Concept, HydrologicFeature, EvaluationMetric, Parameter, Algorithm],
+     anchor: "ciroh:", evidence: "prose (LLM) + geoconnex (det)", type: [cross, same], consol: true, status: S,
+     note: "shared-domain consolidation — the mechanism; canonical-entity linking"}
+  - {id: D-22, name: implementedBy, domain: [Tool, ComputationalModel], range: Repository, anchor: "ciroh:", evidence: "product card / DocCardList links (det)", type: cross, consol: true, status: S, note: "backs D-06"}
+  - {id: D-23, name: describedInPaper, domain: [Tool, ComputationalModel], range: Paper, anchor: "ciroh:", evidence: "product card links (det)", type: cross, consol: true, status: S, note: "backs D-06"}
+  - {id: D-24, name: describes, domain: DocumentationPage, range: [Tool, ComputationalModel],
+     anchor: "ciroh:", evidence: "documentation body prose", type: cross, consol: true, status: S,
+     note: "Parent property for describesTool and describesModel."}
+  - {id: D-25, name: documentedBy, domain: [Tool, ComputationalModel], range: DocumentationPage,
+     anchor: "ciroh:", evidence: "inverse of documentation describes relation", type: cross, consol: true,
+     status: S, inverse_of: describes, note: "Realizes Validation 3 / E-14 documentedBy inverse."}
+
+# =============================================================================
+# Notes carried from the inventory (for build_ontology.py and reviewers):
+#  - D-06 product hub aggregation is realized by: catalogs (C-DC17) + hasComponent
+#    (C-DC19) + implementedBy (D-22) + describedInPaper (D-23) + documentedBy
+#    (D-25), the inverse of describes (D-24).
+#  - D-20 (archivedAs) resolution rule: link a Zenodo-DOI stub to a curated repo
+#    only where the cross-identifier matches; never infer by name.
+#  - Cited-DOI typing rule (citation extractor): a software/dataset DOI in the
+#    reference list -> Tool/Repository/DatasetResource stub, not a Paper stub.
+#  - hasAuthor/hasCreator/hasContributor are the module-level realizations of the
+#    agent relations (C-P01, C-D03, C-C04, C-DC05).
+# =============================================================================
