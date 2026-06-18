@@ -399,6 +399,22 @@
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>
 
+<owl:ObjectProperty rdf:about="#executes">
+  <rdfs:domain rdf:resource="#Tool"/>
+  <rdfs:range rdf:resource="#DatasetResource"/>
+  <owl:inverseOf rdf:resource="#isExecutedBy"/>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-D21</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-D21</rdfs:comment>
+  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Inverse of isExecutedBy; answers 'which resources run in this tool/JupyterHub'</rdfs:comment>
+  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: inverse of isExecutedBy</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inverse property: isExecutedBy</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
+</owl:ObjectProperty>
+
 <owl:ObjectProperty rdf:about="#explainsWorkflow">
   <rdfs:domain>
     <owl:Class>
@@ -999,6 +1015,24 @@
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Maps to inventory relation: D-02</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: README + Methods prose</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Typed subproperty reference: cito:usesMethodIn</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#isExecutedBy">
+  <rdfs:domain rdf:resource="#DatasetResource"/>
+  <rdfs:range rdf:resource="#Tool"/>
+  <owl:inverseOf rdf:resource="#executes"/>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-D20</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-D20</rdfs:comment>
+  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Resource runs in / is executed by a Tool (e.g. a JupyterHub ToolResource); range = Tool entity, consistent with launchesApp</rdfs:comment>
+  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
+  <alignmentProperty rdf:datatype="http://www.w3.org/2001/XMLSchema#string">hsterms:isExecutedBy</alignmentProperty>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Informative alignment: hsterms:isExecutedBy</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: typed_relations hsterms:isExecutedBy / target_resource_id (det)</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inverse property: executes</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>

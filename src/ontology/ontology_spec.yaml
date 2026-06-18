@@ -384,6 +384,13 @@ relations:
   - {id: C-D19, name: references, domain: DatasetResource, range: [Paper, Repository, DatasetResource],
      anchor: "cito:citesAsDataSource", alt_anchor: "dcterms:references", evidence: "README URL regex / related_resources DOI (det)", type: cross, status: S, maps_to: D-05,
      note: "cito:citesAsDataSource for paper->dataset"}
+  - {id: C-D20, name: isExecutedBy, domain: DatasetResource, range: Tool, anchor: "ciroh:",
+     alignment: "hsterms:isExecutedBy", evidence: "typed_relations hsterms:isExecutedBy / target_resource_id (det)",
+     type: cross, consol: true, status: S, inverse_of: executes,
+     note: "Resource runs in / is executed by a Tool (e.g. a JupyterHub ToolResource); range = Tool entity, consistent with launchesApp"}
+  - {id: C-D21, name: executes, domain: Tool, range: DatasetResource, anchor: "ciroh:",
+     evidence: "inverse of isExecutedBy", type: cross, status: S, inverse_of: isExecutedBy,
+     note: "Inverse of isExecutedBy; answers 'which resources run in this tool/JupyterHub'"}
 
   # ---- Module 3: Code Repository (Table C) ----
   - {id: C-C01, name: hasFile, domain: Repository, range: RepoFile, anchor: "schema:hasPart", evidence: "files_manifest (det)", type: intra, status: S}

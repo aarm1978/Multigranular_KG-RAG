@@ -223,6 +223,8 @@ Person canonicalization across four regimes (ORCID / name+affiliation+email / na
 | C-D17 | `hasMeasurement` | → `Measurement` | `ciroh:` | README prose | intra | E |
 | C-D18 | `mentionsModel`/`usesTool` | → `ComputationalModel`/`Tool` | `ciroh:` | abstract/README prose | cross+same | S · consol |
 | C-D19 | `references` (README URLs / citation) | → `Paper`/`Repository`/`DatasetResource` | `cito:citesAsDataSource` (paper→dataset) / `dcterms:references` | README URL regex / `related_resources` DOI (det) | cross | S (→ D-05) |
+| C-D20 | `isExecutedBy` | `DatasetResource` → `Tool` | `ciroh:` (alignment: `hsterms:isExecutedBy`) | `typed_relations` `hsterms:isExecutedBy` / `target_resource_id` (det) | cross | S · consol |
+| C-D21 | `executes` | `Tool` → `DatasetResource` | `ciroh:` | inverse of `isExecutedBy` | cross | S |
 
 ---
 
@@ -373,7 +375,7 @@ Person canonicalization across four regimes (ORCID / name+affiliation+email / na
 | D-25 | `documentedBy` | `Tool`/`ComputationalModel` → `DocumentationPage` | cross | `ciroh:` | inverse of `describes` | yes | S |
 
 > **D-06 backing edges:** the aggregation now has explicit, traversable relations — `catalogs` (C-DC17), `hasComponent` (C-DC19), **`implementedBy`** (D-22), **`describedInPaper`** (D-23), and **`documentedBy`** (D-25). `describesTool`/`describesModel` are subproperties of `describes` (D-24), and `documentedBy` is its inverse. This lets E-05, E-10, and E-14 traverse directly from a product/component node to its repo and paper.
-> **Declared inverse pairs:** `hasMember` ⇄ `isMemberOf` for dataset collection membership; `hasSubPage` ⇄ `isPartOf` for documentation page hierarchy; `documentedBy` ⇄ `describes`, with `describesTool`/`describesModel` as subproperties of `describes`.
+> **Declared inverse pairs:** `hasMember` ⇄ `isMemberOf` for dataset collection membership; `isExecutedBy` ⇄ `executes` for dataset/tool execution; `hasSubPage` ⇄ `isPartOf` for documentation page hierarchy; `documentedBy` ⇄ `describes`, with `describesTool`/`describesModel` as subproperties of `describes`.
 > **D-20 resolution rule:** an externally-referenced stub (e.g. a Zenodo DOI) whose `relatedIdentifier` metadata points to a curated corpus repository is **linked to that repository**, so paper mentions reach the curated entity. Where the cross-identifier does **not** match (the `deep_bucket_lab` case: paper DOI `10.5281/zenodo.14538196` ≠ repo README sandbox DOI), the link is low-confidence/omitted — **never inferred by name**.
 > **Cited-DOI typing rule** (citation extractor): classify a reference by identifier type — a **software/dataset DOI** (e.g. a Zenodo software DOI) in the reference list is typed as a stub `Tool`/`Repository`/`DatasetResource`, **not** a `Paper`-stub; a **paper DOI** is a `Paper`-stub. Required so `archivedAs` (domain `Repository`, D-20) can attach to a software stub (E-26).
 > **Promoted cross-cutting relations** (live in module Table C, consolidate via D-16): `reportsMetric`/`evaluates` (`EvaluationMetric`), `hasParameter` (`Parameter`), `usesAlgorithm` (`Algorithm`).

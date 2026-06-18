@@ -488,6 +488,9 @@ def annotate_relation_group(
         if relation.get("anchor"):
             append_annotation(prop, annotations["reuse_anchor"], relation["anchor"])
             append_comment(prop, f"Reuse anchor: {relation['anchor']}")
+        if relation.get("alignment"):
+            append_annotation(prop, annotations["alignment_property"], relation["alignment"])
+            append_comment(prop, f"Informative alignment: {relation['alignment']}")
         if relation.get("same_as"):
             append_comment(prop, f"Same as inventory relation: {relation['same_as']}")
         if relation.get("maps_to"):

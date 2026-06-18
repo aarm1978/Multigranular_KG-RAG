@@ -49,6 +49,7 @@ ENV/
 *.owl.tmp
 hermit_*.log
 *.reasoner.log
+src/ontology/catalog-v*.xml
 
 # OS and editor files
 .DS_Store
