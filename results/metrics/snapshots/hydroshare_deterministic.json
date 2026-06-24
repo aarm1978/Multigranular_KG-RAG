@@ -1,0 +1,167 @@
+{
+  "counts": {
+    "edges": 1613,
+    "nodes": 1288
+  },
+  "displayName": "HydroShare (det.)",
+  "input": {
+    "path": "data/interim/datasets/hydroshare_nodes_edges.json",
+    "sha256": "c76c1cf9c88fe2a91f4927bd3bd4fc03456e3a2a83190bd3d8c47076f2acb7e3"
+  },
+  "label": "hydroshare_deterministic",
+  "methodology": {
+    "administrativeAttributeExclusionSet": [
+      "bagUrl",
+      "checksum",
+      "createdAt",
+      "curationStatus",
+      "doi",
+      "downloadUrl",
+      "edgeId",
+      "extractionMethod",
+      "filePath",
+      "fundingAgencyUrl",
+      "host",
+      "hydroshareResourceId",
+      "hydroshareUserId",
+      "id",
+      "identifier",
+      "identifierRegime",
+      "identifierType",
+      "identifierValue",
+      "identifiers",
+      "internalId",
+      "inventoryId",
+      "launchURL",
+      "mentionCount",
+      "modifiedAt",
+      "nodeId",
+      "normalizedValue",
+      "orcid",
+      "path",
+      "requestUrlBase",
+      "requestUrlBaseFile",
+      "resourceId",
+      "ror",
+      "sourceArtifact",
+      "sourceLocation",
+      "spdxId",
+      "timestamp",
+      "toolIconUrl",
+      "updatedAt",
+      "url"
+    ],
+    "consolidationRatioDefinition": "Unique canonical entity nodes divided by extracted entity mentions, globally and per class.",
+    "externalUrlStubNote": "Because url and host are excluded as identifier/administrative fields, external-URL stub nodes may have near-zero informative-attribute density. This is intentional and honest: unresolved stubs are information-poor, while their incident relations still contribute to structural density.",
+    "informationDensityDefinition": "Average per node of nonempty informative attribute keys plus incident edge instances. Incoming and outgoing edges count; a self-loop counts once for its node.",
+    "informativeAttributeDefinition": "Each nonempty node.attributes key not in the exclusion set counts once, regardless of value length.",
+    "relationalRichnessDefinition": "Average per node of distinct incoming or outgoing relation names."
+  },
+  "metrics": {
+    "consolidation": {
+      "global": {
+        "ratio": 1.0,
+        "totalEntityMentions": 1288,
+        "uniqueCanonicalEntities": 1288
+      },
+      "interpretation": "mention_level_pre_consolidation",
+      "mentionCountAttribute": "mentionCount",
+      "perEntityType": {
+        "Award": {
+          "ratio": 1.0,
+          "totalEntityMentions": 20,
+          "uniqueCanonicalEntities": 20
+        },
+        "DatasetFile": {
+          "ratio": 1.0,
+          "totalEntityMentions": 757,
+          "uniqueCanonicalEntities": 757
+        },
+        "DatasetResource": {
+          "ratio": 1.0,
+          "totalEntityMentions": 86,
+          "uniqueCanonicalEntities": 86
+        },
+        "HydrologicFeature": {
+          "ratio": 1.0,
+          "totalEntityMentions": 7,
+          "uniqueCanonicalEntities": 7
+        },
+        "Identifier": {
+          "ratio": 1.0,
+          "totalEntityMentions": 66,
+          "uniqueCanonicalEntities": 66
+        },
+        "License": {
+          "ratio": 1.0,
+          "totalEntityMentions": 1,
+          "uniqueCanonicalEntities": 1
+        },
+        "Organization": {
+          "ratio": 1.0,
+          "totalEntityMentions": 51,
+          "uniqueCanonicalEntities": 51
+        },
+        "Paper": {
+          "ratio": 1.0,
+          "totalEntityMentions": 4,
+          "uniqueCanonicalEntities": 4
+        },
+        "Person": {
+          "ratio": 1.0,
+          "totalEntityMentions": 75,
+          "uniqueCanonicalEntities": 75
+        },
+        "Repository": {
+          "ratio": 1.0,
+          "totalEntityMentions": 4,
+          "uniqueCanonicalEntities": 4
+        },
+        "ResourceType": {
+          "ratio": 1.0,
+          "totalEntityMentions": 3,
+          "uniqueCanonicalEntities": 3
+        },
+        "SpatialCoverage": {
+          "ratio": 1.0,
+          "totalEntityMentions": 31,
+          "uniqueCanonicalEntities": 31
+        },
+        "Subject": {
+          "ratio": 1.0,
+          "totalEntityMentions": 158,
+          "uniqueCanonicalEntities": 158
+        },
+        "TemporalCoverage": {
+          "ratio": 1.0,
+          "totalEntityMentions": 21,
+          "uniqueCanonicalEntities": 21
+        },
+        "Tool": {
+          "ratio": 1.0,
+          "totalEntityMentions": 3,
+          "uniqueCanonicalEntities": 3
+        },
+        "ToolConfiguration": {
+          "ratio": 1.0,
+          "totalEntityMentions": 1,
+          "uniqueCanonicalEntities": 1
+        }
+      },
+      "stage": "pre_consolidation"
+    },
+    "informationDensity": {
+      "averageIncidentEdgesPerNode": 2.504658,
+      "averageInformativeAttributesPerNode": 1.878106,
+      "combinedAveragePerNode": 4.382764,
+      "totalIncidentEdgeOccurrences": 3226,
+      "totalInformativeAttributes": 2419
+    },
+    "relationalRichness": {
+      "averageDistinctRelationTypesPerNode": 1.346273,
+      "totalPerNodeDistinctRelationTypes": 1734
+    }
+  },
+  "schemaVersion": "1.0",
+  "trajectoryOrder": 10
+}
