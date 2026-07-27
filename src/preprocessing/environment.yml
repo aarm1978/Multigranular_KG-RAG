@@ -5,3 +5,5 @@ dependencies:
   - python>=3.11
   - pyyaml
   - packaging
+  - openpyxl
+  - pybtex>=0.26,<0.27

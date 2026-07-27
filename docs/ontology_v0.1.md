@@ -1,7 +1,7 @@
 # Ontology v0.1 — Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts
 
 **Study 2 — Phase 1 deliverable (conceptual companion to the exhaustive `Study2_Ontology_Inventory.md`).**
-**Vocabulary reuse verified (validation 1); schema fit-checked on 6 real artifacts (validation 2, Etapa A) → GO, schema-change log applied. OWL/RDF formalization in Protégé follows after Etapa B + validation 3; HermiT = Phase 4.**
+**Historical 0.1 planning status:** vocabulary reuse verified (validation 1); schema fit-checked on 6 real artifacts (validation 2, Etapa A) → GO, schema-change log applied. The former next step was OWL/RDF formalization in Protégé followed by HermiT. Current formalization and validation status is maintained in `ontology_formalization.md`.
 
 > **Scope (TBox/ABox).** The schema declares *all* proposal classes; instance-level extraction status is `S` (supported-now) / `E` (extract-where-evidence) / `F` (future-only). Genuinely `future-only` = figure/table visual content and source-code AST parsing only.
 
@@ -114,4 +114,8 @@ Cross-type (`usesDataset`, `implementsMethod`+`cito:usesMethodIn`, `documents`/`
 
 ## 13. Next step
 
-**Validations 1–3 complete; schema frozen.** Validation 3 (CQ dry-run): 23/26 CQs traced unchanged; the other 3 (product hub) resolved by 5 additive fixes (backing edges `implementedBy`/`describedInPaper`, cited-DOI typing rule, agent-layer `affiliatedWith`/`fundedBy`, `hasProcedure`, E-21/E-22 ID corrections). Remaining: **Etapa B** — LLM pilot on the same 6+ artifacts (same OpenAI backbone, when credits return): calibrates prompt overhead/quality/projected cost for Dr. Gong's approval; re-tests the Model/Method rule and `Measurement` coverage; seeds the Phase-2 gold standard. → **Protégé** per §3.1 + inventory Part 8 (declare classes + constrained imports, domain/range axioms, `hasEvidence min 1`, `curationStatus`, bind `ciroh:`). HermiT = Phase 4.
+**Historical 0.1 status:** validations 1–3 were complete and the conceptual schema was frozen. Validation 3 (CQ dry-run) traced 23/26 CQs unchanged; the other 3 (product hub) were resolved by 5 additive fixes (backing edges `implementedBy`/`describedInPaper`, cited-DOI typing rule, agent-layer `affiliatedWith`/`fundedBy`, `hasProcedure`, E-21/E-22 ID corrections). The former Protégé → HermiT next-step statement is superseded by the versioned formalization and reasoner record in `ontology_formalization.md`.
+
+### Formalization patch 0.1.1
+
+The conceptual schema remains frozen. Version 0.1.1 is a formalization patch correcting the machine-readable translation of already-approved global relations. It completes the three module branches of `D-05 referencesDataset` and the previously omitted DocumentationPage branches of D-15, D-18, and D-21. `C-DC02i` remains the machine-readable ID for `hasSubPage`; `C-DC21` is its earlier narrative alias. No conceptual class or relation family was added, and use, mention, reference, description, and announcement semantics remain distinct.

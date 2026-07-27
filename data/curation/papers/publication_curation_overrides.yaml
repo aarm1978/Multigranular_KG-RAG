@@ -1,0 +1,101 @@
+schema_version: "1.1.0"
+
+records:
+  "27":
+    identifier_dispositions:
+      - context: reference
+        candidate: 10.1007/s11069-016-2382
+        action: defer
+        reason: >
+          Corpus curation flags an unresolved source-boundary concern that
+          cannot be repaired from deterministic local evidence.
+
+  "29":
+    identifier_dispositions:
+      - context: reference
+        candidate: 10.1175/mwr-d-21
+        action: defer
+        reason: >
+          The exact source occurrence has multiple longer local DOI values
+          sharing this prefix, so deterministic local evidence does not identify
+          one unique completion.
+
+  "134":
+    identifier_dispositions:
+      - context: reference
+        candidate: 10.1061/(asce)wr.1943-5452
+        action: defer
+        reason: >
+          Corpus curation flags an unresolved source-boundary concern that
+          cannot be repaired from deterministic local evidence.
+
+  "71":
+    action: replace_bibliographic_record
+    source_zotero_key: Farmani_Behrangi_Gupta_Tavakoly_Geheran_Niu_2024
+    reason: >
+      The Zotero record represents a preprint, while the curated corpus
+      contains the final peer-reviewed publication.
+    metadata:
+      bibtex_entry_type: article
+      record_type: journal_article
+      title: Do land models miss key soil hydrological processes controlling soil moisture memory?
+      authors:
+        - display_name: M. A. Farmani
+          raw_name: Farmani, M. A.
+        - display_name: A. Behrangi
+          raw_name: Behrangi, A.
+        - display_name: A. Gupta
+          raw_name: Gupta, A.
+        - display_name: A. Tavakoly
+          raw_name: Tavakoly, A.
+        - display_name: M. Geheran
+          raw_name: Geheran, M.
+        - display_name: G.-Y. Niu
+          raw_name: Niu, G.-Y.
+      venue: Hydrology and Earth System Sciences
+      year: 2025
+      volume: "29"
+      issue: "2"
+      pages: "547--566"
+      doi: 10.5194/hess-29-547-2025
+      url: https://hess.copernicus.org/articles/29/547/2025/
+
+  "87-corrigendum":
+    action: add_non_zotero_artifact
+    reason: >
+      The corrigendum is a separate published artifact discovered while
+      retrieving the original publication and has no independent Zotero entry.
+    metadata:
+      bibtex_entry_type: null
+      record_type: corrigendum
+      title: 'Corrigendum to "Deep learning rainfall–runoff predictions of extreme events"'
+      authors:
+        - display_name: Jonathan M. Frame
+          raw_name: Frame, Jonathan M.
+        - display_name: Frederik Kratzert
+          raw_name: Kratzert, Frederik
+        - display_name: Daniel Klotz
+          raw_name: Klotz, Daniel
+        - display_name: Martin Gauch
+          raw_name: Gauch, Martin
+        - display_name: Guy Shalev
+          raw_name: Shalev, Guy
+        - display_name: Oren Gilon
+          raw_name: Gilon, Oren
+        - display_name: Logan M. Qualls
+          raw_name: Qualls, Logan M.
+        - display_name: Hoshin V. Gupta
+          raw_name: Gupta, Hoshin V.
+        - display_name: Grey S. Nearing
+          raw_name: Nearing, Grey S.
+      venue: Hydrology and Earth System Sciences
+      year: 2023
+      volume: null
+      issue: null
+      pages: null
+      doi: 10.5194/hess-26-3377-2022-corrigendum
+      url: https://doi.org/10.5194/hess-26-3377-2022-corrigendum
+    correction_of:
+      scheme: doi
+      value: 10.5194/hess-26-3377-2022
+      uri: https://doi.org/10.5194/hess-26-3377-2022

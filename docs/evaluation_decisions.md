@@ -39,8 +39,9 @@ The evaluation therefore serves **two distinct purposes**, which must not be con
 
 - **Purpose 1 — Internal trajectory (self-comparison).** Structural metrics measured at
   successive construction points, each compared against earlier versions of the *same* KG.
-  Shows progressive enrichment as sources are integrated and entities consolidated. No
-  external baseline. This is the proposal's intrinsic stance.
+  Characterizes how structural density and relation-type diversity change as additional
+  sources are integrated and entities are later consolidated. No external baseline. This
+  is the proposal's intrinsic stance.
 - **Purpose 2 — External comparison (vs. GraphRAG).** The two schema-agnostic metrics
   measured on the *final assembled* KG and on GraphRAG's KG of the *same complete corpus*.
   Shows that the ontology-guided pipeline yields a structurally richer graph than a
@@ -71,7 +72,11 @@ references.bib.]`
   relations per entity, **excluding purely administrative or identifier fields** (e.g.
   internal IDs, checksums, bag URLs, timestamps). *Decision (argued):* the exclusion list
   must be defined explicitly and applied identically to both KGs in the comparison, or the
-  metric is not comparable. The exclusion set is recorded with the script.
+  metric is not comparable. The script defines one fixed global administrative/identifier
+  exclusion set plus a small class-specific mapping for keys whose meaning is contextual.
+  Both sets and their observed per-class use are recorded in every metrics result. False
+  Boolean values remain countable when their keys are informative; administrative Boolean
+  keys are excluded by policy rather than treated as absent.
 - **Relational richness** — average number of *distinct relation types* incident on each
   entity. Counts relation-type variety per node, not relation volume.
 
@@ -79,10 +84,59 @@ Both are schema-agnostic: they ask "how many informative attributes / distinct r
 types per entity," never "does class X exist." This is precisely why they can compare KGs
 with different schemas (ours vs. GraphRAG's).
 
+#### File-inventory sensitivity policy
+
+`File`, `DatasetFile`, and `RepoFile` are legitimate semantic KG content: they represent
+declared repository files, dataset distributions, and documentation source files. They
+remain in every actual KG output. Structural metrics are always reported in two variants:
+
+- `full` is the primary description of the actual KG product and uses every node and edge;
+- `file_inventory_excluded` is a sensitivity analysis introduced after the deterministic
+  trajectory revealed the effect of explicit file-level granularity. Its policy was frozen
+  before generating the GraphRAG baseline and conducting the external comparison. It
+  excludes the complete explicit file-inventory layer and all edges incident to it.
+
+Both variants are always reported together and neither result is suppressed. The
+sensitivity analysis does not delete or alter graph content. Its frozen executable class
+policy is:
+
+```python
+FILE_INVENTORY_CLASSES = frozenset({"DatasetFile", "File", "RepoFile"})
+```
+
+The approved class-to-inventory-ID audit is `DatasetFile` → A-D03, `File` → A-C02, and
+`RepoFile` → A-C02. The class set is the selector; inventory IDs are validation checks,
+not a second filtering rule. An approved class with an unexpected inventory ID causes
+evaluation to fail.
+
+The frozen artifacts contain 757 `DatasetFile` nodes, all degree one and incident only to
+`hasFile`; 11,702 `File` nodes, all degree one and incident only to `hasFile`; and 242
+`RepoFile` nodes, all degree two and incident to both `hasFile` and `hasSourceFile`.
+`DatasetFile` represents 58.773292% of the HydroShare graph and `File` represents
+92.083727% of the GitHub graph. Thus the explicit file-inventory layer is dominated by
+degree-one `File` and `DatasetFile` nodes, while CIROH Hub `RepoFile` nodes connect both
+their source repository and their derived documentation page. Removing `RepoFile` in the
+sensitivity view also removes its `hasSourceFile` edges because the complete inventory
+layer is excluded—not merely leaf edges.
+
+Selection is never based on degree or relation name. Excluded edges are derived only from
+whether their source or target is an excluded node. Consequently, a file-inventory node
+with several relations remains excluded and an unrelated degree-one node remains retained.
+Every numerator and denominator is recomputed independently on the retained graph.
+
+Metric snapshots use `schemaVersion: "1.2"` and `evaluatorVersion: "1.2.0"`. They record
+the input path and SHA-256, the
+attribute-exclusion policy, excluded classes, counts by class, endpoint-derived excluded
+edge counts by relation, and deterministic digests of excluded node and edge IDs. Each ID
+digest sorts IDs lexicographically, joins them with `"\n"`, appends one final `"\n"`,
+encodes UTF-8, and computes lowercase SHA-256. Individual excluded IDs are not persisted.
+
 ### 2.2 Consolidation metric — measurable across stages
 
 - **Consolidation ratio** = (unique canonical entities) / (total extracted entity
-  mentions). Higher = better consolidation, less redundancy. Measured at three points
+  mentions). Lower values indicate greater consolidation of extracted mentions into
+  shared canonical entities. The ratio measures the degree of consolidation, not its
+  correctness; erroneous over-merging can also lower the ratio. Measured at three points
   (§3): before semantic alignment, after alignment, after assembly. *Decision (argued,
   from proposal):* computed **globally and per entity type**, to separate intended
   multiplicity (e.g. versioned datasets) from undesirable duplication.
@@ -113,10 +167,10 @@ already established consistency.
 
 Two granularities of trajectory are distinguished. **Fine granularity is adopted** (decision
 confirmed), because density and richness evolve as sources are added and entities
-consolidated, and the fine trajectory makes progressive improvement visible at low marginal
+consolidated, and the fine trajectory makes source-driven structural changes visible at low marginal
 cost (re-running the same script).
 
-The construction pipeline stages and their measurement points:
+The construction pipeline stages and their measurement points are cumulative:
 
 | Stage | Measurement point | Structural metrics | Consolidation ratio | LLM-model dimension? |
 |---|---|---|---|---|
@@ -127,6 +181,16 @@ The construction pipeline stages and their measurement points:
 | | after LLM layer added | density, richness | ratio "before alignment" | **yes — ×3 models** |
 | Alignment (consolidation) | after semantic alignment | density, richness | ratio "after alignment" | yes — ×3 models |
 | Assembly | after graph assembly | density, richness | ratio "after assembly" | yes — ×3 models |
+
+Thus “+ GitHub” means the concatenated HydroShare and GitHub mention graphs, not GitHub in
+isolation. Module-only diagnostics may be computed for quality control, but they are stored
+separately and do not become internal-trajectory rows. Pre-alignment cumulative snapshots
+perform no canonical-key matching, stub resolution, semantic merging, or consolidation.
+
+The cumulative structural metrics are not expected to be monotonic. Adding a source
+dominated by low-degree or attribute-sparse entity classes can lower a global average while
+still increasing graph coverage and total represented information. Global values must
+therefore be interpreted together with node and edge counts and per-class diagnostics.
 
 *Reading the table:* the deterministic-only points have no model dimension (no LLM
 involved). The model dimension (×3) appears only from the LLM layer onward, because only
@@ -196,9 +260,17 @@ richness), on the **final assembled** ontology-guided KG vs. GraphRAG's KG, both
 trajectory points against GraphRAG would be invalid — only same-corpus KGs are comparable,
 so the comparison is at the final state only.
 
-**Identical metric definitions both sides.** The administrative/identifier exclusion set
-(§2.1) and the counting rules must be applied identically to both KGs, or the comparison is
-not fair. Recorded as a hard requirement for the script.
+**Formal comparison and supporting sensitivity view.** The formal schema-agnostic
+comparison is GraphRAG `full` versus Multigranular KG `full`, using the same
+administrative/identifier attribute exclusions and metric-counting rules. The
+Multigranular KG `file_inventory_excluded` result is a supporting granularity sensitivity
+analysis, and GraphRAG `full` may be shown alongside it as contextual reference. This does
+not constitute a symmetrically filtered comparison. The file-inventory filter must not be
+claimed or applied symmetrically across the two schemas unless a common cross-schema
+file-inventory identification protocol is defined and frozen before evaluating the
+baseline. The external comparison remains limited to information density and relational
+richness. Consolidation remains an internal pipeline metric, although it is calculated in
+both Multigranular KG variants for consistency.
 
 ### Table skeleton — schema-agnostic comparison (Purpose 2)
 
@@ -219,15 +291,32 @@ configuration/version used.]`
 
 ### 6.1 Internal trajectory — structural metrics (Purpose 1)
 
-| Construction point | Information density | Relational richness | (Consolidation ratio where applicable) |
-|---|---|---|---|
-| HydroShare (det.) | | | — |
-| + GitHub (det.) | | | — |
-| + Hub (det.) | | | — |
-| + Papers (det.) | | | — |
-| + LLM layer [per model] | | | before-alignment |
-| after alignment [per model] | | | after-alignment |
-| after assembly [per model] | | | after-assembly |
+The trajectory report uses three tables. Table A is the primary full-KG result. Table B is
+explicitly labeled as a sensitivity analysis and is not a replacement graph. Table C
+reports `file_inventory_excluded − full`, with absolute and percentage deltas wherever the
+full value is nonzero.
+
+#### Table A — Full KG
+
+| Construction point | Nodes | Edges | Information density | Informative attributes per node | Incident edges per node | Relational richness | Consolidation ratio |
+|---|---:|---:|---:|---:|---:|---:|---|
+| HydroShare (det.) | | | | | | | |
+| + GitHub (det.) | | | | | | | |
+| + Hub (det.) | | | | | | | |
+| + Papers (det.) | | | | | | | |
+
+#### Table B — File-inventory-excluded sensitivity analysis
+
+Uses the same rows and columns as Table A.
+
+#### Table C — Sensitivity effect
+
+| Construction point | Excluded nodes | Excluded edges | Excluded nodes as percentage of full graph | Delta information density | Delta informative attributes per node | Delta incident edges per node | Delta relational richness | Delta consolidation ratio |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| HydroShare (det.) | | | | | | | | |
+| + GitHub (det.) | | | | | | | | |
+| + Hub (det.) | | | | | | | | |
+| + Papers (det.) | | | | | | | | |
 
 For the LLM-onward rows, this table is instantiated **once per model** (×3), per §4.
 
@@ -252,12 +341,11 @@ duplication.
 
 ## 7. What is measurable now vs. later
 
-- **Now:** information density, relational richness, and (mention-level) counts on the
-  existing HydroShare nodes/edges output — capturing the **first trajectory point**
-  (HydroShare deterministic, pre-consolidation) before it is lost. Requires only a script
-  that reads the nodes/edges JSON.
-- **As construction proceeds:** re-run the same script after each source and each
-  consolidation stage (the fine trajectory).
+- **Now:** information density, relational richness, and mention-level counts at the
+  HydroShare deterministic point and the cumulative HydroShare + GitHub deterministic
+  point. GitHub alone is retained only as a module diagnostic.
+- **As construction proceeds:** materialize the next cumulative snapshot and re-run the
+  same evaluator after each added source and each consolidation stage (the fine trajectory).
 - **Later (requires LLM layer):** the model dimension (×3), the before/after-alignment
   consolidation ratios.
 - **Later (requires gold standard):** Precision/Recall/F1, fact recoverability.
@@ -271,8 +359,11 @@ duplication.
   inter-annotator-agreement references; multi-model-robustness rationale reference.
 - Confirm exact model identifiers at experiment time (§4).
 - Confirm GraphRAG configuration/version and that its run uses the same corpus (§5).
-- Define the administrative/identifier **exclusion set** for information density (§2.1) —
-  must be fixed and applied identically to both KGs.
+- Preserve the ratified global and class-specific administrative/identifier exclusion
+  policy for information density (§2.1) and apply it identically to both KGs.
+- Preserve the frozen Multigranular KG file-inventory class policy and endpoint-derived
+  edge filtering as a supporting sensitivity analysis; do not claim symmetric GraphRAG
+  filtering without a pre-defined common cross-schema identification protocol.
 - Decide whether the "Multi-granular KG" in the GraphRAG comparison is strictly the
   assembled state (recommended) — confirm.
 - Budget and ordering for the ×3 (and GraphRAG ×3) runs, with the advisor.

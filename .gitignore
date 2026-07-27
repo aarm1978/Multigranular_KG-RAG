@@ -50,6 +50,7 @@ ENV/
 hermit_*.log
 *.reasoner.log
 src/ontology/catalog-v*.xml
+!src/ontology/catalog-v001.xml
 
 # OS and editor files
 .DS_Store

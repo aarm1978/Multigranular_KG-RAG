@@ -34,11 +34,21 @@ from packaging.requirements import InvalidRequirement, Requirement
 from packaging.utils import canonicalize_name
 
 
-SCHEMA_VERSION = "1.0.0"
-PHASE_A_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"
+PHASE_A_VERSION = "1.1.0"
 DEFAULT_RAW_ROOT = Path("data/raw/coderepos")
 DEFAULT_OUTPUT = Path("data/interim/coderepos/ciroh_github_corpus.json")
 DIRECT_FILE_ROLES = {"dependency_manifest", "environment_manifest"}
+INVENTORY_RECORD_KEYS = {
+    "path",
+    "file_name",
+    "extension",
+    "size_bytes",
+    "downloaded",
+    "selection_reason",
+    "file_role",
+    "source_path",
+}
 LOCK_SENTINELS = {"_libgcc_mutex", "_openmp_mutex"}
 BOOTSTRAP_PACKAGES = {"flit-core", "hatch-vcs", "hatchling", "pdm-backend", "pip", "poetry-core", "setuptools", "wheel"}
 MANIFEST_TYPES = {
@@ -257,42 +267,42 @@ def build_source(manifest_path: str, raw_line: str | None = None) -> dict[str, A
 
 
 def build_files(files_manifest: list[dict[str, Any]]) -> dict[str, Any]:
-    """Build the files block from the raw files_manifest.json records."""
+    """Build the authoritative inventory and its derived compatibility views."""
     histogram = Counter(str(entry.get("selection_reason")) for entry in files_manifest)
-    downloaded: list[dict[str, Any]] = []
-    dockerfiles: list[dict[str, Any]] = []
+    inventory: list[dict[str, Any]] = []
     for entry in files_manifest:
         path = str(entry.get("path") or "")
         file_name = str(entry.get("file_name") or Path(path).name)
         extension = str(entry.get("extension") or "")
-        file_role = derive_file_role(path, file_name, extension)
-        if bool(entry.get("downloaded")):
-            downloaded.append(
-                {
-                    "path": path,
-                    "file_name": file_name,
-                    "extension": extension,
-                    "size_bytes": entry.get("size_bytes"),
-                    "selection_reason": entry.get("selection_reason"),
-                    "file_role": file_role,
-                    "source_path": f"files_manifest.json:{path}",
-                }
-            )
-        if file_role == "dockerfile":
-            dockerfiles.append(
-                {
-                    "path": path,
-                    "file_name": file_name,
-                    "size_bytes": entry.get("size_bytes"),
-                }
-            )
-    downloaded.sort(key=lambda item: item["path"])
-    dockerfiles.sort(key=lambda item: item["path"])
+        inventory.append(
+            {
+                "path": path,
+                "file_name": file_name,
+                "extension": extension,
+                "size_bytes": entry.get("size_bytes") if isinstance(entry.get("size_bytes"), int) else 0,
+                "downloaded": bool(entry.get("downloaded")),
+                "selection_reason": entry.get("selection_reason"),
+                "file_role": derive_file_role(path, file_name, extension),
+                "source_path": f"files_manifest.json:{path}",
+            }
+        )
+    inventory.sort(key=lambda item: item["path"])
+    downloaded = [dict(item) for item in inventory if item["downloaded"]]
+    dockerfiles = [
+        {
+            "path": item["path"],
+            "file_name": item["file_name"],
+            "size_bytes": item["size_bytes"],
+        }
+        for item in inventory
+        if item["file_role"] == "dockerfile"
+    ]
     return {
-        "total_count": len(files_manifest),
+        "total_count": len(inventory),
         "downloaded_count": len(downloaded),
         "selection_reason_histogram": dict(sorted(histogram.items())),
         "has_dockerfile": bool(dockerfiles),
+        "inventory": inventory,
         "downloaded": downloaded,
         "dockerfiles": dockerfiles,
     }
@@ -1374,8 +1384,20 @@ def required_repo_keys() -> set[str]:
 def validate_corpus(corpus: dict[str, Any], raw_root: Path, repo_filter: list[str] | None = None) -> dict[str, Any]:
     """Run the Phase A self-validation checks and return a structured report."""
     repos = corpus.get("repos") or []
-    expected_count = len(discover_repo_dirs(raw_root, repo_filter))
+    repo_dirs = discover_repo_dirs(raw_root, repo_filter)
+    expected_count = len(repo_dirs)
+    raw_manifests: dict[str, list[dict[str, Any]]] = {}
     issues: list[str] = []
+    for repo_dir in repo_dirs:
+        try:
+            parsed_manifest = json.loads(read_text_tolerant(repo_dir / "files_manifest.json"))
+        except Exception as exc:  # noqa: BLE001 - validation reports malformed raw inputs.
+            issues.append(f"{repo_dir.name}: unable to validate files_manifest.json: {exc}")
+            continue
+        if not isinstance(parsed_manifest, list):
+            issues.append(f"{repo_dir.name}: files_manifest.json is not an array")
+            continue
+        raw_manifests[repo_dir.name] = parsed_manifest
     direct_manifests = 0
     lock_manifests = 0
     warning_counts: Counter[str] = Counter()
@@ -1389,10 +1411,55 @@ def validate_corpus(corpus: dict[str, Any], raw_root: Path, repo_filter: list[st
         if repo.get("license") is not None and not isinstance(repo["license"].get("is_spdx"), bool):
             issues.append(f"{repo.get('name')}: license.is_spdx is not boolean")
         files = repo.get("files") or {}
+        inventory = files.get("inventory") or []
+        inventory_paths = [item.get("path") for item in inventory]
+        raw_manifest = raw_manifests.get(str(repo.get("name")))
+        expected_inventory = build_files(raw_manifest)["inventory"] if raw_manifest is not None else None
+        downloaded_projection = [dict(item) for item in inventory if item.get("downloaded") is True]
+        dockerfile_projection = [
+            {
+                "path": item.get("path"),
+                "file_name": item.get("file_name"),
+                "size_bytes": item.get("size_bytes"),
+            }
+            for item in inventory
+            if item.get("file_role") == "dockerfile"
+        ]
         if not isinstance(files.get("has_dockerfile"), bool):
             issues.append(f"{repo.get('name')}: files.has_dockerfile is not boolean")
-        if files.get("downloaded_count") != len(files.get("downloaded") or []):
+        if files.get("total_count") != len(inventory):
+            issues.append(f"{repo.get('name')}: total_count does not match inventory length")
+        if raw_manifest is None:
+            issues.append(f"{repo.get('name')}: raw files manifest unavailable for validation")
+        elif files.get("total_count") != len(raw_manifest):
+            issues.append(f"{repo.get('name')}: total_count does not match raw manifest length")
+        if expected_inventory is not None and inventory != expected_inventory:
+            issues.append(f"{repo.get('name')}: inventory does not match normalized raw manifest")
+        if files.get("downloaded_count") != len(downloaded_projection):
             issues.append(f"{repo.get('name')}: downloaded_count mismatch")
+        if files.get("downloaded") != downloaded_projection:
+            issues.append(f"{repo.get('name')}: downloaded view does not match inventory projection")
+        if files.get("dockerfiles") != dockerfile_projection:
+            issues.append(f"{repo.get('name')}: dockerfiles view does not match inventory projection")
+        if files.get("has_dockerfile") != bool(dockerfile_projection):
+            issues.append(f"{repo.get('name')}: has_dockerfile does not match inventory roles")
+        if inventory_paths != sorted(inventory_paths):
+            issues.append(f"{repo.get('name')}: inventory paths are not sorted")
+        if len(inventory_paths) != len(set(inventory_paths)):
+            issues.append(f"{repo.get('name')}: inventory paths are not unique")
+        for item in inventory:
+            missing_inventory_keys = INVENTORY_RECORD_KEYS - set(item)
+            if missing_inventory_keys:
+                issues.append(
+                    f"{repo.get('name')}: inventory entry missing keys "
+                    f"{sorted(missing_inventory_keys)}: {item.get('path')}"
+                )
+            if not item.get("path"):
+                issues.append(f"{repo.get('name')}: inventory entry has empty path")
+            if not item.get("source_path"):
+                issues.append(f"{repo.get('name')}: inventory entry has empty source_path")
+            if not isinstance(item.get("downloaded"), bool):
+                issues.append(f"{repo.get('name')}: inventory downloaded flag is not boolean: {item.get('path')}")
         if files.get("total_count") != sum((files.get("selection_reason_histogram") or {}).values()):
             issues.append(f"{repo.get('name')}: selection_reason_histogram mismatch")
         for dep in (repo.get("dependencies") or []) + (repo.get("repo_dependencies") or []):
@@ -1443,6 +1510,9 @@ def validate_corpus(corpus: dict[str, Any], raw_root: Path, repo_filter: list[st
         "dependency_count": sum(len(repo.get("dependencies") or []) for repo in repos),
         "repo_dependency_count": sum(len(repo.get("repo_dependencies") or []) for repo in repos),
         "execution_environment_count": sum(len(repo.get("execution_environment") or []) for repo in repos),
+        "inventory_file_count": sum(len(repo.get("files", {}).get("inventory") or []) for repo in repos),
+        "downloaded_file_count": sum(len(repo.get("files", {}).get("downloaded") or []) for repo in repos),
+        "dockerfile_count": sum(len(repo.get("files", {}).get("dockerfiles") or []) for repo in repos),
         "direct_manifest_count": direct_manifests,
         "lock_manifest_count": lock_manifests,
         "parse_warning_count": sum(warning_counts.values()),
@@ -1466,6 +1536,9 @@ def print_report(report: dict[str, Any]) -> None:
     print(f"dependencies: {report['dependency_count']}")
     print(f"repo_dependencies: {report['repo_dependency_count']}")
     print(f"execution_environment records: {report['execution_environment_count']}")
+    print(f"file inventory records: {report['inventory_file_count']}")
+    print(f"downloaded file records: {report['downloaded_file_count']}")
+    print(f"dockerfile records: {report['dockerfile_count']}")
     print(f"manifest classifications: direct={report['direct_manifest_count']}, lock={report['lock_manifest_count']}")
     print(f"parse_warnings: {report['parse_warning_count']}")
     for issue, count in report["parse_warning_counts"].items():

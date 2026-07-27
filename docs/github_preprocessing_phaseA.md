@@ -77,13 +77,54 @@ IDs, no network, no time-dependent values beyond what the raw already carries.
 Deterministic ordering applies to structures Phase A constructs; raw text carried as evidence
 such as lockfile `pinned_set_evidence` preserves original file order.
 
-**Provenance preservation for Phase B.** Phase A does not build evidence objects, but it
-records, for every normalized fact, the **manifest path** (and raw line where applicable)
-under a `sources` / `source_path` field. This is exactly what Phase B needs to populate
-`sourceLocation` (the provenance path) and `evidenceText` (the value). The raw line is kept
-verbatim for line-based manifests, and reconstructed as faithful TOML for TOML-table
-manifests because `tomllib` does not preserve source text, so Phase B's `evidenceText`
-carries semantic value, not just a field path.
+### Internal lineage and public evidence provenance
+
+Phase A preserves two distinct provenance channels for downstream processing.
+
+**Internal pipeline lineage.** Fields such as `source_path`, `manifest_path`,
+`repo_metadata.json:*`, `contributors.json[*]`, `archive_info.json:*`, and
+`files_manifest.json:<path>` identify where a fact was obtained inside the frozen raw corpus
+and preprocessing pipeline. They support reproducibility, debugging, validation, extraction
+auditing, and tracing a normalized value back to the local raw snapshot. They remain part of
+schema 1.1.0 and are not public evidence URLs. Raw lines are kept verbatim for line-based
+manifests and reconstructed as faithful TOML for TOML-table manifests because `tomllib` does
+not preserve source text.
+
+`source_path` and `manifest_path` preserve internal pipeline lineage. They are inputs to
+downstream public-source resolution, not final user-facing source locations.
+
+**Public evidence provenance.** Phase B must not copy an internal value such as
+`files_manifest.json:README.md` verbatim into `EvidenceSpan.sourceLocation`. For facts
+derived from repository files, Phase B constructs the public `EvidenceSpan.sourceLocation`
+as a SHA-pinned GitHub blob URL using `repo.html_url`,
+`repo.archive.frozen_commit_sha`, and the repository-relative `path`, `manifest_path`,
+citation path, README path, or other source file path:
+
+```text
+{html_url}/blob/{frozen_commit_sha}/{repository_relative_path}
+```
+
+For example, `https://github.com/OWNER/REPO/blob/SHA/README.md`. The repository snapshot as
+a whole remains identified by `{html_url}/tree/{frozen_commit_sha}`, already emitted as
+`provenance.source_artifact`.
+
+For facts derived from repository files, Phase B constructs the public
+`EvidenceSpan.sourceLocation` as a SHA-pinned GitHub blob URL. Internal raw filenames such
+as `files_manifest.json`, `repo_metadata.json`, `contributors.json`, and
+`archive_info.json` must never be exposed as the primary public evidence location.
+
+**GitHub API-derived metadata.** Repository descriptions, topics, timestamps,
+archived/disabled status, GitHub statistics, and contributor records originate from mutable
+GitHub API metadata rather than version-controlled repository files. Phase B uses the
+corresponding public GitHub repository page or API endpoint as the public source and retains
+`archive.downloaded_at_epoch` as the acquisition snapshot version. A Git commit freezes
+repository files but does not freeze mutable GitHub API metadata; the local raw JSON is the
+exact acquisition snapshot. A future published corpus or RO-Crate may provide a persistent
+public snapshot of those API responses.
+
+Phase A preserves the information needed for these resolutions but does not build final
+`EvidenceSpan` objects or generate every user-facing evidence URL. It therefore does not
+duplicate derivable values by adding a `public_url` to every inventory record.
 
 **Normalization principle.** Normalize only what is mechanical and reversible-by-record:
 lower-casing package names for the dedup key while keeping the original spelling in `raw`;
@@ -99,7 +140,7 @@ identity (same person, same library node) is **not** touched here.
 
 ## 4. Output schema — `ciroh_github_corpus.json`
 
-Top level: `{ "schema_version": "1.0.0", "repos": [ <repo_record>, ... ] }`.
+Top level: `{ "schema_version": "1.1.0", "repos": [ <repo_record>, ... ] }`.
 `schema_version` versions the output schema; `phase_a_version` versions the parser logic.
 
 A `<repo_record>` has the following stable shape. Every field is always present; absence is
@@ -164,13 +205,21 @@ existence).
     "selection_reason_histogram": { "allowed_exact_filename": 3,
                                     "allowed_top_level_notebook": 1, "...": 1 },
     "has_dockerfile": false,
-    "downloaded": [                           // only downloaded:true entries
+    "inventory": [                            // authoritative: every files_manifest.json entry
       { "path": "README.md", "file_name": "README.md", "extension": ".md",
-        "size_bytes": 5051, "selection_reason": "allowed_exact_filename",
+        "size_bytes": 5051, "downloaded": true,
+        "selection_reason": "allowed_exact_filename",
         "file_role": "readme", "source_path": "files_manifest.json:README.md" }
       // ...
     ],
-    "dockerfiles": [                          // existence-only (downloaded:false), no content
+    "downloaded": [                           // deterministic inventory projection: downloaded:true
+      { "path": "README.md", "file_name": "README.md", "extension": ".md",
+        "size_bytes": 5051, "downloaded": true,
+        "selection_reason": "allowed_exact_filename",
+        "file_role": "readme", "source_path": "files_manifest.json:README.md" }
+      // ...
+    ],
+    "dockerfiles": [                          // derived inventory view; content may be unavailable
       // { "path": "Dockerfile", "file_name": "Dockerfile", "size_bytes": 3890 }
     ]
   },
@@ -233,7 +282,11 @@ existence).
 
   "provenance": {
     "source_artifact": "https://github.com/CIROH-UA/deep_bucket_lab/tree/23b412d6...",
-    "phase_a_version": "1.0.0",
+    "phase_a_version": "1.1.0",
+    "manifest_classifications": {
+      "environment.yml": "direct",
+      "requirements.txt": "lock"
+    },
     "parse_warnings": []                       // e.g. {file, issue}: setup.py dynamic, symlink env, FIXME cff
   }
 }
@@ -241,6 +294,8 @@ existence).
 
 `provenance.source_artifact` is the SHA-pinned canonical GitHub anchor for the frozen raw
 snapshot, built from `html_url` and `archive.frozen_commit_sha`.
+`provenance.manifest_classifications` is a deterministic mapping from each parsed manifest
+path to its classification as `direct` or `lock`.
 
 ---
 
@@ -257,13 +312,23 @@ non-informative). `license` is copied verbatim plus a derived `is_spdx` flag: `t
 ### 5.2 Files & `fileRole` derivation (from `files_manifest.json`)
 Emit `total_count`, `downloaded_count`, and a `selection_reason_histogram` over **all**
 manifest entries (preserves the selection-policy contribution, e.g. deep_bucket_lab's 5/25).
-Mint full `File` records (in `files.downloaded[]`) **only for `downloaded:true`** (decision
-already ratified: non-downloaded files are counted, not nodalized). Record Dockerfile
-existence separately in `files.dockerfiles[]` (from `downloaded:false` manifest entries) and
-set `has_dockerfile`, with no content.
+Every file listed in `files_manifest.json` is preserved in `files.inventory[]`. The
+`downloaded` flag distinguishes files whose content is available for parsing or later
+semantic extraction from files whose existence and structural metadata are known only
+through the manifest. `files.inventory[]` is authoritative for downstream Phase B and is
+sorted deterministically by the manifest-provided repository-relative path; each record
+carries `path`, `file_name`, `extension`, `size_bytes`, `downloaded`, `selection_reason`,
+derived `file_role`, and `source_path`. GitHub repository paths remain case-sensitive: Phase
+A does not lowercase, casefold, or otherwise alter them for sorting or identity.
+`files.downloaded[]` is a deterministic compatibility projection containing the complete
+inventory records where `downloaded:true`. `files.dockerfiles[]` is a derived convenience
+view of inventory records with `file_role:dockerfile`; `has_dockerfile` is derived from the
+same classification. Phase A does not read or interpret content for `downloaded:false`
+entries.
 
 `file_role` is **derived** (the manifest gives `selection_reason`, not role), priority-ordered
-on `file_name`/`extension`/`path` (lower-cased):
+on lowercase copies of `file_name`/`extension`/`path` for matching only; the original
+manifest-provided path is preserved:
 
 | Priority | Match | `file_role` |
 |---|---|---|
@@ -296,13 +361,19 @@ excludes bots from `Person` (ratified). These are the **GitHub-login** identity 
 ## 6. Processing rules — dependencies, environment, citation
 
 ### 6.1 Manifest discovery & path disambiguation
-Walk `files.downloaded[]` for `file_role ∈ {dependency_manifest, environment_manifest}`.
+Walk the `files.downloaded[]` compatibility projection (equivalently, inventory entries
+where `downloaded:true`) for `file_role ∈ {dependency_manifest, environment_manifest}`.
+Manifest parsing is always restricted to inventory entries where `downloaded:true`.
 Record each manifest's `path`. **Root-level** manifests describe the repo's own deps;
 manifests under `docs/`, `examples/`, `tutorials/` describe doc-build / example deps. Phase A
 tags each parsed manifest with `manifest_scope ∈ {root, docs, example}` (derived from path)
 and, in `dependencies[].sources[]` / `repo_dependencies[].sources[]`, preserves the originating
 manifest path and `manifest_scope`. Phase B may
 prefer `root`-scope deps; Phase A does not drop non-root manifests, it labels them.
+The recorded `manifest_path` and dependency-source paths are internal lineage values. Phase
+B combines the repository-relative path with `html_url` and `frozen_commit_sha` to resolve a
+public SHA-pinned GitHub blob URL; it does not expose the local raw-corpus filename as the
+primary public source.
 
 ### 6.2 Lockfile vs direct classification (D1)
 Each manifest is classified **direct** or **lock**. Only **direct** manifests feed
@@ -458,8 +529,12 @@ its regime tag and routes appropriately.
 - **Non-SPDX license** (`USDOC`, custom, `NOASSERTION`, null) → `is_spdx:false`; keep string.
 - **Config-only `pyproject`** → no runtime deps; build requires only.
 - **Sparse repo** (no manifest, no CFF — e.g. `awi-ciroh-image`) → yields repo core, license,
-  contributors, downloaded files, identifiers; `dependencies`/`citation` empty. Never assume
-  presence.
+  contributors, complete file inventory, downloaded-file view, identifiers;
+  `dependencies`/`citation` empty. Never assume presence.
+- **Non-downloaded inventory entry** → preserve structural metadata and derived `file_role`,
+  but never read or interpret file content.
+- **Internal lineage path** → preserve it exactly for auditing; do not treat it as a final
+  user-facing provenance URL or perform network resolution in Phase A.
 - **Non-standard env filename** (`pytorch.yml`) not in raw → coverage limitation, documented.
 - **Swapped given/family names** in CFF → extract verbatim, no correction.
 - **Duplicate logins** for one human → seed-not-merge.
@@ -471,6 +546,11 @@ its regime tag and routes appropriately.
 
 - No node/edge minting, no ontology classes/relations/inventory IDs, no `EvidenceSpan`
   objects, no deterministic entity IDs — Phase B.
+- No final public evidence-location construction. Phase A preserves internal lineage,
+  repository identity, commit SHA, and repository-relative paths; Phase B derives public
+  blob URLs without requiring a duplicated `public_url` on every file record.
+- No file content recovery or semantic extraction for `downloaded:false` inventory entries;
+  only manifest-provided structural metadata is preserved.
 - No cross-repo consolidation (Person/Library/Tool/Repository identity) — later step.
 - No URL **typing** (which README URL becomes `usesDataset` vs `referencesRepository`) —
   Phase A only extracts the URLs by regex into `readme.deterministic_urls`; Phase B types them
@@ -490,8 +570,17 @@ its regime tag and routes appropriately.
   a non-empty `sources`/`source_path` (Phase B evidence depends on it).
 - Every parsed manifest was classified direct **or** lock; lock manifests contributed **zero**
   package entries to `dependencies[]`.
-- `files.downloaded_count` equals `len(files.downloaded)`; `total_count` equals the manifest
-  length; histogram sums to `total_count`.
+- `files.inventory` exactly equals the complete deterministic normalized inventory rebuilt
+  by `build_files(raw_manifest)["inventory"]`, covering every normalized file field.
+- `files.total_count == len(files.inventory)` and equals the raw manifest length; inventory
+  paths are non-empty, unique within a repository, sorted deterministically by the
+  manifest-provided case-sensitive repository-relative path, and every inventory record has
+  a non-empty `source_path`.
+- `files.downloaded_count` equals the number of inventory entries where `downloaded:true`;
+  `files.downloaded` exactly equals that deterministic inventory projection.
+- `files.has_dockerfile` equals whether any inventory entry has `file_role:dockerfile`;
+  `files.dockerfiles` is the deterministic convenience projection of those entries.
+- The selection-reason histogram sums to `files.total_count`.
 - `parse_warnings` enumerated for every skipped/deferred manifest (symlink, dynamic setup.py,
   FIXME cff) — none silently dropped.
 - VCS deps normalized to a resolvable `vcs_url`; package deps carry an `ecosystem`.
@@ -502,18 +591,21 @@ its regime tag and routes appropriately.
 
 - **`deep_bucket_lab`** (fork, MIT, 5/25 downloaded): repo core + `github_stats`;
   `contributors` = jmframe/maoyab/leilaher (login regime; jmframe cross-links to a paper
-  author); `files.downloaded` = CITATION.md (→ `citation_md`, deferred), LICENSE, README.md,
-  the notebook, environment.yml; `citation.format = "md"`; `execution_environment` from
+  author); `files.inventory` preserves all 25 manifest entries and `files.downloaded`
+  projects CITATION.md (→ `citation_md`, deferred), LICENSE, README.md, the notebook, and
+  environment.yml; `citation.format = "md"`; `execution_environment` from
   `environment.yml` (`name:deep_bucket_env`, conda-forge/defaults, python 3.9, **direct** —
   hand-authored); `dependencies` from that env's conda packages. No `.cff`, no Dockerfile.
 - **`awi-ciroh-image`** (not fork, BSD-3-Clause, sparse): repo core; six contributors incl.
   the `arpita0911patel`/`arpitapatel09` duplicate-login pair (seed-not-merge) and `pkdash`
-  (cross-links to HydroShare); `files.downloaded` = LICENSE, README.md; **no manifests, no
-  CFF** → `dependencies`/`citation` empty; `has_dockerfile:true` (existence only, content
-  absent — A-C04 gap). Demonstrates the sparse-repo path.
+  (cross-links to HydroShare); `files.inventory` includes every manifest-listed file and
+  `files.downloaded` projects LICENSE and README.md; **no downloaded manifests, no CFF** →
+  `dependencies`/`citation` empty; `has_dockerfile:true` (existence known from inventory,
+  content absent — A-C04 gap). Demonstrates the sparse-repo path.
 - **`LSTM-Tutorials`** (fork, MIT): contributors whitelightning450/shahab122/savalann
-  (savalann cross-links to the NGIAB CFF authors); `files.downloaded` = several notebooks,
-  GettingStarted.md, LICENSE, README.md, requirements.txt; `dependencies` from
+  (savalann cross-links to the NGIAB CFF authors); `files.inventory` preserves the complete
+  manifest and `files.downloaded` projects several notebooks, GettingStarted.md, LICENSE,
+  README.md, and requirements.txt; `dependencies` from
   `requirements.txt` (direct); the repo's `pytorch.yml` conda env is **absent** from raw
   (non-standard name) → documented coverage limitation.
 

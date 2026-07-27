@@ -96,6 +96,11 @@ the spec as `anchor.relation`:
   `ciroh:ProcessBasedModel`, `ciroh:EvaluationMetric`, `ciroh:Algorithm`), which is
   where the domain layer adds what no standard vocabulary provides.
 
+An optional `alt_anchor` records an additional reuse alignment. Primary and
+alternative anchors are serialized as distinct `ciroh:reuseAnchor` annotations and
+comments only; an alternative anchor does not create a subclass, subproperty, or
+equivalence axiom.
+
 ### 3.2 Property-as-class anchors → alignment annotations
 Several inventory entries anchored a *class* to what is, in the reused vocabulary, a
 *property* (e.g. `Variable`→`schema:variableMeasured`, `TemporalCoverage`→
@@ -175,13 +180,13 @@ contradict the lightweight design without adding query capability.
 ## 4. The generated ontology
 
 `build_ontology.py` (owlready2) reads the specification and emits `ciroh_ontology.owl`
-in RDF/XML. The build prints a summary; the current figures are:
+in RDF/XML. The immediately preceding 0.1 specification builds with these figures:
 
 | Element | Count |
 |---|---|
 | Minted CIROH classes | 51 |
 | Referenced external classes | 22 |
-| Object properties | 81 |
+| Object properties | 83 |
 | Datatype properties | 18 |
 | `owl:imports` | 6 |
 
@@ -194,6 +199,13 @@ merging because the inverse and sub-property axioms (`describes`, `documentedBy`
 an object property) were added; the corresponding `launchURL` literal endpoint is
 retained as a datatype attribute.
 
+The earlier value of 81 was accurate for the initial formalization commit
+`49b0137`. Commit `57dbcc7` subsequently added the two formal object properties
+`isExecutedBy` and `executes` while the ontology version remained 0.1, increasing the
+count to 83. Rebuilding both historical commits reproduces 81 and 83 respectively.
+The 0.1.1 `C-P29` declaration does not add another property because it merges into the
+already-existing `referencesDataset` property.
+
 Traceability annotations attached to every entity include the inventory ID, the reuse
 anchor, the S/E/F status, the node kind, and — for property-anchored classes — the
 alignment property recorded as a non-logical annotation.
@@ -202,7 +214,8 @@ alignment property recorded as a non-logical annotation.
 
 ## 5. Reasoner validation
 
-The generated ontology was loaded in Protégé (with the six imported vocabularies
+The historical validation record in this section applies to ontology **0.1**. That
+generated ontology was loaded in Protégé (with the six imported vocabularies
 resolved) and checked with the **HermiT 1.4.3.456** reasoner. The result:
 
 - **Consistent** — no contradiction among the class, property, domain/range,
@@ -227,10 +240,14 @@ after the planned refinements rather than requiring redesign.
 
 ## 6. What this phase establishes, and what remains
 
-**Established.** The Study 2 conceptual schema is now a formal OWL/RDF TBox, generated
-reproducibly from a single specification, traceable to the inventory and the empirical
-validations, and verified logically consistent with no unsatisfiable classes by two
-reasoners. The TBox is frozen.
+**Established for ontology 0.1.** The Study 2 conceptual schema became a formal
+OWL/RDF TBox, generated reproducibly from a single specification, traceable to the
+inventory and empirical validations, and was verified logically consistent with no
+unsatisfiable classes by two reasoners. Ontology 0.1 was frozen at that validation
+point.
+
+**Current 0.1.1 status.** The formalization patch passed structural and
+deterministic-build validation and was manually validated with HermiT and cross-checked with ELK in Protégé on 2026-07-23. Ontology 0.1.1 is formally frozen for deterministic KG extraction; the complete validation record appears in Section 7.1.
 
 **Stated as out-of-TBox (for the manuscript).** Two design commitments are enforced
 outside OWL and must be described as such: (i) evidence completeness for
@@ -244,3 +261,135 @@ no LLM required), then the LLM extractor for the discourse and domain-entity lay
 loading the result into the property graph under this schema. Reasoner-based ABox
 checks (e.g. consistency of the populated graph) and the competency questions as
 executable queries follow once instances exist.
+
+---
+
+## 7. Formalization patch 0.1.1 (2026-07-23)
+
+Publication Phase B exposed a translation omission in ontology 0.1. The approved
+global relation `D-05 referencesDataset` already included the domain branch `Paper` →
+`DatasetResource`, but `ontology_spec.yaml` represented only the documentation-module
+realization (`C-DC15`). This was a formalization error rather than a conceptual
+redesign.
+
+Version 0.1.1 adds `C-P29 referencesDataset` as the Paper-module realization of
+`D-05`, with `cito:citesAsDataSource` as its primary reuse anchor and
+`dcterms:references` as an alternative anchor. It records bibliographic references
+deterministically typed as dataset citations and remains distinct from `C-P20
+usesDataset` and `C-P24 mentionsDataset`. The patch also removes the incorrect
+`C-D19 → D-05` mapping: `C-D19 references` remains a generic outgoing relation whose
+domain is `DatasetResource`.
+
+A final completeness review found the same translation omission for the already
+approved `Repository` domain branch of D-05. `C-C19 referencesDataset` completes that
+branch as `Repository` → `DatasetResource`, using `dcterms:references` for an explicit
+dataset DOI or URL without sufficient evidence of use. It remains distinct from
+`C-C15 usesDataset`. This is another module realization of the existing D-05 relation,
+not a conceptual ontology change.
+
+The final branch audit then added four omitted Documentation-module realizations of
+relations already present in the conceptual global inventory: `C-DC22 references` →
+D-15, `C-DC23 referencesFeature` → D-18, and `C-DC24 mentionsModel` plus
+`C-DC25 mentionsDataset` → D-21. The formal `mentionsModel` merge also exposed that
+`C-D18`, whose DatasetResource range includes `Tool`, had been serialized under its
+narrative `mentionsModel` alias rather than its use semantics. It is now formally
+`usesTool`, keeping D-21 `mentionsModel` restricted to `Paper` and
+`DocumentationPage`. These corrections complete the existing conceptual branches;
+they do not add a relation family or change extraction behavior.
+
+`C-DC02i` remains the canonical machine-readable inventory ID for `hasSubPage`, and
+`C-DC21` remains a narrative alias recorded in the inventory and OWL comment only.
+No second formal inventory annotation was minted and the frozen CIROH Hub graph was
+not migrated. Likewise, `C-DC18` is formally `announces`; D-19 remains the broader
+conceptual announcement/reference family.
+
+Files changed across this patch are `ontology_v0.1.md`, `ontology_inventory.md`,
+`ontology_formalization.md`, `ontology_spec.yaml`, the generated
+`ciroh_ontology.owl`, the Publication Phase B contract and mapping, the CIROH Hub v1
+compatibility notes, and the focused ontology structural test. `build_ontology.py`
+required no relation-specific modification because its generic same-name grouping
+already merges module relations, constructs union domains/ranges, and retains all
+inventory and `maps_to` annotations.
+The cleanup did require one generic builder capability: every class or relation
+`alt_anchor` is now retained as a second `reuseAnchor` annotation and deterministic
+explanatory comment, without adding logical axioms or entity-specific branches.
+
+The regenerated build reports:
+
+| Element | Count |
+|---|---:|
+| Source class declarations | 75 |
+| Source relation declarations | 105 |
+| Minted CIROH classes | 51 |
+| Referenced external classes | 22 |
+| Object properties | 83 |
+| Datatype properties | 18 |
+| `owl:imports` | 6 |
+
+The generated RDF/XML is 215,494 bytes with SHA-256
+`dc873cad75979ae4599ef48051a5cb11ee2d7425299d6dbfdb3f9ad1d759209b`.
+The single generated `referencesDataset` property has effective domain `Paper ∪
+DocumentationPage ∪ Repository`, range `DatasetResource`, and inventory annotations
+`C-P29`, `C-DC15`, and `C-C19`. Its addition does not increase the object-property
+count because all three declarations share the same formal relation name.
+
+The four added declarations merge into existing properties and therefore leave the
+object-property count at 83. Their signatures are: `references` with domain
+`DatasetResource ∪ DocumentationPage` and range `Paper ∪ Repository ∪
+DatasetResource ∪ DocumentationPage`; `referencesFeature` with domain
+`DatasetResource ∪ DocumentationPage` and range `HydrologicFeature`;
+`mentionsModel` with domain `Paper ∪ DocumentationPage` and range
+`ComputationalModel`; and `mentionsDataset` with domain `Paper ∪ DocumentationPage`
+and range `DatasetMention ∪ DatasetResource`.
+
+Twenty ontology-focused structural tests passed. They cover version `0.1.1`, all
+merged signatures and inventory annotations, `C-DC02i`/`C-DC21` alias traceability,
+the unchanged frozen Hub hierarchy ID, relation-semantic distinctions, 105 unique
+source relation declarations, generic alternative-anchor preservation, and three
+independent-process deterministic builds. The complete project suite passed with 174
+tests before Publication Phase B was added, with 1 environment-based skip and 64
+subtests; the skipped Owlready2 test passed in
+the dedicated ontology environment.
+
+The inventory/YAML reconciliation reports zero unexplained mismatches. Exact IDs,
+shared-entity narrative aliases (including `A-DC04` → `A-P04`), the hierarchy alias
+`C-DC21` → `C-DC02i`, unnumbered technical shared-relation IDs, conceptual D rows,
+extraction-category B rows, and competency-question E rows each have an explicit
+disposition. All 180 class/relation inventory IDs in YAML are unique.
+
+The checked D-01 through D-25 audit now reports zero unexplained missing domain
+branches. Each branch is tied to a compatible relation with explicit `maps_to`, a
+documented grouped-relation realization, or an explicit multi-property mechanism
+such as D-06 or D-16. Three separately spawned builds were byte-identical to the
+canonical artifact and shared the SHA-256 above.
+
+### 7.1 Manual HermiT validation and ontology freeze
+
+Ontology 0.1.1 was manually validated on 2026-07-23 in Protégé 5.6.5 with
+HermiT 1.4.3.456. The validated ontology SHA-256 was
+`dc873cad75979ae4599ef48051a5cb11ee2d7425299d6dbfdb3f9ad1d759209b`.
+Protégé loaded the complete import closure with all six direct imports. The P-Plan
+logical IRI `http://purl.org/net/p-plan` resolved through
+`src/ontology/catalog-v001.xml` to the local document
+`src/ontology/imports/p-plan.owl` before classification.
+
+HermiT completed classification without reporting inconsistency. The ontology was
+consistent, the inferred hierarchy contained zero named classes under `owl:Nothing`,
+and HermiT reported no execution errors. `prov:EmptyCollection` is an imported
+PROV-O class/individual punning case, not an unsatisfiable CIROH class. PROV-O
+generated non-blocking redeclaration warnings for `prov:wasRevisionOf` and
+`prov:specializationOf`. A Fact++ startup warning was unrelated to the HermiT run.
+
+These results apply to ontology 0.1.1 and its complete locally resolved import
+closure.
+
+ELK 0.6.0 was also run in Protégé on 2026-07-23 against the same ontology 0.1.1
+artifact (`dc873cad75979ae4599ef48051a5cb11ee2d7425299d6dbfdb3f9ad1d759209b`)
+and complete locally resolved import closure used for the HermiT validation. ELK
+completed classification without reporting an inconsistency, and zero named classes
+were inferred under `owl:Nothing`. Because ELK supports a smaller OWL profile than
+HermiT, this agreement is expected and is treated as a cross-check rather than fully
+independent confirmation across the ontology's complete expressivity.
+
+The historical ontology 0.1 reasoner record in Section 5 remains separate. With
+structural validation, manual HermiT classification, and the ELK cross-check complete, ontology 0.1.1 is formally frozen for deterministic KG extraction.

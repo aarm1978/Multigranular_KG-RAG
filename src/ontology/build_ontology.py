@@ -359,6 +359,11 @@ def declare_classes(
                     f"Property anchor recorded as alignment annotation, not subclass axiom: {anchor_curie}",
                 )
 
+        alt_anchor = class_spec.get("alt_anchor")
+        if alt_anchor:
+            append_annotation(cls, annotations["reuse_anchor"], alt_anchor)
+            append_comment(cls, f"Alternative reuse anchor: {alt_anchor}")
+
     for class_spec in spec.get("classes", []):
         cls = class_by_name[class_spec["name"]]
         if not should_mint_ciroh_class(class_spec):
@@ -488,6 +493,9 @@ def annotate_relation_group(
         if relation.get("anchor"):
             append_annotation(prop, annotations["reuse_anchor"], relation["anchor"])
             append_comment(prop, f"Reuse anchor: {relation['anchor']}")
+        if relation.get("alt_anchor"):
+            append_annotation(prop, annotations["reuse_anchor"], relation["alt_anchor"])
+            append_comment(prop, f"Alternative reuse anchor: {relation['alt_anchor']}")
         if relation.get("alignment"):
             append_annotation(prop, annotations["alignment_property"], relation["alignment"])
             append_comment(prop, f"Informative alignment: {relation['alignment']}")
