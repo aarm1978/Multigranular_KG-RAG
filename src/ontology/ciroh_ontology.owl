@@ -14,7 +14,7 @@
   <owl:imports rdf:resource="http://www.w3.org/2004/02/skos/core"/>
   <owl:imports rdf:resource="http://purl.org/net/p-plan"/>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts</rdfs:comment>
-  <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.1.1</owl:versionInfo>
+  <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.1.2</owl:versionInfo>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Generated from src/ontology/ontology_spec.yaml by build_ontology.py.</rdfs:comment>
 </owl:Ontology>
 
@@ -262,6 +262,8 @@
       <owl:unionOf rdf:parseType="Collection">
         <rdf:Description rdf:about="#Tool"/>
         <rdf:Description rdf:about="#ComputationalModel"/>
+        <rdf:Description rdf:about="#DatasetResource"/>
+        <rdf:Description rdf:about="http://purl.org/spar/deo/Methods"/>
       </owl:unionOf>
     </owl:Class>
   </rdfs:range>
@@ -269,7 +271,7 @@
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">D-24</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: D-24</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Parent property for describesTool and describesModel.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Parent property for describesTool, describesModel, describesDataset, and describesMethod.</rdfs:comment>
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: documentation body prose</rdfs:comment>
@@ -277,23 +279,58 @@
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>
 
+<owl:ObjectProperty rdf:about="#describesAlgorithm">
+  <rdfs:domain rdf:resource="#Repository"/>
+  <rdfs:range rdf:resource="#Algorithm"/>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C20</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C20</rdfs:comment>
+  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">E</sourceStatus>
+  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: README, notebook Markdown, or CITATION prose with a verbatim quoted span</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#describesDataset">
+  <rdfs:domain rdf:resource="#DocumentationPage"/>
+  <rdfs:range rdf:resource="#DatasetResource"/>
+  <rdfs:subPropertyOf rdf:resource="#describes"/>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-DC27</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-DC27</rdfs:comment>
+  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
+  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: documentation body prose demonstrating that the page is substantially about the dataset or data product</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Subproperty of: describes</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
+</owl:ObjectProperty>
+
 <owl:ObjectProperty rdf:about="#describesFunction">
   <rdfs:domain rdf:resource="#Repository"/>
-  <rdfs:range>
-    <owl:Class>
-      <owl:unionOf rdf:parseType="Collection">
-        <rdf:Description rdf:about="#Function"/>
-        <rdf:Description rdf:about="#Algorithm"/>
-      </owl:unionOf>
-    </owl:Class>
-  </rdfs:range>
+  <rdfs:range rdf:resource="#Function"/>
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C08</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C08</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">E</sourceStatus>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: aka describesAlgorithm</rdfs:comment>
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: dossier prose (LLM, quote)</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#describesMethod">
+  <rdfs:domain rdf:resource="#DocumentationPage"/>
+  <rdfs:range rdf:resource="http://purl.org/spar/deo/Methods"/>
+  <rdfs:subPropertyOf rdf:resource="#describes"/>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-DC28</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-DC28</rdfs:comment>
+  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
+  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: documentation body prose demonstrating that the page explains or documents the method</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Subproperty of: describes</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>
@@ -348,6 +385,8 @@
       <owl:unionOf rdf:parseType="Collection">
         <rdf:Description rdf:about="#Tool"/>
         <rdf:Description rdf:about="#ComputationalModel"/>
+        <rdf:Description rdf:about="#DatasetResource"/>
+        <rdf:Description rdf:about="http://purl.org/spar/deo/Methods"/>
       </owl:unionOf>
     </owl:Class>
   </rdfs:domain>
@@ -419,6 +458,7 @@
   <rdfs:domain>
     <owl:Class>
       <owl:unionOf rdf:parseType="Collection">
+        <rdf:Description rdf:about="#DatasetResource"/>
         <rdf:Description rdf:about="#Repository"/>
         <rdf:Description rdf:about="#DocumentationPage"/>
         <rdf:Description rdf:about="#Procedure"/>
@@ -426,12 +466,15 @@
     </owl:Class>
   </rdfs:domain>
   <rdfs:range rdf:resource="#Workflow"/>
-  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C10</inventoryId>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C10</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-D22</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-D22</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: aka documentsUsage</rdfs:comment>
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">p-plan:</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: p-plan:</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: abstract or README prose with a verbatim quoted span</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C10</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C10</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: aka documentsUsage</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: README/notebook md (LLM)</rdfs:comment>
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-DC09</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-DC09</rdfs:comment>
@@ -511,6 +554,23 @@
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">schema:author</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: schema:author</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: Zotero (det)</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#hasCodeRepository">
+  <rdfs:domain rdf:resource="#Paper"/>
+  <rdfs:range rdf:resource="#Repository"/>
+  <rdfs:subPropertyOf rdf:resource="#referencesRepository"/>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-P33</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-P33</rdfs:comment>
+  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Paper-associated implementation repository; a typed subproperty of referencesRepository.</rdfs:comment>
+  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">schema:codeRepository</reuseAnchor>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: schema:codeRepository</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Maps to inventory relation: D-04</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: explicit code/software availability statement or explicit statement that the repository contains the implementation associated with the paper</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Subproperty of: referencesRepository</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>
@@ -988,10 +1048,10 @@
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">D-22</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: D-22</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: backs D-06</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: backs D-06; use is not implementation; queries may traverse this property in reverse without a duplicate inverse</rdfs:comment>
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: product card / DocCardList links (det)</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: explicit product-card or DocCardList evidence, or quoted README, CITATION, or repository prose stating that the repository implements, provides the source code for, or is the implementation of the Tool or ComputationalModel</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>
@@ -1095,13 +1155,32 @@
 </owl:ObjectProperty>
 
 <owl:ObjectProperty rdf:about="#mentionsConcept">
-  <rdfs:domain rdf:resource="#DocumentationPage"/>
+  <rdfs:domain>
+    <owl:Class>
+      <owl:unionOf rdf:parseType="Collection">
+        <rdf:Description rdf:about="#Paper"/>
+        <rdf:Description rdf:about="#DatasetResource"/>
+        <rdf:Description rdf:about="#Repository"/>
+        <rdf:Description rdf:about="#DocumentationPage"/>
+      </owl:unionOf>
+    </owl:Class>
+  </rdfs:domain>
   <rdfs:range rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
-  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-DC08</inventoryId>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-DC08</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-P30</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-P30</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Concept expressed in paper content; weaker than C-P03 hasSubject.</rdfs:comment>
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">skos:Concept</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: skos:Concept</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: paper prose with a verbatim quoted span</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-D23</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-D23</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: abstract or README prose with a verbatim quoted span</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C26</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C26</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: repository prose with a verbatim quoted span</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-DC08</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-DC08</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: body (LLM)</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
@@ -1145,6 +1224,8 @@
     <owl:Class>
       <owl:unionOf rdf:parseType="Collection">
         <rdf:Description rdf:about="#Paper"/>
+        <rdf:Description rdf:about="#DatasetResource"/>
+        <rdf:Description rdf:about="#Repository"/>
         <rdf:Description rdf:about="#DocumentationPage"/>
       </owl:unionOf>
     </owl:Class>
@@ -1157,11 +1238,63 @@
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: related-work prose (quote)</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-D26</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-D26</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Weaker than C-D25 usesModel.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Maps to inventory relation: D-21</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: abstract or README prose naming or referencing a model without sufficient evidence of use</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C23</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C23</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Weaker than C-C21 usesModel.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: repository prose naming or referencing a model without sufficient evidence of use</rdfs:comment>
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-DC24</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-DC24</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Model mention without sufficient evidence that the page describes, documents, or uses the model; weaker than C-DC16 describesModel.</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Maps to inventory relation: D-21</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: documentation body prose with quoted evidence</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#mentionsParameter">
+  <rdfs:domain rdf:resource="#Repository"/>
+  <rdfs:range rdf:resource="#Parameter"/>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C25</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C25</rdfs:comment>
+  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Weaker than C-C24 usesParameter.</rdfs:comment>
+  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: repository prose naming a parameter without sufficient evidence of use or configuration</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#mentionsTool">
+  <rdfs:domain>
+    <owl:Class>
+      <owl:unionOf rdf:parseType="Collection">
+        <rdf:Description rdf:about="#Paper"/>
+        <rdf:Description rdf:about="#DatasetResource"/>
+        <rdf:Description rdf:about="#Repository"/>
+      </owl:unionOf>
+    </owl:Class>
+  </rdfs:domain>
+  <rdfs:range rdf:resource="#Tool"/>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-P31</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-P31</rdfs:comment>
+  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Tool mention without sufficient evidence of use; citation or name occurrence does not imply C-P15 usesTool.</rdfs:comment>
+  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: related-work, background, citation, or availability prose with a verbatim quoted span</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-D24</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-D24</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Weaker than C-D18 usesTool.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: abstract or README prose that names or references a tool without sufficient evidence of use</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C22</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C22</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Weaker than C-C11 usesTool.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: repository prose naming or referencing a tool without sufficient evidence of use</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>
@@ -1176,14 +1309,7 @@
       </owl:unionOf>
     </owl:Class>
   </rdfs:domain>
-  <rdfs:range>
-    <owl:Class>
-      <owl:unionOf rdf:parseType="Collection">
-        <rdf:Description rdf:about="#Variable"/>
-        <rdf:Description rdf:about="#Parameter"/>
-      </owl:unionOf>
-    </owl:Class>
-  </rdfs:range>
+  <rdfs:range rdf:resource="#Variable"/>
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-P16</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-P16</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">E</sourceStatus>
@@ -1192,9 +1318,6 @@
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: prose (quote)</rdfs:comment>
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C12</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C12</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: aka usesParameter</rdfs:comment>
-  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:/schema:</reuseAnchor>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:/schema:</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>
@@ -1234,7 +1357,14 @@
 </owl:ObjectProperty>
 
 <owl:ObjectProperty rdf:about="#referencePublication">
-  <rdfs:domain rdf:resource="#Repository"/>
+  <rdfs:domain>
+    <owl:Class>
+      <owl:unionOf rdf:parseType="Collection">
+        <rdf:Description rdf:about="#Repository"/>
+        <rdf:Description rdf:about="#DocumentationPage"/>
+      </owl:unionOf>
+    </owl:Class>
+  </rdfs:domain>
   <rdfs:range rdf:resource="#Paper"/>
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C17</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C17</rdfs:comment>
@@ -1245,6 +1375,12 @@
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Maps to inventory relation: D-07</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: CITATION.cff/.md (det) / prose</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Typed subproperty reference: cito:cites</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-DC26</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-DC26</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Documentation-module realization merged with C-C17 referencePublication.</rdfs:comment>
+  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: explicit publication DOI, bibliographic citation, or publication link in documentation prose</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>
@@ -1345,14 +1481,30 @@
 </owl:ObjectProperty>
 
 <owl:ObjectProperty rdf:about="#referencesRepository">
-  <rdfs:domain rdf:resource="#DocumentationPage"/>
+  <rdfs:domain>
+    <owl:Class>
+      <owl:unionOf rdf:parseType="Collection">
+        <rdf:Description rdf:about="#Paper"/>
+        <rdf:Description rdf:about="#Repository"/>
+        <rdf:Description rdf:about="#DocumentationPage"/>
+      </owl:unionOf>
+    </owl:Class>
+  </rdfs:domain>
   <rdfs:range rdf:resource="#Repository"/>
-  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-DC14</inventoryId>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-DC14</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-P32</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-P32</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Generic repository reference; weaker than C-P33 hasCodeRepository.</rdfs:comment>
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Maps to inventory relation: D-04</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: explicit GitHub/repository reference whose context does not establish that it is the paper's code repository</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C27</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C27</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Generic repository reference; dependsOnRepository, forkedFrom, and archivedAs take precedence.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: explicit repository URL or repository name in prose when dependency, fork, archive-equivalence, or another stronger relation is not supported</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-DC14</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-DC14</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: github.com URL (det)</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
@@ -1612,6 +1764,8 @@
       <owl:unionOf rdf:parseType="Collection">
         <rdf:Description rdf:about="#Paper"/>
         <rdf:Description rdf:about="http://purl.org/spar/deo/Methods"/>
+        <rdf:Description rdf:about="#DatasetResource"/>
+        <rdf:Description rdf:about="#Repository"/>
       </owl:unionOf>
     </owl:Class>
   </rdfs:domain>
@@ -1623,6 +1777,25 @@
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: Methods prose (quote)</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-D25</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-D25</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: abstract or README prose explicitly establishing that the resource uses, executes, configures, or was generated with the model</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C21</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C21</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: repository prose explicitly establishing actual use, execution, configuration, dependency, or invocation as part of a workflow</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#usesParameter">
+  <rdfs:domain rdf:resource="#Repository"/>
+  <rdfs:range rdf:resource="#Parameter"/>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C24</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C24</rdfs:comment>
+  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
+  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: README, configuration explanation, or notebook prose explicitly establishing that the parameter is used or configured</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>
@@ -1637,14 +1810,7 @@
       </owl:unionOf>
     </owl:Class>
   </rdfs:domain>
-  <rdfs:range>
-    <owl:Class>
-      <owl:unionOf rdf:parseType="Collection">
-        <rdf:Description rdf:about="#Tool"/>
-        <rdf:Description rdf:about="#ComputationalModel"/>
-      </owl:unionOf>
-    </owl:Class>
-  </rdfs:range>
+  <rdfs:range rdf:resource="#Tool"/>
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-P15</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-P15</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
@@ -1653,11 +1819,11 @@
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: prose</rdfs:comment>
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-D18</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-D18</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Dataset-module tool/model-use relation; not the D-21 mentionsModel property.</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: abstract/README prose</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Dataset-module tool-use relation; model use is represented separately by C-D25 usesModel.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: abstract/README prose explicitly establishing tool use</rdfs:comment>
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C11</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C11</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: aka mentionsModel</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: repository prose explicitly establishing actual tool use or dependency</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>

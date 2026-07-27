@@ -1,5 +1,7 @@
 # Ontology Inventory — Study 2 (Phase 1 closure)
 
+**Current semantic version:** 0.1.2 — 75 class declarations and 125 source relation declarations. This additive/corrective LLM-readiness patch accepts the frozen ontology-0.1.1 deterministic graphs unchanged.
+
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 **Companion to `Study2_Ontology_v0.1.md` (concepts + namespaces §3.1). Vocabulary reuse verified (validation 1); schema fit-checked on 6 real artifacts (validation 2, Etapa A) — GO, with the schema-change log below applied.**
 
@@ -173,6 +175,10 @@ Person canonicalization across four regimes (ORCID / name+affiliation+email / na
 | C-P27 | `hasParameter` | `Method`/`Experiment`/`ComputationalModel` → `Parameter` | `schema:` (`PropertyValue`) | param tables / prose (quote) | intra · consol | S (E paper) |
 | C-P28 | `usesAlgorithm` | `Method` → `Algorithm` | `ciroh:` | Methods prose (quote) | intra · consol | E |
 | C-P29 | `referencesDataset` | `Paper` → `DatasetResource` | `cito:citesAsDataSource` / `dcterms:references` | reference DOI deterministically typed as dataset | cross | S · consol (→ D-05) |
+| C-P30 | `mentionsConcept` | `Paper` → `Concept` | `skos:Concept` | paper prose with a verbatim quoted span | intra | S · consol; weaker than `hasSubject` |
+| C-P31 | `mentionsTool` | `Paper` → `Tool` | `ciroh:` | related-work, background, citation, or availability prose with a verbatim quoted span | cross+same | S · consol; weaker than `usesTool` |
+| C-P32 | `referencesRepository` | `Paper` → `Repository` | `ciroh:` | explicit repository reference without paper-code ownership evidence | cross | S · consol (→ D-04) |
+| C-P33 | `hasCodeRepository` ⊑ `referencesRepository` | `Paper` → `Repository` | `schema:codeRepository` | explicit code/software availability or associated-implementation statement | cross | S · consol (→ D-04) |
 
 `C-P20`, `C-P24`, and `C-P29` are intentionally distinct. `usesDataset` records evidence that a paper used a dataset; `mentionsDataset` records a dataset mention without proof of use or bibliographic citation; `referencesDataset` records a bibliographic reference deterministically typed as a dataset citation.
 
@@ -231,10 +237,15 @@ Person canonicalization across four regimes (ORCID / name+affiliation+email / na
 | C-D15 | `referencesFeature` | → `HydrologicFeature` | `ciroh:` | `geospatial_relations` geoconnex URI (det) | cross | S · consol |
 | C-D16 | `containsVariable` | → `Variable` | `ciroh:` | abstract/README prose (quote) | intra | E |
 | C-D17 | `hasMeasurement` | → `Measurement` | `ciroh:` | README prose | intra | E |
-| C-D18 | `usesTool` | `DatasetResource` → `ComputationalModel`/`Tool` | `ciroh:` | abstract/README prose | cross+same | S · consol; distinct from D-21 `mentionsModel` |
+| C-D18 | `usesTool` | `DatasetResource` → `Tool` | `ciroh:` | abstract/README prose explicitly establishing tool use | cross+same | S · consol |
 | C-D19 | `references` (README URLs / citation) | `DatasetResource` → `Paper`/`Repository`/`DatasetResource` | `dcterms:references` | README URL regex / `related_resources` DOI (det) | cross | S |
 | C-D20 | `isExecutedBy` | `DatasetResource` → `Tool` | `ciroh:` (alignment: `hsterms:isExecutedBy`) | `typed_relations` `hsterms:isExecutedBy` / `target_resource_id` (det) | cross | S · consol |
 | C-D21 | `executes` | `Tool` → `DatasetResource` | `ciroh:` | inverse of `isExecutedBy` | cross | S |
+| C-D22 | `explainsWorkflow` | `DatasetResource` → `Workflow` | `p-plan:` | abstract or README prose with a verbatim quoted span | intra | S |
+| C-D23 | `mentionsConcept` | `DatasetResource` → `Concept` | `skos:Concept` | abstract or README prose with a verbatim quoted span | intra | S · consol |
+| C-D24 | `mentionsTool` | `DatasetResource` → `Tool` | `ciroh:` | prose naming a tool without sufficient evidence of use | cross+same | S · consol |
+| C-D25 | `usesModel` | `DatasetResource` → `ComputationalModel` | `ciroh:` | prose establishing use, execution, configuration, or generation with the model | cross+same | S · consol |
+| C-D26 | `mentionsModel` | `DatasetResource` → `ComputationalModel` | `ciroh:` | prose naming a model without sufficient evidence of use | cross+same | S · consol (→ D-21) |
 
 ---
 
@@ -281,11 +292,11 @@ Person canonicalization across four regimes (ORCID / name+affiliation+email / na
 | C-C05 | `hasLicense` | → `License` | SPDX | `repo_metadata` (det) | intra | S |
 | C-C06 | `hasIdentifier` | → `Identifier` (URL, SHA, DOI) | `schema:codeRepository`; `prov` | `archive_info` (det) | intra | S |
 | C-C07 | `hasPurpose` | → `RepositoryPurpose` | `ciroh:` | README (LLM, quote) | intra | S |
-| C-C08 | `describesFunction`/`describesAlgorithm` | `Repository` → `Function`/`Algorithm` | `ciroh:` | dossier prose (LLM, quote) | intra | E |
+| C-C08 | `describesFunction` | `Repository` → `Function` | `ciroh:` | dossier prose (LLM, quote) | intra | E |
 | C-C09 | `hasModelVersion` | → `ModelVersion` | `schema:softwareVersion` | release tag/`CITATION`/README | intra | E |
 | C-C10 | `explainsWorkflow`/`documentsUsage` | → `Workflow` | `p-plan:`; `ciroh:` | README/notebook md (LLM) | intra | S |
-| C-C11 | `usesTool`/`mentionsModel` | → `Tool`/`ComputationalModel` | `ciroh:` | prose | cross+same | S · consol |
-| C-C12 | `mentionsVariable`/`usesParameter` | → `Variable`/`Parameter` | `ciroh:`/`schema:` | prose (quote) | cross+same | E · consol |
+| C-C11 | `usesTool` | `Repository` → `Tool` | `ciroh:` | prose explicitly establishing actual tool use or dependency | cross+same | S · consol |
+| C-C12 | `mentionsVariable` | `Repository` → `Variable` | `ciroh:` | prose (quote) | cross+same | E · consol |
 | C-C13 | `dependsOnRepository` | `Repository` → `Repository` | `ciroh:` (no standard repo→repo dep) | `github.com` links / dep files | same | S/E |
 | C-C14 | `forkedFrom` | `Repository` → `Repository` | `ciroh:` | `fork` flag (det); parent via README/Binder badge | same | flag S · **parent E** |
 | C-C15 | `usesDataset` | → `DatasetResource` | `ciroh:` | README/notebook HydroShare URL | cross | S (→ D-01) |
@@ -293,14 +304,26 @@ Person canonicalization across four regimes (ORCID / name+affiliation+email / na
 | C-C17 | `referencePublication`/`citesPaper` | → `Paper` | `codemeta:referencePublication` (+ `cito:cites`) | `CITATION.cff`/`.md` (det) / prose | cross | S (→ D-07) |
 | C-C18 | `archivedAs`/`sameSoftwareAs` | `Repository` → archived DOI snapshot | `datacite:relatedIdentifier` (IsVersionOf/IsDerivedFrom) | repo README DOI ↔ paper-cited DOI (det where matched) | same | E (→ D-20) |
 | C-C19 | `referencesDataset` | `Repository` → `DatasetResource` | `dcterms:references` | explicit dataset DOI or URL in repository documentation without evidence of use | cross | S · consol (→ D-05) |
+| C-C20 | `describesAlgorithm` | `Repository` → `Algorithm` | `ciroh:` | README, notebook Markdown, or CITATION prose with a verbatim quoted span | intra | E |
+| C-C21 | `usesModel` | `Repository` → `ComputationalModel` | `ciroh:` | prose establishing actual model use, execution, configuration, dependency, or invocation as part of a workflow | cross+same | S · consol; use ≠ implementation |
+| C-C22 | `mentionsTool` | `Repository` → `Tool` | `ciroh:` | prose naming a tool without sufficient evidence of use | cross+same | S · consol |
+| C-C23 | `mentionsModel` | `Repository` → `ComputationalModel` | `ciroh:` | prose naming a model without sufficient evidence of use | cross+same | S · consol (→ D-21) |
+| C-C24 | `usesParameter` | `Repository` → `Parameter` | `ciroh:` | README, configuration explanation, or notebook prose establishing use/configuration | cross+same | S · consol |
+| C-C25 | `mentionsParameter` | `Repository` → `Parameter` | `ciroh:` | prose naming a parameter without sufficient evidence of use/configuration | cross+same | S · consol |
+| C-C26 | `mentionsConcept` | `Repository` → `Concept` | `skos:Concept` | repository prose with a verbatim quoted span | intra | S · consol |
+| C-C27 | `referencesRepository` | `Repository` → `Repository` | `ciroh:` | explicit repository URL/name without stronger semantics | same | S · consol (→ D-04); stronger relations take precedence |
 
 `C-C15 usesDataset` requires evidence that the repository uses the dataset. `C-C19 referencesDataset` records an explicit dataset reference without sufficient evidence of use; the relations remain semantically and structurally distinct.
+
+`C-C21 usesModel` does not assert that the repository implements the model. Model or
+tool implementation is represented by `D-22 implementedBy` and may be traversed in
+reverse from a repository; no duplicate `implementsModel` inverse is declared.
 
 ---
 
 # Part 5 — Module 4: Documentation (CIROH Hub)
 
-> **`pageType`:** {product-catalog, product-doc, service-doc, policy, guide, blog-post, news, release-note}; gating **confirmed** (catalog fires the hub, not Procedure/Step; guide fires Procedure/Step, not the hub). **Product = Option B** with **hierarchical aggregation** (a composite product e.g. NGIAB → distributions/components → repos/docs), not flat. Source provenance: "Edit this page" → `.mdx` path. MDX admonitions (`:::warning`/`:::note`) → `Example`/structured note (minor).
+> **`pageType`:** {product-catalog, product-doc, service-doc, policy, guide, blog-post, news, release-note}; gating **confirmed** (catalog fires the hub, not Procedure/Step; guide fires Procedure/Step, not the hub). **Historical product-hub design: hierarchical aggregation** (a composite product e.g. NGIAB → distributions/components → repos/docs), not flat. The separate ontology-modeling decision of whether product cards directly represent domain entities or use a `CatalogEntry`/`ResearchProduct` intermediate class remains deferred and is not changed by ontology 0.1.2. Source provenance: "Edit this page" → `.mdx` path. MDX admonitions (`:::warning`/`:::note`) → `Example`/structured note (minor).
 
 ## Table A — Entity classes
 | # | Class | Kind | Extraction | Reuse anchor | Status |
@@ -356,6 +379,9 @@ Person canonicalization across four regimes (ORCID / name+affiliation+email / na
 | C-DC23 | `referencesFeature` | `DocumentationPage` → `HydrologicFeature` | `ciroh:` | explicit geoconnex/hydrologic-feature URI or body prose with quoted evidence | cross | S · consol (→ D-18); distinct from place mentions and spatial coverage |
 | C-DC24 | `mentionsModel` | `DocumentationPage` → `ComputationalModel` | `ciroh:` | body prose with quoted evidence | cross+same | S · consol (→ D-21); weaker than C-DC16 `describesModel` |
 | C-DC25 | `mentionsDataset` | `DocumentationPage` → `DatasetResource` | `ciroh:` | body prose with quoted evidence | cross | S · consol (→ D-21); distinct from C-DC15 `referencesDataset` |
+| C-DC26 | `referencePublication` | `DocumentationPage` → `Paper` | `ciroh:` | explicit publication DOI, bibliographic citation, or publication link in prose | cross | S · consol (→ D-07) |
+| C-DC27 | `describesDataset` ⊑ `describes` | `DocumentationPage` → `DatasetResource` | `ciroh:` | body prose substantially about the dataset/data product | cross | S · consol |
+| C-DC28 | `describesMethod` ⊑ `describes` | `DocumentationPage` → `Method` | `ciroh:` | body prose explaining or documenting the method | cross | S · consol |
 
 > `Procedure` is reachable both directly (`hasProcedure`) and via `hasSection` (C-DC01) → `Section` → `Procedure`; the explicit edge is what E-09 traverses.
 
@@ -368,10 +394,10 @@ Person canonicalization across four regimes (ORCID / name+affiliation+email / na
 | D-01 | `usesDataset` | `Paper`/`Repository` → `DatasetResource` | cross | `ciroh:` | data-availability / README HydroShare URL (det)+prose | yes | S |
 | D-02 | `implementsMethod`/`implementedBy` | `Repository`/`Tool` ↔ `Method`-in-`Paper` | cross | `ciroh:` (+ `cito:usesMethodIn` by reference) | README + Methods prose | via Method/Model | S |
 | D-03 | `documents`/`mirrors` | `DocumentationPage` → `Repository` | cross | `ciroh:` | `<GitHubReadme>` tag (det) | yes | S (deterministic) |
-| D-04 | `referencesRepository` | `DocumentationPage`/`DatasetResource` → `Repository` | cross | `ciroh:` | `github.com` URL (det) | — | S |
+| D-04 | `referencesRepository` | `DocumentationPage`/`DatasetResource`/`Paper`/`Repository` → `Repository` | cross+same | `ciroh:` / `schema:codeRepository` / generic `dcterms:references` branch | explicit repository reference; stronger relation where supported | yes | S |
 | D-05 | `referencesDataset` | `DocumentationPage`/`Repository`/`Paper` → `DatasetResource` | cross | `cito:citesAsDataSource` (paper→dataset) / `ciroh:` | `hydroshare.org/resource/{id}` URL (det) | yes | S |
 | D-06 | product-catalog **hierarchical** aggregation (`catalogs` + `hasComponent` + `implementedBy`+`documentedBy`+`referencesDataset`+`describedInPaper`) | `DocumentationPage`(product-catalog) → product `Tool`/`ComputationalModel` → {components/distributions} → {repo, doc, dataset, paper} | cross | `ciroh:` | product card / DocCardList links (det) | **densest hub** | S |
-| D-07 | `referencePublication`/`citesPaper` | `Repository` → `Paper` | cross | `codemeta:referencePublication` (+ `cito:cites`) | `CITATION.cff`/`.md` (det) / prose | — | S |
+| D-07 | `referencePublication`/`citesPaper` | `Repository`/`DocumentationPage` → `Paper` | cross | `codemeta:referencePublication` (+ `cito:cites`) / `ciroh:` | CFF or explicit documentation citation/DOI/link | yes | S |
 | D-08 | `cites` (+ typed) | `Paper` → `Paper` | same | `cito:cites` (+ `citesAsEvidence`/`usesMethodIn`/`extends`) | reference DOI (det) | — | S |
 | D-09 | `corrects`/`isCorrigendumOf` | `Paper` → `Paper` | same | `cito:`/`ciroh:` | corrigendum record (det) | — | S |
 | D-10 | `hasMember`/`isMemberOf` | `DatasetResource`(Collection) ↔ `DatasetResource` | same | `dcterms:hasPart`/`dcterms:isPartOf` | `collection_summary`/`target_resource_id` (det) | — | S |
@@ -385,11 +411,11 @@ Person canonicalization across four regimes (ORCID / name+affiliation+email / na
 | D-18 | `studiesFeature`/`referencesFeature` | `Paper`/`Dataset`/`Doc` → `HydrologicFeature` | cross+same | `ciroh:` | geoconnex URI (det) + prose | yes | S/E |
 | D-19 | `announces`/`references` | `DocumentationPage`(release-note/blog) → PR(`Repository`)/page/`Tool` | cross | `ciroh:` | dated entry + PR/page links (det) | — | S |
 | D-20 | `archivedAs`/`sameSoftwareAs` | `Repository` ↔ archived DOI snapshot (Zenodo) | same | `datacite:relatedIdentifier` (IsVersionOf/IsDerivedFrom) | repo DOI ↔ paper-cited DOI (det **where the cross-identifier matches**) | links stub↔curated | **E** |
-| D-21 | `mentionsModel`/`mentionsDataset` | `Paper`/`Doc` → `ComputationalModel`/`DatasetResource` (mentioned, **not** used) | cross+same | `ciroh:` (distinct from `usesModel`/`usesDataset`) | related-work / prose (quote) | yes | S |
-| D-22 | `implementedBy` | product/component `Tool`/`ComputationalModel` → `Repository` | cross | `ciroh:` (backs D-06) | product card / DocCardList links (det) | yes | S |
+| D-21 | `mentionsModel`/`mentionsDataset` | model: `Paper`/`DocumentationPage`/`Repository`/`DatasetResource` → `ComputationalModel`; dataset: `Paper`/`DocumentationPage` → `DatasetMention`/`DatasetResource` | cross+same | `ciroh:` (distinct from use) | related-work / prose (quote) | yes | S |
+| D-22 | `implementedBy` | product/component `Tool`/`ComputationalModel` → `Repository` | cross | `ciroh:` (backs D-06) | explicit product-card/DocCardList evidence, or quoted README/CITATION/repository prose stating implementation or source-code provision | yes | S; use ≠ implementation |
 | D-23 | `describedInPaper` | `Tool`/`ComputationalModel` → `Paper` | cross | `ciroh:` (backs D-06) | product card links (det) | yes | S |
-| D-24 | `describes` | `DocumentationPage` → `Tool`/`ComputationalModel` | cross | `ciroh:` | documentation body prose | yes | S |
-| D-25 | `documentedBy` | `Tool`/`ComputationalModel` → `DocumentationPage` | cross | `ciroh:` | inverse of `describes` | yes | S |
+| D-24 | `describes` | `DocumentationPage` → `Tool`/`ComputationalModel`/`DatasetResource`/`Method` | cross | `ciroh:` | documentation body prose | yes | S |
+| D-25 | `documentedBy` | `Tool`/`ComputationalModel`/`DatasetResource`/`Method` → `DocumentationPage` | cross | `ciroh:` | inverse of `describes` | yes | S |
 
 `D-05` is realized through module-specific relations: `C-DC15` for `DocumentationPage` → `DatasetResource`, `C-P29` for `Paper` → `DatasetResource`, and `C-C19` for `Repository` → `DatasetResource`. `C-D19` retains its separate DatasetResource-origin generic-reference semantics.
 
@@ -399,7 +425,15 @@ for the D-21 `mentionsModel`/`mentionsDataset` pair. D-19 is a grouped conceptua
 announcement/reference family; its current formal Documentation-module realization
 is `C-DC18 announces`.
 
-> **D-06 backing edges:** the aggregation now has explicit, traversable relations — `catalogs` (C-DC17), `hasComponent` (C-DC19), **`implementedBy`** (D-22), **`describedInPaper`** (D-23), and **`documentedBy`** (D-25). `describesTool`/`describesModel` are subproperties of `describes` (D-24), and `documentedBy` is its inverse. This lets E-05, E-10, and E-14 traverse directly from a product/component node to its repo and paper.
+For 0.1.2, D-04 is realized formally by `C-DC14`, `C-P32`, `C-P33`, and
+`C-C27`; `C-D19` remains the separate generic `references` property that
+conceptually realizes the DatasetResource branch. D-07 is realized by `C-C17`
+and `C-DC26`. The D-21 model branch is realized by `C-P23`, `C-DC24`, `C-C23`,
+and `C-D26`; its dataset branch remains `C-P24` and `C-DC25`. D-24 includes
+typed subproperties `C-DC07`, `C-DC16`, `C-DC27`, and `C-DC28`, and D-25 remains
+its broadened inverse.
+
+> **D-06 backing edges:** the aggregation has explicit, traversable relations — `catalogs` (C-DC17), `hasComponent` (C-DC19), **`implementedBy`** (D-22), **`describedInPaper`** (D-23), and **`documentedBy`** (D-25). `describesTool`, `describesModel`, `describesDataset`, and `describesMethod` are subproperties of `describes` (D-24), and `documentedBy` is its inverse. Ontology 0.1.2 does not otherwise change or resolve the deferred product-catalog design.
 > **Declared inverse pairs:** `hasMember` ⇄ `isMemberOf` for dataset collection membership; `isExecutedBy` ⇄ `executes` for dataset/tool execution; `hasSubPage` ⇄ `isPartOf` for documentation page hierarchy; `documentedBy` ⇄ `describes`, with `describesTool`/`describesModel` as subproperties of `describes`.
 > **D-20 resolution rule:** an externally-referenced stub (e.g. a Zenodo DOI) whose `relatedIdentifier` metadata points to a curated corpus repository is **linked to that repository**, so paper mentions reach the curated entity. Where the cross-identifier does **not** match (the `deep_bucket_lab` case: paper DOI `10.5281/zenodo.14538196` ≠ repo README sandbox DOI), the link is low-confidence/omitted — **never inferred by name**.
 > **Cited-DOI typing rule** (citation extractor): classify a reference by identifier type — a **software/dataset DOI** (e.g. a Zenodo software DOI) in the reference list is typed as a stub `Tool`/`Repository`/`DatasetResource`, **not** a `Paper`-stub; a **paper DOI** is a `Paper`-stub. Required so `archivedAs` (domain `Repository`, D-20) can attach to a software stub (E-26).
@@ -426,16 +460,16 @@ is `C-DC18 announces`.
 | E-13 | Which hypotheses does a paper test, and which claims does it support — kept distinct? | A-P23, A-P24, A-P16 | C-P08, C-P09 | no (E-class) |
 | E-14 | For a composite product (e.g. NGIAB), what are its components/distributions, repos, docs, dataset, and paper? | A-DOM02, A-C01, A-DC01, A-D01, A-P01 | D-06 (`catalogs` + `hasComponent` + `implementedBy` D-22 + `describedInPaper` D-23 + `documentedBy` D-25) | yes (hierarchical hub) |
 | E-15 | Which papers cite a given paper *as a data source* vs. *as evidence* vs. *extend* it? | A-P01 | D-08 (typed CiTO) | same-type |
-| E-16 | For NWM (process-based): which papers use it, repos implement it, docs describe it? | A-DOM03a, A-P01, A-C01, A-DC01 | C-P13, C-C11, C-DC16, D-16 | yes (consolidation) |
+| E-16 | For NWM (process-based): which papers use it, repos implement it, docs describe it? | A-DOM03a, A-P01, A-C01, A-DC01 | C-P13, D-22, C-DC16, D-16 | yes (consolidation) |
 | E-17 | Which configuration files / dependencies and which file roles does a repo expose? | A-C01, A-C02, A-C03 | C-C01, C-C02 | no (deterministic; `fileRole`) |
-| E-18 | Which functions/algorithms are described in prose for a given repository? | A-C01, A-C08, A-DOM13 | C-C08 | no (E-class) |
+| E-18 | Which functions/algorithms are described in prose for a given repository? | A-C01, A-C08, A-DOM13 | C-C08, C-C20 | no (E-class) |
 | E-19 | Which collections does a HydroShare resource belong to, and what app does a ToolResource launch? | A-D01, A-D10 | D-10, D-12 | yes |
 | E-20 | Which release notes announce PRs to a given repository, and which pages did they add? | A-DC01, A-C01 | D-19 | yes |
 | E-21 | Which hydrologic features vs. named places vs. spatial-coverage geometries link to a dataset? | A-DOM07*, A-DOM08, A-DOM09, A-D01 | D-18 (`referencesFeature`), `hasSpatialCoverage` (C-D07/C-P19), `studiesPlace` (C-P18) | yes |
 | E-22 | Which awards fund resources/papers, and through which agency (incl. ROR)? | A-D09, A-AG02, A-D01 | `fundedBy` (A-AG-R2), `Award` (A-D09) | yes (funding trace) |
 | E-23 | For a given model, which methods are *applied to* it, which *algorithms* do those methods use, and what type is the model? | A-DOM03*, A-P13, A-DOM13 | C-P14, C-P28 | no (Model/Method/Algorithm) |
 | E-24 | Which performance metrics (and values) are reported for model M, and which method/experiment produced them? | A-DOM11, A-DOM03*, A-P13 | C-P25, C-P26 | same-type (metric consolidation) |
-| E-25 | Which calibrated parameters (with physical ranges) does a process-based model use, across papers and repos? | A-DOM12, A-DOM03a, A-C01 | C-P27, C-C12, D-16 | yes |
+| E-25 | Which calibrated parameters (with physical ranges) does a process-based model use, across papers and repos? | A-DOM12, A-DOM03a, A-C01 | C-P27, C-C24, D-16 | yes |
 | E-26 | For a paper-cited Zenodo DOI, which curated corpus repository archives the same software? | A-C01, A-ID01 | D-20 (+ resolution rule) | yes (stub↔curated) |
 
 ---
@@ -454,7 +488,11 @@ is `C-DC18 announces`.
 - **Added (val 3, all additive):** product-hub backing edges `implementedBy` (D-22) + `describedInPaper` (D-23), `documentedBy` confirmed as inverse of C-DC07/C-DC16; agent-layer `affiliatedWith` (A-AG-R1) + `fundedBy` (A-AG-R2); `hasProcedure` (C-DC20); cited-DOI typing rule (software/dataset DOI → software stub, not `Paper`-stub); E-21/E-22 relation-ID corrections.
 - **`ciroh:` short list (the contribution):** `ComputationalModel` hierarchy + Model/Method/Algorithm discriminant; `EvaluationMetric`; `Algorithm`; `Aquifer`/`VPU`; controlled classifications (`ResourceType`, `RepositoryPurpose`, `productCategory`); `Variable`/`Measurement` semantics; `ToolConfiguration`; `dependsOnRepository`; mention-vs-use + `archivedAs` resolution + product-hub backing edges; the PEO-aligned discourse classes not in DEO + PEO relation vocabulary; the cross-artifact (R2O) relation semantics. `Parameter` reuses `schema:PropertyValue`.
 
-**Outcome.** Validations 1–3 complete; schema-change logs applied. Validation 3 (CQ dry-run): **23/26 CQs unchanged; the remaining 3 resolved by 5 additive fixes** (no restructuring). **Schema frozen — ready for Protégé.** Remaining: **Etapa B** (LLM pilot on the same 6+ artifacts — re-tests Model/Method and `Measurement` coverage, calibrates cost for Dr. Gong's approval, seeds the Phase-2 gold standard) → Protégé → HermiT (Phase 4).
+**Current outcome.** The deterministic ABox backbone is complete and frozen. Ontology
+0.1.2 has passed structural validation but is not yet frozen; it awaits manual Protégé
+validation with HermiT and ELK. The current sequence is: ontology 0.1.2 source review
+→ OWL regeneration and structural tests → manual HermiT and ELK validation → ontology
+0.1.2 freeze → ontology-guided LLM pilot.
 
 ## Protégé import notes (from validation 1)
 - DEO: prefix `deo:` expands with slash `http://purl.org/spar/deo/`; **import canonical** `http://purl.org/spar/deo`.

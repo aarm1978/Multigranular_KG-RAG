@@ -23,6 +23,29 @@ OWL_PATH = PROJECT_ROOT / "src/ontology/ciroh_ontology.owl"
 BUILDER_PATH = PROJECT_ROOT / "src/ontology/build_ontology.py"
 INVENTORY_PATH = PROJECT_ROOT / "docs/ontology_inventory.md"
 HUB_OUTPUT_PATH = PROJECT_ROOT / "data/interim/documents/ciroh_hub_nodes_edges.json"
+FROZEN_OUTPUT_HASHES = {
+    PROJECT_ROOT / "data/interim/papers/publication_nodes_edges.json": "675049dae5c3dfed6f492ad0aa79e27fc1a9b37d0ecbc13ab3cf1a69cdb8efaf",
+    PROJECT_ROOT / "data/interim/datasets/hydroshare_nodes_edges.json": "c76c1cf9c88fe2a91f4927bd3bd4fc03456e3a2a83190bd3d8c47076f2acb7e3",
+    PROJECT_ROOT / "data/interim/coderepos/github_nodes_edges.json": "2f752295a7d465acd094672b0a5961ffd1fe5453d6d576fc497e284068d901a6",
+    HUB_OUTPUT_PATH: "c106c410b6f84a2755d17cec4629b90d5b145c0813c2866005cb20bcea649602",
+}
+
+# Frozen Phase B outputs preserve several explicit narrative aliases/composite
+# labels from their ontology-0.1.1 extraction contracts. They remain accepted
+# compatibility spellings in 0.1.2 without rewriting any frozen graph.
+FROZEN_NODE_COMPATIBILITY = {
+    ("A-D06", "Subject"): "A-P04",
+    ("A-D07→A-DOM09", "SpatialCoverage"): "A-DOM09",
+    ("A-D08→A-DOM10", "TemporalCoverage"): "A-DOM10",
+    ("A-C02", "File"): "A-C02",
+    ("A-C06", "License"): "A-D05",
+}
+FROZEN_EDGE_COMPATIBILITY = {
+    ("A-ID01 (ID-R1)", "hasIdentifier"): "ID-R1",
+    ("C-D09 / A-AG-R2", "fundedBy"): "C-D09",
+    ("C-DC05/A-AG", "hasContributor"): "C-DC05",
+    ("D-05", "referencesDataset"): "C-C19",
+}
 
 NS = {
     "ciroh": "https://w3id.org/ciroh/ontology#",
@@ -32,6 +55,7 @@ NS = {
 }
 RDF_ABOUT = f"{{{NS['rdf']}}}about"
 RDF_RESOURCE = f"{{{NS['rdf']}}}resource"
+GENERATED_CLASS_LOCAL_ALIASES = {"Methods": "Method", "Data": "DataDescription"}
 
 # Narrative module IDs that consolidate into shared or canonical machine-readable
 # ontology IDs. This is an explicit traceability registry, not a fuzzy matcher.
@@ -60,11 +84,11 @@ GLOBAL_RELATION_BRANCHES = [
     ("D-01", {"Paper", "Repository"}, {"DatasetResource"}, {"C-P20", "C-C15"}, "mapped", "Paper and repository dataset use"),
     ("D-02", {"Repository", "Tool"}, {"Method"}, {"C-C16"}, "mapped", "Code implementation of paper methods"),
     ("D-03", {"DocumentationPage"}, {"Repository"}, {"C-DC13"}, "grouped", "documents/mirrors is the documented module realization"),
-    ("D-04", {"DocumentationPage"}, {"Repository"}, {"C-DC14"}, "mapped", "Documentation repository references"),
+    ("D-04", {"DocumentationPage", "Paper", "Repository"}, {"Repository"}, {"C-DC14", "C-P32", "C-P33", "C-C27"}, "mapped", "Formal repository-reference property branches"),
     ("D-04", {"DatasetResource"}, {"Repository"}, {"C-D19"}, "grouped", "Dataset-origin generic references include repositories"),
     ("D-05", {"DocumentationPage", "Repository", "Paper"}, {"DatasetResource"}, {"C-DC15", "C-C19", "C-P29"}, "mapped", "All three approved dataset-reference branches"),
     ("D-06", {"DocumentationPage", "Tool", "ComputationalModel"}, {"Tool", "ComputationalModel", "Repository", "Paper", "DocumentationPage", "DatasetResource"}, {"C-DC17", "C-DC19", "C-DC15", "D-22", "D-23", "D-24", "D-25"}, "mechanism", "Product catalog aggregation uses seven named backing properties"),
-    ("D-07", {"Repository"}, {"Paper"}, {"C-C17"}, "mapped", "Repository publication reference"),
+    ("D-07", {"Repository", "DocumentationPage"}, {"Paper"}, {"C-C17", "C-DC26"}, "mapped", "Repository and documentation publication references"),
     ("D-08", {"Paper"}, {"Paper"}, {"C-P21"}, "mapped", "Paper citation"),
     ("D-09", {"Paper"}, {"Paper"}, {"C-P22"}, "mapped", "Corrigendum relation"),
     ("D-10", {"DatasetResource"}, {"DatasetResource"}, {"C-D12", "C-D13"}, "grouped", "Forward and inverse collection membership"),
@@ -81,13 +105,13 @@ GLOBAL_RELATION_BRANCHES = [
     ("D-19", {"DocumentationPage"}, {"Repository", "DocumentationPage", "Tool"}, {"C-DC18"}, "grouped", "announces is the formal realization of the announcement/reference family"),
     ("D-20", {"Repository"}, {"Identifier"}, {"C-C18"}, "mapped", "Archived snapshot identifier relation"),
     ("D-21", {"Paper"}, {"ComputationalModel"}, {"C-P23"}, "grouped", "Paper model mention"),
-    ("D-21", {"DocumentationPage"}, {"ComputationalModel"}, {"C-DC24"}, "mapped", "Documentation model mention"),
+    ("D-21", {"DocumentationPage", "Repository", "DatasetResource"}, {"ComputationalModel"}, {"C-DC24", "C-C23", "C-D26"}, "mapped", "Documentation, repository, and dataset model mentions"),
     ("D-21", {"Paper"}, {"DatasetMention", "DatasetResource"}, {"C-P24"}, "grouped", "Paper dataset mention"),
     ("D-21", {"DocumentationPage"}, {"DatasetResource"}, {"C-DC25"}, "mapped", "Documentation dataset mention"),
     ("D-22", {"Tool", "ComputationalModel"}, {"Repository"}, {"D-22"}, "global", "Product implementation backing edge"),
     ("D-23", {"Tool", "ComputationalModel"}, {"Paper"}, {"D-23"}, "global", "Product publication backing edge"),
-    ("D-24", {"DocumentationPage"}, {"Tool", "ComputationalModel"}, {"D-24", "C-DC07", "C-DC16"}, "mechanism", "Parent property plus typed description subproperties"),
-    ("D-25", {"Tool", "ComputationalModel"}, {"DocumentationPage"}, {"D-25"}, "global", "Inverse documentation relation"),
+    ("D-24", {"DocumentationPage"}, {"Tool", "ComputationalModel", "DatasetResource", "Method"}, {"D-24", "C-DC07", "C-DC16", "C-DC27", "C-DC28"}, "mechanism", "Parent property plus four typed description subproperties"),
+    ("D-25", {"Tool", "ComputationalModel", "DatasetResource", "Method"}, {"DocumentationPage"}, {"D-25"}, "global", "Inverse documentation relation"),
 ]
 
 
@@ -146,14 +170,19 @@ def as_set(value: Any) -> set[str]:
 
 def property_expression_members(prop: ET.Element, axis: str) -> set[str]:
     """Return local class names from a generated property domain or range."""
+    def ontology_class_name(iri: str) -> str:
+        """Map reused external local names back to ontology specification names."""
+        local_name = iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
+        return GENERATED_CLASS_LOCAL_ALIASES.get(local_name, local_name)
+
     element = prop.find(f"rdfs:{axis}", NS)
     if element is None:
         return set()
     direct = element.get(RDF_RESOURCE)
     if direct:
-        return {direct.rsplit("#", 1)[-1].rsplit("/", 1)[-1]}
+        return {ontology_class_name(direct)}
     return {
-        str(item.get(RDF_ABOUT)).rsplit("#", 1)[-1].rsplit("/", 1)[-1]
+        ontology_class_name(str(item.get(RDF_ABOUT)))
         for item in element.findall("owl:Class/owl:unionOf/rdf:Description", NS)
         if item.get(RDF_ABOUT)
     }
@@ -179,7 +208,7 @@ def inventory_table_ids() -> set[str]:
 
 
 class OntologyFormalizationPatchTests(unittest.TestCase):
-    """Verify the complete ontology 0.1.1 formalization patch."""
+    """Verify the complete ontology 0.1.2 LLM-readiness patch."""
 
     def test_c_p29_declaration(self) -> None:
         """C-P29 realizes the Paper-domain branch of global D-05."""
@@ -192,11 +221,11 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
         self.assertEqual(relation["alt_anchor"], "dcterms:references")
         self.assertTrue(relation["consol"])
 
-    def test_generated_version_is_0_1_1(self) -> None:
+    def test_generated_version_is_0_1_2(self) -> None:
         """The generated ontology records the patched semantic version."""
         version = parse_owl().find("owl:Ontology/owl:versionInfo", NS)
         self.assertIsNotNone(version)
-        self.assertEqual(version.text, "0.1.1")
+        self.assertEqual(version.text, "0.1.2")
 
     def test_c_dc15_remains_documentation_page_relation(self) -> None:
         """The existing documentation realization remains unchanged."""
@@ -297,9 +326,9 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
         }
         self.assertEqual(reuse_anchors, {"dcterms:references"})
 
-    def test_generated_object_property_count_remains_83(self) -> None:
-        """The added module declaration merges without minting a new property."""
-        self.assertEqual(len(parse_owl().findall("owl:ObjectProperty", NS)), 83)
+    def test_generated_object_property_count_is_90(self) -> None:
+        """Twenty declarations add exactly seven distinct object properties."""
+        self.assertEqual(len(parse_owl().findall("owl:ObjectProperty", NS)), 90)
 
     def test_has_sub_page_machine_id_and_narrative_alias(self) -> None:
         """C-DC02i remains formal while C-DC21 is comment-only traceability."""
@@ -369,9 +398,9 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
                 {"C-D15", "C-DC23"},
             ),
             "mentionsModel": (
-                {"Paper", "DocumentationPage"},
+                {"Paper", "DocumentationPage", "DatasetResource", "Repository"},
                 {"ComputationalModel"},
-                {"C-P23", "C-DC24"},
+                {"C-P23", "C-DC24", "C-D26", "C-C23"},
             ),
             "mentionsDataset": (
                 {"Paper", "DocumentationPage"},
@@ -387,13 +416,111 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
                 self.assertEqual(property_expression_members(properties[0], "range"), ranges)
                 self.assertEqual(property_inventory_ids(properties[0]), inventory_ids)
 
-    def test_source_relation_declaration_count_is_105(self) -> None:
-        """The patch adds four declarations without changing class declarations."""
+    def test_source_relation_declaration_count_is_125(self) -> None:
+        """The patch adds twenty declarations without changing classes."""
         spec = load_spec()
         self.assertEqual(len(spec["classes"]), 75)
-        self.assertEqual(len(spec["relations"]), 105)
+        self.assertEqual(len(spec["relations"]), 125)
         all_ids = [entry["id"] for section in ("classes", "relations") for entry in spec[section]]
         self.assertEqual(len(all_ids), len(set(all_ids)))
+
+    def test_corrected_and_new_property_signatures(self) -> None:
+        """Corrected collapsed declarations generate the approved signatures."""
+        expected = {
+            "usesTool": ({"Paper", "DatasetResource", "Repository"}, {"Tool"}, {"C-P15", "C-D18", "C-C11"}),
+            "mentionsTool": ({"Paper", "DatasetResource", "Repository"}, {"Tool"}, {"C-P31", "C-D24", "C-C22"}),
+            "usesModel": ({"Paper", "Method", "DatasetResource", "Repository"}, {"ComputationalModel"}, {"C-P13", "C-D25", "C-C21"}),
+            "mentionsModel": ({"Paper", "DocumentationPage", "DatasetResource", "Repository"}, {"ComputationalModel"}, {"C-P23", "C-DC24", "C-D26", "C-C23"}),
+            "mentionsVariable": ({"Paper", "DataDescription", "Repository"}, {"Variable"}, {"C-P16", "C-C12"}),
+            "mentionsConcept": ({"Paper", "DatasetResource", "Repository", "DocumentationPage"}, {"Concept"}, {"C-P30", "C-D23", "C-C26", "C-DC08"}),
+            "explainsWorkflow": ({"DocumentationPage", "Procedure", "Repository", "DatasetResource"}, {"Workflow"}, {"C-DC09", "C-C10", "C-D22"}),
+            "referencesRepository": ({"DocumentationPage", "Paper", "Repository"}, {"Repository"}, {"C-DC14", "C-P32", "C-C27"}),
+            "referencePublication": ({"Repository", "DocumentationPage"}, {"Paper"}, {"C-C17", "C-DC26"}),
+            "describes": ({"DocumentationPage"}, {"Tool", "ComputationalModel", "DatasetResource", "Method"}, {"D-24"}),
+            "documentedBy": ({"Tool", "ComputationalModel", "DatasetResource", "Method"}, {"DocumentationPage"}, {"D-25"}),
+        }
+        for name, (domains, ranges, inventory_ids) in expected.items():
+            with self.subTest(property=name):
+                prop = object_properties(parse_owl(), name)
+                self.assertEqual(len(prop), 1)
+                self.assertEqual(property_expression_members(prop[0], "domain"), domains)
+                self.assertEqual(property_expression_members(prop[0], "range"), ranges)
+                self.assertEqual(property_inventory_ids(prop[0]), inventory_ids)
+
+    def test_use_mention_and_split_semantics_are_distinct(self) -> None:
+        """Use, mention, function, algorithm, variable, and parameter remain distinct."""
+        relations = {item["id"]: item for item in load_spec()["relations"]}
+        self.assertNotEqual(relations["C-P15"]["name"], relations["C-P31"]["name"])
+        self.assertNotEqual(relations["C-P13"]["name"], relations["C-P23"]["name"])
+        self.assertNotEqual(relations["C-C24"]["name"], relations["C-C25"]["name"])
+        self.assertNotEqual(relations["C-C08"]["name"], relations["C-C20"]["name"])
+        self.assertEqual(as_set(relations["C-C12"]["range"]), {"Variable"})
+        self.assertNotIn("Parameter", as_set(relations["C-C12"]["range"]))
+
+    def test_repository_model_use_is_not_implementation(self) -> None:
+        """C-C21 use evidence stays distinct from D-22 implementation evidence."""
+        uses_model = relation_by_id("C-C21")
+        implemented_by = relation_by_id("D-22")
+        use_evidence = uses_model["evidence"].casefold()
+        implementation_evidence = implemented_by["evidence"].casefold()
+
+        self.assertNotIn("implementation", use_evidence)
+        self.assertNotIn("implements", use_evidence)
+        for required in ("use", "execution", "configuration", "dependency", "workflow"):
+            self.assertIn(required, use_evidence)
+        self.assertEqual(as_set(implemented_by["domain"]), {"Tool", "ComputationalModel"})
+        self.assertEqual(as_set(implemented_by["range"]), {"Repository"})
+        for required in ("product-card", "doccardlist", "readme", "citation", "implements"):
+            self.assertIn(required, implementation_evidence)
+
+    def test_approved_subproperties_and_inverse_are_generated(self) -> None:
+        """Typed specializations and the broadened inverse survive serialization."""
+        expected_subproperties = {
+            "hasCodeRepository": "referencesRepository",
+            "describesDataset": "describes",
+            "describesMethod": "describes",
+        }
+        for child, parent in expected_subproperties.items():
+            with self.subTest(child=child):
+                prop = object_properties(parse_owl(), child)[0]
+                subproperty = prop.find("rdfs:subPropertyOf", NS)
+                self.assertIsNotNone(subproperty)
+                self.assertEqual(subproperty.get(RDF_RESOURCE), f"#{parent}")
+        documented_by = object_properties(parse_owl(), "documentedBy")[0]
+        inverse = documented_by.find("owl:inverseOf", NS)
+        self.assertIsNotNone(inverse)
+        self.assertEqual(inverse.get(RDF_RESOURCE), "#describes")
+
+    def test_frozen_phase_b_outputs_are_unchanged_and_resolve(self) -> None:
+        """Frozen 0.1.1 graphs remain byte-identical and compatible with 0.1.2."""
+        spec = load_spec()
+        classes = {item["id"]: item["name"] for item in spec["classes"]}
+        relations = {item["id"]: item["name"] for item in spec["relations"]}
+        for path, expected_hash in FROZEN_OUTPUT_HASHES.items():
+            with self.subTest(path=path):
+                self.assertTrue(path.exists())
+                self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), expected_hash)
+                output = json.loads(path.read_text(encoding="utf-8"))
+                for node in output["nodes"]:
+                    pair = (node["inventoryId"], node["class"])
+                    if classes.get(pair[0]) == pair[1]:
+                        continue
+                    self.assertIn(pair, FROZEN_NODE_COMPATIBILITY)
+                    self.assertIn(FROZEN_NODE_COMPATIBILITY[pair], classes)
+                for edge in output["edges"]:
+                    pair = (edge["inventoryId"], edge["relation"])
+                    if relations.get(pair[0]) == pair[1]:
+                        continue
+                    self.assertIn(pair, FROZEN_EDGE_COMPATIBILITY)
+                    self.assertIn(FROZEN_EDGE_COMPATIBILITY[pair], relations)
+
+    def test_corrected_llm_ids_have_no_frozen_edges(self) -> None:
+        """The four corrected declarations were unused by deterministic Phase B."""
+        corrected_ids = {"C-C08", "C-C11", "C-C12", "C-D18"}
+        for path in FROZEN_OUTPUT_HASHES:
+            output = json.loads(path.read_text(encoding="utf-8"))
+            hits = [edge for edge in output["edges"] if edge["inventoryId"] in corrected_ids]
+            self.assertEqual(hits, [], str(path))
 
     def test_inventory_yaml_reconciliation_has_no_unexplained_mismatch(self) -> None:
         """Narrative IDs reconcile exactly, by approved alias, or by documented role."""

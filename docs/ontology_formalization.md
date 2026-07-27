@@ -2,6 +2,10 @@
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 
+**Current semantic version:** 0.1.2. This additive/corrective LLM-readiness
+relation patch supersedes 0.1.1 only at the TBox level; frozen deterministic Phase B
+graphs remain ontology-0.1.1 products and are accepted unchanged.
+
 **Purpose.** This document records the *formalization* phase: how the validated
 conceptual schema was translated into a machine-readable OWL/RDF ontology, the
 translation decisions taken, and the reasoner-based validation of the result. It
@@ -118,6 +122,19 @@ inventory IDs as annotations. One conceptual relation maps to one property; the 
 domain expresses "any of these subject types," avoiding the design smell of encoding
 the domain in suffixed property names.
 
+Ontology 0.1.2 uses this mechanism for the approved LLM-facing families. The merged
+signatures are: `mentionsConcept` (`Paper`/`DatasetResource`/`Repository`/
+`DocumentationPage` → `Concept`); `usesTool` (`Paper`/`DatasetResource`/`Repository`
+→ `Tool`); `mentionsTool` over the same domains and range; `usesModel` (`Paper`/
+`Method`/`DatasetResource`/`Repository` → `ComputationalModel`); `mentionsModel`
+(`Paper`/`DocumentationPage`/`DatasetResource`/`Repository` →
+`ComputationalModel`); `mentionsVariable` (`Paper`/`DataDescription`/`Repository` →
+`Variable`); `explainsWorkflow` (`DocumentationPage`/`Procedure`/`Repository`/
+`DatasetResource` → `Workflow`); `referencesRepository` (`DocumentationPage`/
+`Paper`/`Repository` → `Repository`, with the DatasetResource conceptual branch kept
+as generic `references`); and `referencePublication` (`Repository`/
+`DocumentationPage` → `Paper`). Use and mention properties remain distinct.
+
 `isPartOf` was the exception: it carried two genuinely distinct senses — dataset→
 collection membership and documentation page→page hierarchy. These were **split** into
 `isMemberOf` (dataset↔collection) and `isPartOf` (page hierarchy), each with its own
@@ -163,10 +180,16 @@ A small set of inverse and sub-property axioms was declared, guided by the compe
 questions and the lightweight principle:
 - `hasMember` ⇄ `isMemberOf` (dataset collection membership)
 - `hasSubPage` ⇄ `isPartOf` (documentation page hierarchy)
-- `documentedBy` ⇄ `describes`, with `describesTool` and `describesModel` as
+- `documentedBy` ⇄ `describes`, with `describesTool`, `describesModel`,
+  `describesDataset`, and `describesMethod` as
   sub-properties of a parent `describes` — this realizes the `documentedBy` inverse
   named in the competency-question validation and completes the product-hub aggregation
   (`catalogs` + `hasComponent` + `implementedBy` + `describedInPaper` + `documentedBy`).
+
+The historical product-hub decision here is hierarchical aggregation. The separate
+ontology-modeling decision of whether product cards directly represent domain entities
+or use a `CatalogEntry`/`ResearchProduct` intermediate class remains deferred and is
+not changed by ontology 0.1.2.
 
 Most other reverse traversals were **deliberately not** given inverse properties,
 because both SPARQL and the property-graph query layer (Cypher) traverse relations in
@@ -175,18 +198,28 @@ only when the reverse direction needs a name in the schema (as `documentedBy` do
 when the reasoner should materialize it; minting inverses for every relation would
 contradict the lightweight design without adding query capability.
 
+This applies specifically to D-22: `implementedBy` retains the logical direction
+`Tool`/`ComputationalModel` → `Repository`, and queries may traverse it in reverse.
+Its evidence may be an explicit product card/DocCardList or quoted README, CITATION,
+or repository prose stating implementation or source-code provision. Repository
+`usesModel` instead requires actual use, execution, configuration, dependency, or
+workflow invocation. **Use is not implementation**, so no duplicate
+`implementsModel` inverse is introduced.
+
 ---
 
 ## 4. The generated ontology
 
 `build_ontology.py` (owlready2) reads the specification and emits `ciroh_ontology.owl`
-in RDF/XML. The immediately preceding 0.1 specification builds with these figures:
+in RDF/XML. Ontology 0.1.2 builds with these figures:
 
 | Element | Count |
 |---|---|
 | Minted CIROH classes | 51 |
 | Referenced external classes | 22 |
-| Object properties | 83 |
+| Source class declarations | 75 |
+| Source relation declarations | 125 |
+| Object properties | 90 |
 | Datatype properties | 18 |
 | `owl:imports` | 6 |
 
@@ -205,6 +238,13 @@ The earlier value of 81 was accurate for the initial formalization commit
 count to 83. Rebuilding both historical commits reproduces 81 and 83 respectively.
 The 0.1.1 `C-P29` declaration does not add another property because it merges into the
 already-existing `referencesDataset` property.
+
+Relative to 0.1.1, the class count is unchanged, source relation declarations increase
+from 105 to 125, and generated object properties increase from 83 to 90. The seven
+new property names are `mentionsTool`, `hasCodeRepository`, `describesAlgorithm`,
+`usesParameter`, `mentionsParameter`, `describesDataset`, and `describesMethod`; the
+other new declarations merge into existing properties. The generated 0.1.2 artifact
+SHA-256 is `2857dc9f8e578367f6d2608da7e05d2ff5b2113fd41ff6c34047b90574b53ee7`.
 
 Traceability annotations attached to every entity include the inventory ID, the reuse
 anchor, the S/E/F status, the node kind, and — for property-anchored classes — the
@@ -249,18 +289,24 @@ point.
 **Current 0.1.1 status.** The formalization patch passed structural and
 deterministic-build validation and was manually validated with HermiT and cross-checked with ELK in Protégé on 2026-07-23. Ontology 0.1.1 is formally frozen for deterministic KG extraction; the complete validation record appears in Section 7.1.
 
+**Current 0.1.2 status.** Local generation, RDF/XML structural checks, merged-property
+regressions, inventory reconciliation, frozen-output compatibility checks, and
+three-build byte determinism are complete. Manual Protégé validation is also complete:
+HermiT passed with ontology consistency and zero unsatisfiable named classes; ELK
+completed with profile-incompleteness warnings and is retained only as a profile-limited
+classification cross-check. Ontology 0.1.2 is formally frozen. The 0.1.1 reasoner
+record below remains historical.
+
 **Stated as out-of-TBox (for the manuscript).** Two design commitments are enforced
 outside OWL and must be described as such: (i) evidence completeness for
 externally-typed nodes is guaranteed by the extraction rule and validated in the ABox,
 not by an OWL restriction; (ii) edge-level evidence is materialized as relationship
 properties in the property graph, not as OWL axioms.
 
-**Remaining (next phases).** Populate the ABox by extracting instances from the corpus
-— first the deterministic extractor (metadata, manifests, identifiers, file roles;
-no LLM required), then the LLM extractor for the discourse and domain-entity layers —
-loading the result into the property graph under this schema. Reasoner-based ABox
-checks (e.g. consistency of the populated graph) and the competency questions as
-executable queries follow once instances exist.
+**Current process boundary.** The deterministic ABox backbone and ontology 0.1.2 are
+complete and formally frozen. No deterministic extractor needs to be rerun. The next
+authorized KG-construction activity is design of the ontology-guided LLM extraction
+target inventory and its evidence/output contract before production extraction code.
 
 ---
 
@@ -393,3 +439,55 @@ independent confirmation across the ontology's complete expressivity.
 
 The historical ontology 0.1 reasoner record in Section 5 remains separate. With
 structural validation, manual HermiT classification, and the ELK cross-check complete, ontology 0.1.1 is formally frozen for deterministic KG extraction.
+
+---
+
+## 8. LLM-readiness relation patch 0.1.2 (2026-07-27)
+
+Ontology 0.1.2 is an additive and corrective relation patch. It adds no class and
+does not reopen deterministic extraction. It separates the collapsed 0.1.1 ranges
+`C-D18 usesTool` (`Tool` only), `C-C08 describesFunction` (`Function` only),
+`C-C11 usesTool` (`Tool` only), and `C-C12 mentionsVariable` (`Variable` only), then
+adds the approved model, algorithm, parameter, mention, reference, workflow, and
+typed-description declarations under new stable IDs. D-04, D-07, D-21, D-24, and
+D-25 are broadened exactly as recorded in the inventory.
+
+The preflight inspected all four frozen Phase B outputs and found no edge using
+`C-C08`, `C-C11`, `C-C12`, or `C-D18`. Their recorded SHA-256 values were:
+
+| Frozen ontology-0.1.1 output | SHA-256 before and after the 0.1.2 build |
+|---|---|
+| `data/interim/papers/publication_nodes_edges.json` | `675049dae5c3dfed6f492ad0aa79e27fc1a9b37d0ecbc13ab3cf1a69cdb8efaf` |
+| `data/interim/datasets/hydroshare_nodes_edges.json` | `c76c1cf9c88fe2a91f4927bd3bd4fc03456e3a2a83190bd3d8c47076f2acb7e3` |
+| `data/interim/coderepos/github_nodes_edges.json` | `2f752295a7d465acd094672b0a5961ffd1fe5453d6d576fc497e284068d901a6` |
+| `data/interim/documents/ciroh_hub_nodes_edges.json` | `c106c410b6f84a2755d17cec4629b90d5b145c0813c2866005cb20bcea649602` |
+
+The compatibility regression resolves every frozen node class/inventory ID and edge
+relation/inventory ID directly or through the extraction contracts' explicit 0.1.1
+spellings: class aliases `A-D06` → `A-P04`, `A-D07→A-DOM09` → `A-DOM09`,
+`A-D08→A-DOM10` → `A-DOM10`, frozen `A-C02 File` → formal `A-C02 RepoFile`, and
+`A-C06` → `A-D05`; edge spellings `A-ID01 (ID-R1)` → `ID-R1`,
+`C-D09 / A-AG-R2` → `C-D09`, `C-DC05/A-AG` → `C-DC05`, and frozen global `D-05
+referencesDataset` → its `C-C19` module realization. These compatibility rules accept
+the existing bytes; they do not rewrite, consolidate, or migrate any node or edge.
+
+The canonical build reports 51 minted CIROH classes, 22 specification-referenced
+external classes, 90 object properties, 18 datatype properties, six imports, and 125
+source relation declarations. Its SHA-256 is
+`2857dc9f8e578367f6d2608da7e05d2ff5b2113fd41ff6c34047b90574b53ee7`.
+
+### 8.1 Manual HermiT and ELK validation
+
+Ontology 0.1.2 was manually validated in Protégé against the generated OWL artifact with SHA-256 `2857dc9f8e578367f6d2608da7e05d2ff5b2113fd41ff6c34047b90574b53ee7`.
+
+HermiT completed classification of the ontology and its resolved import closure without reporting an inconsistency or an execution error. No named classes were inferred under `owl:Nothing`. Ontology 0.1.2 was therefore found to be logically consistent, with zero unsatisfiable named classes under HermiT.
+
+ELK also completed class, object-property, data-property, and instance taxonomy computation without an execution error, and no named classes were observed under `owl:Nothing`. ELK reported potential incompleteness because the loaded ontology closure contains constructs outside the OWL 2 EL profile, including data-cardinality axioms and other unsupported OWL constructs. Consequently, the ELK run is recorded as a profile-limited classification cross-check rather than an independent full-consistency validation.
+
+The reasoner-validation outcome for ontology 0.1.2 is therefore:
+
+* HermiT: PASS — ontology consistent; zero unsatisfiable named classes.
+* ELK: COMPLETED WITH PROFILE-INCOMPLETENESS WARNINGS — no execution error and zero observed unsatisfiable named classes, but full satisfiability checking was not available for the complete ontology closure.
+
+With structural validation and the manual reasoner review complete, ontology 0.1.2 is
+formally frozen at the validated SHA-256 recorded above.

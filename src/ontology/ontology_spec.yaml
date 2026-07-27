@@ -20,7 +20,7 @@ ontology:
   iri: "https://w3id.org/ciroh/ontology#"
   prefix: ciroh
   title: "Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts"
-  version: "0.1.1"
+  version: "0.1.2"
 
 # -----------------------------------------------------------------------------
 # Namespaces / imports (v0.1 §3.1).
@@ -360,6 +360,21 @@ relations:
      evidence: "reference DOI deterministically typed as dataset", type: cross, consol: true,
      status: S, maps_to: D-05,
      note: "Paper-module realization of D-05; bibliographic dataset citation, not dataset use; distinct from C-P20 usesDataset and C-P24 mentionsDataset"}
+  - {id: C-P30, name: mentionsConcept, domain: Paper, range: Concept,
+     anchor: "skos:Concept", evidence: "paper prose with a verbatim quoted span", type: intra, consol: true, status: S,
+     note: "Concept expressed in paper content; weaker than C-P03 hasSubject."}
+  - {id: C-P31, name: mentionsTool, domain: Paper, range: Tool,
+     anchor: "ciroh:", evidence: "related-work, background, citation, or availability prose with a verbatim quoted span",
+     type: [cross, same], consol: true, status: S,
+     note: "Tool mention without sufficient evidence of use; citation or name occurrence does not imply C-P15 usesTool."}
+  - {id: C-P32, name: referencesRepository, domain: Paper, range: Repository,
+     anchor: "ciroh:", evidence: "explicit GitHub/repository reference whose context does not establish that it is the paper's code repository",
+     type: cross, consol: true, status: S, maps_to: D-04,
+     note: "Generic repository reference; weaker than C-P33 hasCodeRepository."}
+  - {id: C-P33, name: hasCodeRepository, domain: Paper, range: Repository,
+     anchor: "schema:codeRepository", evidence: "explicit code/software availability statement or explicit statement that the repository contains the implementation associated with the paper",
+     type: cross, consol: true, status: S, maps_to: D-04, subproperty_of: referencesRepository,
+     note: "Paper-associated implementation repository; a typed subproperty of referencesRepository."}
 
   # ---- Module 2: Dataset / HydroShare (Table C) ----
   - {id: C-D01, name: hasResourceType, domain: DatasetResource, range: ResourceType, anchor: "ciroh:", evidence: "resource_type (det)", type: intra, status: S}
@@ -385,7 +400,7 @@ relations:
   - {id: C-D15, name: referencesFeature, domain: DatasetResource, range: HydrologicFeature, anchor: "ciroh:", evidence: "geospatial_relations geoconnex URI (det)", type: cross, consol: true, status: S}
   - {id: C-D16, name: containsVariable, domain: DatasetResource, range: Variable, anchor: "ciroh:", evidence: "abstract/README prose (quote)", type: intra, status: E}
   - {id: C-D17, name: hasMeasurement, domain: DatasetResource, range: Measurement, anchor: "ciroh:", evidence: "README prose", type: intra, status: E}
-  - {id: C-D18, name: usesTool, domain: DatasetResource, range: [ComputationalModel, Tool], anchor: "ciroh:", evidence: "abstract/README prose", type: [cross, same], consol: true, status: S, note: "Dataset-module tool/model-use relation; not the D-21 mentionsModel property."}
+  - {id: C-D18, name: usesTool, domain: DatasetResource, range: Tool, anchor: "ciroh:", evidence: "abstract/README prose explicitly establishing tool use", type: [cross, same], consol: true, status: S, note: "Dataset-module tool-use relation; model use is represented separately by C-D25 usesModel."}
   - {id: C-D19, name: references, domain: DatasetResource, range: [Paper, Repository, DatasetResource],
      anchor: "dcterms:references", evidence: "README URL regex / related_resources DOI (det)", type: cross, status: S,
      note: "Generic outgoing reference from a DatasetResource; not the Paper-module realization of D-05"}
@@ -396,6 +411,19 @@ relations:
   - {id: C-D21, name: executes, domain: Tool, range: DatasetResource, anchor: "ciroh:",
      evidence: "inverse of isExecutedBy", type: cross, status: S, inverse_of: isExecutedBy,
      note: "Inverse of isExecutedBy; answers 'which resources run in this tool/JupyterHub'"}
+  - {id: C-D22, name: explainsWorkflow, domain: DatasetResource, range: Workflow,
+     anchor: "p-plan:", evidence: "abstract or README prose with a verbatim quoted span", type: intra, status: S}
+  - {id: C-D23, name: mentionsConcept, domain: DatasetResource, range: Concept,
+     anchor: "skos:Concept", evidence: "abstract or README prose with a verbatim quoted span", type: intra, consol: true, status: S}
+  - {id: C-D24, name: mentionsTool, domain: DatasetResource, range: Tool,
+     anchor: "ciroh:", evidence: "abstract or README prose that names or references a tool without sufficient evidence of use",
+     type: [cross, same], consol: true, status: S, note: "Weaker than C-D18 usesTool."}
+  - {id: C-D25, name: usesModel, domain: DatasetResource, range: ComputationalModel,
+     anchor: "ciroh:", evidence: "abstract or README prose explicitly establishing that the resource uses, executes, configures, or was generated with the model",
+     type: [cross, same], consol: true, status: S}
+  - {id: C-D26, name: mentionsModel, domain: DatasetResource, range: ComputationalModel,
+     anchor: "ciroh:", evidence: "abstract or README prose naming or referencing a model without sufficient evidence of use",
+     type: [cross, same], consol: true, status: S, maps_to: D-21, note: "Weaker than C-D25 usesModel."}
 
   # ---- Module 3: Code Repository (Table C) ----
   - {id: C-C01, name: hasFile, domain: Repository, range: RepoFile, anchor: "schema:hasPart", evidence: "files_manifest (det)", type: intra, status: S}
@@ -405,11 +433,11 @@ relations:
   - {id: C-C05, name: hasLicense, domain: Repository, range: License, anchor: "spdx:", evidence: "repo_metadata (det)", type: intra, status: S}
   - {id: C-C06, name: hasIdentifier, domain: Repository, range: Identifier, anchor: "schema:codeRepository", evidence: "archive_info (det)", type: intra, status: S, same_as: ID-R1}
   - {id: C-C07, name: hasPurpose, domain: Repository, range: RepositoryPurpose, anchor: "ciroh:", evidence: "README (LLM, quote)", type: intra, status: S}
-  - {id: C-C08, name: describesFunction, domain: Repository, range: [Function, Algorithm], anchor: "ciroh:", evidence: "dossier prose (LLM, quote)", type: intra, status: E, note: "aka describesAlgorithm"}
+  - {id: C-C08, name: describesFunction, domain: Repository, range: Function, anchor: "ciroh:", evidence: "dossier prose (LLM, quote)", type: intra, status: E}
   - {id: C-C09, name: hasModelVersion, domain: Repository, range: ModelVersion, anchor: "schema:softwareVersion", evidence: "release tag/CITATION/README", type: intra, status: E}
   - {id: C-C10, name: explainsWorkflow, domain: Repository, range: Workflow, anchor: "p-plan:", evidence: "README/notebook md (LLM)", type: intra, status: S, note: "aka documentsUsage"}
-  - {id: C-C11, name: usesTool, domain: Repository, range: [Tool, ComputationalModel], anchor: "ciroh:", evidence: "prose", type: [cross, same], consol: true, status: S, note: "aka mentionsModel"}
-  - {id: C-C12, name: mentionsVariable, domain: Repository, range: [Variable, Parameter], anchor: "ciroh:/schema:", evidence: "prose (quote)", type: [cross, same], consol: true, status: E, note: "aka usesParameter"}
+  - {id: C-C11, name: usesTool, domain: Repository, range: Tool, anchor: "ciroh:", evidence: "repository prose explicitly establishing actual tool use or dependency", type: [cross, same], consol: true, status: S}
+  - {id: C-C12, name: mentionsVariable, domain: Repository, range: Variable, anchor: "ciroh:", evidence: "prose (quote)", type: [cross, same], consol: true, status: E}
   - {id: C-C13, name: dependsOnRepository, domain: Repository, range: Repository, anchor: "ciroh:", evidence: "github.com links / dep files", type: same, status: S, status_note: "S/E", note: "no standard repo->repo dep"}
   - {id: C-C14, name: forkedFrom, domain: Repository, range: Repository, anchor: "ciroh:", evidence: "fork flag (det); parent via README/Binder badge", type: same, status: S, status_note: "flag S · parent E"}
   - {id: C-C15, name: usesDataset, domain: Repository, range: DatasetResource, anchor: "ciroh:", evidence: "README/notebook HydroShare URL", type: cross, status: S, maps_to: D-01}
@@ -421,6 +449,29 @@ relations:
      evidence: "explicit dataset DOI or URL in repository documentation without evidence of use",
      type: cross, consol: true, status: S, maps_to: D-05,
      note: "Repository-module realization of D-05; records a dataset reference without sufficient evidence of use; distinct from C-C15 usesDataset"}
+  - {id: C-C20, name: describesAlgorithm, domain: Repository, range: Algorithm,
+     anchor: "ciroh:", evidence: "README, notebook Markdown, or CITATION prose with a verbatim quoted span", type: intra, status: E}
+  - {id: C-C21, name: usesModel, domain: Repository, range: ComputationalModel,
+     anchor: "ciroh:", evidence: "repository prose explicitly establishing actual use, execution, configuration, dependency, or invocation as part of a workflow",
+     type: [cross, same], consol: true, status: S}
+  - {id: C-C22, name: mentionsTool, domain: Repository, range: Tool,
+     anchor: "ciroh:", evidence: "repository prose naming or referencing a tool without sufficient evidence of use",
+     type: [cross, same], consol: true, status: S, note: "Weaker than C-C11 usesTool."}
+  - {id: C-C23, name: mentionsModel, domain: Repository, range: ComputationalModel,
+     anchor: "ciroh:", evidence: "repository prose naming or referencing a model without sufficient evidence of use",
+     type: [cross, same], consol: true, status: S, maps_to: D-21, note: "Weaker than C-C21 usesModel."}
+  - {id: C-C24, name: usesParameter, domain: Repository, range: Parameter,
+     anchor: "ciroh:", evidence: "README, configuration explanation, or notebook prose explicitly establishing that the parameter is used or configured",
+     type: [cross, same], consol: true, status: S}
+  - {id: C-C25, name: mentionsParameter, domain: Repository, range: Parameter,
+     anchor: "ciroh:", evidence: "repository prose naming a parameter without sufficient evidence of use or configuration",
+     type: [cross, same], consol: true, status: S, note: "Weaker than C-C24 usesParameter."}
+  - {id: C-C26, name: mentionsConcept, domain: Repository, range: Concept,
+     anchor: "skos:Concept", evidence: "repository prose with a verbatim quoted span", type: intra, consol: true, status: S}
+  - {id: C-C27, name: referencesRepository, domain: Repository, range: Repository,
+     anchor: "ciroh:", evidence: "explicit repository URL or repository name in prose when dependency, fork, archive-equivalence, or another stronger relation is not supported",
+     type: same, consol: true, status: S, maps_to: D-04,
+     note: "Generic repository reference; dependsOnRepository, forkedFrom, and archivedAs take precedence."}
 
   # ---- Module 4: Documentation / CIROH Hub (Table C) ----
   - {id: C-DC01, name: hasSection, domain: DocumentationPage, range: Section, anchor: "doco:hasPart", evidence: "heading hierarchy (det)", type: intra, status: S}
@@ -462,6 +513,16 @@ relations:
      anchor: "ciroh:", evidence: "documentation body prose with quoted evidence",
      type: cross, consol: true, status: S, maps_to: D-21,
      note: "Dataset mention without sufficient evidence of use or explicit identifier-based reference; distinct from C-DC15 referencesDataset."}
+  - {id: C-DC26, name: referencePublication, domain: DocumentationPage, range: Paper,
+     anchor: "ciroh:", evidence: "explicit publication DOI, bibliographic citation, or publication link in documentation prose",
+     type: cross, consol: true, status: S, maps_to: D-07,
+     note: "Documentation-module realization merged with C-C17 referencePublication."}
+  - {id: C-DC27, name: describesDataset, domain: DocumentationPage, range: DatasetResource,
+     anchor: "ciroh:", evidence: "documentation body prose demonstrating that the page is substantially about the dataset or data product",
+     type: cross, consol: true, status: S, subproperty_of: describes}
+  - {id: C-DC28, name: describesMethod, domain: DocumentationPage, range: Method,
+     anchor: "ciroh:", evidence: "documentation body prose demonstrating that the page explains or documents the method",
+     type: cross, consol: true, status: S, subproperty_of: describes}
 
   # ---- Global cross-artifact relations unique to Table D (not already a module C row) ----
   - {id: D-17, name: generatedBy, domain: DatasetResource, range: Repository, anchor: "prov:wasGeneratedBy", evidence: "explicit metadata/README (det/quote)", type: cross, status: S, status_note: "S explicit · F inferred"}
@@ -469,12 +530,12 @@ relations:
      range: [ComputationalModel, Tool, Variable, Concept, HydrologicFeature, EvaluationMetric, Parameter, Algorithm],
      anchor: "ciroh:", evidence: "prose (LLM) + geoconnex (det)", type: [cross, same], consol: true, status: S,
      note: "shared-domain consolidation — the mechanism; canonical-entity linking"}
-  - {id: D-22, name: implementedBy, domain: [Tool, ComputationalModel], range: Repository, anchor: "ciroh:", evidence: "product card / DocCardList links (det)", type: cross, consol: true, status: S, note: "backs D-06"}
+  - {id: D-22, name: implementedBy, domain: [Tool, ComputationalModel], range: Repository, anchor: "ciroh:", evidence: "explicit product-card or DocCardList evidence, or quoted README, CITATION, or repository prose stating that the repository implements, provides the source code for, or is the implementation of the Tool or ComputationalModel", type: cross, consol: true, status: S, note: "backs D-06; use is not implementation; queries may traverse this property in reverse without a duplicate inverse"}
   - {id: D-23, name: describedInPaper, domain: [Tool, ComputationalModel], range: Paper, anchor: "ciroh:", evidence: "product card links (det)", type: cross, consol: true, status: S, note: "backs D-06"}
-  - {id: D-24, name: describes, domain: DocumentationPage, range: [Tool, ComputationalModel],
+  - {id: D-24, name: describes, domain: DocumentationPage, range: [Tool, ComputationalModel, DatasetResource, Method],
      anchor: "ciroh:", evidence: "documentation body prose", type: cross, consol: true, status: S,
-     note: "Parent property for describesTool and describesModel."}
-  - {id: D-25, name: documentedBy, domain: [Tool, ComputationalModel], range: DocumentationPage,
+     note: "Parent property for describesTool, describesModel, describesDataset, and describesMethod."}
+  - {id: D-25, name: documentedBy, domain: [Tool, ComputationalModel, DatasetResource, Method], range: DocumentationPage,
      anchor: "ciroh:", evidence: "inverse of documentation describes relation", type: cross, consol: true,
      status: S, inverse_of: describes, note: "Realizes Validation 3 / E-14 documentedBy inverse."}
 
