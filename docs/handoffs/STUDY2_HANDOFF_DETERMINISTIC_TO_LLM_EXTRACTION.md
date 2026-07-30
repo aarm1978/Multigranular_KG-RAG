@@ -1,5 +1,9 @@
 # Study 2 Handoff: From Deterministic Extraction to LLM-Guided Extraction
 
+> **Historical handoff notice:** This document records the 2026-07-27 ontology 0.1.2
+> baseline. The current formally frozen ontology is 0.1.3; see
+> `docs/ontology_formalization.md` for its authoritative validation and SHA-256 record.
+
 **Project:** Multigranular KG-RAG for Operational Hydrology
 **Repository:** `https://github.com/aarm1978/Multigranular_KG-RAG`
 **Primary branch:** `main`

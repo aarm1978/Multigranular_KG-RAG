@@ -1,6 +1,6 @@
 # Multigranular KG-RAG for Operational Hydrology
 
-> **Project status:** Active doctoral dissertation research. Ontology v0.1.1 and the deterministic extraction layer are complete and frozen for the current study snapshot. LLM-assisted extraction, cross-source alignment, final graph assembly, retrieval, and comparative question-answering evaluation remain under development.
+> **Project status:** Active doctoral dissertation research. Ontology v0.1.3 and the deterministic extraction layer are complete and frozen. The Publication LLM target inventory is complete and frozen; Publication Pilot 1 contracts and implementation are next/in progress, while LLM-assisted semantic extraction execution, cross-source alignment, final graph assembly, retrieval, and comparative question-answering evaluation are not yet completed.
 
 This repository supports the construction and evaluation of an ontology-guided, multigranular knowledge graph and KG-RAG system for **scientific cross-artifact question answering in operational hydrology**.
 
@@ -25,15 +25,17 @@ The intended final system will be evaluated against non-retrieval, web-search, v
 | Component | Status |
 |---|---|
 | Conceptual ontology design | Complete |
-| OWL/RDF formalization | Complete — v0.1.1 frozen |
+| OWL/RDF formalization | Complete — v0.1.3 frozen |
 | HermiT validation | Complete |
-| ELK cross-check | Complete |
+| ELK cross-check | Complete — profile-limited technical cross-check |
 | HydroShare deterministic extraction | Complete |
 | GitHub deterministic extraction | Complete |
 | CIROH Hub deterministic extraction | Complete |
 | Publication deterministic extraction | Complete |
 | Cumulative structural evaluation | Complete for the deterministic pre-alignment trajectory |
-| LLM-assisted semantic extraction | Planned |
+| Publication LLM target inventory | Complete and frozen |
+| Publication Pilot 1 contracts and implementation | Next/in progress |
+| LLM-assisted semantic extraction execution | Not yet completed |
 | Cross-source entity alignment and consolidation | Planned |
 | Final graph assembly and graph-database loading | Planned |
 | GraphRAG baseline | Planned |
@@ -62,21 +64,24 @@ Phase A parses and normalizes source-specific records without creating graph ent
 
 ## Frozen ontology
 
-The current ontology release is **v0.1.1**.
+The current ontology release is **v0.1.3**, formally frozen.
 
 - Generated artifact: [`src/ontology/ciroh_ontology.owl`](src/ontology/ciroh_ontology.owl)
 - Machine-readable specification: [`src/ontology/ontology_spec.yaml`](src/ontology/ontology_spec.yaml)
 - Generator: [`src/ontology/build_ontology.py`](src/ontology/build_ontology.py)
-- SHA-256: `dc873cad75979ae4599ef48051a5cb11ee2d7425299d6dbfdb3f9ad1d759209b`
+- SHA-256: `ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57`
 - Source class declarations: 75
-- Source relation declarations: 105
+- Source relation declarations: 125
 - Minted CIROH classes: 51
 - Referenced external classes: 22
-- Object properties: 83
+- Object properties: 90
 - Datatype properties: 18
 - Direct OWL imports: 6
 
-Ontology v0.1.1 was classified in Protégé using HermiT 1.4.3.456 and cross-checked with ELK 0.6.0 against the complete locally resolved import closure. Both runs completed without reporting an inconsistency, and zero named classes were inferred under `owl:Nothing`. ELK is treated as a supporting cross-check because it covers a smaller OWL profile than HermiT.
+Ontology v0.1.3 passed the authoritative manual HermiT gate in Protégé: HermiT
+completed successfully, found the ontology consistent, inferred no named classes under
+`owl:Nothing`, and reported no execution errors. The technical ELK cross-check and its
+profile limitations are recorded in the formalization document.
 
 See [`docs/ontology_formalization.md`](docs/ontology_formalization.md) for the complete formalization and validation record.
 
@@ -151,6 +156,8 @@ tests/                           Unit, regression, contract, and frozen-snapshot
 - [Phase A preprocessing record](docs/publication_preprocessing_phaseA.md)
 - [Phase B deterministic extraction record](docs/publication_extraction_phaseB.md)
 - [Extraction mapping](src/extraction/deterministic/publication_extraction_mapping.md)
+- [Final Publication Pilot 1 LLM target inventory](docs/publication_llm_extraction_target_inventory.md)
+- [Final publication ontology observations register](docs/publication_ontology_observations_register.md)
 
 ### Evaluation
 
@@ -208,10 +215,12 @@ External source materials remain subject to their original terms of use and lice
 
 ## Roadmap
 
-- [x] Freeze ontology v0.1.1
+- [x] Freeze ontology v0.1.3
 - [x] Complete deterministic extraction for the four artifact families
 - [x] Record the cumulative deterministic structural trajectory
-- [ ] Implement ontology-guided LLM extraction
+- [x] Freeze the Publication Pilot 1 LLM target inventory
+- [ ] Complete Publication Pilot 1 contracts and implementation
+- [ ] Execute ontology-guided LLM-assisted semantic extraction
 - [ ] Align and consolidate entities across artifact families
 - [ ] Assemble and load the final multigranular KG
 - [ ] Build the Microsoft GraphRAG comparison baseline

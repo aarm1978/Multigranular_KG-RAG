@@ -20,7 +20,7 @@ ontology:
   iri: "https://w3id.org/ciroh/ontology#"
   prefix: ciroh
   title: "Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts"
-  version: "0.1.2"
+  version: "0.1.3"
 
 # -----------------------------------------------------------------------------
 # Namespaces / imports (v0.1 §3.1).
@@ -310,17 +310,18 @@ relations:
      anchor: "ciroh:", evidence: "body", type: intra, status: S, note: "PEO resolves/leads_to; aka addresses"}
   - {id: C-P07, name: produces, domain: [Method, Experiment], range: Finding,
      anchor: "ciroh:", evidence: "Results prose", type: intra, status: S, note: "PEO produces, SAO"}
-  - {id: C-P08, name: testedBy, domain: [TheoreticalBasis, Hypothesis], range: [Method, Experiment],
-     anchor: "ciroh:", evidence: "body", type: intra, status: S, status_note: "E: testedBy", note: "PEO basis; testedBy CIROH"}
+  - {id: C-P08, name: testedBy, domain: Hypothesis, range: [Method, Experiment],
+     anchor: "ciroh:", evidence: "body", type: intra, status: S, status_note: "E: testedBy",
+     note: "Hypothesis testing only; TheoreticalBasis grounding is deferred"}
   - {id: C-P09, name: supports, domain: [Finding, Claim], range: [Claim, Conclusion],
-     anchor: "ciroh:", evidence: "body", type: intra, status: E, note: "PEO/SAO; aka notSupports/argues"}
+     anchor: "ciroh:", evidence: "body", type: intra, status: E, note: "Positive support semantics only; PEO/SAO"}
   - {id: C-P10, name: discussesRelatedWork, domain: Paper, range: RelatedResearch,
      anchor: "ciroh:", evidence: "Related Work", type: intra, status: S, note: "PEO review"}
   - {id: C-P11, name: relatesTo, domain: RelatedResearch,
      range: [Method, TheoreticalBasis, Concept, ResearchProblem, Paper],
      anchor: "ciroh:", evidence: "Related Work prose", type: [intra, cross], status: S, note: "PEO elaboration; Paper=stub"}
   - {id: C-P12, name: hasLimitation, domain: [Paper, Finding], range: Limitation,
-     anchor: "ciroh:", evidence: "Discussion/Conclusion", type: intra, status: S, note: "PEO; also Conclusion->Finding (summary)"}
+     anchor: "ciroh:", evidence: "Discussion/Conclusion", type: intra, status: S, note: "PEO limitation semantics"}
   - {id: C-P13, name: usesModel, domain: [Paper, Method], range: ComputationalModel,
      anchor: "ciroh:", evidence: "Methods prose (quote)", type: [cross, same], consol: true, status: S, note: "PEO uses"}
   - {id: C-P14, name: appliesTo, domain: Method, range: ComputationalModel,

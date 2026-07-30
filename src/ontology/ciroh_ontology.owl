@@ -14,7 +14,7 @@
   <owl:imports rdf:resource="http://www.w3.org/2004/02/skos/core"/>
   <owl:imports rdf:resource="http://purl.org/net/p-plan"/>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts</rdfs:comment>
-  <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.1.2</owl:versionInfo>
+  <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.1.3</owl:versionInfo>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Generated from src/ontology/ontology_spec.yaml by build_ontology.py.</rdfs:comment>
 </owl:Ontology>
 
@@ -791,7 +791,7 @@
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-P12</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-P12</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: PEO; also Conclusion-&gt;Finding (summary)</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: PEO limitation semantics</rdfs:comment>
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: Discussion/Conclusion</rdfs:comment>
@@ -1677,7 +1677,7 @@
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-P09</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-P09</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">E</sourceStatus>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: PEO/SAO; aka notSupports/argues</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Positive support semantics only; PEO/SAO</rdfs:comment>
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: body</rdfs:comment>
@@ -1686,14 +1686,7 @@
 </owl:ObjectProperty>
 
 <owl:ObjectProperty rdf:about="#testedBy">
-  <rdfs:domain>
-    <owl:Class>
-      <owl:unionOf rdf:parseType="Collection">
-        <rdf:Description rdf:about="#TheoreticalBasis"/>
-        <rdf:Description rdf:about="#Hypothesis"/>
-      </owl:unionOf>
-    </owl:Class>
-  </rdfs:domain>
+  <rdfs:domain rdf:resource="#Hypothesis"/>
   <rdfs:range>
     <owl:Class>
       <owl:unionOf rdf:parseType="Collection">
@@ -1705,7 +1698,7 @@
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-P08</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-P08</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: PEO basis; testedBy CIROH</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Hypothesis testing only; TheoreticalBasis grounding is deferred</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Status note: E: testedBy</rdfs:comment>
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>

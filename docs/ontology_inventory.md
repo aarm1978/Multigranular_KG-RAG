@@ -1,6 +1,6 @@
 # Ontology Inventory — Study 2 (Phase 1 closure)
 
-**Current semantic version:** 0.1.2 — 75 class declarations and 125 source relation declarations. This additive/corrective LLM-readiness patch accepts the frozen ontology-0.1.1 deterministic graphs unchanged.
+**Current semantic version:** 0.1.3, formally frozen — 75 class declarations and 125 source relation declarations. HermiT completed successfully against the validated OWL, found the ontology consistent with zero unsatisfiable named classes, and reported no execution errors. The frozen ontology-0.1.1 deterministic graphs remain unchanged.
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 **Companion to `Study2_Ontology_v0.1.md` (concepts + namespaces §3.1). Vocabulary reuse verified (validation 1); schema fit-checked on 6 real artifacts (validation 2, Etapa A) — GO, with the schema-change log below applied.**
@@ -90,7 +90,7 @@ Person canonicalization across four regimes (ORCID / name+affiliation+email / na
 
 **Source.** Du, X. & Li, N. (2022). ICBASE 2022, CEUR-WS Vol-3304, paper03, pp. 15–27. No OWL release → cited, not imported.
 **Anchoring (Co-occurrence Framework):** `deo:` where DEO co-occurs and has the class (`Background`, `ProblemStatement`, `Motivation`←Research-Goal, `Methods`, `Data`←DataDescription, `Results`, `Evaluation`←Result-Evaluation, `Discussion`, `RelatedWork`, `Scenario`←Examples, `Conclusion`, `Contribution`, `FutureWork`); `ciroh:` (aligned PEO) otherwise (`Theme`, `Research-Significance`, `Theoretical-Basis`, `Definition`, `Experiment`, `Limitation`). `deo:Materials` **not adopted** (validation 2: "materials" decompose into `DatasetMention`/`ProcessBasedModel`/`HydrologicFeature`/`Parameter` — no residual). `deo:Model` not adopted (captured by `EvidenceSpan`). `Research-Content` = scaffolding.
-**CIROH additions** (not PEO classes): `ResearchQuestion`, `Hypothesis`, `Claim` (SAO/Micropublications); PEO models argumentation as relations (`argues`/`supports`/`not_support`) which these reuse. `Hypothesis` ≠ `Claim`; `ResearchSignificance` ≠ `Contribution`.
+**CIROH additions** (not PEO classes): `ResearchQuestion`, `Hypothesis`, `Claim` (SAO/Micropublications). The current formalization declares only the positive `supports` relation shown below; negative support, refutation, contradiction, and generic argument relations are not declared. `Hypothesis` ≠ `Claim`; `ResearchSignificance` ≠ `Contribution`.
 **Relation vocabulary = PEO's 18** (`ciroh:` aligned PEO; RST/SAO). **Internal attributes** `tendency`, `source`. **29 second-level** = E fine layer (Result-Evaluation → `deo:Evaluation`).
 
 ## Table A — Entity classes
@@ -153,11 +153,11 @@ Person canonicalization across four regimes (ORCID / name+affiliation+email / na
 | C-P05 | `reports`/`hasComponent` | `Paper` → discourse units A-P05–24, A-P26 | `deo:`/`ciroh:` | body chunk (LLM, quote) | intra | S (E: A-P23/24) |
 | C-P06 | `resolves`/`addresses` | `Method`/`Contribution` → `ResearchProblem`; `ResearchQuestion` → `ResearchProblem` | `ciroh:` (PEO `resolves`/`leads_to`) | body | intra | S |
 | C-P07 | `produces` | `Method`/`Experiment` → `Finding` | `ciroh:` (PEO `produces`, SAO) | Results prose | intra | S |
-| C-P08 | `basis`/`testedBy` | `TheoreticalBasis` → `Method`; `Hypothesis` → `Method`/`Experiment` | `ciroh:` (PEO `basis`; `testedBy` CIROH) | body | intra | S (E: testedBy) |
-| C-P09 | `supports`/`notSupports`/`argues` | `Finding` → `Claim`/`Conclusion`; `Claim` → `Claim` | `ciroh:` (PEO, SAO) | body | intra | E |
+| C-P08 | `testedBy` | `Hypothesis` → `Method`/`Experiment` | `ciroh:` | body | intra | S (E: testedBy) |
+| C-P09 | `supports` | `Finding` → `Claim`/`Conclusion`; `Claim` → `Claim` | `ciroh:` (PEO, SAO) | body | intra | E |
 | C-P10 | `review`/`discussesRelatedWork` | `Paper` → `RelatedResearch` | `ciroh:` (PEO `review`) | Related Work | intra | S |
 | C-P11 | `relatesTo`/`elaboration` | `RelatedResearch` → `Method`/`TheoreticalBasis`/`Concept`/`ResearchProblem`/`Paper`(stub) | `ciroh:` (PEO) | Related Work prose | intra/cross | S |
-| C-P12 | `hasLimitation`/`summary` | `Paper`/`Finding` → `Limitation`; `Conclusion` → `Finding` | `ciroh:` (PEO) | Discussion/Conclusion | intra | S |
+| C-P12 | `hasLimitation` | `Paper`/`Finding` → `Limitation` | `ciroh:` (PEO) | Discussion/Conclusion | intra | S |
 | C-P13 | `usesModel` | `Paper`/`Method` → `ComputationalModel` | `ciroh:` (PEO `uses`) | Methods prose (quote) | cross+same | S · consol |
 | C-P14 | `appliesTo` | `Method` → `ComputationalModel` | `ciroh:` (Model/Method discriminant) | Methods prose | intra/cross | S |
 | C-P15 | `usesTool` | `Paper` → `Tool` | `ciroh:` | prose | cross+same | S · consol |
@@ -179,6 +179,10 @@ Person canonicalization across four regimes (ORCID / name+affiliation+email / na
 | C-P31 | `mentionsTool` | `Paper` → `Tool` | `ciroh:` | related-work, background, citation, or availability prose with a verbatim quoted span | cross+same | S · consol; weaker than `usesTool` |
 | C-P32 | `referencesRepository` | `Paper` → `Repository` | `ciroh:` | explicit repository reference without paper-code ownership evidence | cross | S · consol (→ D-04) |
 | C-P33 | `hasCodeRepository` ⊑ `referencesRepository` | `Paper` → `Repository` | `schema:codeRepository` | explicit code/software availability or associated-implementation statement | cross | S · consol (→ D-04) |
+
+`TheoreticalBasis` remains an available node class, but no theory-to-method grounding
+property is declared in ontology 0.1.3. Such a relation is deferred pending corpus
+evidence. `C-P09` represents positive support only, and `C-P12` has no summary branch.
 
 `C-P20`, `C-P24`, and `C-P29` are intentionally distinct. `usesDataset` records evidence that a paper used a dataset; `mentionsDataset` records a dataset mention without proof of use or bibliographic citation; `referencesDataset` records a bibliographic reference deterministically typed as a dataset citation.
 
@@ -323,7 +327,7 @@ reverse from a repository; no duplicate `implementsModel` inverse is declared.
 
 # Part 5 — Module 4: Documentation (CIROH Hub)
 
-> **`pageType`:** {product-catalog, product-doc, service-doc, policy, guide, blog-post, news, release-note}; gating **confirmed** (catalog fires the hub, not Procedure/Step; guide fires Procedure/Step, not the hub). **Historical product-hub design: hierarchical aggregation** (a composite product e.g. NGIAB → distributions/components → repos/docs), not flat. The separate ontology-modeling decision of whether product cards directly represent domain entities or use a `CatalogEntry`/`ResearchProduct` intermediate class remains deferred and is not changed by ontology 0.1.2. Source provenance: "Edit this page" → `.mdx` path. MDX admonitions (`:::warning`/`:::note`) → `Example`/structured note (minor).
+> **`pageType`:** {product-catalog, product-doc, service-doc, policy, guide, blog-post, news, release-note}; gating **confirmed** (catalog fires the hub, not Procedure/Step; guide fires Procedure/Step, not the hub). **Historical product-hub design: hierarchical aggregation** (a composite product e.g. NGIAB → distributions/components → repos/docs), not flat. Ontology 0.1.3 retains the decision, left unchanged in 0.1.2, to defer whether product cards directly represent domain entities or use a `CatalogEntry`/`ResearchProduct` intermediate class. Source provenance: "Edit this page" → `.mdx` path. MDX admonitions (`:::warning`/`:::note`) → `Example`/structured note (minor).
 
 ## Table A — Entity classes
 | # | Class | Kind | Extraction | Reuse anchor | Status |
@@ -425,7 +429,7 @@ for the D-21 `mentionsModel`/`mentionsDataset` pair. D-19 is a grouped conceptua
 announcement/reference family; its current formal Documentation-module realization
 is `C-DC18 announces`.
 
-For 0.1.2, D-04 is realized formally by `C-DC14`, `C-P32`, `C-P33`, and
+Ontology 0.1.3 retains the D-04 realization established in 0.1.2 through `C-DC14`, `C-P32`, `C-P33`, and
 `C-C27`; `C-D19` remains the separate generic `references` property that
 conceptually realizes the DatasetResource branch. D-07 is realized by `C-C17`
 and `C-DC26`. The D-21 model branch is realized by `C-P23`, `C-DC24`, `C-C23`,
@@ -433,7 +437,7 @@ and `C-D26`; its dataset branch remains `C-P24` and `C-DC25`. D-24 includes
 typed subproperties `C-DC07`, `C-DC16`, `C-DC27`, and `C-DC28`, and D-25 remains
 its broadened inverse.
 
-> **D-06 backing edges:** the aggregation has explicit, traversable relations — `catalogs` (C-DC17), `hasComponent` (C-DC19), **`implementedBy`** (D-22), **`describedInPaper`** (D-23), and **`documentedBy`** (D-25). `describesTool`, `describesModel`, `describesDataset`, and `describesMethod` are subproperties of `describes` (D-24), and `documentedBy` is its inverse. Ontology 0.1.2 does not otherwise change or resolve the deferred product-catalog design.
+> **D-06 backing edges:** the aggregation has explicit, traversable relations — `catalogs` (C-DC17), `hasComponent` (C-DC19), **`implementedBy`** (D-22), **`describedInPaper`** (D-23), and **`documentedBy`** (D-25). `describesTool`, `describesModel`, `describesDataset`, and `describesMethod` are subproperties of `describes` (D-24), and `documentedBy` is its inverse. Ontology 0.1.3 retains the deferred product-catalog design left unchanged in 0.1.2.
 > **Declared inverse pairs:** `hasMember` ⇄ `isMemberOf` for dataset collection membership; `isExecutedBy` ⇄ `executes` for dataset/tool execution; `hasSubPage` ⇄ `isPartOf` for documentation page hierarchy; `documentedBy` ⇄ `describes`, with `describesTool`/`describesModel` as subproperties of `describes`.
 > **D-20 resolution rule:** an externally-referenced stub (e.g. a Zenodo DOI) whose `relatedIdentifier` metadata points to a curated corpus repository is **linked to that repository**, so paper mentions reach the curated entity. Where the cross-identifier does **not** match (the `deep_bucket_lab` case: paper DOI `10.5281/zenodo.14538196` ≠ repo README sandbox DOI), the link is low-confidence/omitted — **never inferred by name**.
 > **Cited-DOI typing rule** (citation extractor): classify a reference by identifier type — a **software/dataset DOI** (e.g. a Zenodo software DOI) in the reference list is typed as a stub `Tool`/`Repository`/`DatasetResource`, **not** a `Paper`-stub; a **paper DOI** is a `Paper`-stub. Required so `archivedAs` (domain `Repository`, D-20) can attach to a software stub (E-26).
@@ -488,11 +492,14 @@ its broadened inverse.
 - **Added (val 3, all additive):** product-hub backing edges `implementedBy` (D-22) + `describedInPaper` (D-23), `documentedBy` confirmed as inverse of C-DC07/C-DC16; agent-layer `affiliatedWith` (A-AG-R1) + `fundedBy` (A-AG-R2); `hasProcedure` (C-DC20); cited-DOI typing rule (software/dataset DOI → software stub, not `Paper`-stub); E-21/E-22 relation-ID corrections.
 - **`ciroh:` short list (the contribution):** `ComputationalModel` hierarchy + Model/Method/Algorithm discriminant; `EvaluationMetric`; `Algorithm`; `Aquifer`/`VPU`; controlled classifications (`ResourceType`, `RepositoryPurpose`, `productCategory`); `Variable`/`Measurement` semantics; `ToolConfiguration`; `dependsOnRepository`; mention-vs-use + `archivedAs` resolution + product-hub backing edges; the PEO-aligned discourse classes not in DEO + PEO relation vocabulary; the cross-artifact (R2O) relation semantics. `Parameter` reuses `schema:PropertyValue`.
 
-**Current outcome.** The deterministic ABox backbone is complete and frozen. Ontology
-0.1.2 has passed structural validation but is not yet frozen; it awaits manual Protégé
-validation with HermiT and ELK. The current sequence is: ontology 0.1.2 source review
-→ OWL regeneration and structural tests → manual HermiT and ELK validation → ontology
-0.1.2 freeze → ontology-guided LLM pilot.
+**Current outcome.** The deterministic ABox backbone and ontology 0.1.3 are complete
+and formally frozen. HermiT is authoritative for the freeze decision: it completed
+successfully, found the validated ontology consistent with zero named classes under
+`owl:Nothing`, and reported no execution errors. The patch narrows `testedBy` to
+Hypothesis, removes the unsupported `C-P12` summary documentation, and clarifies
+positive-only `supports` semantics without adding classes or relation families. The
+frozen deterministic graphs remain byte-identical and no deterministic extractor has
+been rerun.
 
 ## Protégé import notes (from validation 1)
 - DEO: prefix `deo:` expands with slash `http://purl.org/spar/deo/`; **import canonical** `http://purl.org/spar/deo`.

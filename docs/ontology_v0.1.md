@@ -1,6 +1,6 @@
 # Ontology v0.1 — Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts
 
-**Current semantic version: 0.1.2.** The ontology IRI and this stable v0.1 filename are unchanged.
+**Current semantic version: 0.1.3, formally frozen.** The ontology IRI and this stable v0.1 filename are unchanged. HermiT completed successfully, found the validated ontology consistent with zero unsatisfiable named classes, and reported no execution errors.
 
 **Study 2 — Phase 1 deliverable (conceptual companion to the exhaustive `Study2_Ontology_Inventory.md`).**
 **Historical 0.1 planning status:** vocabulary reuse verified (validation 1); schema fit-checked on 6 real artifacts (validation 2, Etapa A) → GO, schema-change log applied. The former next step was OWL/RDF formalization in Protégé followed by HermiT. Current formalization and validation status is maintained in `ontology_formalization.md`.
@@ -108,7 +108,7 @@ PEO-grounded discourse layer anchored to **DEO** via PEO's Co-occurrence Framewo
 
 ## 11. Module 4 — Documentation (CIROH Hub)
 
-`DocumentationPage` (+ `pageType`; gating confirmed) with `Section`, `Link`, `Subject`, instructional `Procedure`/`Step`/`Parameter`(shared)/`Example` (admonitions → `Example`), `Creator` (`schema:Person`); `Procedure` reached via explicit `hasProcedure` (and via `hasSection`→`Section`). Typed description subproperties are `describesTool`, `describesModel`, `describesDataset`, and `describesMethod`, all under `describes`; inverse `documentedBy` covers those four target classes. Documentation publication citations reuse the merged `referencePublication` property. `hasSourceFile` (".mdx"); **`documents`/`mirrors` doc→repo is deterministic (S)** when sourced from the `<GitHubReadme>` tag; `announces`/`references` retain distinct semantics. **Historical product-hub design: hierarchical aggregation.** The separate ontology-modeling decision of whether product cards directly represent domain entities or use a `CatalogEntry`/`ResearchProduct` intermediate class remains deferred and is not changed by ontology 0.1.2. See inventory Part 5.
+`DocumentationPage` (+ `pageType`; gating confirmed) with `Section`, `Link`, `Subject`, instructional `Procedure`/`Step`/`Parameter`(shared)/`Example` (admonitions → `Example`), `Creator` (`schema:Person`); `Procedure` reached via explicit `hasProcedure` (and via `hasSection`→`Section`). Typed description subproperties are `describesTool`, `describesModel`, `describesDataset`, and `describesMethod`, all under `describes`; inverse `documentedBy` covers those four target classes. Documentation publication citations reuse the merged `referencePublication` property. `hasSourceFile` (".mdx"); **`documents`/`mirrors` doc→repo is deterministic (S)** when sourced from the `<GitHubReadme>` tag; `announces`/`references` retain distinct semantics. **Historical product-hub design: hierarchical aggregation.** Ontology 0.1.3 retains the decision, left unchanged in 0.1.2, to defer whether product cards directly represent domain entities or use a `CatalogEntry`/`ResearchProduct` intermediate class. See inventory Part 5.
 
 ## 12. Integration layer
 
@@ -118,11 +118,9 @@ Cross-type relation families preserve distinct evidence semantics: **use** requi
 
 **Historical 0.1 status:** validations 1–3 were complete and the conceptual schema was frozen. Validation 3 (CQ dry-run) traced 23/26 CQs unchanged; the other 3 (product hub) were resolved by 5 additive fixes (backing edges `implementedBy`/`describedInPaper`, cited-DOI typing rule, agent-layer `affiliatedWith`/`fundedBy`, `hasProcedure`, E-21/E-22 ID corrections). The former Protégé → HermiT next-step statement is superseded by the versioned formalization and reasoner record in `ontology_formalization.md`.
 
-The deterministic ABox backbone is complete and frozen. Ontology 0.1.2 has passed
-structural validation but awaits manual Protégé validation with HermiT and ELK. The
-current sequence is: ontology 0.1.2 source review → OWL regeneration and structural
-tests → manual HermiT and ELK validation → ontology 0.1.2 freeze → ontology-guided
-LLM pilot. Ontology 0.1.2 must not be described as frozen before manual validation.
+The deterministic ABox backbone and ontology 0.1.3 are complete and formally frozen.
+HermiT is the authoritative reasoner for the formal validation and freeze decision. The
+frozen deterministic graphs remain unchanged.
 
 ### Formalization patch 0.1.1
 
@@ -131,3 +129,14 @@ The conceptual schema remains frozen. Version 0.1.1 is a formalization patch cor
 ### LLM-readiness relation patch 0.1.2
 
 Version 0.1.2 is additive and corrective: it separates previously collapsed tool/model, function/algorithm, and variable/parameter semantics; completes approved LLM-facing mention, use, reference, workflow, publication-reference, and typed-description branches; and broadens D-04, D-07, D-21, D-24, and D-25 accordingly. It adds no classes and makes no entity-consolidation or controlled-vocabulary decision. The frozen deterministic graphs remain products of ontology 0.1.1 and are accepted byte-for-byte unchanged by 0.1.2; no deterministic extractor is rerun for this patch.
+
+### Minimal pre-pilot patch 0.1.3
+
+Version 0.1.3 narrows `C-P08 testedBy` to `Hypothesis →
+Method/Experiment`; `TheoreticalBasis` remains a class, but its possible grounding
+relation is deferred. It removes the unsupported summary branch from the `C-P12`
+documentation and clarifies that `C-P09 supports` is positive-only under the current
+formalization. No class, property name, stable ID, or relation family is added or
+removed, and all other domains and ranges remain unchanged. Structural validation and
+the authoritative manual HermiT gate are complete, and ontology 0.1.3 is formally
+frozen at the validated SHA recorded in `ontology_formalization.md`.

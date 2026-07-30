@@ -32,7 +32,7 @@ FROZEN_OUTPUT_HASHES = {
 
 # Frozen Phase B outputs preserve several explicit narrative aliases/composite
 # labels from their ontology-0.1.1 extraction contracts. They remain accepted
-# compatibility spellings in 0.1.2 without rewriting any frozen graph.
+# compatibility spellings without rewriting any frozen graph.
 FROZEN_NODE_COMPATIBILITY = {
     ("A-D06", "Subject"): "A-P04",
     ("A-D07→A-DOM09", "SpatialCoverage"): "A-DOM09",
@@ -208,7 +208,11 @@ def inventory_table_ids() -> set[str]:
 
 
 class OntologyFormalizationPatchTests(unittest.TestCase):
-    """Verify the complete ontology 0.1.2 LLM-readiness patch."""
+    """Verify the complete ontology 0.1.3 pre-pilot patch."""
+
+    def test_spec_version_is_0_1_3(self) -> None:
+        """The authoritative specification records candidate version 0.1.3."""
+        self.assertEqual(load_spec()["ontology"]["version"], "0.1.3")
 
     def test_c_p29_declaration(self) -> None:
         """C-P29 realizes the Paper-domain branch of global D-05."""
@@ -221,11 +225,42 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
         self.assertEqual(relation["alt_anchor"], "dcterms:references")
         self.assertTrue(relation["consol"])
 
-    def test_generated_version_is_0_1_2(self) -> None:
+    def test_generated_version_is_0_1_3(self) -> None:
         """The generated ontology records the patched semantic version."""
         version = parse_owl().find("owl:Ontology/owl:versionInfo", NS)
         self.assertIsNotNone(version)
-        self.assertEqual(version.text, "0.1.2")
+        self.assertEqual(version.text, "0.1.3")
+
+    def test_c_p08_is_hypothesis_testing_only(self) -> None:
+        """C-P08 excludes theoretical grounding while retaining its testedBy range."""
+        relation = relation_by_id("C-P08")
+        self.assertEqual(relation["name"], "testedBy")
+        self.assertEqual(as_set(relation["domain"]), {"Hypothesis"})
+        self.assertNotIn("TheoreticalBasis", as_set(relation["domain"]))
+        self.assertEqual(as_set(relation["range"]), {"Method", "Experiment"})
+
+        prop = object_properties(parse_owl(), "testedBy")[0]
+        self.assertEqual(property_inventory_ids(prop), {"C-P08"})
+        self.assertEqual(property_expression_members(prop, "domain"), {"Hypothesis"})
+        self.assertEqual(property_expression_members(prop, "range"), {"Method", "Experiment"})
+
+    def test_c_p12_retains_only_limitation_semantics(self) -> None:
+        """C-P12 keeps its signature and no longer claims a summary branch."""
+        relation = relation_by_id("C-P12")
+        self.assertEqual(relation["name"], "hasLimitation")
+        self.assertEqual(as_set(relation["domain"]), {"Paper", "Finding"})
+        self.assertEqual(as_set(relation["range"]), {"Limitation"})
+        self.assertNotRegex(relation.get("note", "").casefold(), r"summar(?:y|ize|izes)")
+
+    def test_c_p09_retains_positive_support_signature(self) -> None:
+        """C-P09 remains structurally unchanged without undeclared aliases."""
+        relation = relation_by_id("C-P09")
+        self.assertEqual(relation["name"], "supports")
+        self.assertEqual(as_set(relation["domain"]), {"Finding", "Claim"})
+        self.assertEqual(as_set(relation["range"]), {"Claim", "Conclusion"})
+        note = relation.get("note", "").casefold()
+        for undeclared_alias in ("notsupports", "refutes", "contradicts", "argues"):
+            self.assertNotIn(undeclared_alias, note)
 
     def test_c_dc15_remains_documentation_page_relation(self) -> None:
         """The existing documentation realization remains unchanged."""
@@ -492,7 +527,7 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
         self.assertEqual(inverse.get(RDF_RESOURCE), "#describes")
 
     def test_frozen_phase_b_outputs_are_unchanged_and_resolve(self) -> None:
-        """Frozen 0.1.1 graphs remain byte-identical and compatible with 0.1.2."""
+        """Frozen 0.1.1 graphs remain byte-identical and compatible with 0.1.3."""
         spec = load_spec()
         classes = {item["id"]: item["name"] for item in spec["classes"]}
         relations = {item["id"]: item["name"] for item in spec["relations"]}
@@ -520,6 +555,17 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
         for path in FROZEN_OUTPUT_HASHES:
             output = json.loads(path.read_text(encoding="utf-8"))
             hits = [edge for edge in output["edges"] if edge["inventoryId"] in corrected_ids]
+            self.assertEqual(hits, [], str(path))
+
+    def test_c_p08_has_no_frozen_edges(self) -> None:
+        """The narrowed C-P08 declaration requires no frozen ABox migration."""
+        for path in FROZEN_OUTPUT_HASHES:
+            output = json.loads(path.read_text(encoding="utf-8"))
+            hits = [
+                edge
+                for edge in output["edges"]
+                if edge["inventoryId"] == "C-P08" or edge["relation"] == "testedBy"
+            ]
             self.assertEqual(hits, [], str(path))
 
     def test_inventory_yaml_reconciliation_has_no_unexplained_mismatch(self) -> None:
