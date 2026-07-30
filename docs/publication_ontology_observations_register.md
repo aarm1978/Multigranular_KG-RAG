@@ -28,7 +28,7 @@ The ELK execution is retained only as a technical, profile-limited cross-check.
 | `usesModel` versus `appliesTo` | **Annotation/validator decision:** freeze functional discriminant and evaluate agreement |
 | use/mention/reference precedence | **Validator decision:** stronger role suppresses weaker mention; dataset reference may coexist with use |
 | asserted versus inferred types/properties | **Implementation decision:** preserve provenance distinction and do not score derived assertions as LLM output |
-| Organization/Award/funding gap | **Deterministic implementation gap:** remain outside the publication LLM pilot |
+| Organization/Award/funding gap | **Deterministic and ontology review gap:** supported classes, affiliation, and Paper→Award funding remain outside the publication LLM pilot; Award→Organization is undeclared |
 | Citation, corrigendum, numeric/unit, temporal, and cross-source needs | **Deferred:** separate follow-on or post-pilot review |
 
 No other TBox expansion is authorized by this gate.
@@ -159,7 +159,7 @@ The pre-pilot gate approved and ontology 0.1.3 implemented one TBox change: narr
 | OBS-PUB-018 | RelatedResearch relatesTo is broad and may generate low-value edges | relation granularity and utility | C-P11; RelatedResearch; Method; TheoreticalBasis; Concept; ResearchProblem | non-blocking; monitor | Require a substantive explicit connection to an already accepted local target. | Add strong negative examples for thematic co-occurrence. | Measure edge precision, degree, and retrieval contribution. | Replace or supplement relatesTo with typed subrelations. | deferred_to_post_pilot |
 | OBS-PUB-019 | DOI-less and typed citation grounding require a separate method | methodological boundary | C-P21 cites; C-P11 RelatedResearch→Paper; cited Paper identity | not a Pilot 1 blocker | Keep generic DOI-backed citations as deterministic context; exclude typed and DOI-less grounding. | Ensure reference sections are excluded from ordinary semantic entity extraction. | Design a separate benchmark using in-text anchors, bibliography records, provider metadata, and semantic citation context. | Potentially add typed citation subproperties only after the grounding protocol is validated. | separate_follow_on_protocol |
 | OBS-PUB-020 | Fine-grained corrigendum semantics are not represented | correction/provenance expressivity gap | C-P22 corrects; Finding; EvaluationMetric; Parameter; Experiment; Conclusion | not a Pilot 1 blocker | Retain generic 87-corrigendum→corrects→87 and extract local corrigendum semantics without targeted correction edges. | No TBox change required for Pilot 1. | Design a paired-document alignment protocol and collect correction types. | Add correctsFinding, replacesMetricValue, revisesExperiment, invalidatesConclusion, or a generic correction-event pattern. | separate_follow_on_protocol |
-| OBS-PUB-021 | Organization, Award, affiliation, and funding are ontology-supported but not implemented in publication Phase B | deterministic implementation gap | A-AG02; A-D09; A-AG-R1; A-AG-R2 | non-blocking for LLM Pilot 1 | Keep out of scope; do not transfer responsibility to the LLM. | Record the gap explicitly in the target inventory. | Plan a versioned deterministic publication enrichment if required by competency questions. | Implementation change, not necessarily an ontology change. | implementation_gap |
+| OBS-PUB-021 | Publication Organization, Award, affiliation, and Paper-to-Award funding are ontology-supported but not implemented in publication Phase B; Award-to-funding-organization linkage is not formally declared | deterministic implementation and ontology review gap | A-AG02; A-D09; A-AG-R1; A-AG-R2 | non-blocking for LLM Pilot 1 | Keep the entire publication funding family out of scope; do not transfer responsibility to the LLM. | Record both the implementation gap and undeclared branch explicitly in the target inventory. | Plan a versioned deterministic publication enrichment and ontology review if required by competency questions. | Later deterministic and ontology review; no Pilot 1 change. | implementation_gap |
 | OBS-PUB-022 | Global ontology extraction labels can be confused with source-specific production responsibility | documentation semantics | Parameter, DatasetMention, DatasetResource, Repository, Tool, models, and other classes marked hybrid globally | pre-pilot correction required | The publication inventory uses source_scope=publications and stage_scope=llm_semantic_overlay. | Add an explicit note that ontology extraction metadata is global/descriptive, while production responsibility is source- and stage-specific. | Apply the same convention to Hub, GitHub, and HydroShare inventories. | Add source-specific extraction profiles outside the TBox rather than changing class semantics. | accepted_for_contract_implementation |
 | OBS-PUB-023 | Asserted and inferred superclass or parent-property memberships need provenance separation | reasoning and graph materialization | SoftwareEntity; ComputationalModel; Place; HydrologicFeature; hasCodeRepository; referencesRepository | pre-pilot implementation policy required | LLM emits the concrete class/specific property; pipeline derives ancestors or parent properties. | Define assertedType versus inferredType and ensure derived assertions are not scored as LLM predictions. | Evaluate Neo4j materialization strategy and query performance. | No TBox change necessarily required; add provenance/materialization metadata. | accepted_for_contract_implementation |
 | OBS-PUB-024 | Use/mention/reference precedence must be enforced consistently | operational relation policy | usesModel/mentionsModel; usesTool/mentionsTool; usesDataset/mentionsDataset/referencesDataset | pre-pilot guideline and validator required | Use supersedes mention; formal dataset reference may coexist with use. | Add candidate reconciliation and conflict-validation rules. | Evaluate role-classification confusion and duplicate weaker edges. | Ontology structure is currently adequate; revise only if roles remain irreducibly ambiguous. | accepted_for_contract_implementation |
@@ -711,7 +711,7 @@ Design a paired-document alignment protocol and collect correction types.
 
 Add correctsFinding, replacesMetricValue, revisesExperiment, invalidatesConclusion, or a generic correction-event pattern.
 
-## OBS-PUB-021 — Organization, Award, affiliation, and funding are ontology-supported but not implemented in publication Phase B
+## OBS-PUB-021 — Publication funding has both an implementation gap and an undeclared agency branch
 
 - **Category:** deterministic implementation gap
 - **Affected targets:** A-AG02; A-D09; A-AG-R1; A-AG-R2
@@ -720,23 +720,32 @@ Add correctsFinding, replacesMetricValue, revisesExperiment, invalidatesConclusi
 
 ### Observed issue
 
-Organization, Award, affiliation, and funding are ontology-supported but not implemented in publication Phase B.
+The `Organization` and `Award` classes, `Person` → `Organization` affiliation, and
+`Paper`/`DatasetResource` → `Award` funding are formally supported. Publication Phase B
+does not implement those publication facts. Ontology 0.1.3 does not formally declare an
+`Award` → funding `Organization` relation; the A-AG-R2 `funding_agency` note is
+non-logical. Dataset-module C-D09 separately permits direct `DatasetResource` →
+`Organization` behavior and does not establish the missing Award branch.
 
 ### Current Pilot 1 treatment
 
-Keep out of scope; do not transfer responsibility to the LLM.
+Keep the entire publication funding family out of scope; do not transfer responsibility
+to the LLM.
 
 ### Required pre-pilot action
 
-Record the gap explicitly in the target inventory.
+Record the implementation gap and undeclared Award-to-Organization branch explicitly in
+the target inventory.
 
 ### Evidence required after the pilot
 
-Plan a versioned deterministic publication enrichment if required by competency questions.
+Plan a versioned deterministic publication enrichment and ontology review if required by
+competency questions.
 
 ### Candidate resolution
 
-Implementation change, not necessarily an ontology change.
+Any future publication funding addition requires later deterministic and ontology review;
+no change is authorized for Pilot 1.
 
 ## OBS-PUB-022 — Global ontology extraction labels can be confused with source-specific production responsibility
 

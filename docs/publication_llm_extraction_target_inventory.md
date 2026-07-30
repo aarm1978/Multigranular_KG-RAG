@@ -61,6 +61,16 @@ The inventory should be interpreted together with:
 - publication deterministic mapping
 - frozen Phase A corpus and Phase B node/edge snapshot
 
+The completed and frozen implementation contracts under this inventory are:
+
+- [`publication_target_inventory.yaml`](../src/extraction/llm/publications/publication_target_inventory.yaml)
+  — the final and binding machine-readable executable target profile;
+- [`publication_source_unit_contract.md`](publication_source_unit_contract.md) — the
+  final and binding canonical source-unit and request-context contract.
+
+The candidate-output JSON Schema and evidence-validation contract are next. The
+production source-unit builder and LLM extractor are not yet implemented.
+
 ## 3. Scope and non-goals
 
 Pilot 1 evaluates local, evidence-grounded semantic extraction from publications. It does
@@ -316,7 +326,7 @@ domain, or resolution cases.
 | PROV-R2 | wasExtractedBy | EvidenceSpan → prov:Activity | pipeline_generated | required_infrastructure | Created from run/model/prompt/schema metadata. | Not an independent LLM prediction. |
 | ID-R1 / C-P04 | hasIdentifier | Entity/Paper → Identifier | deterministic | context_only | Exact authorized identifier link. | The LLM cannot mint, repair, or merge identifiers. |
 | A-AG-R1 | affiliatedWith | Person → Organization | deterministic | out_of_scope | Publication affiliation parsing. | Implementation gap, not an LLM target. |
-| A-AG-R2 | fundedBy | Paper → Award; Award → Organization | deterministic | out_of_scope | Publication funding parsing. | Implementation gap, not an LLM target. |
+| A-AG-R2 | fundedBy | Paper → Award | deterministic | out_of_scope | Publication funding parsing. | Implementation gap, not an LLM target. An Award-to-funding-organization branch is not formally declared in ontology 0.1.3 and remains deferred outside Publication Pilot 1. |
 | C-P01 | hasAuthor | Paper → Author | deterministic | context_only | Frozen Phase B author edge. | Not re-extracted. |
 | C-P02 | publishedIn | Paper → Venue | deterministic | context_only | Frozen Phase B venue edge. | Not re-extracted. |
 | C-P03 | hasSubject | Paper → Subject | deterministic | context_only | Frozen explicit keyword edge. | Not interchangeable with mentionsConcept. |
@@ -557,7 +567,8 @@ Before implementation or benchmark annotation begins:
 - [x] Regenerate the OWL and pass the complete ontology-focused automated suite.
 - [x] Complete authoritative manual HermiT validation and the technical ELK cross-check.
 - [x] Freeze this inventory version.
-- [ ] Freeze source-unit and evidence contracts.
+- [x] Freeze the source-unit contract.
+- [ ] Freeze the evidence-validation contract.
 - [ ] Freeze output JSON schema.
 - [ ] Freeze annotation and adjudication guidelines.
 - [ ] Freeze evaluation matching rules and GO/REVISE/NO-GO thresholds.

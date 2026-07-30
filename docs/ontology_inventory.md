@@ -46,7 +46,12 @@ Person canonicalization across four regimes (ORCID / name+affiliation+email / na
 | # | Relation | Domain → Range | Reuse anchor | Evidence locus | Status |
 |---|---|---|---|---|---|
 | A-AG-R1 | `affiliatedWith` | `Person` → `Organization` | `schema:affiliation` / `org:` | affiliation block (det) | S |
-| A-AG-R2 | `fundedBy` | `Paper`/`DatasetResource` → `Award`; `Award` → `Organization` | `schema:funder` / `ciroh:` | acknowledgments / `awards[]` (det) | S |
+| A-AG-R2 | `fundedBy` | `Paper`/`DatasetResource` → `Award` | `schema:funder` | acknowledgments / `awards[]` (det) | S |
+
+The `funding_agency` note carried by A-AG-R2 is non-logical documentation; ontology
+0.1.3 does not formally declare an `Award` → `Organization` branch. The separate
+dataset-module C-D09 signature directly permits `DatasetResource` → `Award` or
+`Organization`, but it does not create an `Award` → `Organization` relation.
 
 > `hasAuthor`/`hasCreator`/`hasContributor` are declared in the module Tables C (C-P01, C-D03, C-C04, C-DC05). `Award` is `A-D09`.
 
@@ -232,7 +237,7 @@ evidence. `C-P09` represents positive support only, and `C-P12` has no summary b
 | C-D06 | `hasSubject` | → `Subject` | `dcterms:subject` | `subjects[]` (det) | intra | S |
 | C-D07 | `hasSpatialCoverage` | → `SpatialCoverage` | `geo:hasGeometry`/`dcterms:spatial` | `spatial_coverage` (det) | intra | S |
 | C-D08 | `coversPeriod` | → `TemporalCoverage` | `dcterms:temporal` | `temporal_coverage` (det) | intra | S |
-| C-D09 | `fundedBy` | → `Award`/`Organization` | `schema:funding` | `awards[]` (det) | prov | S |
+| C-D09 | `fundedBy` | `DatasetResource` → `Award`/`Organization` | `schema:funding` | `awards[]` (det) | prov | S |
 | C-D10 | `hasToolConfig` | `DatasetResource`(Tool) → `ToolConfiguration` | `ciroh:` | `tool_config` (det) | intra | S |
 | C-D11 | `launchesApp` | `ToolConfiguration` → `Tool` | `ciroh:` | `app_home_page_url` / app-launching URL pattern | cross | S |
 | C-D12 | `hasMember` | `DatasetResource`(Collection) → `DatasetResource` | `dcterms:hasPart` | `members[].member_resource_id` (det) | same | S |

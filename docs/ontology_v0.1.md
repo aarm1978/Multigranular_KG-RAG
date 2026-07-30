@@ -80,7 +80,7 @@ Four artifact modules (Paper, Dataset, Code, Documentation) over four shared lay
 
 ## 6. Agent layer
 
-`Person` (`schema:Person`) and `Organization` (`schema:Organization` + ROR) — schema.org primary, not mixed with FOAF. Relations `hasAuthor`/`hasCreator`/`hasContributor` (module tables); `affiliatedWith` (`Person` → `Organization`, `schema:affiliation`); `fundedBy` (`Paper`/`DatasetResource` → `Award`; `Award` → `Organization`, `schema:funder`). Four identifier regimes reconciled (validated: a GitHub login resolves to a paper author).
+`Person` (`schema:Person`) and `Organization` (`schema:Organization` + ROR) — schema.org primary, not mixed with FOAF. Relations `hasAuthor`/`hasCreator`/`hasContributor` (module tables); `affiliatedWith` (`Person` → `Organization`, `schema:affiliation`); `fundedBy` (`Paper`/`DatasetResource` → `Award`, `schema:funder`). The A-AG-R2 `funding_agency` note is non-logical: ontology 0.1.3 does not declare `Award` → `Organization`. Dataset-module C-D09 separately permits direct `DatasetResource` → `Award`/`Organization` assertions. Four identifier regimes reconciled (validated: a GitHub login resolves to a paper author).
 
 ## 7. Shared CIROH domain-entity layer (the contribution)
 

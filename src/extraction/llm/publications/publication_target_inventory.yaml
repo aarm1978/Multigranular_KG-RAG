@@ -1,0 +1,3780 @@
+schema_version: 0.1.0
+profile_id: publication-pilot1-target-inventory
+title: Publication Pilot 1 Machine-Readable Target Inventory
+status: final_and_binding
+artifact_family: scientific_publications
+source_scope: publications
+stage_scope: llm_semantic_overlay
+binding_human_readable_source: docs/publication_llm_extraction_target_inventory.md
+ontology:
+  version: 0.1.3
+  validated_owl_sha256: ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57
+  spec_path: src/ontology/ontology_spec.yaml
+  spec_sha256_of_reviewed_copy: a940dd79ac0c8b10980b3a17739d2f03ac5b0c23ce80dffb0bb90009cf19db54
+  source_class_declarations: 75
+  source_relation_declarations: 125
+reviewed_sources:
+- path: docs/publication_llm_extraction_target_inventory.md
+  sha256: b2055e9735c64c5dc5d712fa96bdc95cb4137c75390261902fbc3055fc3d9ffa
+  role: binding operational inventory
+- path: docs/publication_ontology_observations_register.md
+  sha256: d06dbdf64fa7bd2ac81c7c1e97d16eebb8ded3d432396414c03a3e0ebca79d5e
+  role: binding observation and implementation decisions
+- path: docs/ontology_inventory.md
+  sha256: 4940bca14cf3bc29550b6bda94b49b34676848107941f276fac35c1e5deeb9ee
+  role: publication routing categories and human-readable ontology inventory
+authority_order:
+- frozen ontology 0.1.3 specification and generated OWL
+- frozen deterministic Phase B outputs and tests
+- final Publication Pilot 1 human-readable target inventory
+- publication ontology observations register
+- LLM extraction decision record
+- this machine-readable profile
+- source-unit contract
+controlled_vocabularies:
+  production_responsibility:
+  - deterministic
+  - pipeline_generated
+  - llm
+  - hybrid
+  - alignment_consolidation
+  pilot_treatment:
+  - context_only
+  - required_infrastructure
+  - extract_and_evaluate
+  - extract_and_monitor
+  - deferred_resolution
+  - separate_follow_on_protocol
+  - out_of_scope
+  - audit_only
+  entity_actions:
+  - propose_new
+  - link_existing
+  relation_actions:
+  - propose_edge
+  - derive
+  - resolve_deferred
+  evaluation_modes:
+  - audit_only
+  - follow_on_only
+  - not_attempted
+  - not_scored_context
+  - pipeline_validation
+  - pooled_metrics_and_case_analysis
+  - resolution_accuracy
+  - target_level_metrics
+global_rules:
+  evidence: No supported evidence span means no accepted semantic assertion.
+  node_edge_evidence_independence: true
+  atomicity: one node = one atomic semantic unit
+  identity_scope: source_local_within_paper
+  local_reconciliation: same class and same meaning within one Paper may reconcile; distinct meanings remain separate
+  global_consolidation_allowed: false
+  same_as_allowed: false
+  deterministic_mutation_allowed: false
+  neo4j_writes_allowed: false
+  abstract_class_direct_instantiation_allowed: false
+  derived_assertions_scored_as_llm_predictions: false
+  use_mention_reference_precedence:
+    usesModel: supersedes mentionsModel for the same Paper-entity pair
+    usesTool: supersedes mentionsTool for the same Paper-entity pair
+    usesDataset: supersedes mentionsDataset for the same Paper-entity pair
+    usesDataset_and_referencesDataset: may coexist
+    hasCodeRepository: specific assertion; referencesRepository parent may be pipeline-derived
+  metric_parameter_policy: contextual occurrences; preserve exact source strings and do not introduce unapproved numeric normalization
+  forbidden_output_fields_or_behaviors:
+  - sameAs
+  - mergeWith
+  - consolidatesTo
+  - global canonical ID
+  - invented external identifier
+  - Neo4j internal ID
+  - direct database write
+  - mutation of deterministic output
+  - direct instantiation of abstract classes
+class_expansions:
+  SoftwareEntity:
+  - Tool
+  - ComputationalModel
+  ComputationalModel:
+  - ProcessBasedModel
+  - ConceptualModel
+  - StatisticalModel
+  - MLModel
+  Place:
+  - HydrologicFeature
+  - NamedPlace
+  HydrologicFeature:
+  - Watershed
+  - RiverReach
+  - Gauge
+  - WaterBody
+  - Aquifer
+  - VPU
+  accepted_discourse_node:
+  - Background
+  - Theme
+  - ResearchProblem
+  - ResearchQuestion
+  - ResearchGoal
+  - ResearchSignificance
+  - Definition
+  - TheoreticalBasis
+  - Method
+  - Experiment
+  - Examples
+  - Finding
+  - Discussion
+  - RelatedResearch
+  - Limitation
+  - Conclusion
+  - Contribution
+  - FutureWork
+  - Hypothesis
+  - Claim
+  - DataDescription
+routing_categories:
+- id: B-P01
+  name: Background & Motivation
+  typical_region: Intro
+  raw_reachable_expression: A-P05, A-P06, A-P09, A-P10, A-DOM05
+  reachable_ontology_ids:
+  - A-P05
+  - A-P06
+  - A-P09
+  - A-P10
+  - A-DOM05
+  active_operational_target_ids:
+  - PUB-N-A-DOM05-CONCEPT
+  - PUB-N-A-P05-BACKGROUND
+  - PUB-N-A-P06-THEME
+  - PUB-N-A-P09-RESEARCHGOAL
+  - PUB-N-A-P10-RESEARCHSIGNIFICANCE
+- id: B-P02
+  name: Problem & Questions
+  typical_region: Intro
+  raw_reachable_expression: A-P07, A-P08
+  reachable_ontology_ids:
+  - A-P07
+  - A-P08
+  active_operational_target_ids:
+  - PUB-N-A-P07-RESEARCHPROBLEM
+  - PUB-N-A-P08-RESEARCHQUESTION
+- id: B-P03
+  name: Hypotheses & Claims
+  typical_region: Intro/Discussion
+  raw_reachable_expression: A-P23, A-P24
+  reachable_ontology_ids:
+  - A-P23
+  - A-P24
+  active_operational_target_ids:
+  - PUB-N-A-P23-HYPOTHESIS
+  - PUB-N-A-P24-CLAIM
+- id: B-P04
+  name: Definitions & Theory
+  typical_region: body
+  raw_reachable_expression: A-P11, A-P12
+  reachable_ontology_ids:
+  - A-P11
+  - A-P12
+  active_operational_target_ids:
+  - PUB-N-A-P11-DEFINITION
+  - PUB-N-A-P12-THEORETICALBASIS
+- id: B-P05
+  name: Study Area & Setting
+  typical_region: Study Area
+  raw_reachable_expression: A-DOM07*, A-DOM08, A-DOM09
+  reachable_ontology_ids:
+  - A-DOM07a
+  - A-DOM07b
+  - A-DOM07c
+  - A-DOM07d
+  - A-DOM07e
+  - A-DOM07f
+  - A-DOM08
+  - A-DOM09
+  active_operational_target_ids:
+  - PUB-N-A-DOM07A-WATERSHED
+  - PUB-N-A-DOM07B-RIVERREACH
+  - PUB-N-A-DOM07C-GAUGE
+  - PUB-N-A-DOM07D-WATERBODY
+  - PUB-N-A-DOM07E-AQUIFER
+  - PUB-N-A-DOM07F-VPU
+  - PUB-N-A-DOM08-NAMEDPLACE
+- id: B-P06
+  name: Data & Datasets
+  typical_region: Data/Methods
+  raw_reachable_expression: A-P25, A-P26, A-DOM04
+  reachable_ontology_ids:
+  - A-P25
+  - A-P26
+  - A-DOM04
+  active_operational_target_ids:
+  - PUB-N-A-DOM04-VARIABLE
+  - PUB-N-A-P25-DATASETMENTION-EXISTING-PHASE-B-INSTANCE
+  - PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE
+  - PUB-N-A-P26-DATADESCRIPTION
+- id: B-P07
+  name: Methods, Models, Algorithms & Experiments
+  typical_region: Methods
+  raw_reachable_expression: A-P13, A-P14, A-DOM03*, A-DOM13
+  reachable_ontology_ids:
+  - A-P13
+  - A-P14
+  - A-DOM03a
+  - A-DOM03b
+  - A-DOM03c
+  - A-DOM03d
+  - A-DOM13
+  active_operational_target_ids:
+  - PUB-N-A-DOM03A-PROCESSBASEDMODEL
+  - PUB-N-A-DOM03B-CONCEPTUALMODEL
+  - PUB-N-A-DOM03C-STATISTICALMODEL
+  - PUB-N-A-DOM03D-MLMODEL
+  - PUB-N-A-DOM13-ALGORITHM
+  - PUB-N-A-P13-METHOD
+  - PUB-N-A-P14-EXPERIMENT
+- id: B-P08
+  name: Tools & Software
+  typical_region: Methods
+  raw_reachable_expression: A-DOM02
+  reachable_ontology_ids:
+  - A-DOM02
+  active_operational_target_ids:
+  - PUB-N-A-DOM02-TOOL-EXISTING-EXACT-ENDPOINT
+  - PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE
+- id: B-P09
+  name: Parameters & Configuration
+  typical_region: Methods
+  raw_reachable_expression: A-DOM12
+  reachable_ontology_ids:
+  - A-DOM12
+  active_operational_target_ids:
+  - PUB-N-A-DOM12-PARAMETER
+- id: B-P10
+  name: Results, Findings & Metrics
+  typical_region: Results
+  raw_reachable_expression: A-P16, A-P15, A-DOM11
+  reachable_ontology_ids:
+  - A-P16
+  - A-P15
+  - A-DOM11
+  active_operational_target_ids:
+  - PUB-N-A-DOM11-EVALUATIONMETRIC
+  - PUB-N-A-P15-EXAMPLES
+  - PUB-N-A-P16-FINDING
+- id: B-P11
+  name: Discussion & Interpretation
+  typical_region: Discussion
+  raw_reachable_expression: A-P17, A-P19
+  reachable_ontology_ids:
+  - A-P17
+  - A-P19
+  active_operational_target_ids:
+  - PUB-N-A-P17-DISCUSSION
+  - PUB-N-A-P19-LIMITATION
+- id: B-P12
+  name: Conclusions, Contribution & Future Work
+  typical_region: Conclusion
+  raw_reachable_expression: A-P20, A-P21, A-P22
+  reachable_ontology_ids:
+  - A-P20
+  - A-P21
+  - A-P22
+  active_operational_target_ids:
+  - PUB-N-A-P20-CONCLUSION
+  - PUB-N-A-P21-CONTRIBUTION
+  - PUB-N-A-P22-FUTUREWORK
+- id: B-P13
+  name: Related Work
+  typical_region: Related Work
+  raw_reachable_expression: A-P18
+  reachable_ontology_ids:
+  - A-P18
+  active_operational_target_ids:
+  - PUB-N-A-P18-RELATEDRESEARCH
+contract_implementation_observations:
+- id: OBS-PUB-005
+  status: accepted_for_contract_implementation
+  observation: Method usesModel and Method appliesTo may overlap
+  pilot_rule: usesModel = model as component/resource; appliesTo = model as object of operation.
+  implementation_requirement: Add matched positive/negative examples and adjudication rules; prohibit duplicate edges from
+    the same evidence unless roles differ.
+- id: OBS-PUB-007
+  status: accepted_for_contract_implementation
+  observation: mentionsVariable is weaker than the operational study-relevance criterion
+  pilot_rule: Extract only variables observed, predicted, modeled, derived, compared, or analyzed by the current study.
+  implementation_requirement: Freeze relevance criteria and prefer DataDescription as the local source when available.
+- id: OBS-PUB-008
+  status: accepted_for_contract_implementation
+  observation: hasCodeRepository requires a reproducible ownership/association threshold
+  pilot_rule: Use hasCodeRepository only for explicit associated implementation, source code, scripts, or reproducibility
+    statements.
+  implementation_requirement: Create positive, negative, and ambiguous examples; define precedence over referencesRepository.
+- id: OBS-PUB-009
+  status: accepted_for_contract_implementation
+  observation: Compound and hybrid models lack a frozen typing policy
+  pilot_rule: Decompose explicit components; type named composite entity by the best-supported concrete subtype; abstain when
+    unsupported.
+  implementation_requirement: Create adjudication examples for multi-component and multi-typed systems; prohibit abstract
+    fallback.
+- id: OBS-PUB-010
+  status: accepted_for_contract_implementation
+  observation: EvaluationMetric conflates metric type and contextual metric occurrence
+  pilot_rule: Create contextual metric occurrences distinguished by model, method, experiment, condition, and value.
+  implementation_requirement: Freeze occurrence-level identity and local reconciliation rules.
+- id: OBS-PUB-011
+  status: accepted_for_contract_implementation
+  observation: Parameter conflates parameter concept and contextual parameter setting
+  pilot_rule: Create contextual Parameter instances distinguished by owner, configuration, range, and value.
+  implementation_requirement: Freeze owner-aware identity and local reconciliation rules.
+- id: OBS-PUB-015
+  status: accepted_for_contract_implementation
+  observation: No RepositoryMention class for unresolved repository names
+  pilot_rule: Use a source-scoped provisional Repository candidate without global merge.
+  implementation_requirement: Ensure candidate schema distinguishes provisional identity from exact Repository endpoints.
+- id: OBS-PUB-022
+  status: accepted_for_contract_implementation
+  observation: Global ontology extraction labels can be confused with source-specific production responsibility
+  pilot_rule: The publication inventory uses source_scope=publications and stage_scope=llm_semantic_overlay.
+  implementation_requirement: Add an explicit note that ontology extraction metadata is global/descriptive, while production
+    responsibility is source- and stage-specific.
+- id: OBS-PUB-023
+  status: accepted_for_contract_implementation
+  observation: Asserted and inferred superclass or parent-property memberships need provenance separation
+  pilot_rule: LLM emits the concrete class/specific property; pipeline derives ancestors or parent properties.
+  implementation_requirement: Define assertedType versus inferredType and ensure derived assertions are not scored as LLM
+    predictions.
+- id: OBS-PUB-024
+  status: accepted_for_contract_implementation
+  observation: Use/mention/reference precedence must be enforced consistently
+  pilot_rule: Use supersedes mention; formal dataset reference may coexist with use.
+  implementation_requirement: Add candidate reconciliation and conflict-validation rules.
+semantic_abstention_reasons:
+- insufficient_evidence
+- ambiguous_class
+- ambiguous_relation
+- unresolved_endpoint
+- invalid_domain_range
+- target_outside_ontology
+- incomplete_source_text
+- unrecoverable_table_structure
+- visual_only_evidence
+- equation_only_evidence
+- unresolved_cross_reference
+automatic_rejection_reasons:
+- evidence_not_literal
+- invalid_offsets
+- source_unit_not_found
+- unknown_ontology_id
+- abstract_class_instantiated
+- forbidden_field
+- endpoint_not_found
+- deterministic_mutation_attempt
+processing_failures:
+- invalid_json
+- timeout
+- api_error
+- truncated_response
+- token_limit
+- retry_exhausted
+pilot_sample:
+- '10'
+- '15'
+- '16'
+- '18'
+- '34'
+- '37'
+- '46'
+- '54'
+- '79'
+- '276'
+- '87'
+- 87-corrigendum
+counts:
+  node_operational_rows: 61
+  relation_operational_rows: 44
+  nodes_by_treatment:
+    required_infrastructure: 5
+    context_only: 9
+    out_of_scope: 5
+    extract_and_monitor: 21
+    extract_and_evaluate: 19
+    deferred_resolution: 2
+  relations_by_treatment:
+    required_infrastructure: 5
+    context_only: 8
+    out_of_scope: 3
+    extract_and_evaluate: 16
+    extract_and_monitor: 10
+    separate_follow_on_protocol: 1
+    deferred_resolution: 1
+node_targets:
+- row: 1
+  operational_id: PUB-N-A-PROV01-EVIDENCESPAN
+  ontology_ids:
+  - A-PROV01
+  formal_classes:
+  - id: A-PROV01
+    name: EvidenceSpan
+    iri: ciroh:EvidenceSpan
+    kind: metadata
+    extraction: det+llm
+    status: S
+    attributes:
+    - name: sourceArtifact
+    - name: sourceLocation
+    - name: evidenceText
+    - name: extractionMethod
+    - name: version
+  operational_target: EvidenceSpan
+  kind: metadata
+  production_responsibility: pipeline_generated
+  pilot_treatment: required_infrastructure
+  direct_instantiation: false
+  emission_mode: pipeline_materialized
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: pipeline_verified_span
+  evaluation_mode: pipeline_validation
+  positive_criterion: Materialized only after the proposed evidence text, source unit, and offsets pass literal verification.
+  boundary: The LLM proposes evidence coordinates; the pipeline creates the EvidenceSpan. Not scored as an entity-class prediction.
+- row: 2
+  operational_id: PUB-N-A-ID01-IDENTIFIER
+  ontology_ids:
+  - A-ID01
+  formal_classes:
+  - id: A-ID01
+    name: Identifier
+    iri: datacite:Identifier
+    kind: metadata
+    extraction: det
+    status: S
+    note: datacite:relatedIdentifier for archived snapshots
+  operational_target: Identifier
+  kind: metadata
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  direct_instantiation: true
+  emission_mode: deterministic_context
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Exact DOI, resource ID, canonical repository URL, ORCID, ROR, or other authorized identifier.
+  boundary: The LLM may quote an identifier literal but may not mint, repair, normalize, or merge identifiers.
+- row: 3
+  operational_id: PUB-N-A-AG01-A-P03-PERSON-AUTHOR
+  ontology_ids:
+  - A-AG01
+  - A-P03
+  formal_classes:
+  - id: A-AG01
+    name: Person
+    iri: schema:Person
+    kind: agent
+    extraction: hybrid
+    status: S
+    note: 'roles: Author/Creator/Contributor; canonicalized across four identifier regimes'
+  - id: A-P03
+    name: Author
+    iri: schema:Person
+    kind: agent
+    extraction: hybrid
+    status: S
+    same_as: A-AG01
+  operational_target: Person / Author
+  kind: agent
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  direct_instantiation: true
+  emission_mode: deterministic_context
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Publication authors already represented in the frozen Phase B backbone.
+  boundary: Body-text person extraction and cross-source person consolidation are outside Pilot 1.
+- row: 4
+  operational_id: PUB-N-A-AG02-ORGANIZATION
+  ontology_ids:
+  - A-AG02
+  formal_classes:
+  - id: A-AG02
+    name: Organization
+    iri: schema:Organization
+    kind: agent
+    extraction: det
+    status: S
+    note: + ROR
+  operational_target: Organization
+  kind: agent
+  production_responsibility: deterministic
+  pilot_treatment: out_of_scope
+  direct_instantiation: true
+  emission_mode: not_emitted
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: not_applicable
+  evaluation_mode: not_attempted
+  positive_criterion: Affiliation or funding organization recoverable through structured or rule-based parsing.
+  boundary: Current publication implementation gap; it must not be reassigned to the LLM merely because Phase B does not yet
+    implement it.
+- row: 5
+  operational_id: PUB-N-A-P01-PAPER
+  ontology_ids:
+  - A-P01
+  formal_classes:
+  - id: A-P01
+    name: Paper
+    iri: ciroh:Paper
+    kind: artifact
+    extraction: hybrid
+    status: S
+    note: DataCite; fabio ref. IRI
+  operational_target: Paper
+  kind: artifact
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  direct_instantiation: true
+  emission_mode: deterministic_context
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Curated source Paper and DOI-backed cited-paper stubs already represented by Phase B.
+  boundary: DOI-less and unresolved citation targets require a separate citation-grounding protocol.
+- row: 6
+  operational_id: PUB-N-A-P02-VENUE
+  ontology_ids:
+  - A-P02
+  formal_classes:
+  - id: A-P02
+    name: Venue
+    iri: ciroh:Venue
+    kind: metadata
+    extraction: det
+    status: S
+    note: fabio:hasPublicationVenue; ref. IRI
+  operational_target: Venue
+  kind: metadata
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  direct_instantiation: true
+  emission_mode: deterministic_context
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Publication venue already represented by Phase B.
+  boundary: Not re-extracted.
+- row: 7
+  operational_id: PUB-N-A-P04-SUBJECT
+  ontology_ids:
+  - A-P04
+  formal_classes:
+  - id: A-P04
+    name: Subject
+    iri: ciroh:Subject
+    kind: metadata
+    extraction: det
+    status: S
+    note: unified keyword/tag class across paper, dataset, doc (was A-P04/A-D06/A-DC04); dcterms:subject
+  operational_target: Subject
+  kind: metadata
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  direct_instantiation: true
+  emission_mode: deterministic_context
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Explicit publication keywords or subjects already represented by Phase B.
+  boundary: Concepts interpreted from prose are Concept, not generated Subject instances.
+- row: 8
+  operational_id: PUB-N-A-D09-AWARD
+  ontology_ids:
+  - A-D09
+  formal_classes:
+  - id: A-D09
+    name: Award
+    iri: ciroh:Award
+    kind: metadata
+    extraction: det
+    status: S
+    note: funding; prov
+  operational_target: Award
+  kind: metadata
+  production_responsibility: deterministic
+  pilot_treatment: out_of_scope
+  direct_instantiation: true
+  emission_mode: not_emitted
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: not_applicable
+  evaluation_mode: not_attempted
+  positive_criterion: Award or grant recoverable from structured funding evidence.
+  boundary: Publication deterministic implementation gap; not an LLM target.
+- row: 9
+  operational_id: PUB-N-A-DOM01-SOFTWAREENTITY
+  ontology_ids:
+  - A-DOM01
+  formal_classes:
+  - id: A-DOM01
+    name: SoftwareEntity
+    iri: ciroh:SoftwareEntity
+    kind: domain
+    status: S
+    note: CodeMeta = profile
+  operational_target: SoftwareEntity
+  kind: abstract domain class
+  production_responsibility: pipeline_generated
+  pilot_treatment: required_infrastructure
+  direct_instantiation: false
+  emission_mode: pipeline_derived
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: inherited_from_concrete_assertion
+  evaluation_mode: pipeline_validation
+  positive_criterion: Superclass membership derived from an accepted Tool or concrete ComputationalModel subtype.
+  boundary: The LLM may not emit SoftwareEntity as a final class.
+  observation_refs:
+  - OBS-PUB-023
+  derivation_policy:
+    asserted_by_llm: false
+    derive_from_concrete_child: true
+    score_as_llm_prediction: false
+- row: 10
+  operational_id: PUB-N-A-DOM03-COMPUTATIONALMODEL
+  ontology_ids:
+  - A-DOM03
+  formal_classes:
+  - id: A-DOM03
+    name: ComputationalModel
+    iri: ciroh:ComputationalModel
+    kind: domain
+    extraction: llm
+    status: S
+    parent: ciroh:SoftwareEntity
+    note: 'ciroh: under schema:SoftwareApplication/SoftwareSourceCode'
+  operational_target: ComputationalModel
+  kind: abstract domain class
+  production_responsibility: pipeline_generated
+  pilot_treatment: required_infrastructure
+  direct_instantiation: false
+  emission_mode: pipeline_derived
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: inherited_from_concrete_assertion
+  evaluation_mode: pipeline_validation
+  positive_criterion: Superclass membership derived from ProcessBasedModel, ConceptualModel, StatisticalModel, or MLModel.
+  boundary: The LLM may not use ComputationalModel as a fallback for ambiguous subtype classification.
+  observation_refs:
+  - OBS-PUB-023
+  derivation_policy:
+    asserted_by_llm: false
+    derive_from_concrete_child: true
+    score_as_llm_prediction: false
+- row: 11
+  operational_id: PUB-N-A-DOM06-PLACE
+  ontology_ids:
+  - A-DOM06
+  formal_classes:
+  - id: A-DOM06
+    name: Place
+    iri: schema:Place
+    kind: domain
+    status: S
+  operational_target: Place
+  kind: abstract domain class
+  production_responsibility: pipeline_generated
+  pilot_treatment: required_infrastructure
+  direct_instantiation: false
+  emission_mode: pipeline_derived
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: inherited_from_concrete_assertion
+  evaluation_mode: pipeline_validation
+  positive_criterion: Superclass membership derived from HydrologicFeature or NamedPlace.
+  boundary: The LLM must emit a supported concrete subtype.
+  observation_refs:
+  - OBS-PUB-023
+  derivation_policy:
+    asserted_by_llm: false
+    derive_from_concrete_child: true
+    score_as_llm_prediction: false
+- row: 12
+  operational_id: PUB-N-A-DOM07-HYDROLOGICFEATURE
+  ontology_ids:
+  - A-DOM07
+  formal_classes:
+  - id: A-DOM07
+    name: HydrologicFeature
+    iri: ciroh:HydrologicFeature
+    kind: domain
+    extraction: hybrid
+    status: S
+    parent: schema:Place
+    status_note: S/E
+    note: typed by hyf:; geometry via geo:hasGeometry
+  operational_target: HydrologicFeature
+  kind: abstract domain class
+  production_responsibility: pipeline_generated
+  pilot_treatment: required_infrastructure
+  direct_instantiation: false
+  emission_mode: pipeline_derived
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: inherited_from_concrete_assertion
+  evaluation_mode: pipeline_validation
+  positive_criterion: Superclass membership derived from Watershed, RiverReach, Gauge, WaterBody, Aquifer, or VPU.
+  boundary: The LLM may not emit HydrologicFeature directly.
+  observation_refs:
+  - OBS-PUB-023
+  derivation_policy:
+    asserted_by_llm: false
+    derive_from_concrete_child: true
+    score_as_llm_prediction: false
+- row: 13
+  operational_id: PUB-N-A-P05-BACKGROUND
+  ontology_ids:
+  - A-P05
+  formal_classes:
+  - id: A-P05
+    name: Background
+    iri: deo:Background
+    kind: discourse
+    extraction: llm
+    status: S
+  operational_target: Background
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Atomic contextual statement that directly motivates the current study.
+  boundary: Exclude generic introduction text, detailed related work, the research gap, and the study goal.
+- row: 14
+  operational_id: PUB-N-A-P06-THEME
+  ontology_ids:
+  - A-P06
+  formal_classes:
+  - id: A-P06
+    name: Theme
+    iri: ciroh:Theme
+    kind: discourse
+    extraction: llm
+    status: S
+    note: PEO
+  operational_target: Theme
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Text-supported central thematic focus of the paper.
+  boundary: Monitor redundancy with title, Subject, Concept, and Background; do not create unsupported abstractive summaries.
+- row: 15
+  operational_id: PUB-N-A-P07-RESEARCHPROBLEM
+  ontology_ids:
+  - A-P07
+  formal_classes:
+  - id: A-P07
+    name: ResearchProblem
+    iri: deo:ProblemStatement
+    kind: discourse
+    extraction: llm
+    status: S
+  operational_target: ResearchProblem
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Explicit gap, deficiency, uncertainty, unresolved challenge, or problem addressed by the current study.
+  boundary: Exclude general importance, study limitations, and objectives.
+- row: 16
+  operational_id: PUB-N-A-P08-RESEARCHQUESTION
+  ontology_ids:
+  - A-P08
+  formal_classes:
+  - id: A-P08
+    name: ResearchQuestion
+    iri: ciroh:ResearchQuestion
+    kind: discourse
+    extraction: llm
+    status: S
+    note: CIROH addition — PEO uses Problem
+  operational_target: ResearchQuestion
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Explicit question or clearly interrogative declarative formulation addressed by the current study.
+  boundary: Do not rewrite every objective as a question; exclude rhetorical and future-work questions.
+- row: 17
+  operational_id: PUB-N-A-P09-RESEARCHGOAL
+  ontology_ids:
+  - A-P09
+  formal_classes:
+  - id: A-P09
+    name: ResearchGoal
+    iri: deo:Motivation
+    kind: discourse
+    extraction: llm
+    status: S
+  operational_target: ResearchGoal
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Explicit aim, objective, or intended scientific action of the current paper.
+  boundary: Exclude goals of simulated agents, cited studies, software components, and future recommendations.
+- row: 18
+  operational_id: PUB-N-A-P10-RESEARCHSIGNIFICANCE
+  ontology_ids:
+  - A-P10
+  formal_classes:
+  - id: A-P10
+    name: ResearchSignificance
+    iri: ciroh:ResearchSignificance
+    kind: discourse
+    extraction: llm
+    status: S
+    note: PEO; != Contribution
+  operational_target: ResearchSignificance
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Explicit statement of why this study, result, or contribution matters.
+  boundary: Background is general importance; Contribution is what was added.
+- row: 19
+  operational_id: PUB-N-A-P11-DEFINITION
+  ontology_ids:
+  - A-P11
+  formal_classes:
+  - id: A-P11
+    name: Definition
+    iri: ciroh:Definition
+    kind: discourse
+    extraction: llm
+    status: S
+    note: PEO
+  operational_target: Definition
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Explicit statement establishing the meaning of a term, measure, method, or concept.
+  boundary: Exclude general explanations, procedure descriptions, and formulas without textual interpretation.
+- row: 20
+  operational_id: PUB-N-A-P12-THEORETICALBASIS
+  ontology_ids:
+  - A-P12
+  formal_classes:
+  - id: A-P12
+    name: TheoreticalBasis
+    iri: ciroh:TheoreticalBasis
+    kind: discourse
+    extraction: llm
+    status: S
+    note: PEO
+  operational_target: TheoreticalBasis
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Theory, conceptual framework, or scientific principle that grounds the study, hypothesis, method, or
+    interpretation.
+  boundary: Exclude mere theory mentions and applied procedures. No TheoreticalBasis grounding relation is declared in ontology
+    0.1.3.
+- row: 21
+  operational_id: PUB-N-A-P13-METHOD
+  ontology_ids:
+  - A-P13
+  formal_classes:
+  - id: A-P13
+    name: Method
+    iri: deo:Methods
+    kind: discourse
+    extraction: llm
+    status: S
+  operational_target: Method
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Technique, procedure, or applied approach used to perform part of the current study.
+  boundary: A named reusable entity may instead be an Algorithm, Tool, or concrete model; the applied activity remains Method.
+- row: 22
+  operational_id: PUB-N-A-P14-EXPERIMENT
+  ontology_ids:
+  - A-P14
+  formal_classes:
+  - id: A-P14
+    name: Experiment
+    iri: ciroh:Experiment
+    kind: discourse
+    extraction: llm
+    status: S
+    note: PEO
+  operational_target: Experiment
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Delimited empirical or computational test combining data, methods/models, conditions, and evaluation.
+  boundary: Exclude a single technique, a data description, or an illustrative example without evaluation.
+- row: 23
+  operational_id: PUB-N-A-P15-EXAMPLES
+  ontology_ids:
+  - A-P15
+  formal_classes:
+  - id: A-P15
+    name: Examples
+    iri: deo:Scenario
+    kind: discourse
+    extraction: llm
+    status: S
+  operational_target: Examples
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Single illustrative case, scenario, or application used to demonstrate an idea or procedure.
+  boundary: Exclude evaluated experiments and incidental phrases introduced by 'for example'.
+- row: 24
+  operational_id: PUB-N-A-P16-FINDING
+  ontology_ids:
+  - A-P16
+  formal_classes:
+  - id: A-P16
+    name: Finding
+    iri: deo:Results
+    kind: discourse
+    extraction: llm
+    status: S
+    note: aka Result
+  operational_target: Finding
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Empirical, computational, analytical, qualitative, negative, or null result produced by the current
+    study.
+  boundary: Exclude goals, expectations, recommendations, and findings attributed only to cited work.
+- row: 25
+  operational_id: PUB-N-A-P17-DISCUSSION
+  ontology_ids:
+  - A-P17
+  formal_classes:
+  - id: A-P17
+    name: Discussion
+    iri: deo:Discussion
+    kind: discourse
+    extraction: llm
+    status: S
+  operational_target: Discussion
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Atomic interpretation or explanation of a result.
+  boundary: Finding states what was observed; Discussion explains why it occurred or what it implies.
+- row: 26
+  operational_id: PUB-N-A-P18-RELATEDRESEARCH
+  ontology_ids:
+  - A-P18
+  formal_classes:
+  - id: A-P18
+    name: RelatedResearch
+    iri: deo:RelatedWork
+    kind: discourse
+    extraction: llm
+    status: S
+  operational_target: RelatedResearch
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Substantive description, comparison, or synthesis of prior research.
+  boundary: Exclude bare citations and bibliographic records; cited-Paper grounding is a separate protocol.
+- row: 27
+  operational_id: PUB-N-A-P19-LIMITATION
+  ontology_ids:
+  - A-P19
+  formal_classes:
+  - id: A-P19
+    name: Limitation
+    iri: ciroh:Limitation
+    kind: discourse
+    extraction: llm
+    status: S
+    note: PEO Discussion-Limitation
+  operational_target: Limitation
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Explicit constraint, weakness, uncertainty, or boundary of the current study, method, experiment, data,
+    or finding.
+  boundary: ResearchProblem predates and motivates the study; FutureWork proposes a later action.
+- row: 28
+  operational_id: PUB-N-A-P20-CONCLUSION
+  ontology_ids:
+  - A-P20
+  formal_classes:
+  - id: A-P20
+    name: Conclusion
+    iri: deo:Conclusion
+    kind: discourse
+    extraction: llm
+    status: S
+  operational_target: Conclusion
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Study-level synthesis or general conclusion derived by the authors.
+  boundary: A repeated metric or result is still a Finding unless the text performs a higher-level synthesis.
+- row: 29
+  operational_id: PUB-N-A-P21-CONTRIBUTION
+  ontology_ids:
+  - A-P21
+  formal_classes:
+  - id: A-P21
+    name: Contribution
+    iri: deo:Contribution
+    kind: discourse
+    extraction: llm
+    status: S
+    note: '!= Significance'
+  operational_target: Contribution
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: What the study claims to have added to knowledge, evidence, method, infrastructure, or practice.
+  boundary: ResearchGoal is intended action; ResearchSignificance is why the contribution matters.
+- row: 30
+  operational_id: PUB-N-A-P22-FUTUREWORK
+  ontology_ids:
+  - A-P22
+  formal_classes:
+  - id: A-P22
+    name: FutureWork
+    iri: deo:FutureWork
+    kind: discourse
+    extraction: llm
+    status: S
+  operational_target: FutureWork
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Explicit future research activity proposed by the authors.
+  boundary: Exclude current-study goals, generic aspirations, and future actions of an experimental agent.
+- row: 31
+  operational_id: PUB-N-A-P23-HYPOTHESIS
+  ontology_ids:
+  - A-P23
+  formal_classes:
+  - id: A-P23
+    name: Hypothesis
+    iri: ciroh:Hypothesis
+    kind: discourse
+    extraction: llm
+    status: E
+    note: CIROH; SAO/Micropublications
+  operational_target: Hypothesis
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Explicit, testable proposition that the current study intends to evaluate.
+  boundary: Do not infer a hypothesis from a question, objective, design, or expected result.
+- row: 32
+  operational_id: PUB-N-A-P24-CLAIM
+  ontology_ids:
+  - A-P24
+  formal_classes:
+  - id: A-P24
+    name: Claim
+    iri: ciroh:Claim
+    kind: discourse
+    extraction: llm
+    status: E
+    note: CIROH; SAO/Micropublications
+  operational_target: Claim
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Argumentatively important proposition asserted by the authors but not necessarily a direct empirical
+    result.
+  boundary: Not every declarative sentence is a Claim; avoid duplicate Claim and Conclusion nodes for the same unit.
+- row: 33
+  operational_id: PUB-N-A-P26-DATADESCRIPTION
+  ontology_ids:
+  - A-P26
+  formal_classes:
+  - id: A-P26
+    name: DataDescription
+    iri: deo:Data
+    kind: discourse
+    extraction: llm
+    status: S
+    note: PEO Data
+  operational_target: DataDescription
+  kind: discourse
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Atomic description of data origin, period, coverage, sample, resolution, variables, partition, or composition.
+  boundary: DatasetMention identifies a dataset; DataDescription explains its characteristics.
+- row: 34
+  operational_id: PUB-N-A-DOM02-TOOL-EXISTING-EXACT-ENDPOINT
+  ontology_ids:
+  - A-DOM02
+  formal_classes:
+  - id: A-DOM02
+    name: Tool
+    iri: ciroh:Tool
+    kind: domain
+    extraction: llm
+    status: S
+    parent: ciroh:SoftwareEntity
+  operational_target: Tool — existing exact endpoint
+  kind: domain
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  direct_instantiation: true
+  emission_mode: deterministic_context
+  allowed_actions:
+  - link_existing
+  endpoint_usage: linkable_existing
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Exact Tool already created from authorized deterministic evidence, such as a typed software DOI.
+  boundary: The LLM may link to it but must not duplicate or globally merge it.
+- row: 35
+  operational_id: PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE
+  ontology_ids:
+  - A-DOM02
+  formal_classes:
+  - id: A-DOM02
+    name: Tool
+    iri: ciroh:Tool
+    kind: domain
+    extraction: llm
+    status: S
+    parent: ciroh:SoftwareEntity
+  operational_target: Tool — new from publication prose
+  kind: domain
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Software application, platform, package, or system used or mentioned in the paper.
+  boundary: A system that represents or predicts a scientific process may instead be a model.
+- row: 36
+  operational_id: PUB-N-A-DOM03A-PROCESSBASEDMODEL
+  ontology_ids:
+  - A-DOM03a
+  formal_classes:
+  - id: A-DOM03a
+    name: ProcessBasedModel
+    iri: ciroh:ProcessBasedModel
+    kind: domain
+    extraction: llm
+    status: S
+    parent: ciroh:ComputationalModel
+  operational_target: ProcessBasedModel
+  kind: domain
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Named computational model explicitly representing physical, hydrologic, hydraulic, or environmental
+    processes.
+  boundary: Exclude the method applied to the model and auxiliary software used to run it.
+  observation_refs:
+  - OBS-PUB-009
+- row: 37
+  operational_id: PUB-N-A-DOM03B-CONCEPTUALMODEL
+  ontology_ids:
+  - A-DOM03b
+  formal_classes:
+  - id: A-DOM03b
+    name: ConceptualModel
+    iri: ciroh:ConceptualModel
+    kind: domain
+    extraction: llm
+    status: S
+    parent: ciroh:ComputationalModel
+  operational_target: ConceptualModel
+  kind: domain
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Named computational model using a simplified conceptual representation such as buckets or tanks.
+  boundary: Monitor ambiguous hybrid models and the boundary with ProcessBasedModel.
+  observation_refs:
+  - OBS-PUB-009
+- row: 38
+  operational_id: PUB-N-A-DOM03C-STATISTICALMODEL
+  ontology_ids:
+  - A-DOM03c
+  formal_classes:
+  - id: A-DOM03c
+    name: StatisticalModel
+    iri: ciroh:StatisticalModel
+    kind: domain
+    extraction: llm
+    status: E
+    parent: ciroh:ComputationalModel
+    status_note: vestigial — regression resolves to Method; instantiates only for a named statistical model with own identity
+  operational_target: StatisticalModel
+  kind: domain
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Named statistical model with stable identity that can be implemented, compared, or reused as an entity.
+  boundary: Generic regression, estimation, copula fitting, or Bayesian analysis is normally Method.
+  observation_refs:
+  - OBS-PUB-009
+- row: 39
+  operational_id: PUB-N-A-DOM03D-MLMODEL
+  ontology_ids:
+  - A-DOM03d
+  formal_classes:
+  - id: A-DOM03d
+    name: MLModel
+    iri: ciroh:MLModel
+    kind: domain
+    extraction: llm
+    status: S
+    parent: ciroh:ComputationalModel
+    note: aka DataDrivenModel
+  operational_target: MLModel
+  kind: domain
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Data-driven model or trained architecture used, proposed, compared, or evaluated by the current study.
+  boundary: Training procedure is Method; optimization procedure may be Algorithm.
+  observation_refs:
+  - OBS-PUB-009
+- row: 40
+  operational_id: PUB-N-A-DOM13-ALGORITHM
+  ontology_ids:
+  - A-DOM13
+  formal_classes:
+  - id: A-DOM13
+    name: Algorithm
+    iri: ciroh:Algorithm
+    kind: domain
+    extraction: llm
+    status: E
+    note: named technique
+  operational_target: Algorithm
+  kind: domain
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Named, reusable computational procedure such as SCE-UA, DDS, or Adam.
+  boundary: Optimization, calibration, training, and regression without a named algorithm are Methods.
+- row: 41
+  operational_id: PUB-N-A-DOM11-EVALUATIONMETRIC
+  ontology_ids:
+  - A-DOM11
+  formal_classes:
+  - id: A-DOM11
+    name: EvaluationMetric
+    iri: ciroh:EvaluationMetric
+    kind: domain
+    extraction: llm
+    status: S
+    attributes:
+    - name: value
+      type: string
+      note: schema:PropertyValue
+    note: aka PerformanceMetric; value as schema:PropertyValue
+  operational_target: EvaluationMetric
+  kind: domain
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Contextual metric occurrence used to evaluate a model or method, optionally with an explicit value.
+  boundary: Do not merge same-named metrics across different models, experiments, conditions, or values.
+  observation_refs:
+  - OBS-PUB-010
+  identity_policy:
+    scope: contextual_occurrence
+    distinguish_by:
+    - owner
+    - experiment
+    - condition
+    - version
+    - value
+    preserve_exact_source_strings:
+    - value
+    - range
+    - operator
+    - interval
+    - unit
+- row: 42
+  operational_id: PUB-N-A-DOM12-PARAMETER
+  ontology_ids:
+  - A-DOM12
+  formal_classes:
+  - id: A-DOM12
+    name: Parameter
+    iri: ciroh:Parameter
+    kind: domain
+    extraction: hybrid
+    status: S
+    attributes:
+    - name: range
+      type: string
+    - name: value
+      type: string
+    - name: calibrationStatus
+      type: enum
+      values:
+      - calibrated
+      - default
+    status_note: E at paper level
+  operational_target: Parameter
+  kind: domain
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Contextual value, coefficient, threshold, or configuration controlling a model, method, algorithm, or
+    experiment.
+  boundary: Variable is observed/predicted; EvaluationMetric evaluates performance. Preserve value/range as exact strings.
+  observation_refs:
+  - OBS-PUB-011
+  identity_policy:
+    scope: contextual_occurrence
+    distinguish_by:
+    - owner
+    - configuration
+    - range
+    - value
+    preserve_exact_source_strings:
+    - value
+    - range
+    - operator
+    - interval
+    - unit
+- row: 43
+  operational_id: PUB-N-A-DOM04-VARIABLE
+  ontology_ids:
+  - A-DOM04
+  formal_classes:
+  - id: A-DOM04
+    name: Variable
+    iri: schema:variableMeasured
+    kind: domain
+    extraction: llm
+    status: E
+    note: CF Standard Names; measurable quantity (vs Concept)
+  operational_target: Variable
+  kind: domain
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Study-relevant measurable, observed, predicted, derived, or analyzed quantity or characteristic.
+  boundary: Exclude broad concepts, metrics, parameters, units, and variables appearing only incidentally in prior work.
+  observation_refs:
+  - OBS-PUB-007
+- row: 44
+  operational_id: PUB-N-A-D12-MEASUREMENT
+  ontology_ids:
+  - A-D12
+  formal_classes:
+  - id: A-D12
+    name: Measurement
+    iri: ciroh:Measurement
+    kind: domain
+    extraction: llm
+    status: E
+    status_note: coverage ~ 0 · demote-candidate
+  operational_target: Measurement
+  kind: domain
+  production_responsibility: llm
+  pilot_treatment: out_of_scope
+  direct_instantiation: true
+  emission_mode: not_emitted
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: not_applicable
+  evaluation_mode: not_attempted
+  positive_criterion: Individual quantified observation of a variable.
+  boundary: Designed primarily for HydroShare; publication observations remain within Finding/DataDescription in Pilot 1.
+- row: 45
+  operational_id: PUB-N-A-P25-DATASETMENTION-EXISTING-PHASE-B-INSTANCE
+  ontology_ids:
+  - A-P25
+  formal_classes:
+  - id: A-P25
+    name: DatasetMention
+    iri: ciroh:DatasetMention
+    kind: domain
+    extraction: hybrid
+    status: S
+    note: DataCite
+  operational_target: DatasetMention — existing Phase B instance
+  kind: domain
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  direct_instantiation: true
+  emission_mode: deterministic_context
+  allowed_actions:
+  - link_existing
+  endpoint_usage: linkable_existing
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Source-scoped dataset mention already produced by Phase B.
+  boundary: Do not recreate it.
+- row: 46
+  operational_id: PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE
+  ontology_ids:
+  - A-P25
+  formal_classes:
+  - id: A-P25
+    name: DatasetMention
+    iri: ciroh:DatasetMention
+    kind: domain
+    extraction: hybrid
+    status: S
+    note: DataCite
+  operational_target: DatasetMention — new from prose
+  kind: domain
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Dataset named or described in publication prose without sufficient exact identity for DatasetResource.
+  boundary: Preserve source-scoped identity and version wording; do not promote by name alone.
+- row: 47
+  operational_id: PUB-N-A-D01-DATASETRESOURCE-EXISTING-EXACT-ENDPOINT
+  ontology_ids:
+  - A-D01
+  formal_classes:
+  - id: A-D01
+    name: DatasetResource
+    iri: ciroh:DatasetResource
+    kind: artifact
+    extraction: hybrid
+    status: S
+    note: DataCite; prov:Entity; hsterms
+  operational_target: DatasetResource — existing exact endpoint
+  kind: artifact
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  direct_instantiation: true
+  emission_mode: deterministic_context
+  allowed_actions:
+  - link_existing
+  endpoint_usage: linkable_existing
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Dataset with exact DOI, HydroShare ID, canonical URL, or other authorized identity already resolved.
+  boundary: The LLM may link to it; a name-only mention remains DatasetMention.
+- row: 48
+  operational_id: PUB-N-A-D01-DATASETRESOURCE-EXACT-IDENTIFIER-OMITTED-BY-PHASE-B
+  ontology_ids:
+  - A-D01
+  formal_classes:
+  - id: A-D01
+    name: DatasetResource
+    iri: ciroh:DatasetResource
+    kind: artifact
+    extraction: hybrid
+    status: S
+    note: DataCite; prov:Entity; hsterms
+  operational_target: DatasetResource — exact identifier omitted by Phase B
+  kind: artifact
+  production_responsibility: hybrid
+  pilot_treatment: deferred_resolution
+  direct_instantiation: true
+  emission_mode: resolver_mediated_candidate
+  allowed_actions:
+  - propose_new
+  - link_existing
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: semantic_span_plus_exact_identifier_resolution
+  evaluation_mode: resolution_accuracy
+  positive_criterion: LLM locates and interprets the role; deterministic resolver validates and creates/reuses the exact resource.
+  boundary: Not scored as ordinary open entity discovery.
+- row: 49
+  operational_id: PUB-N-A-C01-REPOSITORY-EXISTING-EXACT-ENDPOINT
+  ontology_ids:
+  - A-C01
+  formal_classes:
+  - id: A-C01
+    name: Repository
+    iri: ciroh:Repository
+    kind: artifact
+    extraction: hybrid
+    status: S
+    attributes:
+    - name: fork
+      type: boolean
+    - name: commitSHA
+      type: string
+    note: CodeMeta profile; DOAP ref. IRIs; + fork flag, RepositoryPurpose, commitSHA
+  operational_target: Repository — existing exact endpoint
+  kind: artifact
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  direct_instantiation: true
+  emission_mode: deterministic_context
+  allowed_actions:
+  - link_existing
+  endpoint_usage: linkable_existing
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Canonical repository URL already resolved by Phase B.
+  boundary: The LLM interprets its role but does not recreate the repository.
+  observation_refs:
+  - OBS-PUB-008
+- row: 50
+  operational_id: PUB-N-A-C01-REPOSITORY-EXACT-URL-OMITTED-BY-PHASE-B
+  ontology_ids:
+  - A-C01
+  formal_classes:
+  - id: A-C01
+    name: Repository
+    iri: ciroh:Repository
+    kind: artifact
+    extraction: hybrid
+    status: S
+    attributes:
+    - name: fork
+      type: boolean
+    - name: commitSHA
+      type: string
+    note: CodeMeta profile; DOAP ref. IRIs; + fork flag, RepositoryPurpose, commitSHA
+  operational_target: Repository — exact URL omitted by Phase B
+  kind: artifact
+  production_responsibility: hybrid
+  pilot_treatment: deferred_resolution
+  direct_instantiation: true
+  emission_mode: resolver_mediated_candidate
+  allowed_actions:
+  - propose_new
+  - link_existing
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: semantic_span_plus_exact_identifier_resolution
+  evaluation_mode: resolution_accuracy
+  positive_criterion: LLM identifies relevance; deterministic resolver normalizes and verifies owner/repository identity.
+  boundary: Retain unresolved if URL or role cannot be validated.
+  observation_refs:
+  - OBS-PUB-008
+- row: 51
+  operational_id: PUB-N-A-C01-REPOSITORY-NAMED-WITHOUT-EXACT-IDENTITY
+  ontology_ids:
+  - A-C01
+  formal_classes:
+  - id: A-C01
+    name: Repository
+    iri: ciroh:Repository
+    kind: artifact
+    extraction: hybrid
+    status: S
+    attributes:
+    - name: fork
+      type: boolean
+    - name: commitSHA
+      type: string
+    note: CodeMeta profile; DOAP ref. IRIs; + fork flag, RepositoryPurpose, commitSHA
+  operational_target: Repository — named without exact identity
+  kind: artifact candidate
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Text clearly refers to a repository but provides no exact canonical identity.
+  boundary: Keep a source-scoped provisional candidate; never merge globally by name alone.
+  observation_refs:
+  - OBS-PUB-008
+  - OBS-PUB-015
+  identity_policy:
+    status: provisional_source_local
+    global_merge_allowed: false
+    exact_identifier_required_for_promotion: true
+- row: 52
+  operational_id: PUB-N-A-DOM05-CONCEPT
+  ontology_ids:
+  - A-DOM05
+  formal_classes:
+  - id: A-DOM05
+    name: Concept
+    iri: skos:Concept
+    kind: domain
+    extraction: llm
+    status: S
+  operational_target: Concept
+  kind: domain
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Specific scientific or technical notion substantively discussed and not better represented by another
+    class.
+  boundary: Avoid generic nouns and indiscriminate terminology extraction; connect through mentionsConcept or authorized relations.
+- row: 53
+  operational_id: PUB-N-A-DOM07A-WATERSHED
+  ontology_ids:
+  - A-DOM07a
+  formal_classes:
+  - id: A-DOM07a
+    name: Watershed
+    iri: ciroh:Watershed
+    kind: domain
+    extraction: hybrid
+    status: S
+    parent: ciroh:HydrologicFeature
+    status_note: S/E
+    note: aka HydrologicUnit (HUC); geoconnex ref/hu*
+  operational_target: Watershed
+  kind: hydrologic feature
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Basin, catchment, watershed, subbasin, or drainage-defined hydrologic unit relevant to the study.
+  boundary: A river is RiverReach; an administrative region is NamedPlace.
+- row: 54
+  operational_id: PUB-N-A-DOM07B-RIVERREACH
+  ontology_ids:
+  - A-DOM07b
+  formal_classes:
+  - id: A-DOM07b
+    name: RiverReach
+    iri: ciroh:RiverReach
+    kind: domain
+    extraction: hybrid
+    status: S
+    parent: ciroh:HydrologicFeature
+    status_note: S/E
+    note: COMID; also hyf:HY_River; geoconnex ref/mainstems
+  operational_target: RiverReach
+  kind: hydrologic feature
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: River, stream, flowpath, channel, or explicit reach/segment relevant to the study.
+  boundary: Distinguish the river from its watershed.
+- row: 55
+  operational_id: PUB-N-A-DOM07C-GAUGE
+  ontology_ids:
+  - A-DOM07c
+  formal_classes:
+  - id: A-DOM07c
+    name: Gauge
+    iri: ciroh:Gauge
+    kind: domain
+    extraction: hybrid
+    status: S
+    parent: ciroh:HydrologicFeature
+    status_note: S/E
+    note: aka MonitoringStation; USGS Gages, SNOTEL; geoconnex ref/gages
+  operational_target: Gauge
+  kind: hydrologic feature
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Hydrologic monitoring or measurement station relevant to the study.
+  boundary: Preserve explicit station IDs; do not invent external IDs.
+- row: 56
+  operational_id: PUB-N-A-DOM07D-WATERBODY
+  ontology_ids:
+  - A-DOM07d
+  formal_classes:
+  - id: A-DOM07d
+    name: WaterBody
+    iri: ciroh:WaterBody
+    kind: domain
+    extraction: llm
+    status: E
+    parent: ciroh:HydrologicFeature
+  operational_target: WaterBody
+  kind: hydrologic feature
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Lake, reservoir, bay, estuary, or other water body relevant to the study.
+  boundary: Regional references surrounding a water body may instead be NamedPlace.
+- row: 57
+  operational_id: PUB-N-A-DOM07E-AQUIFER
+  ontology_ids:
+  - A-DOM07e
+  formal_classes:
+  - id: A-DOM07e
+    name: Aquifer
+    iri: ciroh:Aquifer
+    kind: domain
+    extraction: llm
+    status: E
+    parent: ciroh:HydrologicFeature
+    note: 'geoconnex ref/aquifers else ciroh:'
+  operational_target: Aquifer
+  kind: hydrologic feature
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Named or source-scoped aquifer or hydrogeologic system relevant to the study.
+  boundary: Likely low frequency in the publication pilot.
+- row: 58
+  operational_id: PUB-N-A-DOM07F-VPU
+  ontology_ids:
+  - A-DOM07f
+  formal_classes:
+  - id: A-DOM07f
+    name: VPU
+    iri: ciroh:VPU
+    kind: domain
+    extraction: hybrid
+    status: E
+    parent: ciroh:HydrologicFeature
+    note: NHDPlus VPU
+  operational_target: VPU
+  kind: hydrologic feature
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Explicit NHDPlus Vector Processing Unit.
+  boundary: Do not infer from generic 'region', 'unit', or 'processing area'.
+- row: 59
+  operational_id: PUB-N-A-DOM08-NAMEDPLACE
+  ontology_ids:
+  - A-DOM08
+  formal_classes:
+  - id: A-DOM08
+    name: NamedPlace
+    iri: ciroh:NamedPlace
+    kind: domain
+    extraction: llm
+    status: E
+    parent: schema:Place
+    note: NOT CIROH domain — admin places; GeoNames >= 2.2.1
+  operational_target: NamedPlace
+  kind: place
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  direct_instantiation: true
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_new
+  endpoint_usage: candidate_endpoint
+  evidence_requirement: direct_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Study-relevant named geographic area that is not better classified as a hydrologic feature.
+  boundary: Exclude affiliations, publisher locations, bibliography-only places, and incidental toponyms.
+- row: 60
+  operational_id: PUB-N-A-DOM09-SPATIALCOVERAGE
+  ontology_ids:
+  - A-DOM09
+  formal_classes:
+  - id: A-DOM09
+    name: SpatialCoverage
+    iri: geo:Geometry
+    kind: metadata
+    extraction: det
+    status: S
+    note: + dcterms:spatial; declared footprint, not a place
+  operational_target: SpatialCoverage
+  kind: geometry
+  production_responsibility: deterministic
+  pilot_treatment: out_of_scope
+  direct_instantiation: true
+  emission_mode: not_emitted
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: not_applicable
+  evaluation_mode: not_attempted
+  positive_criterion: Explicit geometry, bounding box, polygon, or coordinate extent.
+  boundary: The LLM may not invent geometry from a place name.
+- row: 61
+  operational_id: PUB-N-A-DOM10-TEMPORALCOVERAGE
+  ontology_ids:
+  - A-DOM10
+  formal_classes:
+  - id: A-DOM10
+    name: TemporalCoverage
+    iri: ciroh:TemporalCoverage
+    kind: metadata
+    extraction: det
+    status: S
+  operational_target: TemporalCoverage
+  kind: temporal entity
+  production_responsibility: deterministic
+  pilot_treatment: out_of_scope
+  direct_instantiation: true
+  emission_mode: not_emitted
+  allowed_actions: []
+  endpoint_usage: context_or_pipeline_only
+  evidence_requirement: not_applicable
+  evaluation_mode: not_attempted
+  positive_criterion: Structured temporal coverage associated primarily with DatasetResource.
+  boundary: Publication periods remain in DataDescription/Experiment evidence because paper-level temporal roles are not modeled.
+relation_targets:
+- row: 1
+  operational_id: PUB-R-PROV-R1-HASEVIDENCE
+  ontology_ids:
+  - PROV-R1
+  formal_relations:
+  - id: PROV-R1
+    name: hasEvidence
+    domain: owl:Thing
+    range: EvidenceSpan
+    status: S
+    anchor: 'ciroh:'
+    type: intra
+  operational_relation: hasEvidence
+  raw_operational_signature: Accepted node/edge → EvidenceSpan
+  operational_signatures:
+  - domain:
+      classes:
+      - AcceptedAssertion
+      match: exact
+      pipeline_pseudo_type: true
+    range:
+      classes:
+      - EvidenceSpan
+      match: exact
+  production_responsibility: pipeline_generated
+  pilot_treatment: required_infrastructure
+  emission_mode: pipeline_materialized
+  allowed_actions:
+  - derive
+  evidence_requirement: validated_evidence_span
+  evaluation_mode: pipeline_validation
+  positive_criterion: Created only after evidence literal and offsets validate.
+  boundary: Not an independent LLM relation prediction.
+- row: 2
+  operational_id: PUB-R-PROV-R2-WASEXTRACTEDBY
+  ontology_ids:
+  - PROV-R2
+  formal_relations:
+  - id: PROV-R2
+    name: wasExtractedBy
+    domain: EvidenceSpan
+    range: prov:Activity
+    status: S
+    anchor: prov:wasGeneratedBy
+    type: prov
+  operational_relation: wasExtractedBy
+  raw_operational_signature: EvidenceSpan → prov:Activity
+  operational_signatures:
+  - domain:
+      classes:
+      - EvidenceSpan
+      match: exact
+    range:
+      classes:
+      - prov:Activity
+      match: exact
+  production_responsibility: pipeline_generated
+  pilot_treatment: required_infrastructure
+  emission_mode: pipeline_materialized
+  allowed_actions:
+  - derive
+  evidence_requirement: run_metadata
+  evaluation_mode: pipeline_validation
+  positive_criterion: Created from run/model/prompt/schema metadata.
+  boundary: Not an independent LLM prediction.
+- row: 3
+  operational_id: PUB-R-ID-R1-C-P04-HASIDENTIFIER
+  ontology_ids:
+  - ID-R1
+  - C-P04
+  formal_relations:
+  - id: ID-R1
+    name: hasIdentifier
+    domain: owl:Thing
+    range: Identifier
+    status: S
+    anchor: datacite:hasIdentifier
+    type: intra
+  - id: C-P04
+    name: hasIdentifier
+    domain: Paper
+    range: Identifier
+    status: S
+    anchor: 'datacite:'
+    type: intra
+  operational_relation: hasIdentifier
+  raw_operational_signature: Entity/Paper → Identifier
+  operational_signatures:
+  - domain:
+      classes:
+      - owl:Thing
+      match: any
+    range:
+      classes:
+      - Identifier
+      match: exact
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  emission_mode: deterministic_context
+  allowed_actions: []
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Exact authorized identifier link.
+  boundary: The LLM cannot mint, repair, or merge identifiers.
+- row: 4
+  operational_id: PUB-R-A-AG-R1-AFFILIATEDWITH
+  ontology_ids:
+  - A-AG-R1
+  formal_relations:
+  - id: A-AG-R1
+    name: affiliatedWith
+    domain: Person
+    range: Organization
+    status: S
+    anchor: schema:affiliation
+    type: intra
+  operational_relation: affiliatedWith
+  raw_operational_signature: Person → Organization
+  operational_signatures:
+  - domain:
+      classes:
+      - Person
+      match: exact
+    range:
+      classes:
+      - Organization
+      match: exact
+  production_responsibility: deterministic
+  pilot_treatment: out_of_scope
+  emission_mode: not_emitted
+  allowed_actions: []
+  evidence_requirement: not_applicable
+  evaluation_mode: not_attempted
+  positive_criterion: Publication affiliation parsing.
+  boundary: Implementation gap, not an LLM target.
+- row: 5
+  operational_id: PUB-R-A-AG-R2-FUNDEDBY
+  ontology_ids:
+  - A-AG-R2
+  formal_relations:
+  - id: A-AG-R2
+    name: fundedBy
+    domain:
+    - Paper
+    - DatasetResource
+    range: Award
+    status: S
+    anchor: schema:funder
+    type: prov
+    note: 'Non-logical funding_agency note only; ontology 0.1.3 does not declare Award -> Organization.'
+  operational_relation: fundedBy
+  raw_operational_signature: Paper → Award
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Award
+      match: exact
+  production_responsibility: deterministic
+  pilot_treatment: out_of_scope
+  emission_mode: not_emitted
+  allowed_actions: []
+  evidence_requirement: not_applicable
+  evaluation_mode: not_attempted
+  positive_criterion: Publication funding parsing.
+  boundary: Publication implementation gap, not an LLM target. An Award-to-funding-organization relation is not formally
+    declared in ontology 0.1.3 and remains outside Publication Pilot 1.
+- row: 6
+  operational_id: PUB-R-C-P01-HASAUTHOR
+  ontology_ids:
+  - C-P01
+  formal_relations:
+  - id: C-P01
+    name: hasAuthor
+    domain: Paper
+    range: Author
+    status: S
+    anchor: schema:author
+    type: intra
+  operational_relation: hasAuthor
+  raw_operational_signature: Paper → Author
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Author
+      match: exact
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  emission_mode: deterministic_context
+  allowed_actions: []
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Frozen Phase B author edge.
+  boundary: Not re-extracted.
+- row: 7
+  operational_id: PUB-R-C-P02-PUBLISHEDIN
+  ontology_ids:
+  - C-P02
+  formal_relations:
+  - id: C-P02
+    name: publishedIn
+    domain: Paper
+    range: Venue
+    status: S
+    anchor: fabio:hasPublicationVenue
+    type: intra
+  operational_relation: publishedIn
+  raw_operational_signature: Paper → Venue
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Venue
+      match: exact
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  emission_mode: deterministic_context
+  allowed_actions: []
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Frozen Phase B venue edge.
+  boundary: Not re-extracted.
+- row: 8
+  operational_id: PUB-R-C-P03-HASSUBJECT
+  ontology_ids:
+  - C-P03
+  formal_relations:
+  - id: C-P03
+    name: hasSubject
+    domain: Paper
+    range: Subject
+    status: S
+    anchor: dcterms:subject
+    type: intra
+  operational_relation: hasSubject
+  raw_operational_signature: Paper → Subject
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Subject
+      match: exact
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  emission_mode: deterministic_context
+  allowed_actions: []
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Frozen explicit keyword edge.
+  boundary: Not interchangeable with mentionsConcept.
+- row: 9
+  operational_id: PUB-R-C-P05-REPORTS
+  ontology_ids:
+  - C-P05
+  formal_relations:
+  - id: C-P05
+    name: reports
+    domain: Paper
+    range:
+    - Background
+    - Theme
+    - ResearchProblem
+    - ResearchQuestion
+    - ResearchGoal
+    - ResearchSignificance
+    - Definition
+    - TheoreticalBasis
+    - Method
+    - Experiment
+    - Examples
+    - Finding
+    - Discussion
+    - RelatedResearch
+    - Limitation
+    - Conclusion
+    - Contribution
+    - FutureWork
+    - Hypothesis
+    - Claim
+    - DataDescription
+    status: S
+    status_note: 'E: Hypothesis/Claim'
+    anchor: 'deo:/ciroh:'
+    type: intra
+    note: aka hasComponent (discourse containment)
+  operational_relation: reports
+  raw_operational_signature: Paper → accepted discourse node
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Background
+      - Theme
+      - ResearchProblem
+      - ResearchQuestion
+      - ResearchGoal
+      - ResearchSignificance
+      - Definition
+      - TheoreticalBasis
+      - Method
+      - Experiment
+      - Examples
+      - Finding
+      - Discussion
+      - RelatedResearch
+      - Limitation
+      - Conclusion
+      - Contribution
+      - FutureWork
+      - Hypothesis
+      - Claim
+      - DataDescription
+      match: one_of
+  production_responsibility: pipeline_generated
+  pilot_treatment: required_infrastructure
+  emission_mode: pipeline_derived
+  allowed_actions:
+  - derive
+  evidence_requirement: derived_from_accepted_node_evidence
+  evaluation_mode: pipeline_validation
+  positive_criterion: Derived from accepted discourse candidate provenance.
+  boundary: No independent edge span is required beyond the node evidence.
+- row: 10
+  operational_id: PUB-R-C-P06-RESOLVES
+  ontology_ids:
+  - C-P06
+  formal_relations:
+  - id: C-P06
+    name: resolves
+    domain:
+    - Method
+    - Contribution
+    - ResearchQuestion
+    range: ResearchProblem
+    status: S
+    anchor: 'ciroh:'
+    type: intra
+    note: PEO resolves/leads_to; aka addresses
+  operational_relation: resolves
+  raw_operational_signature: Method/Contribution/ResearchQuestion → ResearchProblem
+  operational_signatures:
+  - domain:
+      classes:
+      - Method
+      - Contribution
+      - ResearchQuestion
+      match: one_of
+    range:
+      classes:
+      - ResearchProblem
+      match: exact
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Explicitly addresses, responds to, fills, or resolves the stated problem.
+  boundary: Do not infer from co-occurrence; operational meaning is 'addresses', not necessarily complete solution.
+- row: 11
+  operational_id: PUB-R-C-P07-PRODUCES
+  ontology_ids:
+  - C-P07
+  formal_relations:
+  - id: C-P07
+    name: produces
+    domain:
+    - Method
+    - Experiment
+    range: Finding
+    status: S
+    anchor: 'ciroh:'
+    type: intra
+    note: PEO produces, SAO
+  operational_relation: produces
+  raw_operational_signature: Method/Experiment → Finding
+  operational_signatures:
+  - domain:
+      classes:
+      - Method
+      - Experiment
+      match: one_of
+    range:
+      classes:
+      - Finding
+      match: exact
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Edge evidence explicitly links the procedure/test to the result.
+  boundary: Prefer Experiment→Finding when the result belongs to a combined experimental configuration.
+- row: 12
+  operational_id: PUB-R-C-P08-TESTEDBY-HYPOTHESIS-BRANCH
+  ontology_ids:
+  - C-P08
+  formal_relations:
+  - id: C-P08
+    name: testedBy
+    domain: Hypothesis
+    range:
+    - Method
+    - Experiment
+    status: S
+    status_note: 'E: testedBy'
+    anchor: 'ciroh:'
+    type: intra
+    note: Hypothesis testing only; TheoreticalBasis grounding is deferred
+  operational_relation: testedBy — Hypothesis branch
+  raw_operational_signature: Hypothesis → Method/Experiment
+  operational_signatures:
+  - domain:
+      classes:
+      - Hypothesis
+      match: exact
+    range:
+      classes:
+      - Method
+      - Experiment
+      match: one_of
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Explicit statement that the hypothesis is tested by the method or experiment.
+  boundary: Low frequency; do not infer the hypothesis.
+- row: 13
+  operational_id: PUB-R-C-P09-SUPPORTS
+  ontology_ids:
+  - C-P09
+  formal_relations:
+  - id: C-P09
+    name: supports
+    domain:
+    - Finding
+    - Claim
+    range:
+    - Claim
+    - Conclusion
+    status: E
+    anchor: 'ciroh:'
+    type: intra
+    note: Positive support semantics only; PEO/SAO
+  operational_relation: supports
+  raw_operational_signature: Finding/Claim → Claim/Conclusion
+  operational_signatures:
+  - domain:
+      classes:
+      - Finding
+      - Claim
+      match: one_of
+    range:
+      classes:
+      - Claim
+      - Conclusion
+      match: one_of
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Explicit positive support, demonstration, or confirmation relation.
+  boundary: Do not infer from compatibility; Finding→Hypothesis and negative-support edges are not authorized.
+- row: 14
+  operational_id: PUB-R-C-P10-DISCUSSESRELATEDWORK
+  ontology_ids:
+  - C-P10
+  formal_relations:
+  - id: C-P10
+    name: discussesRelatedWork
+    domain: Paper
+    range: RelatedResearch
+    status: S
+    anchor: 'ciroh:'
+    type: intra
+    note: PEO review
+  operational_relation: discussesRelatedWork
+  raw_operational_signature: Paper → RelatedResearch
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - RelatedResearch
+      match: exact
+  production_responsibility: pipeline_generated
+  pilot_treatment: required_infrastructure
+  emission_mode: pipeline_derived
+  allowed_actions:
+  - derive
+  evidence_requirement: derived_from_accepted_node_evidence
+  evaluation_mode: pipeline_validation
+  positive_criterion: Derived when a RelatedResearch node is accepted for the source Paper.
+  boundary: May coexist with the general reports edge.
+- row: 15
+  operational_id: PUB-R-C-P11-RELATESTO-LOCAL-SEMANTIC-TARGET
+  ontology_ids:
+  - C-P11
+  formal_relations:
+  - id: C-P11
+    name: relatesTo
+    domain: RelatedResearch
+    range:
+    - Method
+    - TheoreticalBasis
+    - Concept
+    - ResearchProblem
+    - Paper
+    status: S
+    anchor: 'ciroh:'
+    type:
+    - intra
+    - cross
+    note: PEO elaboration; Paper=stub
+  operational_relation: relatesTo — local semantic target
+  raw_operational_signature: RelatedResearch → Method/TheoreticalBasis/Concept/ResearchProblem
+  operational_signatures:
+  - domain:
+      classes:
+      - RelatedResearch
+      match: exact
+    range:
+      classes:
+      - Method
+      - TheoreticalBasis
+      - Concept
+      - ResearchProblem
+      match: one_of
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Substantive explicit connection to an accepted local target.
+  boundary: Avoid generic thematic co-occurrence.
+- row: 16
+  operational_id: PUB-R-C-P11-RELATESTO-CITED-PAPER
+  ontology_ids:
+  - C-P11
+  formal_relations:
+  - id: C-P11
+    name: relatesTo
+    domain: RelatedResearch
+    range:
+    - Method
+    - TheoreticalBasis
+    - Concept
+    - ResearchProblem
+    - Paper
+    status: S
+    anchor: 'ciroh:'
+    type:
+    - intra
+    - cross
+    note: PEO elaboration; Paper=stub
+  operational_relation: relatesTo — cited Paper
+  raw_operational_signature: RelatedResearch → cited Paper
+  operational_signatures:
+  - domain:
+      classes:
+      - RelatedResearch
+      match: exact
+    range:
+      classes:
+      - Paper
+      match: exact
+      constraints:
+      - bibliographic_endpoint_resolution_required
+  production_responsibility: hybrid
+  pilot_treatment: separate_follow_on_protocol
+  emission_mode: follow_on_only
+  allowed_actions: []
+  evidence_requirement: follow_on_protocol
+  evaluation_mode: follow_on_only
+  positive_criterion: Requires semantic citation context plus bibliographic anchor resolution.
+  boundary: Typed citation grounding, not part of Pilot 1 primary metrics.
+- row: 17
+  operational_id: PUB-R-C-P12-HASLIMITATION-PAPER-BRANCH
+  ontology_ids:
+  - C-P12
+  formal_relations:
+  - id: C-P12
+    name: hasLimitation
+    domain:
+    - Paper
+    - Finding
+    range: Limitation
+    status: S
+    anchor: 'ciroh:'
+    type: intra
+    note: PEO limitation semantics
+  operational_relation: hasLimitation — Paper branch
+  raw_operational_signature: Paper → Limitation
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Limitation
+      match: exact
+  production_responsibility: pipeline_generated
+  pilot_treatment: required_infrastructure
+  emission_mode: pipeline_derived
+  allowed_actions:
+  - derive
+  evidence_requirement: derived_from_accepted_node_evidence
+  evaluation_mode: pipeline_validation
+  positive_criterion: Derived from accepted Limitation provenance.
+  boundary: Not independently scored.
+- row: 18
+  operational_id: PUB-R-C-P12-HASLIMITATION-FINDING-BRANCH
+  ontology_ids:
+  - C-P12
+  formal_relations:
+  - id: C-P12
+    name: hasLimitation
+    domain:
+    - Paper
+    - Finding
+    range: Limitation
+    status: S
+    anchor: 'ciroh:'
+    type: intra
+    note: PEO limitation semantics
+  operational_relation: hasLimitation — Finding branch
+  raw_operational_signature: Finding → Limitation
+  operational_signatures:
+  - domain:
+      classes:
+      - Finding
+      match: exact
+    range:
+      classes:
+      - Limitation
+      match: exact
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Evidence explicitly restricts or qualifies a particular Finding.
+  boundary: Do not attach every study limitation to every Finding.
+- row: 19
+  operational_id: PUB-R-C-P13-USESMODEL-PAPER-BRANCH
+  ontology_ids:
+  - C-P13
+  formal_relations:
+  - id: C-P13
+    name: usesModel
+    domain:
+    - Paper
+    - Method
+    range: ComputationalModel
+    status: S
+    anchor: 'ciroh:'
+    type:
+    - cross
+    - same
+    consol: true
+    note: PEO uses
+  operational_relation: usesModel — Paper branch
+  raw_operational_signature: Paper → ComputationalModel subtype
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - ProcessBasedModel
+      - ConceptualModel
+      - StatisticalModel
+      - MLModel
+      match: concrete_subclass_of
+      ontology_parent: ComputationalModel
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Model was trained, executed, calibrated, compared, evaluated, or otherwise used in the current study.
+  boundary: Use takes precedence over mentionsModel for the same pair.
+  observation_refs:
+  - OBS-PUB-009
+  - OBS-PUB-024
+- row: 20
+  operational_id: PUB-R-C-P13-USESMODEL-METHOD-BRANCH
+  ontology_ids:
+  - C-P13
+  formal_relations:
+  - id: C-P13
+    name: usesModel
+    domain:
+    - Paper
+    - Method
+    range: ComputationalModel
+    status: S
+    anchor: 'ciroh:'
+    type:
+    - cross
+    - same
+    consol: true
+    note: PEO uses
+  operational_relation: usesModel — Method branch
+  raw_operational_signature: Method → ComputationalModel subtype
+  operational_signatures:
+  - domain:
+      classes:
+      - Method
+      match: exact
+    range:
+      classes:
+      - ProcessBasedModel
+      - ConceptualModel
+      - StatisticalModel
+      - MLModel
+      match: concrete_subclass_of
+      ontology_parent: ComputationalModel
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Model functions as a component or resource of the Method.
+  boundary: Distinguish from appliesTo, where the model is the object of the operation.
+  observation_refs:
+  - OBS-PUB-005
+  - OBS-PUB-009
+  - OBS-PUB-024
+- row: 21
+  operational_id: PUB-R-C-P14-APPLIESTO
+  ontology_ids:
+  - C-P14
+  formal_relations:
+  - id: C-P14
+    name: appliesTo
+    domain: Method
+    range: ComputationalModel
+    status: S
+    anchor: 'ciroh:'
+    type:
+    - intra
+    - cross
+    note: Model/Method discriminant
+  operational_relation: appliesTo
+  raw_operational_signature: Method → ComputationalModel subtype
+  operational_signatures:
+  - domain:
+      classes:
+      - Method
+      match: exact
+    range:
+      classes:
+      - ProcessBasedModel
+      - ConceptualModel
+      - StatisticalModel
+      - MLModel
+      match: concrete_subclass_of
+      ontology_parent: ComputationalModel
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Method is applied to, configures, analyzes, explains, calibrates, or evaluates the model.
+  boundary: Do not emit both usesModel and appliesTo unless two roles are explicitly supported.
+  observation_refs:
+  - OBS-PUB-005
+  - OBS-PUB-009
+- row: 22
+  operational_id: PUB-R-C-P15-USESTOOL
+  ontology_ids:
+  - C-P15
+  formal_relations:
+  - id: C-P15
+    name: usesTool
+    domain: Paper
+    range: Tool
+    status: S
+    anchor: 'ciroh:'
+    type:
+    - cross
+    - same
+    consol: true
+  operational_relation: usesTool
+  raw_operational_signature: Paper → Tool
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Tool
+      match: exact
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Tool was actually employed in the current study.
+  boundary: Use takes precedence over mentionsTool.
+  observation_refs:
+  - OBS-PUB-024
+- row: 23
+  operational_id: PUB-R-C-P16-MENTIONSVARIABLE
+  ontology_ids:
+  - C-P16
+  formal_relations:
+  - id: C-P16
+    name: mentionsVariable
+    domain:
+    - Paper
+    - DataDescription
+    range: Variable
+    status: E
+    anchor: 'ciroh:'
+    type:
+    - cross
+    - same
+    consol: true
+  operational_relation: mentionsVariable
+  raw_operational_signature: Paper/DataDescription → Variable
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      - DataDescription
+      match: one_of
+    range:
+      classes:
+      - Variable
+      match: exact
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Variable is relevant to the current study and explicitly observed, predicted, modeled, derived, or analyzed.
+  boundary: Prefer DataDescription as source when it locally contains the evidence.
+  observation_refs:
+  - OBS-PUB-007
+- row: 24
+  operational_id: PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH
+  ontology_ids:
+  - C-P17
+  formal_relations:
+  - id: C-P17
+    name: studiesFeature
+    domain:
+    - Paper
+    - Method
+    range: HydrologicFeature
+    status: S
+    anchor: 'ciroh:'
+    type:
+    - cross
+    - same
+    consol: true
+  operational_relation: studiesFeature — Paper branch
+  raw_operational_signature: Paper → concrete HydrologicFeature
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Watershed
+      - RiverReach
+      - Gauge
+      - WaterBody
+      - Aquifer
+      - VPU
+      match: concrete_subclass_of
+      ontology_parent: HydrologicFeature
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Feature is a study object, domain, or hydrologic unit of analysis.
+  boundary: Do not use for affiliations or incidental locations.
+- row: 25
+  operational_id: PUB-R-C-P17-STUDIESFEATURE-METHOD-BRANCH
+  ontology_ids:
+  - C-P17
+  formal_relations:
+  - id: C-P17
+    name: studiesFeature
+    domain:
+    - Paper
+    - Method
+    range: HydrologicFeature
+    status: S
+    anchor: 'ciroh:'
+    type:
+    - cross
+    - same
+    consol: true
+  operational_relation: studiesFeature — Method branch
+  raw_operational_signature: Method → concrete HydrologicFeature
+  operational_signatures:
+  - domain:
+      classes:
+      - Method
+      match: exact
+    range:
+      classes:
+      - Watershed
+      - RiverReach
+      - Gauge
+      - WaterBody
+      - Aquifer
+      - VPU
+      match: concrete_subclass_of
+      ontology_parent: HydrologicFeature
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: A specific Method is explicitly applied to the feature.
+  boundary: Do not derive automatically from Paper-level study area.
+- row: 26
+  operational_id: PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH
+  ontology_ids:
+  - C-P18
+  formal_relations:
+  - id: C-P18
+    name: studiesPlace
+    domain:
+    - Paper
+    - Method
+    range: NamedPlace
+    status: E
+    anchor: 'ciroh:'
+    type:
+    - cross
+    - same
+  operational_relation: studiesPlace — Paper branch
+  raw_operational_signature: Paper → NamedPlace
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - NamedPlace
+      match: exact
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: NamedPlace is a study area, model domain, data coverage area, or result location.
+  boundary: Use studiesFeature for watersheds, rivers, gauges, water bodies, aquifers, and VPUs.
+- row: 27
+  operational_id: PUB-R-C-P18-STUDIESPLACE-METHOD-BRANCH
+  ontology_ids:
+  - C-P18
+  formal_relations:
+  - id: C-P18
+    name: studiesPlace
+    domain:
+    - Paper
+    - Method
+    range: NamedPlace
+    status: E
+    anchor: 'ciroh:'
+    type:
+    - cross
+    - same
+  operational_relation: studiesPlace — Method branch
+  raw_operational_signature: Method → NamedPlace
+  operational_signatures:
+  - domain:
+      classes:
+      - Method
+      match: exact
+    range:
+      classes:
+      - NamedPlace
+      match: exact
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: A specific Method is explicitly applied in the place.
+  boundary: Do not derive automatically from Paper-level location.
+- row: 28
+  operational_id: PUB-R-C-P19-HASSPATIALCOVERAGE
+  ontology_ids:
+  - C-P19
+  formal_relations:
+  - id: C-P19
+    name: hasSpatialCoverage
+    domain:
+    - Paper
+    - Place
+    range: SpatialCoverage
+    status: E
+    anchor: 'ciroh:'
+    type: intra
+    note: ~ geo:hasGeometry
+  operational_relation: hasSpatialCoverage
+  raw_operational_signature: Paper/Place → SpatialCoverage
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      - Place
+      match: one_of
+    range:
+      classes:
+      - SpatialCoverage
+      match: exact
+  production_responsibility: deterministic
+  pilot_treatment: out_of_scope
+  emission_mode: not_emitted
+  allowed_actions: []
+  evidence_requirement: not_applicable
+  evaluation_mode: not_attempted
+  positive_criterion: Explicit structured geometry only.
+  boundary: No LLM-generated geometry.
+- row: 29
+  operational_id: PUB-R-C-P20-USESDATASET-EXISTING-PHASE-B-EDGE
+  ontology_ids:
+  - C-P20
+  formal_relations:
+  - id: C-P20
+    name: usesDataset
+    domain: Paper
+    range:
+    - DatasetMention
+    - DatasetResource
+    status: S
+    anchor: 'ciroh:'
+    type: cross
+    consol: true
+    maps_to: D-01
+  operational_relation: usesDataset — existing Phase B edge
+  raw_operational_signature: Paper → DatasetMention/DatasetResource
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - DatasetMention
+      - DatasetResource
+      match: one_of
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  emission_mode: deterministic_context
+  allowed_actions: []
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Frozen Phase B data-use edge.
+  boundary: Not recreated.
+  observation_refs:
+  - OBS-PUB-024
+- row: 30
+  operational_id: PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE
+  ontology_ids:
+  - C-P20
+  formal_relations:
+  - id: C-P20
+    name: usesDataset
+    domain: Paper
+    range:
+    - DatasetMention
+    - DatasetResource
+    status: S
+    anchor: 'ciroh:'
+    type: cross
+    consol: true
+    maps_to: D-01
+  operational_relation: usesDataset — new prose evidence
+  raw_operational_signature: Paper → DatasetMention/DatasetResource
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - DatasetMention
+      - DatasetResource
+      match: one_of
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Dataset was actually used for training, testing, forcing, analysis, observation, or benchmarking.
+  boundary: Use takes precedence over mentionsDataset; may coexist with referencesDataset.
+  observation_refs:
+  - OBS-PUB-024
+- row: 31
+  operational_id: PUB-R-C-P21-CITES
+  ontology_ids:
+  - C-P21
+  formal_relations:
+  - id: C-P21
+    name: cites
+    domain: Paper
+    range: Paper
+    status: S
+    anchor: cito:cites
+    type: same
+    maps_to: D-08
+    note: range = Paper stub
+  operational_relation: cites
+  raw_operational_signature: Paper → Paper
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Paper
+      match: exact
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  emission_mode: deterministic_context
+  allowed_actions: []
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Generic DOI-backed citation edge.
+  boundary: Typed citation semantics require a separate protocol.
+- row: 32
+  operational_id: PUB-R-C-P22-CORRECTS
+  ontology_ids:
+  - C-P22
+  formal_relations:
+  - id: C-P22
+    name: corrects
+    domain: Paper
+    range: Paper
+    status: S
+    anchor: 'cito:/ciroh:'
+    type: same
+    maps_to: D-09
+    note: aka isCorrigendumOf
+  operational_relation: corrects
+  raw_operational_signature: Corrigendum Paper → original Paper
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+      constraints:
+      - record_type=corrigendum
+    range:
+      classes:
+      - Paper
+      match: exact
+      constraints:
+      - role=corrected_original
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  emission_mode: deterministic_context
+  allowed_actions: []
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Frozen generic corrigendum relation.
+  boundary: Fine-grained correction targets require a separate protocol.
+- row: 33
+  operational_id: PUB-R-C-P23-MENTIONSMODEL
+  ontology_ids:
+  - C-P23
+  formal_relations:
+  - id: C-P23
+    name: mentionsModel
+    domain: Paper
+    range: ComputationalModel
+    status: S
+    anchor: 'ciroh:'
+    type:
+    - cross
+    - same
+    consol: true
+    note: mentioned, NOT used; != C-P13
+  operational_relation: mentionsModel
+  raw_operational_signature: Paper → ComputationalModel subtype
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - ProcessBasedModel
+      - ConceptualModel
+      - StatisticalModel
+      - MLModel
+      match: concrete_subclass_of
+      ontology_parent: ComputationalModel
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Model appears in background, related work, definition, comparison context, or future work without proof
+    of use.
+  boundary: Do not retain alongside usesModel for the same pair.
+  observation_refs:
+  - OBS-PUB-009
+  - OBS-PUB-024
+- row: 34
+  operational_id: PUB-R-C-P24-MENTIONSDATASET
+  ontology_ids:
+  - C-P24
+  formal_relations:
+  - id: C-P24
+    name: mentionsDataset
+    domain: Paper
+    range:
+    - DatasetMention
+    - DatasetResource
+    status: S
+    anchor: 'ciroh:'
+    type: cross
+    note: '!= C-P20'
+  operational_relation: mentionsDataset
+  raw_operational_signature: Paper → DatasetMention/DatasetResource
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - DatasetMention
+      - DatasetResource
+      match: one_of
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Dataset is discussed without proof of use or formal dataset citation.
+  boundary: Do not retain alongside usesDataset for the same pair.
+  observation_refs:
+  - OBS-PUB-024
+- row: 35
+  operational_id: PUB-R-C-P25-REPORTSMETRIC
+  ontology_ids:
+  - C-P25
+  formal_relations:
+  - id: C-P25
+    name: reportsMetric
+    domain:
+    - Finding
+    - Experiment
+    range: EvaluationMetric
+    status: S
+    anchor: 'ciroh:'
+    type: intra
+    consol: true
+  operational_relation: reportsMetric
+  raw_operational_signature: Finding/Experiment → EvaluationMetric
+  operational_signatures:
+  - domain:
+      classes:
+      - Finding
+      - Experiment
+      match: one_of
+    range:
+      classes:
+      - EvaluationMetric
+      match: exact
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Metric occurrence is explicitly reported by the Finding or Experiment.
+  boundary: Metric and endpoint must be contextually aligned, especially in tables.
+  observation_refs:
+  - OBS-PUB-010
+- row: 36
+  operational_id: PUB-R-C-P26-EVALUATES
+  ontology_ids:
+  - C-P26
+  formal_relations:
+  - id: C-P26
+    name: evaluates
+    domain: EvaluationMetric
+    range:
+    - ComputationalModel
+    - Method
+    status: S
+    anchor: 'ciroh:'
+    type: intra
+  operational_relation: evaluates
+  raw_operational_signature: EvaluationMetric → ComputationalModel/Method
+  operational_signatures:
+  - domain:
+      classes:
+      - EvaluationMetric
+      match: exact
+    range:
+      classes:
+      - Method
+      - ProcessBasedModel
+      - ConceptualModel
+      - StatisticalModel
+      - MLModel
+      match: one_of_or_concrete_subclass_of
+      ontology_parent: ComputationalModel
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Evidence identifies what the metric evaluates.
+  boundary: Textual proximity alone is insufficient.
+  observation_refs:
+  - OBS-PUB-010
+- row: 37
+  operational_id: PUB-R-C-P27-HASPARAMETER
+  ontology_ids:
+  - C-P27
+  formal_relations:
+  - id: C-P27
+    name: hasParameter
+    domain:
+    - Method
+    - Experiment
+    - ComputationalModel
+    range: Parameter
+    status: S
+    status_note: E paper
+    anchor: 'schema:'
+    type: intra
+    consol: true
+  operational_relation: hasParameter
+  raw_operational_signature: Method/Experiment/ComputationalModel → Parameter
+  operational_signatures:
+  - domain:
+      classes:
+      - Method
+      - Experiment
+      - ProcessBasedModel
+      - ConceptualModel
+      - StatisticalModel
+      - MLModel
+      match: one_of_or_concrete_subclass_of
+      ontology_parent: ComputationalModel
+    range:
+      classes:
+      - Parameter
+      match: exact
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Evidence identifies the parameter owner or experimental context.
+  boundary: Do not connect every parameter only to the Paper.
+  observation_refs:
+  - OBS-PUB-011
+- row: 38
+  operational_id: PUB-R-C-P28-USESALGORITHM
+  ontology_ids:
+  - C-P28
+  formal_relations:
+  - id: C-P28
+    name: usesAlgorithm
+    domain: Method
+    range: Algorithm
+    status: E
+    anchor: 'ciroh:'
+    type: intra
+    consol: true
+  operational_relation: usesAlgorithm
+  raw_operational_signature: Method → Algorithm
+  operational_signatures:
+  - domain:
+      classes:
+      - Method
+      match: exact
+    range:
+      classes:
+      - Algorithm
+      match: exact
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Method explicitly uses a named, reusable Algorithm.
+  boundary: No Paper→usesAlgorithm shortcut is created.
+- row: 39
+  operational_id: PUB-R-C-P29-REFERENCESDATASET-EXISTING-PHASE-B-EDGE
+  ontology_ids:
+  - C-P29
+  formal_relations:
+  - id: C-P29
+    name: referencesDataset
+    domain: Paper
+    range: DatasetResource
+    status: S
+    anchor: cito:citesAsDataSource
+    type: cross
+    consol: true
+    maps_to: D-05
+    note: Paper-module realization of D-05; bibliographic dataset citation, not dataset use; distinct from C-P20 usesDataset
+      and C-P24 mentionsDataset
+  operational_relation: referencesDataset — existing Phase B edge
+  raw_operational_signature: Paper → DatasetResource
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - DatasetResource
+      match: exact
+  production_responsibility: deterministic
+  pilot_treatment: context_only
+  emission_mode: deterministic_context
+  allowed_actions: []
+  evidence_requirement: frozen_phase_b_evidence
+  evaluation_mode: not_scored_context
+  positive_criterion: Formal bibliographic dataset reference already typed by Phase B.
+  boundary: Distinct from use and mention.
+  observation_refs:
+  - OBS-PUB-024
+- row: 40
+  operational_id: PUB-R-C-P29-REFERENCESDATASET-EXACT-OMITTED-IDENTIFIER
+  ontology_ids:
+  - C-P29
+  formal_relations:
+  - id: C-P29
+    name: referencesDataset
+    domain: Paper
+    range: DatasetResource
+    status: S
+    anchor: cito:citesAsDataSource
+    type: cross
+    consol: true
+    maps_to: D-05
+    note: Paper-module realization of D-05; bibliographic dataset citation, not dataset use; distinct from C-P20 usesDataset
+      and C-P24 mentionsDataset
+  operational_relation: referencesDataset — exact omitted identifier
+  raw_operational_signature: Paper → DatasetResource
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - DatasetResource
+      match: exact
+  production_responsibility: hybrid
+  pilot_treatment: deferred_resolution
+  emission_mode: resolver_mediated_candidate
+  allowed_actions:
+  - resolve_deferred
+  evidence_requirement: edge_specific_span_plus_exact_endpoint_resolution
+  evaluation_mode: resolution_accuracy
+  positive_criterion: LLM identifies citation/reference role; deterministic resolver validates and types the exact dataset
+    identity.
+  boundary: Not ordinary open discovery.
+  observation_refs:
+  - OBS-PUB-024
+- row: 41
+  operational_id: PUB-R-C-P30-MENTIONSCONCEPT
+  ontology_ids:
+  - C-P30
+  formal_relations:
+  - id: C-P30
+    name: mentionsConcept
+    domain: Paper
+    range: Concept
+    status: S
+    anchor: skos:Concept
+    type: intra
+    consol: true
+    note: Concept expressed in paper content; weaker than C-P03 hasSubject.
+  operational_relation: mentionsConcept
+  raw_operational_signature: Paper → Concept
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Concept
+      match: exact
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Specific concept is substantively discussed, defined, analyzed, or applied.
+  boundary: Weaker than hasSubject; avoid terminology flooding.
+- row: 42
+  operational_id: PUB-R-C-P31-MENTIONSTOOL
+  ontology_ids:
+  - C-P31
+  formal_relations:
+  - id: C-P31
+    name: mentionsTool
+    domain: Paper
+    range: Tool
+    status: S
+    anchor: 'ciroh:'
+    type:
+    - cross
+    - same
+    consol: true
+    note: Tool mention without sufficient evidence of use; citation or name occurrence does not imply C-P15 usesTool.
+  operational_relation: mentionsTool
+  raw_operational_signature: Paper → Tool
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Tool
+      match: exact
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Tool is mentioned without proof of actual use.
+  boundary: Do not retain alongside usesTool for the same pair.
+  observation_refs:
+  - OBS-PUB-024
+- row: 43
+  operational_id: PUB-R-C-P32-REFERENCESREPOSITORY
+  ontology_ids:
+  - C-P32
+  formal_relations:
+  - id: C-P32
+    name: referencesRepository
+    domain: Paper
+    range: Repository
+    status: S
+    anchor: 'ciroh:'
+    type: cross
+    consol: true
+    maps_to: D-04
+    note: Generic repository reference; weaker than C-P33 hasCodeRepository.
+  operational_relation: referencesRepository
+  raw_operational_signature: Paper → Repository
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Repository
+      match: exact
+  production_responsibility: llm
+  pilot_treatment: extract_and_monitor
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: pooled_metrics_and_case_analysis
+  positive_criterion: Explicit repository reference without evidence that it is the associated code repository.
+  boundary: Stronger hasCodeRepository takes precedence.
+  observation_refs:
+  - OBS-PUB-008
+  - OBS-PUB-024
+- row: 44
+  operational_id: PUB-R-C-P33-HASCODEREPOSITORY
+  ontology_ids:
+  - C-P33
+  formal_relations:
+  - id: C-P33
+    name: hasCodeRepository
+    domain: Paper
+    range: Repository
+    status: S
+    anchor: schema:codeRepository
+    type: cross
+    consol: true
+    maps_to: D-04
+    subproperty_of: referencesRepository
+    note: Paper-associated implementation repository; a typed subproperty of referencesRepository.
+  operational_relation: hasCodeRepository
+  raw_operational_signature: Paper → Repository
+  operational_signatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Repository
+      match: exact
+  production_responsibility: llm
+  pilot_treatment: extract_and_evaluate
+  emission_mode: llm_candidate
+  allowed_actions:
+  - propose_edge
+  evidence_requirement: edge_specific_span_required
+  evaluation_mode: target_level_metrics
+  positive_criterion: Explicit evidence that the repository contains code, implementation, scripts, or workflow associated
+    with the study.
+  boundary: Emit only this specific edge; referencesRepository may be derived as its parent property.
+  observation_refs:
+  - OBS-PUB-008
+  - OBS-PUB-023
+  - OBS-PUB-024
+deferred_and_follow_on_cases:
+- operational_case: Exact Paper→Repository role deferred by Phase B
+  responsibility: hybrid
+  treatment: deferred_resolution
+  pilot_rule: LLM classifies hasCodeRepository/referencesRepository/unsupported; deterministic endpoint is reused.
+- operational_case: Exact Paper→Tool role deferred by Phase B
+  responsibility: hybrid
+  treatment: deferred_resolution
+  pilot_rule: LLM classifies usesTool/mentionsTool/unsupported; deterministic endpoint is reused.
+- operational_case: Exact dataset or repository identifier omitted by Phase B
+  responsibility: hybrid
+  treatment: deferred_resolution
+  pilot_rule: LLM locates and interprets; deterministic resolver validates, normalizes, and creates/reuses endpoint.
+- operational_case: Availability identifier with ambiguous semantic role
+  responsibility: hybrid
+  treatment: deferred_resolution
+  pilot_rule: Resolve only for pilot papers; allow remain_deferred, rejected, type_conflict, or unsupported_role.
+- operational_case: Ambiguous or conflicting cited DOI type
+  responsibility: hybrid
+  treatment: separate_follow_on_protocol
+  pilot_rule: Requires provider metadata, bibliographic resolution, and adjudication.
+- operational_case: DOI-less citation grounding
+  responsibility: hybrid
+  treatment: separate_follow_on_protocol
+  pilot_rule: Requires in-text anchor and reference-list resolution.
+- operational_case: Typed citation grounding and citation intent
+  responsibility: hybrid
+  treatment: separate_follow_on_protocol
+  pilot_rule: Requires citation-context semantics plus bibliographic endpoint resolution.
+- operational_case: Fine-grained corrigendum targeting
+  responsibility: hybrid
+  treatment: separate_follow_on_protocol
+  pilot_rule: Align corrected statement, Finding, Metric, Experiment, Parameter, or Conclusion with original paper.
+- operational_case: Cross-source identity and consolidation
+  responsibility: alignment_consolidation
+  treatment: separate_follow_on_protocol
+  pilot_rule: Global identity, versions, sameAs-like decisions, and cross-source implementation/documentation relations.

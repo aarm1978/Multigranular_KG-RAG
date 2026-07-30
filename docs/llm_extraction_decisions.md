@@ -661,6 +661,8 @@ The binding target groups include:
 - intra-source representation and bounded inter-source candidates.
 
 Targets outside that final inventory are not authorized for Publication Pilot 1 output.
+The corresponding executable profile is complete, frozen, and final and binding:
+[`publication_target_inventory.yaml`](../src/extraction/llm/publications/publication_target_inventory.yaml).
 
 **Rationale.**
 
@@ -833,6 +835,15 @@ Successful marker-to-reference resolution and an annotated citation-context samp
 **Current decision.**
 
 Use section-aware bounded source units that preserve paragraph boundaries and structural paths. Adjacent context may be supplied when required. Exact token limits and overlap policy will be selected during pilot design.
+
+The complete and frozen source-unit parameters and request-context policy are specified
+in the final and binding
+[`publication_source_unit_contract.md`](publication_source_unit_contract.md). That
+contract resolves the historical open-parameter sentence above without replacing
+section-aware unitization with fixed-token chunking.
+
+The candidate-output JSON Schema and evidence-validation contract are next. The
+production source-unit builder and LLM extractor are not yet implemented.
 
 **Rationale.**
 
