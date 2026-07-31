@@ -1,6 +1,6 @@
 # Multigranular KG-RAG for Operational Hydrology
 
-> **Project status:** Active doctoral dissertation research. Ontology v0.1.3, the deterministic extraction layer, the Publication Pilot 1 machine-readable target profile, and the source-unit contract are complete and frozen. The candidate-output JSON Schema and evidence-validation contract are next; the production source-unit builder and LLM extractor are not yet implemented. LLM-assisted semantic extraction execution, cross-source alignment, final graph assembly, retrieval, and comparative question-answering evaluation are also not yet completed.
+> **Project status:** Active doctoral dissertation research. Ontology v0.1.3, the deterministic extraction layer, the Publication Pilot 1 machine-readable target profile, source-unit contract, candidate-output JSON Schema, and evidence-validation contract are complete and frozen. The production source-unit builder, request builder, candidate parser, evidence validator, and LLM extractor are not yet implemented. LLM-assisted semantic extraction execution, cross-source alignment, final graph assembly, retrieval, and comparative question-answering evaluation are also not yet completed.
 
 This repository supports the construction and evaluation of an ontology-guided, multigranular knowledge graph and KG-RAG system for **scientific cross-artifact question answering in operational hydrology**.
 
@@ -35,8 +35,10 @@ The intended final system will be evaluated against non-retrieval, web-search, v
 | Cumulative structural evaluation | Complete for the deterministic pre-alignment trajectory |
 | Publication Pilot 1 machine-readable target profile | Complete and frozen |
 | Publication Pilot 1 source-unit contract | Complete and frozen |
-| Candidate-output JSON Schema and evidence-validation contract | Next |
+| Publication Pilot 1 candidate-output JSON Schema | Complete and frozen |
+| Publication Pilot 1 evidence-validation contract | Complete and frozen |
 | Production source-unit builder and LLM extractor | Not yet implemented |
+| Request builder, candidate parser, and evidence validator | Not yet implemented |
 | LLM-assisted semantic extraction execution | Not yet completed |
 | Cross-source entity alignment and consolidation | Planned |
 | Final graph assembly and graph-database loading | Planned |
@@ -161,6 +163,8 @@ tests/                           Unit, regression, contract, and frozen-snapshot
 - [Final Publication Pilot 1 LLM target inventory](docs/publication_llm_extraction_target_inventory.md)
 - [Publication Pilot 1 machine-readable target profile](src/extraction/llm/publications/publication_target_inventory.yaml)
 - [Publication Pilot 1 source-unit contract](docs/publication_source_unit_contract.md)
+- [Publication Pilot 1 candidate-output JSON Schema](schemas/publication_candidate_output.schema.json)
+- [Publication Pilot 1 evidence-validation contract](docs/publication_evidence_validation_contract.md)
 - [Final publication ontology observations register](docs/publication_ontology_observations_register.md)
 
 ### Evaluation
@@ -224,8 +228,14 @@ External source materials remain subject to their original terms of use and lice
 - [x] Record the cumulative deterministic structural trajectory
 - [x] Freeze the Publication Pilot 1 machine-readable target profile
 - [x] Freeze the Publication Pilot 1 source-unit contract
-- [ ] Complete the candidate-output JSON Schema and evidence-validation contract
+- [x] Complete and freeze the candidate-output JSON Schema
+- [x] Complete and freeze the evidence-validation contract
+- [ ] Complete and freeze annotation and adjudication guidelines
+- [ ] Complete and freeze evaluation matching rules and GO/REVISE/NO-GO thresholds
+- [ ] Complete the pilot sample and input freeze record
+- [ ] Complete the model and reproducibility policy
 - [ ] Implement the production source-unit builder and LLM extractor
+- [ ] Implement the request builder, candidate parser, and evidence validator
 - [ ] Execute ontology-guided LLM-assisted semantic extraction
 - [ ] Align and consolidate entities across artifact families
 - [ ] Assemble and load the final multigranular KG
