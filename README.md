@@ -1,6 +1,6 @@
 # Multigranular KG-RAG for Operational Hydrology
 
-> **Project status:** Active doctoral dissertation research. Ontology v0.1.3, the deterministic extraction layer, and the Publication Pilot 1 target profile, source-unit contract, candidate-output JSON Schema, evidence-validation contract, and annotation and adjudication guidelines are complete and frozen. The annotator handbook has not yet been created. The pilot sample/input record, evaluation-matching rules and thresholds, and model/reproducibility policy are not yet frozen. The production source-unit builder, request builder, candidate parser, evidence validator, LLM extractor, annotation interface, and annotation storage are not yet implemented. Annotation execution and gold construction have not occurred. LLM-assisted semantic extraction execution, cross-source alignment, final graph assembly, retrieval, and comparative question-answering evaluation are also not yet completed.
+> **Project status:** Active doctoral dissertation research. Ontology v0.1.3, the deterministic extraction layer, and the Publication Pilot 1 target profile, source-unit contract, candidate-output JSON Schema, evidence-validation contract, annotation and adjudication guidelines, and evaluation matching contract are complete and frozen. The annotator handbook has not yet been created. The pilot sample/input record and model/reproducibility policy are not yet frozen. The production source-unit builder, request builder, candidate parser, evidence validator, LLM extractor, annotation interface, and annotation storage are not yet implemented. Annotation execution and gold construction have not occurred. LLM-assisted semantic extraction execution, cross-source alignment, final graph assembly, retrieval, and comparative question-answering evaluation are also not yet completed.
 
 This repository supports the construction and evaluation of an ontology-guided, multigranular knowledge graph and KG-RAG system for **scientific cross-artifact question answering in operational hydrology**.
 
@@ -38,6 +38,8 @@ The intended final system will be evaluated against non-retrieval, web-search, v
 | Publication Pilot 1 candidate-output JSON Schema | Complete and frozen |
 | Publication Pilot 1 evidence-validation contract | Complete and frozen |
 | Publication Pilot 1 annotation and adjudication guidelines | Complete and frozen |
+| Publication Pilot 1 evaluation matching contract | Complete and frozen — version 0.1.0 |
+| Publication Pilot 1 sample and input freeze record | Candidate scaffold; not frozen |
 | Production source-unit builder and LLM extractor | Not yet implemented |
 | Request builder, candidate parser, and evidence validator | Not yet implemented |
 | LLM-assisted semantic extraction execution | Not yet completed |
@@ -167,6 +169,8 @@ tests/                           Unit, regression, contract, and frozen-snapshot
 - [Publication Pilot 1 candidate-output JSON Schema](schemas/publication_candidate_output.schema.json)
 - [Publication Pilot 1 evidence-validation contract](docs/publication_evidence_validation_contract.md)
 - [Publication Pilot 1 annotation and adjudication guidelines](docs/publication_annotation_adjudication_guidelines.md)
+- [Publication Pilot 1 evaluation matching contract — complete and frozen, version 0.1.0](docs/publication_evaluation_matching_contract.md)
+- [Publication Pilot 1 sample and input freeze record — candidate scaffold; not frozen](docs/publication_pilot1_sample_input_freeze.md)
 - [Final publication ontology observations register](docs/publication_ontology_observations_register.md)
 
 ### Evaluation
@@ -233,7 +237,7 @@ External source materials remain subject to their original terms of use and lice
 - [x] Complete and freeze the candidate-output JSON Schema
 - [x] Complete and freeze the evidence-validation contract
 - [x] Complete and freeze the Publication Pilot 1 annotation and adjudication guidelines
-- [ ] Complete and freeze evaluation matching rules and GO/REVISE/NO-GO thresholds
+- [x] Complete and freeze evaluation matching rules and GO/REVISE/NO-GO thresholds
 - [ ] Complete the pilot sample and input freeze record
 - [ ] Complete the model and reproducibility policy
 - [ ] Create the concise annotator handbook and calibration materials
