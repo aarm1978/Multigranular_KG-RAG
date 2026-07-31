@@ -402,7 +402,7 @@ class PublicationEvaluationMatchingContractTests(unittest.TestCase):
     def test_sample_remains_unfrozen_without_exact_unit_ids(self) -> None:
         """The sample is a support-aware scaffold and contains no materialized unit IDs."""
         self.assertIn("**Status:** candidate; not yet frozen", self.sample)
-        self.assertIn("**Document version:** 0.1.0", self.sample)
+        self.assertIn("**Document version:** 0.2.2", self.sample)
         self.assertIn(
             "Publication evaluation matching contract version:\n0.1.0", self.sample
         )

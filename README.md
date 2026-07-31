@@ -39,7 +39,7 @@ The intended final system will be evaluated against non-retrieval, web-search, v
 | Publication Pilot 1 evidence-validation contract | Complete and frozen |
 | Publication Pilot 1 annotation and adjudication guidelines | Complete and frozen |
 | Publication Pilot 1 evaluation matching contract | Complete and frozen — version 0.1.0 |
-| Publication Pilot 1 sample and input freeze record | Candidate scaffold; not frozen |
+| Publication Pilot 1 sample and input freeze record | Candidate scaffold; not frozen — methodologically reviewed and ready for source-unit materialization |
 | Production source-unit builder and LLM extractor | Not yet implemented |
 | Request builder, candidate parser, and evidence validator | Not yet implemented |
 | LLM-assisted semantic extraction execution | Not yet completed |
@@ -170,7 +170,7 @@ tests/                           Unit, regression, contract, and frozen-snapshot
 - [Publication Pilot 1 evidence-validation contract](docs/publication_evidence_validation_contract.md)
 - [Publication Pilot 1 annotation and adjudication guidelines](docs/publication_annotation_adjudication_guidelines.md)
 - [Publication Pilot 1 evaluation matching contract — complete and frozen, version 0.1.0](docs/publication_evaluation_matching_contract.md)
-- [Publication Pilot 1 sample and input freeze record — candidate scaffold; not frozen](docs/publication_pilot1_sample_input_freeze.md)
+- [Publication Pilot 1 sample and input freeze record — candidate scaffold; not frozen; methodologically reviewed and ready for source-unit materialization](docs/publication_pilot1_sample_input_freeze.md)
 - [Final publication ontology observations register](docs/publication_ontology_observations_register.md)
 
 ### Evaluation
