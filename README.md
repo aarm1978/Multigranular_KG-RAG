@@ -1,6 +1,6 @@
 # Multigranular KG-RAG for Operational Hydrology
 
-> **Project status:** Active doctoral dissertation research. Ontology v0.1.3, the deterministic extraction layer, the Publication Pilot 1 machine-readable target profile, source-unit contract, candidate-output JSON Schema, and evidence-validation contract are complete and frozen. The production source-unit builder, request builder, candidate parser, evidence validator, and LLM extractor are not yet implemented. LLM-assisted semantic extraction execution, cross-source alignment, final graph assembly, retrieval, and comparative question-answering evaluation are also not yet completed.
+> **Project status:** Active doctoral dissertation research. Ontology v0.1.3, the deterministic extraction layer, and the Publication Pilot 1 target profile, source-unit contract, candidate-output JSON Schema, evidence-validation contract, and annotation and adjudication guidelines are complete and frozen. The annotator handbook has not yet been created. The pilot sample/input record, evaluation-matching rules and thresholds, and model/reproducibility policy are not yet frozen. The production source-unit builder, request builder, candidate parser, evidence validator, LLM extractor, annotation interface, and annotation storage are not yet implemented. Annotation execution and gold construction have not occurred. LLM-assisted semantic extraction execution, cross-source alignment, final graph assembly, retrieval, and comparative question-answering evaluation are also not yet completed.
 
 This repository supports the construction and evaluation of an ontology-guided, multigranular knowledge graph and KG-RAG system for **scientific cross-artifact question answering in operational hydrology**.
 
@@ -37,6 +37,7 @@ The intended final system will be evaluated against non-retrieval, web-search, v
 | Publication Pilot 1 source-unit contract | Complete and frozen |
 | Publication Pilot 1 candidate-output JSON Schema | Complete and frozen |
 | Publication Pilot 1 evidence-validation contract | Complete and frozen |
+| Publication Pilot 1 annotation and adjudication guidelines | Complete and frozen |
 | Production source-unit builder and LLM extractor | Not yet implemented |
 | Request builder, candidate parser, and evidence validator | Not yet implemented |
 | LLM-assisted semantic extraction execution | Not yet completed |
@@ -165,6 +166,7 @@ tests/                           Unit, regression, contract, and frozen-snapshot
 - [Publication Pilot 1 source-unit contract](docs/publication_source_unit_contract.md)
 - [Publication Pilot 1 candidate-output JSON Schema](schemas/publication_candidate_output.schema.json)
 - [Publication Pilot 1 evidence-validation contract](docs/publication_evidence_validation_contract.md)
+- [Publication Pilot 1 annotation and adjudication guidelines](docs/publication_annotation_adjudication_guidelines.md)
 - [Final publication ontology observations register](docs/publication_ontology_observations_register.md)
 
 ### Evaluation
@@ -230,18 +232,22 @@ External source materials remain subject to their original terms of use and lice
 - [x] Freeze the Publication Pilot 1 source-unit contract
 - [x] Complete and freeze the candidate-output JSON Schema
 - [x] Complete and freeze the evidence-validation contract
-- [ ] Complete and freeze annotation and adjudication guidelines
+- [x] Complete and freeze the Publication Pilot 1 annotation and adjudication guidelines
 - [ ] Complete and freeze evaluation matching rules and GO/REVISE/NO-GO thresholds
 - [ ] Complete the pilot sample and input freeze record
 - [ ] Complete the model and reproducibility policy
+- [ ] Create the concise annotator handbook and calibration materials
+- [ ] Implement the annotation interface and storage
 - [ ] Implement the production source-unit builder and LLM extractor
 - [ ] Implement the request builder, candidate parser, and evidence validator
+- [ ] Execute human annotation, adjudication, and gold construction
 - [ ] Execute ontology-guided LLM-assisted semantic extraction
 - [ ] Align and consolidate entities across artifact families
 - [ ] Assemble and load the final multigranular KG
 - [ ] Build the Microsoft GraphRAG comparison baseline
 - [ ] Implement scientific workflow-aware KG retrieval
 - [ ] Evaluate retrieval and answer quality against all baselines
+- [ ] Conduct Study 4 expert evaluation
 - [ ] Add release-level installation, reproduction, and citation instructions
 
 ## Citation
