@@ -1,6 +1,6 @@
 # Multigranular KG-RAG for Operational Hydrology
 
-> **Project status:** Active doctoral dissertation research. Ontology v0.1.3, the deterministic extraction layer, and the Publication Pilot 1 target profile, source-unit contract, candidate-output JSON Schema, evidence-validation contract, annotation and adjudication guidelines, and evaluation matching contract are complete and frozen. The annotator handbook has not yet been created. The pilot sample/input record and model/reproducibility policy are not yet frozen. The production source-unit builder, request builder, candidate parser, evidence validator, LLM extractor, annotation interface, and annotation storage are not yet implemented. Annotation execution and gold construction have not occurred. LLM-assisted semantic extraction execution, cross-source alignment, final graph assembly, retrieval, and comparative question-answering evaluation are also not yet completed.
+> **Project status:** Active doctoral dissertation research. Ontology v0.1.3, the deterministic extraction layer, and the Publication Pilot 1 target profile, source-unit contract, candidate-output JSON Schema, evidence-validation contract, annotation and adjudication guidelines, and evaluation matching contract are complete and frozen. The Publication Pilot 1 source-unit builder component and its fifth twelve-artifact materialization are independently accepted at version 0.1.4. The annotator handbook has not yet been created. The pilot sample/input record and model/reproducibility policy are not yet frozen; screening and exact source-unit selection have not started. The request builder, candidate parser, evidence validator, LLM extractor, annotation interface, and annotation storage are not yet implemented. Annotation execution and gold construction have not occurred. LLM extraction and pilot evaluation have not occurred. Cross-source alignment, final graph assembly, retrieval, and comparative question-answering evaluation are also not yet completed.
 
 This repository supports the construction and evaluation of an ontology-guided, multigranular knowledge graph and KG-RAG system for **scientific cross-artifact question answering in operational hydrology**.
 
@@ -39,8 +39,10 @@ The intended final system will be evaluated against non-retrieval, web-search, v
 | Publication Pilot 1 evidence-validation contract | Complete and frozen |
 | Publication Pilot 1 annotation and adjudication guidelines | Complete and frozen |
 | Publication Pilot 1 evaluation matching contract | Complete and frozen — version 0.1.0 |
-| Publication Pilot 1 sample and input freeze record | Candidate scaffold; not frozen — methodologically reviewed and ready for source-unit materialization |
-| Production source-unit builder and LLM extractor | Not yet implemented |
+| Publication Pilot 1 source-unit builder | Accepted — version 0.1.4 |
+| Publication Pilot 1 source-unit inventory | Fifth twelve-artifact population materialization available for review |
+| Publication Pilot 1 sample and input freeze record | Candidate; not frozen — population materialized, screening and selection not started |
+| Publication Pilot 1 LLM extractor | Not yet implemented |
 | Request builder, candidate parser, and evidence validator | Not yet implemented |
 | LLM-assisted semantic extraction execution | Not yet completed |
 | Cross-source entity alignment and consolidation | Planned |
@@ -166,11 +168,12 @@ tests/                           Unit, regression, contract, and frozen-snapshot
 - [Final Publication Pilot 1 LLM target inventory](docs/publication_llm_extraction_target_inventory.md)
 - [Publication Pilot 1 machine-readable target profile](src/extraction/llm/publications/publication_target_inventory.yaml)
 - [Publication Pilot 1 source-unit contract](docs/publication_source_unit_contract.md)
+- [Publication Pilot 1 source-unit builder implementation and materialization record](docs/publication_source_unit_builder_implementation.md)
 - [Publication Pilot 1 candidate-output JSON Schema](schemas/publication_candidate_output.schema.json)
 - [Publication Pilot 1 evidence-validation contract](docs/publication_evidence_validation_contract.md)
 - [Publication Pilot 1 annotation and adjudication guidelines](docs/publication_annotation_adjudication_guidelines.md)
 - [Publication Pilot 1 evaluation matching contract — complete and frozen, version 0.1.0](docs/publication_evaluation_matching_contract.md)
-- [Publication Pilot 1 sample and input freeze record — candidate scaffold; not frozen; methodologically reviewed and ready for source-unit materialization](docs/publication_pilot1_sample_input_freeze.md)
+- [Publication Pilot 1 sample and input freeze record — candidate; not frozen; population materialized; screening and selection not started](docs/publication_pilot1_sample_input_freeze.md)
 - [Final publication ontology observations register](docs/publication_ontology_observations_register.md)
 
 ### Evaluation
@@ -242,7 +245,9 @@ External source materials remain subject to their original terms of use and lice
 - [ ] Complete the model and reproducibility policy
 - [ ] Create the concise annotator handbook and calibration materials
 - [ ] Implement the annotation interface and storage
-- [ ] Implement the production source-unit builder and LLM extractor
+- [x] Implement and rematerialize the Publication Pilot 1 source-unit builder for implementation review
+- [x] Materialize the corrected fixed twelve-artifact source-unit inventory for review
+- [ ] Implement the Publication Pilot 1 LLM extractor
 - [ ] Implement the request builder, candidate parser, and evidence validator
 - [ ] Execute human annotation, adjudication, and gold construction
 - [ ] Execute ontology-guided LLM-assisted semantic extraction

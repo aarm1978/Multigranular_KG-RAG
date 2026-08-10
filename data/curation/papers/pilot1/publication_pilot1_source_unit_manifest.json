@@ -1,0 +1,598 @@
+{
+  "artifactCount": 12,
+  "artifactRecords": [
+    {
+      "canonicalArtifactID": "https://doi.org/10.1016/j.jhydrol.2017.11.036",
+      "canonicalTextSha256": "055a59f8b80c2ec088d376de2dc9558ea2dc28f217797dc7dd1e1f26e5df2b59",
+      "chunksMetadataSha256": "08bb1bdfa89b4511ea99e8f160a999bebe49f96071a1a38608ef98ee02c43348",
+      "chunksSha256": "d55708e37b86a71fc57fbec0526fd75ce7aed3816229ffbc913f60f8d9a945eb",
+      "conversionStatusSummary": "canonical_markdown_available",
+      "conversionWarnings": [
+        {
+          "category": "ambiguous_keyword_format",
+          "detail": {
+            "candidate": "Keywords:",
+            "line_number": 32,
+            "reason": "empty_inline_keyword_declaration"
+          }
+        },
+        {
+          "category": "excel_bibtex_conflict",
+          "detail": "year"
+        },
+        {
+          "category": "repaired_reference_doi_candidate",
+          "detail": {
+            "candidate": "10.1007/s11069-004-4549",
+            "corrected_doi": "10.1007/s11069-004-4549-4",
+            "line_number": 382,
+            "reason": "exact_local_citation_extension"
+          }
+        }
+      ],
+      "eligibilityCounts": {
+        "context_only": 6,
+        "eligible": 24,
+        "excluded": 4
+      },
+      "equationContainingUnitCount": 1,
+      "imageContainingUnitCount": 12,
+      "markdownMetadataSha256": "63f3c7491bb825452482446dae7040276b60f6b987e17881de10f3e6dafd40f4",
+      "markerVersion": null,
+      "markerVersionJustification": "Marker version is not retained in the reviewed Phase A corpus or sidecar metadata.",
+      "markerVersionStatus": "unavailable_with_justification",
+      "needsReviewCount": 0,
+      "paperID": "10",
+      "rawFileSha256": "055a59f8b80c2ec088d376de2dc9558ea2dc28f217797dc7dd1e1f26e5df2b59",
+      "recordType": "journal_article",
+      "sectionCount": 31,
+      "sourceFile": "data/raw/papers/markdowns/10/markdown/10_md.md",
+      "sourceUnitCount": 34,
+      "tableContainingUnitCount": 2,
+      "validationResults": {
+        "errorCodes": [],
+        "valid": true
+      },
+      "visualOnlyUnitCount": 1,
+      "warningCount": 3
+    },
+    {
+      "canonicalArtifactID": "https://doi.org/10.1007/978-3-031-66428-1_13",
+      "canonicalTextSha256": "8cc50035edcda72777a100c8bb2a40498de0480a22f7c1b6929287d080479f43",
+      "chunksMetadataSha256": "505ba6f55037fe4ce8844e42e071675b020abd9883a087af8f07d0fe7a4730bb",
+      "chunksSha256": "cffcbba0c0cdd848cc022eef555fead103fb86d365aa2a1067d17c0d1686e84a",
+      "conversionStatusSummary": "canonical_markdown_available",
+      "conversionWarnings": [],
+      "eligibilityCounts": {
+        "context_only": 2,
+        "eligible": 15,
+        "excluded": 3
+      },
+      "equationContainingUnitCount": 4,
+      "imageContainingUnitCount": 6,
+      "markdownMetadataSha256": "bcec733390be0428cecc318dfe9db6912fa7333a91c759d2bc330c3d659dc9a8",
+      "markerVersion": null,
+      "markerVersionJustification": "Marker version is not retained in the reviewed Phase A corpus or sidecar metadata.",
+      "markerVersionStatus": "unavailable_with_justification",
+      "needsReviewCount": 0,
+      "paperID": "15",
+      "rawFileSha256": "8cc50035edcda72777a100c8bb2a40498de0480a22f7c1b6929287d080479f43",
+      "recordType": "book_chapter",
+      "sectionCount": 19,
+      "sourceFile": "data/raw/papers/markdowns/15/markdown/15_md.md",
+      "sourceUnitCount": 20,
+      "tableContainingUnitCount": 3,
+      "validationResults": {
+        "errorCodes": [],
+        "valid": true
+      },
+      "visualOnlyUnitCount": 1,
+      "warningCount": 0
+    },
+    {
+      "canonicalArtifactID": "https://doi.org/10.1080/02626667.2024.2355202",
+      "canonicalTextSha256": "39f01a2f6055c46ee24efbb14d6212e55aa5d0ee98982420635962d6f92c807c",
+      "chunksMetadataSha256": "1d98ce4e743ce7e67f2ed6000bc5fbdea5b924bbc5869f358cd5e0197b8db8f9",
+      "chunksSha256": "ab613effb6cb7279c6f2517cbfa313b5f5d985142925962803a34e2b731d4e6a",
+      "conversionStatusSummary": "canonical_markdown_available",
+      "conversionWarnings": [],
+      "eligibilityCounts": {
+        "context_only": 3,
+        "eligible": 38,
+        "excluded": 7
+      },
+      "equationContainingUnitCount": 0,
+      "imageContainingUnitCount": 17,
+      "markdownMetadataSha256": "f9fb3908412eada42e84dd45fc34464605948f5d3a8f9f3858d7d6dde0e4e84a",
+      "markerVersion": null,
+      "markerVersionJustification": "Marker version is not retained in the reviewed Phase A corpus or sidecar metadata.",
+      "markerVersionStatus": "unavailable_with_justification",
+      "needsReviewCount": 0,
+      "paperID": "16",
+      "rawFileSha256": "39f01a2f6055c46ee24efbb14d6212e55aa5d0ee98982420635962d6f92c807c",
+      "recordType": "journal_article",
+      "sectionCount": 43,
+      "sourceFile": "data/raw/papers/markdowns/16/markdown/16_md.md",
+      "sourceUnitCount": 48,
+      "tableContainingUnitCount": 5,
+      "validationResults": {
+        "errorCodes": [],
+        "valid": true
+      },
+      "visualOnlyUnitCount": 3,
+      "warningCount": 0
+    },
+    {
+      "canonicalArtifactID": "https://doi.org/10.5194/hess-28-4127-2024",
+      "canonicalTextSha256": "bf7795f3c3b6af14e4755bb893296622742f15c8efc38dbfd8606d13e99bd7ae",
+      "chunksMetadataSha256": "422c988d9c8649006d823689019bc46eef63dd660ccb53c7742648102bae9fb1",
+      "chunksSha256": "7dd4b5ebdebf52ddb538958eb5519fa0ec6716036b9a1932fa519f78747c70e0",
+      "conversionStatusSummary": "canonical_markdown_sanitized_forbidden_controls",
+      "conversionWarnings": [
+        {
+          "category": "unexpected_control_characters",
+          "detail": {
+            "code_points": [
+              "U+0002"
+            ],
+            "line_numbers": [
+              359
+            ],
+            "occurrence_count": 1,
+            "source_path": "data/raw/papers/markdowns/18/markdown/18_md.md"
+          }
+        }
+      ],
+      "eligibilityCounts": {
+        "context_only": 2,
+        "eligible": 28,
+        "excluded": 4
+      },
+      "equationContainingUnitCount": 3,
+      "imageContainingUnitCount": 9,
+      "markdownMetadataSha256": "40336d836aba59ec6ddcb633ce2ed15c200760e98650f3508631f7bbdb374284",
+      "markerVersion": null,
+      "markerVersionJustification": "Marker version is not retained in the reviewed Phase A corpus or sidecar metadata.",
+      "markerVersionStatus": "unavailable_with_justification",
+      "needsReviewCount": 0,
+      "paperID": "18",
+      "rawFileSha256": "c0e816f2fb5900997d3f843127741aee375fd1887a03ed2daa19a1bf9757d0a1",
+      "recordType": "journal_article",
+      "sectionCount": 31,
+      "sourceFile": "data/raw/papers/markdowns/18/markdown/18_md.md",
+      "sourceUnitCount": 34,
+      "tableContainingUnitCount": 1,
+      "validationResults": {
+        "errorCodes": [],
+        "valid": true
+      },
+      "visualOnlyUnitCount": 0,
+      "warningCount": 1
+    },
+    {
+      "canonicalArtifactID": "https://doi.org/10.1029/2023wr035337",
+      "canonicalTextSha256": "0a3ec316639d150e74924967bf34253da9d803822bc9976b4657d5b93059821c",
+      "chunksMetadataSha256": "5e7cb56533e3d82051e77b021d408befd8e6c7b0e9739a33fc4752232ae16c7c",
+      "chunksSha256": "e4b851ed0ecdb1062f6088e0ef763b31a738823592465e183c0aff73b34ca34b",
+      "conversionStatusSummary": "canonical_markdown_available",
+      "conversionWarnings": [],
+      "eligibilityCounts": {
+        "context_only": 4,
+        "eligible": 27,
+        "excluded": 3,
+        "needs_review": 3
+      },
+      "equationContainingUnitCount": 5,
+      "imageContainingUnitCount": 11,
+      "markdownMetadataSha256": "a47e268f6cd48b02142ca7a76ea218c5d8868c84090af18b2d93e3c4e2c7273d",
+      "markerVersion": null,
+      "markerVersionJustification": "Marker version is not retained in the reviewed Phase A corpus or sidecar metadata.",
+      "markerVersionStatus": "unavailable_with_justification",
+      "needsReviewCount": 3,
+      "paperID": "34",
+      "rawFileSha256": "0a3ec316639d150e74924967bf34253da9d803822bc9976b4657d5b93059821c",
+      "recordType": "journal_article",
+      "sectionCount": 32,
+      "sourceFile": "data/raw/papers/markdowns/34/markdown/34_md.md",
+      "sourceUnitCount": 37,
+      "tableContainingUnitCount": 4,
+      "validationResults": {
+        "errorCodes": [],
+        "valid": true
+      },
+      "visualOnlyUnitCount": 1,
+      "warningCount": 0
+    },
+    {
+      "canonicalArtifactID": "https://doi.org/10.1016/j.advwatres.2024.104858",
+      "canonicalTextSha256": "e9cfd3337d4df8fc5e3148586ddb21a85533ed24d45cec4607e4b5ddda0dd01a",
+      "chunksMetadataSha256": "2f9136b0ba05eeb24a454077d549ffc4ec3a9be0dd9152d678bfee0920571757",
+      "chunksSha256": "d17517c217800ecdb799ae7a321e0e0de0f650f9287176f8c6cea033f695981d",
+      "conversionStatusSummary": "canonical_markdown_available",
+      "conversionWarnings": [
+        {
+          "category": "ambiguous_keyword_declaration",
+          "detail": {
+            "candidate": "Estuarine environments River discharge Storm surge Compound floods Bivariate hazard Dynamic copulas Climate patterns Bayesian statistics",
+            "line_number": 29,
+            "reason": "undelimited_candidate_exceeds_precision_threshold"
+          }
+        }
+      ],
+      "eligibilityCounts": {
+        "context_only": 3,
+        "eligible": 19,
+        "excluded": 3
+      },
+      "equationContainingUnitCount": 2,
+      "imageContainingUnitCount": 5,
+      "markdownMetadataSha256": "034767edf5a013f5a1152d1984cd21d1e68f0d21179934f39e0d422a5c18ac9a",
+      "markerVersion": null,
+      "markerVersionJustification": "Marker version is not retained in the reviewed Phase A corpus or sidecar metadata.",
+      "markerVersionStatus": "unavailable_with_justification",
+      "needsReviewCount": 0,
+      "paperID": "37",
+      "rawFileSha256": "e9cfd3337d4df8fc5e3148586ddb21a85533ed24d45cec4607e4b5ddda0dd01a",
+      "recordType": "journal_article",
+      "sectionCount": 24,
+      "sourceFile": "data/raw/papers/markdowns/37/markdown/37_md.md",
+      "sourceUnitCount": 25,
+      "tableContainingUnitCount": 2,
+      "validationResults": {
+        "errorCodes": [],
+        "valid": true
+      },
+      "visualOnlyUnitCount": 1,
+      "warningCount": 1
+    },
+    {
+      "canonicalArtifactID": "https://doi.org/10.1016/j.envsoft.2024.106239",
+      "canonicalTextSha256": "3615ac2bc6801621f3890f7535921ccb44891b44986c514ac013a8c78f8da703",
+      "chunksMetadataSha256": "745a7dfe7cbc9411d000e9c457c3bd457dbe9b28d6a8d066525900c8ef464900",
+      "chunksSha256": "13429f1d8944a3ebb29ca3be7c1a0a9853bb63feeeb8c6f4b915eadd4eecaca6",
+      "conversionStatusSummary": "canonical_markdown_available",
+      "conversionWarnings": [
+        {
+          "category": "ambiguous_keyword_declaration",
+          "detail": {
+            "candidate": "Large spatial datasets Server-side data access Reproducible environmental modeling HydroShare GeoServer THREDDS data server",
+            "line_number": 29,
+            "reason": "undelimited_candidate_exceeds_precision_threshold"
+          }
+        },
+        {
+          "category": "deferred_reference_doi_candidate",
+          "detail": {
+            "action": "defer",
+            "candidate": "10.1061/(asce)",
+            "context": "reference",
+            "evidence_text": "DeVantier, B.A., Feldman, A.D., 1993. Review of GIS applications in hydrologic modeling. J. Water Resour. Plann. Manag. 119. [https://doi.org/10.1061/\\(asce\\)](https://doi.org/10.1061/(asce)0733-9496(1993)119:2(246) [0733-9496\\(1993\\)119:2\\(246.](https://doi.org/10.1061/(asce)0733-9496(1993)119:2(246)",
+            "reason": "same_source_occurrence_parser_contradiction:invalid_split_doi_continuation",
+            "source_artifact": "https://doi.org/10.1016/j.envsoft.2024.106239",
+            "source_location": {
+              "line_end": 371,
+              "line_start": 371,
+              "section": "**References**",
+              "source_artifact": "https://doi.org/10.1016/j.envsoft.2024.106239"
+            }
+          }
+        },
+        {
+          "category": "malformed_reference_doi_candidate",
+          "detail": {
+            "candidate": "10.1061/(asce)0733-9496(1993)119:2(246)[0733-9496(1993)119:2(246.](https://doi.org/10.1061/(asce)0733-9496(1993)119:2(246)",
+            "line_number": 371,
+            "reason": "invalid_split_doi_continuation"
+          }
+        }
+      ],
+      "eligibilityCounts": {
+        "context_only": 6,
+        "eligible": 29,
+        "excluded": 2
+      },
+      "equationContainingUnitCount": 0,
+      "imageContainingUnitCount": 8,
+      "markdownMetadataSha256": "1dfa7626c09040d6edff9fb174d911736de4aff9fe580de32150473a7ed53c45",
+      "markerVersion": null,
+      "markerVersionJustification": "Marker version is not retained in the reviewed Phase A corpus or sidecar metadata.",
+      "markerVersionStatus": "unavailable_with_justification",
+      "needsReviewCount": 0,
+      "paperID": "46",
+      "rawFileSha256": "3615ac2bc6801621f3890f7535921ccb44891b44986c514ac013a8c78f8da703",
+      "recordType": "journal_article",
+      "sectionCount": 35,
+      "sourceFile": "data/raw/papers/markdowns/46/markdown/46_md.md",
+      "sourceUnitCount": 37,
+      "tableContainingUnitCount": 1,
+      "validationResults": {
+        "errorCodes": [],
+        "valid": true
+      },
+      "visualOnlyUnitCount": 0,
+      "warningCount": 3
+    },
+    {
+      "canonicalArtifactID": "https://doi.org/10.5194/hess-29-2521-2025",
+      "canonicalTextSha256": "9771ef8eabf1331d82d54e52e856c09cc1ac9a7bcdcca628a0716c333218939a",
+      "chunksMetadataSha256": "bc70a4d3f89cc06df500b4f024ad4f66bb534e9f128234041d6cece856bc9700",
+      "chunksSha256": "29c624c2c5b3e051766a4db14a3c6084c5d649b85024cdfba6039a6682d05d75",
+      "conversionStatusSummary": "canonical_markdown_available",
+      "conversionWarnings": [],
+      "eligibilityCounts": {
+        "context_only": 5,
+        "eligible": 33,
+        "excluded": 7
+      },
+      "equationContainingUnitCount": 2,
+      "imageContainingUnitCount": 3,
+      "markdownMetadataSha256": "84140b9e6b8f5d763e1100c66c927584508216d296e6bcf74a509b4e4cf624a1",
+      "markerVersion": null,
+      "markerVersionJustification": "Marker version is not retained in the reviewed Phase A corpus or sidecar metadata.",
+      "markerVersionStatus": "unavailable_with_justification",
+      "needsReviewCount": 0,
+      "paperID": "54",
+      "rawFileSha256": "9771ef8eabf1331d82d54e52e856c09cc1ac9a7bcdcca628a0716c333218939a",
+      "recordType": "journal_article",
+      "sectionCount": 39,
+      "sourceFile": "data/raw/papers/markdowns/54/markdown/54_md.md",
+      "sourceUnitCount": 45,
+      "tableContainingUnitCount": 2,
+      "validationResults": {
+        "errorCodes": [],
+        "valid": true
+      },
+      "visualOnlyUnitCount": 0,
+      "warningCount": 0
+    },
+    {
+      "canonicalArtifactID": "https://doi.org/10.1111/1752-1688.12946",
+      "canonicalTextSha256": "106154cb68f883e13e4974e25b2bbfa4ac9f2d56997b7b1ba56c63a22794d78b",
+      "chunksMetadataSha256": "2bf4d6f31037d518f4acd52ff01971ba177555689aef62eb1d225605e0479a01",
+      "chunksSha256": "e784553878b11aa9a310385b2c5ac2258f6b9e83025b37ebbfd30ce2fd771648",
+      "conversionStatusSummary": "canonical_markdown_available",
+      "conversionWarnings": [
+        {
+          "category": "excel_bibtex_conflict",
+          "detail": "url"
+        }
+      ],
+      "eligibilityCounts": {
+        "context_only": 4,
+        "eligible": 17,
+        "excluded": 2
+      },
+      "equationContainingUnitCount": 5,
+      "imageContainingUnitCount": 4,
+      "markdownMetadataSha256": "cdbbd214a44fbfbfdbd18cdab8ffa0b3a7f6b8f54345b167253d5d17e7296b54",
+      "markerVersion": null,
+      "markerVersionJustification": "Marker version is not retained in the reviewed Phase A corpus or sidecar metadata.",
+      "markerVersionStatus": "unavailable_with_justification",
+      "needsReviewCount": 0,
+      "paperID": "79",
+      "rawFileSha256": "106154cb68f883e13e4974e25b2bbfa4ac9f2d56997b7b1ba56c63a22794d78b",
+      "recordType": "journal_article",
+      "sectionCount": 22,
+      "sourceFile": "data/raw/papers/markdowns/79/markdown/79_md.md",
+      "sourceUnitCount": 23,
+      "tableContainingUnitCount": 1,
+      "validationResults": {
+        "errorCodes": [],
+        "valid": true
+      },
+      "visualOnlyUnitCount": 1,
+      "warningCount": 1
+    },
+    {
+      "canonicalArtifactID": "https://doi.org/10.1016/j.envsoft.2025.106665",
+      "canonicalTextSha256": "dcdc4a573d1111b0e7965684533b375a3fee1015a45a4da32d23e09afb9d33db",
+      "chunksMetadataSha256": "fd6a8b9aaaa253deb91ddfcb0a637b0b07b6d31275393bbce6f6d14caa51b286",
+      "chunksSha256": "9eb0f9389dd9a23004c17bca3e14fcd7153070014b0431752f9fefdb389e75f8",
+      "conversionStatusSummary": "canonical_markdown_available",
+      "conversionWarnings": [
+        {
+          "category": "ambiguous_keyword_declaration",
+          "detail": {
+            "candidate": "Nash-Sutcliffe Efficiency (NSE) Kling-Gupta Efficiency (KGE) Model accuracy Model skill Model evaluation",
+            "line_number": 26,
+            "reason": "undelimited_candidate_exceeds_precision_threshold"
+          }
+        }
+      ],
+      "eligibilityCounts": {
+        "context_only": 5,
+        "eligible": 19,
+        "excluded": 1
+      },
+      "equationContainingUnitCount": 4,
+      "imageContainingUnitCount": 5,
+      "markdownMetadataSha256": "0debaa3526b15106345c3b038e46c7c2cb33e002a087fffb504763e4ee0195d6",
+      "markerVersion": null,
+      "markerVersionJustification": "Marker version is not retained in the reviewed Phase A corpus or sidecar metadata.",
+      "markerVersionStatus": "unavailable_with_justification",
+      "needsReviewCount": 0,
+      "paperID": "276",
+      "rawFileSha256": "dcdc4a573d1111b0e7965684533b375a3fee1015a45a4da32d23e09afb9d33db",
+      "recordType": "journal_article",
+      "sectionCount": 25,
+      "sourceFile": "data/raw/papers/markdowns/276/markdown/276_md.md",
+      "sourceUnitCount": 25,
+      "tableContainingUnitCount": 3,
+      "validationResults": {
+        "errorCodes": [],
+        "valid": true
+      },
+      "visualOnlyUnitCount": 0,
+      "warningCount": 1
+    },
+    {
+      "canonicalArtifactID": "https://doi.org/10.5194/hess-26-3377-2022",
+      "canonicalTextSha256": "1909a4308120ea0327bfcb82a730f3194dae1e1f0eeb09f9285975e88f65cb10",
+      "chunksMetadataSha256": "a1b4039557762dec1396d6e3b751b189e35bd4f1d6e65b7f161024600740487e",
+      "chunksSha256": "eea313450769e0665691684e882ff98e647965b056a0dd6f99c54fa434f20d08",
+      "conversionStatusSummary": "canonical_markdown_sanitized_forbidden_controls",
+      "conversionWarnings": [
+        {
+          "category": "unexpected_control_characters",
+          "detail": {
+            "code_points": [
+              "U+000C"
+            ],
+            "line_numbers": [
+              219
+            ],
+            "occurrence_count": 1,
+            "source_path": "data/raw/papers/markdowns/87/markdown/87_md.md"
+          }
+        }
+      ],
+      "eligibilityCounts": {
+        "context_only": 4,
+        "eligible": 13,
+        "excluded": 2
+      },
+      "equationContainingUnitCount": 4,
+      "imageContainingUnitCount": 5,
+      "markdownMetadataSha256": "466fe5a63b897f69cf27885225f9304bf54b465e4f80f444ac1fe0ebe164ba5c",
+      "markerVersion": null,
+      "markerVersionJustification": "Marker version is not retained in the reviewed Phase A corpus or sidecar metadata.",
+      "markerVersionStatus": "unavailable_with_justification",
+      "needsReviewCount": 0,
+      "paperID": "87",
+      "rawFileSha256": "ad759a8cdd7ba7097ebbcbe86be004bcea39665304641370b7baf6ca034a5bd3",
+      "recordType": "journal_article",
+      "sectionCount": 18,
+      "sourceFile": "data/raw/papers/markdowns/87/markdown/87_md.md",
+      "sourceUnitCount": 19,
+      "tableContainingUnitCount": 2,
+      "validationResults": {
+        "errorCodes": [],
+        "valid": true
+      },
+      "visualOnlyUnitCount": 0,
+      "warningCount": 1
+    },
+    {
+      "canonicalArtifactID": "https://doi.org/10.5194/hess-26-3377-2022-corrigendum",
+      "canonicalTextSha256": "bfc98ce8b75dbaac508bce8c44fb11aa444e6a7db62e59ef41b964cadc22a11a",
+      "chunksMetadataSha256": "38d6f0235fbc4a9e37262b900c593a92811c151e80e911bedfbbc201edf8e225",
+      "chunksSha256": "f6ff7a1220c74ac63f52a9513a781138d7f6c4013b95fe5b15a52a25ecdfd915",
+      "conversionStatusSummary": "canonical_markdown_available",
+      "conversionWarnings": [],
+      "eligibilityCounts": {
+        "context_only": 5,
+        "eligible": 5,
+        "excluded": 1
+      },
+      "equationContainingUnitCount": 0,
+      "imageContainingUnitCount": 3,
+      "markdownMetadataSha256": "38d6f0235fbc4a9e37262b900c593a92811c151e80e911bedfbbc201edf8e225",
+      "markerVersion": null,
+      "markerVersionJustification": "Marker version is not retained in the reviewed Phase A corpus or sidecar metadata.",
+      "markerVersionStatus": "unavailable_with_justification",
+      "needsReviewCount": 0,
+      "paperID": "87-corrigendum",
+      "rawFileSha256": "bfc98ce8b75dbaac508bce8c44fb11aa444e6a7db62e59ef41b964cadc22a11a",
+      "recordType": "corrigendum",
+      "sectionCount": 11,
+      "sourceFile": "data/raw/papers/markdowns/87-corrigendum/markdown/87-corrigendum_md.md",
+      "sourceUnitCount": 11,
+      "tableContainingUnitCount": 0,
+      "validationResults": {
+        "errorCodes": [],
+        "valid": true
+      },
+      "visualOnlyUnitCount": 0,
+      "warningCount": 0
+    }
+  ],
+  "builderVersion": "0.1.4",
+  "canonicalCorpusSha256": "6bce89579cb250d4ba94525bc31c327cc1ae7bdb48b71091cb648fd0502f1e25",
+  "canonicalDocumentHashes": {
+    "10": "055a59f8b80c2ec088d376de2dc9558ea2dc28f217797dc7dd1e1f26e5df2b59",
+    "15": "8cc50035edcda72777a100c8bb2a40498de0480a22f7c1b6929287d080479f43",
+    "16": "39f01a2f6055c46ee24efbb14d6212e55aa5d0ee98982420635962d6f92c807c",
+    "18": "bf7795f3c3b6af14e4755bb893296622742f15c8efc38dbfd8606d13e99bd7ae",
+    "276": "dcdc4a573d1111b0e7965684533b375a3fee1015a45a4da32d23e09afb9d33db",
+    "34": "0a3ec316639d150e74924967bf34253da9d803822bc9976b4657d5b93059821c",
+    "37": "e9cfd3337d4df8fc5e3148586ddb21a85533ed24d45cec4607e4b5ddda0dd01a",
+    "46": "3615ac2bc6801621f3890f7535921ccb44891b44986c514ac013a8c78f8da703",
+    "54": "9771ef8eabf1331d82d54e52e856c09cc1ac9a7bcdcca628a0716c333218939a",
+    "79": "106154cb68f883e13e4974e25b2bbfa4ac9f2d56997b7b1ba56c63a22794d78b",
+    "87": "1909a4308120ea0327bfcb82a730f3194dae1e1f0eeb09f9285975e88f65cb10",
+    "87-corrigendum": "bfc98ce8b75dbaac508bce8c44fb11aa444e6a7db62e59ef41b964cadc22a11a"
+  },
+  "configurationSha256": "0a0fff14241fd2afa7b59a7b1061d542bde246d8f4985e12abe0db9d83f8a541",
+  "contentAuditSummary": {
+    "equationContainingUnitCount": 30,
+    "equationOnlyUnitCount": 0,
+    "equationWithNonEvidenceBlockCount": 0,
+    "equationWithSameUnitProseSupportCount": 30,
+    "imageContainingUnitCount": 88,
+    "malformedOrReviewUnitCount": 3,
+    "mixedTextualVisualUnitCount": 80,
+    "pureVisualOnlyUnitCount": 8,
+    "tableContainingUnitCount": 26,
+    "tableQualityCounts": {
+      "partially_recoverable": 3,
+      "well_formed": 23
+    }
+  },
+  "contractVersion": "0.1.1",
+  "eligibilityCounts": {
+    "context_only": 49,
+    "eligible": 267,
+    "excluded": 39,
+    "needs_review": 3
+  },
+  "generatedAt": "2026-08-10T22:36:09Z",
+  "generationEnvironment": {
+    "implementation": "python",
+    "llmAccess": false,
+    "networkAccess": false
+  },
+  "generationTimestamp": "2026-08-10T22:36:09Z",
+  "generatorVersion": "0.1.4",
+  "needsReviewCount": 3,
+  "ontologyOwlSha256": "ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57",
+  "ontologyVersion": "0.1.3",
+  "phaseASchemaVersion": "1.1.0",
+  "phaseAVersion": "1.0.9",
+  "phaseBArtifactHash": "675049dae5c3dfed6f492ad0aa79e27fc1a9b37d0ecbc13ab3cf1a69cdb8efaf",
+  "phaseBVersion": "1.0.2",
+  "sectionCount": 330,
+  "sourceUnitBuilderConfiguration": {
+    "artifactIDs": [
+      "10",
+      "15",
+      "16",
+      "18",
+      "34",
+      "37",
+      "46",
+      "54",
+      "79",
+      "276",
+      "87",
+      "87-corrigendum"
+    ],
+    "atomicBlockHardMaxCharacters": 20000,
+    "crossSectionUnitsAllowed": false,
+    "ordinaryParagraphSplittingAllowed": false,
+    "overlapCharacters": 0,
+    "preferredUnitMaxCharacters": 10000
+  },
+  "sourceUnitBuilderConfigurationHash": "0a0fff14241fd2afa7b59a7b1061d542bde246d8f4985e12abe0db9d83f8a541",
+  "sourceUnitContractHash": "31fbd6c76e0efbccdde3e6945191e2a174f19565711b11aedc27d4d63e8e1c3a",
+  "sourceUnitContractVersion": "0.1.1",
+  "sourceUnitCount": 358,
+  "sourceUnitInventoryHash": "7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e",
+  "targetInventoryHash": "3d8a80c4ff8794588e2551e63a61e72c60a9afcb89d8b7a7058ff23e25ee4760",
+  "targetInventoryVersion": "0.1.0",
+  "validationResults": {
+    "artifactCount": 12,
+    "errorCodes": [],
+    "sourceUnitCount": 358,
+    "valid": true
+  }
+}

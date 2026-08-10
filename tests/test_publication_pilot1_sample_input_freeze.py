@@ -1,6 +1,6 @@
 """Static tests for the candidate Publication Pilot 1 sample/input scaffold.
 
-These checks protect methodological boundaries without materializing source units,
+These checks protect the materialized population and methodological boundaries without
 selecting the sample, creating gold, inspecting model output, or freezing the record.
 """
 
@@ -57,7 +57,7 @@ class PublicationPilot1SampleInputFreezeTests(unittest.TestCase):
         self.assertTrue(SAMPLE_PATH.is_file())
         self.assertTrue(self.raw)
         self.assertIn("**Status:** candidate; not yet frozen", self.text)
-        self.assertIn("**Document version:** 0.2.2", self.text)
+        self.assertIn("**Document version:** 0.2.6", self.text)
         self.assertNotIn("**Status:** final and binding", self.text)
 
     def test_matching_contract_is_final_binding_predecessor(self) -> None:
@@ -92,11 +92,12 @@ class PublicationPilot1SampleInputFreezeTests(unittest.TestCase):
             "mutually exclusive at source-unit level", "exactly one partition",
         )
 
-    def test_no_exact_units_or_sample_size_are_invented(self) -> None:
-        """Materialization and exact selection remain genuinely pending."""
+    def test_no_selected_units_or_sample_size_are_invented(self) -> None:
+        """Population materialization does not invent the selected evaluation sample."""
         self.assertIsNone(re.search(r"pub:[^\s:]+:sec:\d{4}:unit:\d{4}", self.text))
         self.assertIn("Exact sample sizes are intentionally not frozen", self.text)
-        self.assertIn("Exact unit IDs remain pending source-unit materialization", self.text)
+        self.assertIn("The complete population source-unit IDs are materialized", self.text)
+        self.assertIn("Exact selected sample unit IDs\nremain pending blinded screening and sample selection", self.text)
         self.assertNotRegex(self.text, r"(?mi)^exactSampleSize\s*:")
 
     def test_support_is_prospective_and_insufficient_support_is_preserved(self) -> None:
@@ -361,17 +362,17 @@ class PublicationPilot1SampleInputFreezeTests(unittest.TestCase):
         final_gate = self.text.split("## 28. Final freeze gate", 1)[1].split("## 29.", 1)[0]
         self.assertNotIn("- [x]", final_gate)
         self.assert_contains_all(
-            "canonical source units are materialized", "exact source-unit IDs are selected",
+            "[x] canonical source units are materialized", "[ ] exact source-unit IDs are selected",
             "Until that gate passes", "candidate scaffold",
         )
 
     def test_readme_status_remains_candidate_not_frozen(self) -> None:
         """README discoverability reports review readiness without claiming freeze."""
         self.assertIn(
-            "Publication Pilot 1 sample and input freeze record | Candidate scaffold; not frozen",
+            "Publication Pilot 1 sample and input freeze record | Candidate; not frozen",
             self.readme,
         )
-        self.assertIn("ready for source-unit materialization", self.readme)
+        self.assertIn("population materialized, screening and selection not started", self.readme)
 
 
 if __name__ == "__main__":

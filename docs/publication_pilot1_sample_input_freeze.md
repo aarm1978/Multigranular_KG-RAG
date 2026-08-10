@@ -1,12 +1,12 @@
 # Publication Pilot 1 Sample and Input Freeze Record
 
 > **Status:** candidate; not yet frozen
-> **Document version:** 0.2.2
+> **Document version:** 0.2.6
 > **Artifact family:** scientific publications
 > **Dissertation scope:** Study 2 — ontology-guided multigranular KG construction and intrinsic evaluation
 > **Pilot:** Publication Pilot 1
 > **Date drafted:** 2026-07-31
-> **Date revised:** 2026-07-31
+> **Date revised:** 2026-08-10
 > **Required predecessor:** `docs/publication_evaluation_matching_contract.md`
 > **Binding ontology:** CIROH ontology 0.1.3
 > **Binding target profile:** `src/extraction/llm/publications/publication_target_inventory.yaml`
@@ -55,7 +55,7 @@ The evaluation-matching contract comes first because it determines:
 - what minimum support is required for GO/REVISE/NO-GO decisions.
 
 Those requirements are now established by the frozen matching contract. This sample
-record remains a candidate until exact source units, partitions, routing, and hashes exist.
+record remains a candidate until exact selected units, partitions, routing, and sample hashes exist.
 
 ## 3. Authority order
 
@@ -263,7 +263,7 @@ the twelve-artifact pool.
 Required outputs:
 
 ```text
-data/curation/publications/pilot1/
+data/curation/papers/pilot1/
     publication_pilot1_source_unit_inventory.jsonl
     publication_pilot1_source_unit_manifest.json
 ```
@@ -301,6 +301,34 @@ The inventory and manifest filenames may be adjusted during implementation, but 
 logical content is required.
 
 No unit may be manually rewritten after materialization.
+
+### 8.1 Fifth population materialization for acceptance review
+
+The complete population source-unit IDs are materialized. Exact selected sample unit IDs
+remain pending blinded screening and sample selection.
+
+The fifth acceptance-review materialization is bound as follows:
+
+```text
+builder version: 0.1.4
+generation timestamp: 2026-08-10T22:36:09Z
+inventory path: data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl
+inventory SHA-256: 7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e
+manifest path: data/curation/papers/pilot1/publication_pilot1_source_unit_manifest.json
+manifest SHA-256: 42684d340af99440d5f72129a5c5299edcb237d77ce2b3d36456b049bee83823
+configuration SHA-256: 0a0fff14241fd2afa7b59a7b1061d542bde246d8f4985e12abe0db9d83f8a541
+artifact count: 12
+section count: 330
+source-unit count: 358
+eligible: 267
+context_only: 49
+excluded: 39
+needs_review: 3
+```
+
+These values establish the complete population inventory for implementation review only.
+They do not select units, assign partitions, freeze routing, or satisfy the final sample
+freeze gate.
 
 ## 9. Eligibility rules
 
@@ -682,7 +710,8 @@ knownDifficulties
 exposureRecordingPolicy
 ```
 
-Exact unit IDs remain pending source-unit materialization.
+The complete population source-unit IDs are materialized. Exact selected sample unit IDs
+remain pending blinded screening and sample selection.
 
 ## 15. Reliability subset
 
@@ -1043,7 +1072,7 @@ calibration and `reserved_diagnostic` units do not satisfy it.
 Recommended output:
 
 ```text
-data/curation/publications/pilot1/
+data/curation/papers/pilot1/
     publication_pilot1_target_coverage_matrix.csv
 ```
 
@@ -1095,7 +1124,7 @@ Assignments must use pseudonymous annotator IDs in released artifacts.
 Recommended later artifact:
 
 ```text
-data/curation/publications/pilot1/
+data/curation/papers/pilot1/
     publication_pilot1_annotation_assignment_manifest.json
 ```
 
@@ -1203,7 +1232,7 @@ This candidate draft is complete when:
 - [x] required manifests and matrices are defined;
 - [x] the dependency on the matching contract is explicit;
 - [x] the evaluation-matching contract is final and binding;
-- [ ] canonical source units are materialized;
+- [x] canonical source units are materialized;
 - [ ] exact source-unit IDs are selected;
 - [ ] calibration units are listed;
 - [ ] reliability units are listed;

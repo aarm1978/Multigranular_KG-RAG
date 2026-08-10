@@ -402,12 +402,12 @@ class PublicationEvaluationMatchingContractTests(unittest.TestCase):
     def test_sample_remains_unfrozen_without_exact_unit_ids(self) -> None:
         """The sample is a support-aware scaffold and contains no materialized unit IDs."""
         self.assertIn("**Status:** candidate; not yet frozen", self.sample)
-        self.assertIn("**Document version:** 0.2.2", self.sample)
+        self.assertIn("**Document version:** 0.2.6", self.sample)
         self.assertIn(
             "Publication evaluation matching contract version:\n0.1.0", self.sample
         )
         self.assertIn(MATCHING_CONTRACT_EXPECTED_SHA256, self.sample)
-        self.assertIn("Exact unit IDs remain pending source-unit materialization", self.sample)
+        self.assertIn("Exact selected sample unit IDs\nremain pending blinded screening and sample selection", self.sample)
         self.assertIn("INSUFFICIENT_SUPPORT", self.sample)
         self.assertNotRegex(self.sample, r"pub:[^\s`]+:sec:\d{4}:unit:\d{4}")
 
@@ -444,7 +444,7 @@ class PublicationEvaluationMatchingContractTests(unittest.TestCase):
             "create gold data",
         )
         self.assertIn("source-unit builder must complete successfully before", self.sample)
-        self.assertIn("Exact unit IDs remain pending source-unit materialization", self.sample)
+        self.assertIn("Exact selected sample unit IDs\nremain pending blinded screening and sample selection", self.sample)
         self.assertIn("Exact sample sizes are intentionally not frozen", self.sample)
         self.assertIn("Before model execution", self.sample)
 
