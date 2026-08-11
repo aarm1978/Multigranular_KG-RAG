@@ -71,3 +71,6 @@ Thumbs.db
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Local Publication Pilot 1 screening drafts, revisions, audit sidecars, and exports
+var/publication_pilot1_screening/

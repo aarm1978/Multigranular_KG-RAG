@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Publication Pilot 1 Screening</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Publication Pilot 1 · Human screening</p>
+      <h1>Source-unit review</h1>
+    </div>
+    <div class="session">
+      <span id="modeBadge" class="badge"></span>
+      <button id="reviewerButton" class="quiet">Reviewer: <span id="reviewerLabel">not set</span></button>
+      <strong id="progressLabel">0 / 267 reviewed</strong>
+    </div>
+  </header>
+
+  <div id="notice" class="notice hidden" role="status"></div>
+  <main>
+    <aside class="sidebar">
+      <section>
+        <h2>Navigate</h2>
+        <label>Paper
+          <select id="paperFilter"><option value="">All papers</option></select>
+        </label>
+        <label>Section role
+          <select id="roleFilter"><option value="">All roles</option></select>
+        </label>
+        <label>Status
+          <select id="statusFilter">
+            <option value="pending">Pending</option>
+            <option value="">All</option>
+            <option value="reviewed">Reviewed</option>
+          </select>
+        </label>
+        <label>Go to sourceUnitID
+          <div class="inline"><input id="goToID" type="text"><button id="goButton">Go</button></div>
+        </label>
+        <p id="filterPosition" class="muted">—</p>
+        <div class="button-grid">
+          <button id="previousButton">Previous</button>
+          <button id="nextButton">Next</button>
+          <button id="nextPendingButton" class="wide">Next pending</button>
+        </div>
+      </section>
+      <section>
+        <h2>Local exports</h2>
+        <button id="backupButton" class="wide">Export incomplete backup</button>
+        <button id="completeExportButton" class="wide primary">Export compiler-ready CSV</button>
+        <button id="resetDryRunButton" class="wide danger hidden">Reset dry-run state</button>
+        <p class="muted">Exports contain all 358 canonical rows. Draft/session metadata stays in a separate private sidecar.</p>
+      </section>
+    </aside>
+
+    <article class="workspace">
+      <section class="unit-card">
+        <div class="unit-heading">
+          <div><p id="unitID" class="mono"></p><h2 id="sectionTitle">Loading…</h2></div>
+          <span id="completionBadge" class="badge"></span>
+        </div>
+        <dl id="metadata" class="metadata"></dl>
+        <div id="textError" class="error hidden"></div>
+        <pre id="sourceText" class="source-text"></pre>
+      </section>
+
+      <section id="form" class="screening-card">
+        <h2>Human screening judgment</h2>
+        <p class="muted">Nothing is inferred or preselected. Routing makes a target available later; it does not assert presence.</p>
+
+        <label>Screening rationale <span class="required">required to complete</span>
+          <textarea id="screeningRationale" rows="4"></textarea>
+        </label>
+
+        <div class="three-columns">
+          <fieldset><legend>Assertion density</legend><div id="expectedAssertionDensity" class="choice-row"></div></fieldset>
+          <fieldset><legend>Relation density</legend><div id="expectedRelationDensity" class="choice-row"></div></fieldset>
+          <fieldset><legend>Routing complexity</legend><div id="routingComplexity" class="choice-row"></div></fieldset>
+        </div>
+
+        <div class="three-columns">
+          <fieldset><legend>Distributed evidence likely?</legend><div id="distributedEvidenceLikely" class="choice-row yes-no"></div></fieldset>
+          <fieldset><legend>Section context useful?</legend><div id="sectionContextUseful" class="choice-row yes-no"></div></fieldset>
+          <fieldset><legend>Deterministic endpoint likely?</legend><div id="deterministicEndpointLikely" class="choice-row yes-no"></div></fieldset>
+        </div>
+
+        <fieldset><legend>Likely recurring distinctions</legend><div id="recurringDistinctions" class="checkbox-grid"></div></fieldset>
+
+        <div class="target-columns">
+          <section>
+            <div class="target-header"><h3>Node routing</h3><input id="nodeSearch" type="search" placeholder="Search node targets"></div>
+            <div id="nodeTargets" class="target-list"></div>
+          </section>
+          <section>
+            <div class="target-header"><h3>Relation routing</h3><input id="relationSearch" type="search" placeholder="Search relation targets"></div>
+            <div id="relationTargets" class="target-list"></div>
+          </section>
+        </div>
+
+        <fieldset>
+          <legend>Likely exhaustive-empty targets</legend>
+          <p class="muted">Prospective expectation only. Choices are restricted to currently routed <code>extract_and_evaluate</code> targets.</p>
+          <div id="exhaustiveTargets" class="checkbox-grid"></div>
+        </fieldset>
+
+        <label>Optional screening notes
+          <textarea id="screeningNotes" rows="3"></textarea>
+        </label>
+        <div class="savebar">
+          <span id="saveStatus" class="muted">Not saved</span>
+          <button id="saveButton">Save</button>
+          <button id="saveNextButton" class="primary">Mark reviewed &amp; next</button>
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <dialog id="reviewerDialog">
+    <form method="dialog" id="reviewerForm">
+      <h2>Reviewer identity</h2>
+      <p>Enter a stable reviewer ID. It may be changed only before the first draft revision is saved; after that, this single-reviewer session locks it.</p>
+      <label>Reviewer ID<input id="reviewerInput" required autocomplete="off"></label>
+      <div class="dialog-actions"><button id="reviewerCancel" value="cancel">Cancel</button><button id="reviewerSave" value="default" class="primary">Save reviewer ID</button></div>
+    </form>
+  </dialog>
+  <script src="/save_coordinator.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
