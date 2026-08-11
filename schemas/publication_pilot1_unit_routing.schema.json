@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w3id.org/ciroh/kg/schemas/publication-pilot1-unit-routing-0.1.1.json",
+  "title": "Publication Pilot 1 unit routing record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "routingSchemaVersion", "routingVersion", "sourceArtifactID", "paperID", "sourceUnitID",
+    "sourceUnitTextHash", "sectionID", "sectionRole", "routingStatus", "routingBasis",
+    "eligibleNodeOperationalTargetIDs", "eligibleRelationOperationalTargetIDs",
+    "primaryEligibleOperationalTargetIDs",
+    "likelyReportingFamilies", "likelySamplingStrata", "likelyRecurringDistinctions",
+    "sourceConversionStatus", "deterministicEndpointRefs",
+    "contextFlags", "menuDiagnostics", "routingDoesNotAssertPresence"
+  ],
+  "properties": {
+    "routingSchemaVersion": {"const": "0.1.1"},
+    "routingVersion": {"const": "0.1.1"},
+    "sourceArtifactID": {"type": "string", "minLength": 1},
+    "paperID": {"type": "string", "minLength": 1},
+    "sourceUnitID": {"type": "string", "minLength": 1},
+    "sourceUnitTextHash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sectionID": {"type": "string", "minLength": 1},
+    "sectionRole": {"type": "string", "minLength": 1},
+    "routingStatus": {"enum": ["routed", "reviewed_no_eligible_target", "not_open_annotation_target", "blocked_needs_review"]},
+    "routingBasis": {"enum": ["human_screened", "deterministic_only", "structurally_blocked"]},
+    "eligibleNodeOperationalTargetIDs": {"$ref": "#/$defs/idArray"},
+    "eligibleRelationOperationalTargetIDs": {"$ref": "#/$defs/idArray"},
+    "primaryEligibleOperationalTargetIDs": {"$ref": "#/$defs/idArray"},
+    "likelyReportingFamilies": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "likelySamplingStrata": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "likelyRecurringDistinctions": {"type": "array", "uniqueItems": true, "items": {"enum": [
+      "Model/Method/Algorithm/Tool", "Finding/Conclusion", "ResearchProblem/ResearchGoal",
+      "use/mention/reference", "EvaluationMetric/Parameter"
+    ]}},
+    "sourceConversionStatus": {"enum": ["canonical_markdown_available", "canonical_markdown_sanitized_forbidden_controls"]},
+    "deterministicEndpointRefs": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "contextFlags": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sectionContextUseful", "distributedEvidenceLikely", "deterministicEndpointLikely"],
+      "properties": {
+        "sectionContextUseful": {"type": "boolean"},
+        "distributedEvidenceLikely": {"type": "boolean"},
+        "deterministicEndpointLikely": {"type": "boolean"}
+      }
+    },
+    "menuDiagnostics": {
+      "type": "object", "additionalProperties": false,
+      "required": ["nodeTargetCount", "relationTargetCountBeforeEndpointFiltering"],
+      "properties": {
+        "nodeTargetCount": {"type": "integer", "minimum": 0},
+        "relationTargetCountBeforeEndpointFiltering": {"type": "integer", "minimum": 0}
+      }
+    },
+    "routingDoesNotAssertPresence": {"const": true}
+  },
+  "$defs": {
+    "idArray": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^PUB-[NR]-"}}
+  }
+}

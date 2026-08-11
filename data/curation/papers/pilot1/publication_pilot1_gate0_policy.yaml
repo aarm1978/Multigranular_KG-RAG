@@ -1,0 +1,62 @@
+gate0PolicyVersion: 0.1.0
+artifactFamily: publications_only
+status: frozen_before_timing_observation
+annotatorsPerUnit: 2
+independentTimingRequired: true
+activeAnnotationMinutes: readingMinutes + nodePassMinutes + relationPassMinutes + reviewSubmitMinutes
+excludedMinutes:
+- pauseIdleMinutes
+- trainingMinutes
+- jointDiscussionMinutes
+- technicalInterruptionMinutes
+unitTimingMinutes: (annotator1ActiveAnnotationMinutes + annotator2ActiveAnnotationMinutes) / 2
+percentiles:
+  algorithm: nearest_rank
+  rank: ceil(p * N)
+  indexing: sorted_1_indexed
+  values:
+  - 50
+  - 75
+  - 90
+decisions:
+  GREEN:
+    condition: P50 <= 15 AND P75 <= 20 AND P90 <= 30
+    publicationUnitsPerArtifact: 5
+  AMBER:
+    condition: GREEN fails AND P50 <= 20 AND P75 <= 25 AND P90 <= 40
+    publicationUnitsPerArtifact: 4
+  RED:
+    condition: P50 > 20 OR P75 > 25 OR P90 > 40
+    publicationUnitsPerArtifact: null
+    action: pause Block B; reassess or cut ICLR scope; do not invent a smaller quota
+diagnostics:
+  minutesPerNode: activeAnnotationMinutes / positiveNodes when positiveNodes > 0; otherwise undefined
+  minutesPerRelation: activeAnnotationMinutes / positiveRelations when positiveRelations > 0; otherwise undefined
+  minutesPerAssertion: activeAnnotationMinutes / (positiveNodes + positiveRelations) when assertions > 0; otherwise
+    undefined
+  thresholdRole: diagnostic_only
+timingEventContract:
+  eventTypes:
+  - unit_opened
+  - reading_complete
+  - node_pass_started
+  - node_pass_completed
+  - relation_pass_started
+  - relation_pass_completed
+  - review_started
+  - submitted
+  - pause_started
+  - pause_ended
+  - technical_interruption_started
+  - technical_interruption_ended
+  requiredFields:
+  - annotationSessionID
+  - annotatorID
+  - sourceUnitID
+  - sourceUnitTextHash
+  - interfaceVersion
+  - guidelineVersion
+  - handbookVersion
+  - routingVersion
+  - timestamp
+  - eventType

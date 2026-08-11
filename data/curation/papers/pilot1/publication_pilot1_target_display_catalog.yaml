@@ -1,0 +1,2408 @@
+catalogVersion: 0.1.0
+targetProfileHash: 3d8a80c4ff8794588e2551e63a61e72c60a9afcb89d8b7a7058ff23e25ee4760
+menuPolicy: Group legitimate targets; never truncate semantic routing at 12.
+targets:
+- operationalTargetID: PUB-N-A-PROV01-EVIDENCESPAN
+  targetKind: node
+  displayLabel: EvidenceSpan
+  shortDefinition: Materialized only after the proposed evidence text, source unit, and offsets pass literal verification.
+  boundaryHint: The LLM proposes evidence coordinates; the pipeline creates the EvidenceSpan. Not scored as an entity-class
+    prediction.
+  pilotTreatment: required_infrastructure
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-PROV01
+  backendClasses:
+  - EvidenceSpan
+  directInstantiation: false
+- operationalTargetID: PUB-N-A-ID01-IDENTIFIER
+  targetKind: node
+  displayLabel: Identifier
+  shortDefinition: Exact DOI, resource ID, canonical repository URL, ORCID, ROR, or other authorized identifier.
+  boundaryHint: The LLM may quote an identifier literal but may not mint, repair, normalize, or merge identifiers.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-ID01
+  backendClasses:
+  - Identifier
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-AG01-A-P03-PERSON-AUTHOR
+  targetKind: node
+  displayLabel: Person / Author
+  shortDefinition: Publication authors already represented in the frozen Phase B backbone.
+  boundaryHint: Body-text person extraction and cross-source person consolidation are outside Pilot 1.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-AG01
+  - A-P03
+  backendClasses:
+  - Person
+  - Author
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-AG02-ORGANIZATION
+  targetKind: node
+  displayLabel: Organization
+  shortDefinition: Affiliation or funding organization recoverable through structured or rule-based parsing.
+  boundaryHint: Current publication implementation gap; it must not be reassigned to the LLM merely because Phase
+    B does not yet implement it.
+  pilotTreatment: out_of_scope
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-AG02
+  backendClasses:
+  - Organization
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P01-PAPER
+  targetKind: node
+  displayLabel: Paper
+  shortDefinition: Curated source Paper and DOI-backed cited-paper stubs already represented by Phase B.
+  boundaryHint: DOI-less and unresolved citation targets require a separate citation-grounding protocol.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-P01
+  backendClasses:
+  - Paper
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P02-VENUE
+  targetKind: node
+  displayLabel: Venue
+  shortDefinition: Publication venue already represented by Phase B.
+  boundaryHint: Not re-extracted.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-P02
+  backendClasses:
+  - Venue
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P04-SUBJECT
+  targetKind: node
+  displayLabel: Subject
+  shortDefinition: Explicit publication keywords or subjects already represented by Phase B.
+  boundaryHint: Concepts interpreted from prose are Concept, not generated Subject instances.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-P04
+  backendClasses:
+  - Subject
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-D09-AWARD
+  targetKind: node
+  displayLabel: Award
+  shortDefinition: Award or grant recoverable from structured funding evidence.
+  boundaryHint: Publication deterministic implementation gap; not an LLM target.
+  pilotTreatment: out_of_scope
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-D09
+  backendClasses:
+  - Award
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM01-SOFTWAREENTITY
+  targetKind: node
+  displayLabel: SoftwareEntity
+  shortDefinition: Superclass membership derived from an accepted Tool or concrete ComputationalModel subtype.
+  boundaryHint: The LLM may not emit SoftwareEntity as a final class.
+  pilotTreatment: required_infrastructure
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-DOM01
+  backendClasses:
+  - SoftwareEntity
+  directInstantiation: false
+- operationalTargetID: PUB-N-A-DOM03-COMPUTATIONALMODEL
+  targetKind: node
+  displayLabel: ComputationalModel
+  shortDefinition: Superclass membership derived from ProcessBasedModel, ConceptualModel, StatisticalModel, or MLModel.
+  boundaryHint: The LLM may not use ComputationalModel as a fallback for ambiguous subtype classification.
+  pilotTreatment: required_infrastructure
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-DOM03
+  backendClasses:
+  - ComputationalModel
+  directInstantiation: false
+- operationalTargetID: PUB-N-A-DOM06-PLACE
+  targetKind: node
+  displayLabel: Place
+  shortDefinition: Superclass membership derived from HydrologicFeature or NamedPlace.
+  boundaryHint: The LLM must emit a supported concrete subtype.
+  pilotTreatment: required_infrastructure
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-DOM06
+  backendClasses:
+  - Place
+  directInstantiation: false
+- operationalTargetID: PUB-N-A-DOM07-HYDROLOGICFEATURE
+  targetKind: node
+  displayLabel: HydrologicFeature
+  shortDefinition: Superclass membership derived from Watershed, RiverReach, Gauge, WaterBody, Aquifer, or VPU.
+  boundaryHint: The LLM may not emit HydrologicFeature directly.
+  pilotTreatment: required_infrastructure
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-DOM07
+  backendClasses:
+  - HydrologicFeature
+  directInstantiation: false
+- operationalTargetID: PUB-N-A-P05-BACKGROUND
+  targetKind: node
+  displayLabel: Background
+  shortDefinition: Atomic contextual statement that directly motivates the current study.
+  boundaryHint: Exclude generic introduction text, detailed related work, the research gap, and the study goal.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: research_framing
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: research_framing
+  displayOrder: 1
+  ontologyClassIDs:
+  - A-P05
+  backendClasses:
+  - Background
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P06-THEME
+  targetKind: node
+  displayLabel: Theme
+  shortDefinition: Text-supported central thematic focus of the paper.
+  boundaryHint: Monitor redundancy with title, Subject, Concept, and Background; do not create unsupported abstractive
+    summaries.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: research_framing
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: research_framing
+  displayOrder: 2
+  ontologyClassIDs:
+  - A-P06
+  backendClasses:
+  - Theme
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P07-RESEARCHPROBLEM
+  targetKind: node
+  displayLabel: ResearchProblem
+  shortDefinition: Explicit gap, deficiency, uncertainty, unresolved challenge, or problem addressed by the current
+    study.
+  boundaryHint: Exclude general importance, study limitations, and objectives.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: research_framing
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: research_framing
+  displayOrder: 3
+  ontologyClassIDs:
+  - A-P07
+  backendClasses:
+  - ResearchProblem
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P08-RESEARCHQUESTION
+  targetKind: node
+  displayLabel: ResearchQuestion
+  shortDefinition: Explicit question or clearly interrogative declarative formulation addressed by the current study.
+  boundaryHint: Do not rewrite every objective as a question; exclude rhetorical and future-work questions.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: research_framing
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: research_framing
+  displayOrder: 4
+  ontologyClassIDs:
+  - A-P08
+  backendClasses:
+  - ResearchQuestion
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P09-RESEARCHGOAL
+  targetKind: node
+  displayLabel: ResearchGoal
+  shortDefinition: Explicit aim, objective, or intended scientific action of the current paper.
+  boundaryHint: Exclude goals of simulated agents, cited studies, software components, and future recommendations.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: research_framing
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: research_framing
+  displayOrder: 5
+  ontologyClassIDs:
+  - A-P09
+  backendClasses:
+  - ResearchGoal
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P10-RESEARCHSIGNIFICANCE
+  targetKind: node
+  displayLabel: ResearchSignificance
+  shortDefinition: Explicit statement of why this study, result, or contribution matters.
+  boundaryHint: Background is general importance; Contribution is what was added.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: research_framing
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: research_framing
+  displayOrder: 6
+  ontologyClassIDs:
+  - A-P10
+  backendClasses:
+  - ResearchSignificance
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P11-DEFINITION
+  targetKind: node
+  displayLabel: Definition
+  shortDefinition: Explicit statement establishing the meaning of a term, measure, method, or concept.
+  boundaryHint: Exclude general explanations, procedure descriptions, and formulas without textual interpretation.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: discourse_structure
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: discourse_structure
+  displayOrder: 7
+  ontologyClassIDs:
+  - A-P11
+  backendClasses:
+  - Definition
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P12-THEORETICALBASIS
+  targetKind: node
+  displayLabel: TheoreticalBasis
+  shortDefinition: Theory, conceptual framework, or scientific principle that grounds the study, hypothesis, method,
+    or interpretation.
+  boundaryHint: Exclude mere theory mentions and applied procedures. No TheoreticalBasis grounding relation is declared
+    in ontology 0.1.3.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: discourse_structure
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: discourse_structure
+  displayOrder: 8
+  ontologyClassIDs:
+  - A-P12
+  backendClasses:
+  - TheoreticalBasis
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P13-METHOD
+  targetKind: node
+  displayLabel: Method
+  shortDefinition: Technique, procedure, or applied approach used to perform part of the current study.
+  boundaryHint: A named reusable entity may instead be an Algorithm, Tool, or concrete model; the applied activity
+    remains Method.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: methods_and_experiments
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: methods_and_experiments
+  displayOrder: 9
+  ontologyClassIDs:
+  - A-P13
+  backendClasses:
+  - Method
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P14-EXPERIMENT
+  targetKind: node
+  displayLabel: Experiment
+  shortDefinition: Delimited empirical or computational test combining data, methods/models, conditions, and evaluation.
+  boundaryHint: Exclude a single technique, a data description, or an illustrative example without evaluation.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: methods_and_experiments
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: methods_and_experiments
+  displayOrder: 10
+  ontologyClassIDs:
+  - A-P14
+  backendClasses:
+  - Experiment
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P15-EXAMPLES
+  targetKind: node
+  displayLabel: Examples
+  shortDefinition: Single illustrative case, scenario, or application used to demonstrate an idea or procedure.
+  boundaryHint: Exclude evaluated experiments and incidental phrases introduced by 'for example'.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: discourse_structure
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: discourse_structure
+  displayOrder: 11
+  ontologyClassIDs:
+  - A-P15
+  backendClasses:
+  - Examples
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P16-FINDING
+  targetKind: node
+  displayLabel: Finding
+  shortDefinition: Empirical, computational, analytical, qualitative, negative, or null result produced by the current
+    study.
+  boundaryHint: Exclude goals, expectations, recommendations, and findings attributed only to cited work.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: findings_conclusions_limitations_and_future_work
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: findings_conclusions_limitations_and_future_work
+  displayOrder: 12
+  ontologyClassIDs:
+  - A-P16
+  backendClasses:
+  - Finding
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P17-DISCUSSION
+  targetKind: node
+  displayLabel: Discussion
+  shortDefinition: Atomic interpretation or explanation of a result.
+  boundaryHint: Finding states what was observed; Discussion explains why it occurred or what it implies.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: discourse_structure
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: discourse_structure
+  displayOrder: 13
+  ontologyClassIDs:
+  - A-P17
+  backendClasses:
+  - Discussion
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P18-RELATEDRESEARCH
+  targetKind: node
+  displayLabel: RelatedResearch
+  shortDefinition: Substantive description, comparison, or synthesis of prior research.
+  boundaryHint: Exclude bare citations and bibliographic records; cited-Paper grounding is a separate protocol.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: discourse_structure
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: discourse_structure
+  displayOrder: 14
+  ontologyClassIDs:
+  - A-P18
+  backendClasses:
+  - RelatedResearch
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P19-LIMITATION
+  targetKind: node
+  displayLabel: Limitation
+  shortDefinition: Explicit constraint, weakness, uncertainty, or boundary of the current study, method, experiment,
+    data, or finding.
+  boundaryHint: ResearchProblem predates and motivates the study; FutureWork proposes a later action.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: findings_conclusions_limitations_and_future_work
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: findings_conclusions_limitations_and_future_work
+  displayOrder: 15
+  ontologyClassIDs:
+  - A-P19
+  backendClasses:
+  - Limitation
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P20-CONCLUSION
+  targetKind: node
+  displayLabel: Conclusion
+  shortDefinition: Study-level synthesis or general conclusion derived by the authors.
+  boundaryHint: A repeated metric or result is still a Finding unless the text performs a higher-level synthesis.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: findings_conclusions_limitations_and_future_work
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: findings_conclusions_limitations_and_future_work
+  displayOrder: 16
+  ontologyClassIDs:
+  - A-P20
+  backendClasses:
+  - Conclusion
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P21-CONTRIBUTION
+  targetKind: node
+  displayLabel: Contribution
+  shortDefinition: What the study claims to have added to knowledge, evidence, method, infrastructure, or practice.
+  boundaryHint: ResearchGoal is intended action; ResearchSignificance is why the contribution matters.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: findings_conclusions_limitations_and_future_work
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: findings_conclusions_limitations_and_future_work
+  displayOrder: 17
+  ontologyClassIDs:
+  - A-P21
+  backendClasses:
+  - Contribution
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P22-FUTUREWORK
+  targetKind: node
+  displayLabel: FutureWork
+  shortDefinition: Explicit future research activity proposed by the authors.
+  boundaryHint: Exclude current-study goals, generic aspirations, and future actions of an experimental agent.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: findings_conclusions_limitations_and_future_work
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: findings_conclusions_limitations_and_future_work
+  displayOrder: 18
+  ontologyClassIDs:
+  - A-P22
+  backendClasses:
+  - FutureWork
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P23-HYPOTHESIS
+  targetKind: node
+  displayLabel: Hypothesis
+  shortDefinition: Explicit, testable proposition that the current study intends to evaluate.
+  boundaryHint: Do not infer a hypothesis from a question, objective, design, or expected result.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: research_framing
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: research_framing
+  displayOrder: 19
+  ontologyClassIDs:
+  - A-P23
+  backendClasses:
+  - Hypothesis
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P24-CLAIM
+  targetKind: node
+  displayLabel: Claim
+  shortDefinition: Argumentatively important proposition asserted by the authors but not necessarily a direct empirical
+    result.
+  boundaryHint: Not every declarative sentence is a Claim; avoid duplicate Claim and Conclusion nodes for the same
+    unit.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: research_framing
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: research_framing
+  displayOrder: 20
+  ontologyClassIDs:
+  - A-P24
+  backendClasses:
+  - Claim
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P26-DATADESCRIPTION
+  targetKind: node
+  displayLabel: DataDescription
+  shortDefinition: Atomic description of data origin, period, coverage, sample, resolution, variables, partition,
+    or composition.
+  boundaryHint: DatasetMention identifies a dataset; DataDescription explains its characteristics.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: methods_and_experiments
+  samplingStratum: core_discourse_nodes
+  humanVisible: true
+  displayGroup: methods_and_experiments
+  displayOrder: 21
+  ontologyClassIDs:
+  - A-P26
+  backendClasses:
+  - DataDescription
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM02-TOOL-EXISTING-EXACT-ENDPOINT
+  targetKind: node
+  displayLabel: Tool — existing exact endpoint
+  shortDefinition: Exact Tool already created from authorized deterministic evidence, such as a typed software DOI.
+  boundaryHint: The LLM may link to it but must not duplicate or globally merge it.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-DOM02
+  backendClasses:
+  - Tool
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE
+  targetKind: node
+  displayLabel: Tool — new from publication prose
+  shortDefinition: Software application, platform, package, or system used or mentioned in the paper.
+  boundaryHint: A system that represents or predicts a scientific process may instead be a model.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: models_algorithms_and_tools
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: models_algorithms_and_tools
+  displayOrder: 22
+  ontologyClassIDs:
+  - A-DOM02
+  backendClasses:
+  - Tool
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM03A-PROCESSBASEDMODEL
+  targetKind: node
+  displayLabel: ProcessBasedModel
+  shortDefinition: Named computational model explicitly representing physical, hydrologic, hydraulic, or environmental
+    processes.
+  boundaryHint: Exclude the method applied to the model and auxiliary software used to run it.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: models_algorithms_and_tools
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: models_algorithms_and_tools
+  displayOrder: 23
+  ontologyClassIDs:
+  - A-DOM03a
+  backendClasses:
+  - ProcessBasedModel
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM03B-CONCEPTUALMODEL
+  targetKind: node
+  displayLabel: ConceptualModel
+  shortDefinition: Named computational model using a simplified conceptual representation such as buckets or tanks.
+  boundaryHint: Monitor ambiguous hybrid models and the boundary with ProcessBasedModel.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: models_algorithms_and_tools
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: models_algorithms_and_tools
+  displayOrder: 24
+  ontologyClassIDs:
+  - A-DOM03b
+  backendClasses:
+  - ConceptualModel
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM03C-STATISTICALMODEL
+  targetKind: node
+  displayLabel: StatisticalModel
+  shortDefinition: Named statistical model with stable identity that can be implemented, compared, or reused as
+    an entity.
+  boundaryHint: Generic regression, estimation, copula fitting, or Bayesian analysis is normally Method.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: models_algorithms_and_tools
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: models_algorithms_and_tools
+  displayOrder: 25
+  ontologyClassIDs:
+  - A-DOM03c
+  backendClasses:
+  - StatisticalModel
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM03D-MLMODEL
+  targetKind: node
+  displayLabel: MLModel
+  shortDefinition: Data-driven model or trained architecture used, proposed, compared, or evaluated by the current
+    study.
+  boundaryHint: Training procedure is Method; optimization procedure may be Algorithm.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: models_algorithms_and_tools
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: models_algorithms_and_tools
+  displayOrder: 26
+  ontologyClassIDs:
+  - A-DOM03d
+  backendClasses:
+  - MLModel
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM13-ALGORITHM
+  targetKind: node
+  displayLabel: Algorithm
+  shortDefinition: Named, reusable computational procedure such as SCE-UA, DDS, or Adam.
+  boundaryHint: Optimization, calibration, training, and regression without a named algorithm are Methods.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: models_algorithms_and_tools
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: models_algorithms_and_tools
+  displayOrder: 27
+  ontologyClassIDs:
+  - A-DOM13
+  backendClasses:
+  - Algorithm
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM11-EVALUATIONMETRIC
+  targetKind: node
+  displayLabel: EvaluationMetric
+  shortDefinition: Contextual metric occurrence used to evaluate a model or method, optionally with an explicit
+    value.
+  boundaryHint: Do not merge same-named metrics across different models, experiments, conditions, or values.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: metrics_parameters_and_variables
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: metrics_parameters_and_variables
+  displayOrder: 28
+  ontologyClassIDs:
+  - A-DOM11
+  backendClasses:
+  - EvaluationMetric
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM12-PARAMETER
+  targetKind: node
+  displayLabel: Parameter
+  shortDefinition: Contextual value, coefficient, threshold, or configuration controlling a model, method, algorithm,
+    or experiment.
+  boundaryHint: Variable is observed/predicted; EvaluationMetric evaluates performance. Preserve value/range as
+    exact strings.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: metrics_parameters_and_variables
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: metrics_parameters_and_variables
+  displayOrder: 29
+  ontologyClassIDs:
+  - A-DOM12
+  backendClasses:
+  - Parameter
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM04-VARIABLE
+  targetKind: node
+  displayLabel: Variable
+  shortDefinition: Study-relevant measurable, observed, predicted, derived, or analyzed quantity or characteristic.
+  boundaryHint: Exclude broad concepts, metrics, parameters, units, and variables appearing only incidentally in
+    prior work.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: metrics_parameters_and_variables
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: metrics_parameters_and_variables
+  displayOrder: 30
+  ontologyClassIDs:
+  - A-DOM04
+  backendClasses:
+  - Variable
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-D12-MEASUREMENT
+  targetKind: node
+  displayLabel: Measurement
+  shortDefinition: Individual quantified observation of a variable.
+  boundaryHint: Designed primarily for HydroShare; publication observations remain within Finding/DataDescription
+    in Pilot 1.
+  pilotTreatment: out_of_scope
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-D12
+  backendClasses:
+  - Measurement
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P25-DATASETMENTION-EXISTING-PHASE-B-INSTANCE
+  targetKind: node
+  displayLabel: DatasetMention — existing Phase B instance
+  shortDefinition: Source-scoped dataset mention already produced by Phase B.
+  boundaryHint: Do not recreate it.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-P25
+  backendClasses:
+  - DatasetMention
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE
+  targetKind: node
+  displayLabel: DatasetMention — new from prose
+  shortDefinition: Dataset named or described in publication prose without sufficient exact identity for DatasetResource.
+  boundaryHint: Preserve source-scoped identity and version wording; do not promote by name alone.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: datasets_and_repositories
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: datasets_and_repositories
+  displayOrder: 31
+  ontologyClassIDs:
+  - A-P25
+  backendClasses:
+  - DatasetMention
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-D01-DATASETRESOURCE-EXISTING-EXACT-ENDPOINT
+  targetKind: node
+  displayLabel: DatasetResource — existing exact endpoint
+  shortDefinition: Dataset with exact DOI, HydroShare ID, canonical URL, or other authorized identity already resolved.
+  boundaryHint: The LLM may link to it; a name-only mention remains DatasetMention.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-D01
+  backendClasses:
+  - DatasetResource
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-D01-DATASETRESOURCE-EXACT-IDENTIFIER-OMITTED-BY-PHASE-B
+  targetKind: node
+  displayLabel: DatasetResource — exact identifier omitted by Phase B
+  shortDefinition: LLM locates and interprets the role; deterministic resolver validates and creates/reuses the
+    exact resource.
+  boundaryHint: Not scored as ordinary open entity discovery.
+  pilotTreatment: deferred_resolution
+  decisionRole: deferred_resolution_only
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: true
+  displayGroup: deferred_resolution_only
+  displayOrder: 32
+  ontologyClassIDs:
+  - A-D01
+  backendClasses:
+  - DatasetResource
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-C01-REPOSITORY-EXISTING-EXACT-ENDPOINT
+  targetKind: node
+  displayLabel: Repository — existing exact endpoint
+  shortDefinition: Canonical repository URL already resolved by Phase B.
+  boundaryHint: The LLM interprets its role but does not recreate the repository.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-C01
+  backendClasses:
+  - Repository
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-C01-REPOSITORY-EXACT-URL-OMITTED-BY-PHASE-B
+  targetKind: node
+  displayLabel: Repository — exact URL omitted by Phase B
+  shortDefinition: LLM identifies relevance; deterministic resolver normalizes and verifies owner/repository identity.
+  boundaryHint: Retain unresolved if URL or role cannot be validated.
+  pilotTreatment: deferred_resolution
+  decisionRole: deferred_resolution_only
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: true
+  displayGroup: deferred_resolution_only
+  displayOrder: 33
+  ontologyClassIDs:
+  - A-C01
+  backendClasses:
+  - Repository
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-C01-REPOSITORY-NAMED-WITHOUT-EXACT-IDENTITY
+  targetKind: node
+  displayLabel: Repository — named without exact identity
+  shortDefinition: Text clearly refers to a repository but provides no exact canonical identity.
+  boundaryHint: Keep a source-scoped provisional candidate; never merge globally by name alone.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: datasets_and_repositories
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: datasets_and_repositories
+  displayOrder: 34
+  ontologyClassIDs:
+  - A-C01
+  backendClasses:
+  - Repository
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM05-CONCEPT
+  targetKind: node
+  displayLabel: Concept
+  shortDefinition: Specific scientific or technical notion substantively discussed and not better represented by
+    another class.
+  boundaryHint: Avoid generic nouns and indiscriminate terminology extraction; connect through mentionsConcept or
+    authorized relations.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: concepts_and_geography
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: concepts_and_geography
+  displayOrder: 35
+  ontologyClassIDs:
+  - A-DOM05
+  backendClasses:
+  - Concept
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM07A-WATERSHED
+  targetKind: node
+  displayLabel: Watershed
+  shortDefinition: Basin, catchment, watershed, subbasin, or drainage-defined hydrologic unit relevant to the study.
+  boundaryHint: A river is RiverReach; an administrative region is NamedPlace.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: concepts_and_geography
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: concepts_and_geography
+  displayOrder: 36
+  ontologyClassIDs:
+  - A-DOM07a
+  backendClasses:
+  - Watershed
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM07B-RIVERREACH
+  targetKind: node
+  displayLabel: RiverReach
+  shortDefinition: River, stream, flowpath, channel, or explicit reach/segment relevant to the study.
+  boundaryHint: Distinguish the river from its watershed.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: concepts_and_geography
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: concepts_and_geography
+  displayOrder: 37
+  ontologyClassIDs:
+  - A-DOM07b
+  backendClasses:
+  - RiverReach
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM07C-GAUGE
+  targetKind: node
+  displayLabel: Gauge
+  shortDefinition: Hydrologic monitoring or measurement station relevant to the study.
+  boundaryHint: Preserve explicit station IDs; do not invent external IDs.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: concepts_and_geography
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: concepts_and_geography
+  displayOrder: 38
+  ontologyClassIDs:
+  - A-DOM07c
+  backendClasses:
+  - Gauge
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM07D-WATERBODY
+  targetKind: node
+  displayLabel: WaterBody
+  shortDefinition: Lake, reservoir, bay, estuary, or other water body relevant to the study.
+  boundaryHint: Regional references surrounding a water body may instead be NamedPlace.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: concepts_and_geography
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: concepts_and_geography
+  displayOrder: 39
+  ontologyClassIDs:
+  - A-DOM07d
+  backendClasses:
+  - WaterBody
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM07E-AQUIFER
+  targetKind: node
+  displayLabel: Aquifer
+  shortDefinition: Named or source-scoped aquifer or hydrogeologic system relevant to the study.
+  boundaryHint: Likely low frequency in the publication pilot.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: concepts_and_geography
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: concepts_and_geography
+  displayOrder: 40
+  ontologyClassIDs:
+  - A-DOM07e
+  backendClasses:
+  - Aquifer
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM07F-VPU
+  targetKind: node
+  displayLabel: VPU
+  shortDefinition: Explicit NHDPlus Vector Processing Unit.
+  boundaryHint: Do not infer from generic 'region', 'unit', or 'processing area'.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: concepts_and_geography
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: concepts_and_geography
+  displayOrder: 41
+  ontologyClassIDs:
+  - A-DOM07f
+  backendClasses:
+  - VPU
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM08-NAMEDPLACE
+  targetKind: node
+  displayLabel: NamedPlace
+  shortDefinition: Study-relevant named geographic area that is not better classified as a hydrologic feature.
+  boundaryHint: Exclude affiliations, publisher locations, bibliography-only places, and incidental toponyms.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: concepts_and_geography
+  samplingStratum: scientific_entity_nodes
+  humanVisible: true
+  displayGroup: concepts_and_geography
+  displayOrder: 42
+  ontologyClassIDs:
+  - A-DOM08
+  backendClasses:
+  - NamedPlace
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM09-SPATIALCOVERAGE
+  targetKind: node
+  displayLabel: SpatialCoverage
+  shortDefinition: Explicit geometry, bounding box, polygon, or coordinate extent.
+  boundaryHint: The LLM may not invent geometry from a place name.
+  pilotTreatment: out_of_scope
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-DOM09
+  backendClasses:
+  - SpatialCoverage
+  directInstantiation: true
+- operationalTargetID: PUB-N-A-DOM10-TEMPORALCOVERAGE
+  targetKind: node
+  displayLabel: TemporalCoverage
+  shortDefinition: Structured temporal coverage associated primarily with DatasetResource.
+  boundaryHint: Publication periods remain in DataDescription/Experiment evidence because paper-level temporal roles
+    are not modeled.
+  pilotTreatment: out_of_scope
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  ontologyClassIDs:
+  - A-DOM10
+  backendClasses:
+  - TemporalCoverage
+  directInstantiation: true
+- operationalTargetID: PUB-R-PROV-R1-HASEVIDENCE
+  targetKind: relation
+  displayLabel: hasEvidence
+  shortDefinition: Created only after evidence literal and offsets validate.
+  boundaryHint: Not an independent LLM relation prediction.
+  pilotTreatment: required_infrastructure
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: hasEvidence
+  domainClasses:
+  - AcceptedAssertion
+  rangeClasses:
+  - EvidenceSpan
+  operationalSignatures:
+  - domain:
+      classes:
+      - AcceptedAssertion
+      match: exact
+      pipeline_pseudo_type: true
+    range:
+      classes:
+      - EvidenceSpan
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-PROV-R2-WASEXTRACTEDBY
+  targetKind: relation
+  displayLabel: wasExtractedBy
+  shortDefinition: Created from run/model/prompt/schema metadata.
+  boundaryHint: Not an independent LLM prediction.
+  pilotTreatment: required_infrastructure
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: wasExtractedBy
+  domainClasses:
+  - EvidenceSpan
+  rangeClasses:
+  - prov:Activity
+  operationalSignatures:
+  - domain:
+      classes:
+      - EvidenceSpan
+      match: exact
+    range:
+      classes:
+      - prov:Activity
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-ID-R1-C-P04-HASIDENTIFIER
+  targetKind: relation
+  displayLabel: hasIdentifier
+  shortDefinition: Exact authorized identifier link.
+  boundaryHint: The LLM cannot mint, repair, or merge identifiers.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: hasIdentifier
+  domainClasses:
+  - owl:Thing
+  rangeClasses:
+  - Identifier
+  operationalSignatures:
+  - domain:
+      classes:
+      - owl:Thing
+      match: any
+    range:
+      classes:
+      - Identifier
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-A-AG-R1-AFFILIATEDWITH
+  targetKind: relation
+  displayLabel: affiliatedWith
+  shortDefinition: Publication affiliation parsing.
+  boundaryHint: Implementation gap, not an LLM target.
+  pilotTreatment: out_of_scope
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: affiliatedWith
+  domainClasses:
+  - Person
+  rangeClasses:
+  - Organization
+  operationalSignatures:
+  - domain:
+      classes:
+      - Person
+      match: exact
+    range:
+      classes:
+      - Organization
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-A-AG-R2-FUNDEDBY
+  targetKind: relation
+  displayLabel: fundedBy
+  shortDefinition: Publication funding parsing.
+  boundaryHint: Publication implementation gap, not an LLM target. An Award-to-funding-organization relation is
+    not formally declared in ontology 0.1.3 and remains outside Publication Pilot 1.
+  pilotTreatment: out_of_scope
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: fundedBy
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - Award
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Award
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P01-HASAUTHOR
+  targetKind: relation
+  displayLabel: hasAuthor
+  shortDefinition: Frozen Phase B author edge.
+  boundaryHint: Not re-extracted.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: hasAuthor
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - Author
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Author
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P02-PUBLISHEDIN
+  targetKind: relation
+  displayLabel: publishedIn
+  shortDefinition: Frozen Phase B venue edge.
+  boundaryHint: Not re-extracted.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: publishedIn
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - Venue
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Venue
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P03-HASSUBJECT
+  targetKind: relation
+  displayLabel: hasSubject
+  shortDefinition: Frozen explicit keyword edge.
+  boundaryHint: Not interchangeable with mentionsConcept.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: hasSubject
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - Subject
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Subject
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P05-REPORTS
+  targetKind: relation
+  displayLabel: reports
+  shortDefinition: Derived from accepted discourse candidate provenance.
+  boundaryHint: No independent edge span is required beyond the node evidence.
+  pilotTreatment: required_infrastructure
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: reports
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - Background
+  - Claim
+  - Conclusion
+  - Contribution
+  - DataDescription
+  - Definition
+  - Discussion
+  - Examples
+  - Experiment
+  - Finding
+  - FutureWork
+  - Hypothesis
+  - Limitation
+  - Method
+  - RelatedResearch
+  - ResearchGoal
+  - ResearchProblem
+  - ResearchQuestion
+  - ResearchSignificance
+  - Theme
+  - TheoreticalBasis
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Background
+      - Theme
+      - ResearchProblem
+      - ResearchQuestion
+      - ResearchGoal
+      - ResearchSignificance
+      - Definition
+      - TheoreticalBasis
+      - Method
+      - Experiment
+      - Examples
+      - Finding
+      - Discussion
+      - RelatedResearch
+      - Limitation
+      - Conclusion
+      - Contribution
+      - FutureWork
+      - Hypothesis
+      - Claim
+      - DataDescription
+      match: one_of
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P06-RESOLVES
+  targetKind: relation
+  displayLabel: resolves
+  shortDefinition: Explicitly addresses, responds to, fills, or resolves the stated problem.
+  boundaryHint: Do not infer from co-occurrence; operational meaning is 'addresses', not necessarily complete solution.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: discourse_relations
+  samplingStratum: core_discourse_relations
+  humanVisible: true
+  displayGroup: discourse_relations
+  displayOrder: 43
+  operationalRelation: resolves
+  domainClasses:
+  - Contribution
+  - Method
+  - ResearchQuestion
+  rangeClasses:
+  - ResearchProblem
+  operationalSignatures:
+  - domain:
+      classes:
+      - Method
+      - Contribution
+      - ResearchQuestion
+      match: one_of
+    range:
+      classes:
+      - ResearchProblem
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P07-PRODUCES
+  targetKind: relation
+  displayLabel: produces
+  shortDefinition: Edge evidence explicitly links the procedure/test to the result.
+  boundaryHint: Prefer Experiment→Finding when the result belongs to a combined experimental configuration.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: discourse_relations
+  samplingStratum: core_discourse_relations
+  humanVisible: true
+  displayGroup: discourse_relations
+  displayOrder: 44
+  operationalRelation: produces
+  domainClasses:
+  - Experiment
+  - Method
+  rangeClasses:
+  - Finding
+  operationalSignatures:
+  - domain:
+      classes:
+      - Method
+      - Experiment
+      match: one_of
+    range:
+      classes:
+      - Finding
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P08-TESTEDBY-HYPOTHESIS-BRANCH
+  targetKind: relation
+  displayLabel: testedBy — Hypothesis branch
+  shortDefinition: Explicit statement that the hypothesis is tested by the method or experiment.
+  boundaryHint: Low frequency; do not infer the hypothesis.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: discourse_relations
+  samplingStratum: core_discourse_relations
+  humanVisible: true
+  displayGroup: discourse_relations
+  displayOrder: 45
+  operationalRelation: testedBy — Hypothesis branch
+  domainClasses:
+  - Hypothesis
+  rangeClasses:
+  - Experiment
+  - Method
+  operationalSignatures:
+  - domain:
+      classes:
+      - Hypothesis
+      match: exact
+    range:
+      classes:
+      - Method
+      - Experiment
+      match: one_of
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P09-SUPPORTS
+  targetKind: relation
+  displayLabel: supports
+  shortDefinition: Explicit positive support, demonstration, or confirmation relation.
+  boundaryHint: Do not infer from compatibility; Finding→Hypothesis and negative-support edges are not authorized.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: discourse_relations
+  samplingStratum: core_discourse_relations
+  humanVisible: true
+  displayGroup: discourse_relations
+  displayOrder: 46
+  operationalRelation: supports
+  domainClasses:
+  - Claim
+  - Finding
+  rangeClasses:
+  - Claim
+  - Conclusion
+  operationalSignatures:
+  - domain:
+      classes:
+      - Finding
+      - Claim
+      match: one_of
+    range:
+      classes:
+      - Claim
+      - Conclusion
+      match: one_of
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P10-DISCUSSESRELATEDWORK
+  targetKind: relation
+  displayLabel: discussesRelatedWork
+  shortDefinition: Derived when a RelatedResearch node is accepted for the source Paper.
+  boundaryHint: May coexist with the general reports edge.
+  pilotTreatment: required_infrastructure
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: discussesRelatedWork
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - RelatedResearch
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - RelatedResearch
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P11-RELATESTO-LOCAL-SEMANTIC-TARGET
+  targetKind: relation
+  displayLabel: relatesTo — local semantic target
+  shortDefinition: Substantive explicit connection to an accepted local target.
+  boundaryHint: Avoid generic thematic co-occurrence.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: discourse_relations
+  samplingStratum: core_discourse_relations
+  humanVisible: true
+  displayGroup: discourse_relations
+  displayOrder: 47
+  operationalRelation: relatesTo — local semantic target
+  domainClasses:
+  - RelatedResearch
+  rangeClasses:
+  - Concept
+  - Method
+  - ResearchProblem
+  - TheoreticalBasis
+  operationalSignatures:
+  - domain:
+      classes:
+      - RelatedResearch
+      match: exact
+    range:
+      classes:
+      - Method
+      - TheoreticalBasis
+      - Concept
+      - ResearchProblem
+      match: one_of
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P11-RELATESTO-CITED-PAPER
+  targetKind: relation
+  displayLabel: relatesTo — cited Paper
+  shortDefinition: Requires semantic citation context plus bibliographic anchor resolution.
+  boundaryHint: Typed citation grounding, not part of Pilot 1 primary metrics.
+  pilotTreatment: separate_follow_on_protocol
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: relatesTo — cited Paper
+  domainClasses:
+  - RelatedResearch
+  rangeClasses:
+  - Paper
+  operationalSignatures:
+  - domain:
+      classes:
+      - RelatedResearch
+      match: exact
+    range:
+      classes:
+      - Paper
+      match: exact
+      constraints:
+      - bibliographic_endpoint_resolution_required
+  requiresDeterministicEndpoint: true
+- operationalTargetID: PUB-R-C-P12-HASLIMITATION-PAPER-BRANCH
+  targetKind: relation
+  displayLabel: hasLimitation — Paper branch
+  shortDefinition: Derived from accepted Limitation provenance.
+  boundaryHint: Not independently scored.
+  pilotTreatment: required_infrastructure
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: hasLimitation — Paper branch
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - Limitation
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Limitation
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P12-HASLIMITATION-FINDING-BRANCH
+  targetKind: relation
+  displayLabel: hasLimitation — Finding branch
+  shortDefinition: Evidence explicitly restricts or qualifies a particular Finding.
+  boundaryHint: Do not attach every study limitation to every Finding.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: discourse_relations
+  samplingStratum: core_discourse_relations
+  humanVisible: true
+  displayGroup: discourse_relations
+  displayOrder: 48
+  operationalRelation: hasLimitation — Finding branch
+  domainClasses:
+  - Finding
+  rangeClasses:
+  - Limitation
+  operationalSignatures:
+  - domain:
+      classes:
+      - Finding
+      match: exact
+    range:
+      classes:
+      - Limitation
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P13-USESMODEL-PAPER-BRANCH
+  targetKind: relation
+  displayLabel: usesModel — Paper branch
+  shortDefinition: Model was trained, executed, calibrated, compared, evaluated, or otherwise used in the current
+    study.
+  boundaryHint: Use takes precedence over mentionsModel for the same pair.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: use_mention_reference_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: use_mention_reference_relations
+  displayOrder: 49
+  operationalRelation: usesModel — Paper branch
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - ConceptualModel
+  - MLModel
+  - ProcessBasedModel
+  - StatisticalModel
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - ProcessBasedModel
+      - ConceptualModel
+      - StatisticalModel
+      - MLModel
+      match: concrete_subclass_of
+      ontology_parent: ComputationalModel
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P13-USESMODEL-METHOD-BRANCH
+  targetKind: relation
+  displayLabel: usesModel — Method branch
+  shortDefinition: Model functions as a component or resource of the Method.
+  boundaryHint: Distinguish from appliesTo, where the model is the object of the operation.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: use_mention_reference_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: use_mention_reference_relations
+  displayOrder: 50
+  operationalRelation: usesModel — Method branch
+  domainClasses:
+  - Method
+  rangeClasses:
+  - ConceptualModel
+  - MLModel
+  - ProcessBasedModel
+  - StatisticalModel
+  operationalSignatures:
+  - domain:
+      classes:
+      - Method
+      match: exact
+    range:
+      classes:
+      - ProcessBasedModel
+      - ConceptualModel
+      - StatisticalModel
+      - MLModel
+      match: concrete_subclass_of
+      ontology_parent: ComputationalModel
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P14-APPLIESTO
+  targetKind: relation
+  displayLabel: appliesTo
+  shortDefinition: Method is applied to, configures, analyzes, explains, calibrates, or evaluates the model.
+  boundaryHint: Do not emit both usesModel and appliesTo unless two roles are explicitly supported.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: discourse_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: discourse_relations
+  displayOrder: 51
+  operationalRelation: appliesTo
+  domainClasses:
+  - Method
+  rangeClasses:
+  - ConceptualModel
+  - MLModel
+  - ProcessBasedModel
+  - StatisticalModel
+  operationalSignatures:
+  - domain:
+      classes:
+      - Method
+      match: exact
+    range:
+      classes:
+      - ProcessBasedModel
+      - ConceptualModel
+      - StatisticalModel
+      - MLModel
+      match: concrete_subclass_of
+      ontology_parent: ComputationalModel
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P15-USESTOOL
+  targetKind: relation
+  displayLabel: usesTool
+  shortDefinition: Tool was actually employed in the current study.
+  boundaryHint: Use takes precedence over mentionsTool.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: use_mention_reference_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: use_mention_reference_relations
+  displayOrder: 52
+  operationalRelation: usesTool
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - Tool
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Tool
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P16-MENTIONSVARIABLE
+  targetKind: relation
+  displayLabel: mentionsVariable
+  shortDefinition: Variable is relevant to the current study and explicitly observed, predicted, modeled, derived,
+    or analyzed.
+  boundaryHint: Prefer DataDescription as source when it locally contains the evidence.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: use_mention_reference_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: use_mention_reference_relations
+  displayOrder: 53
+  operationalRelation: mentionsVariable
+  domainClasses:
+  - DataDescription
+  - Paper
+  rangeClasses:
+  - Variable
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      - DataDescription
+      match: one_of
+    range:
+      classes:
+      - Variable
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH
+  targetKind: relation
+  displayLabel: studiesFeature — Paper branch
+  shortDefinition: Feature is a study object, domain, or hydrologic unit of analysis.
+  boundaryHint: Do not use for affiliations or incidental locations.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: discourse_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: discourse_relations
+  displayOrder: 54
+  operationalRelation: studiesFeature — Paper branch
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - Aquifer
+  - Gauge
+  - RiverReach
+  - VPU
+  - WaterBody
+  - Watershed
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Watershed
+      - RiverReach
+      - Gauge
+      - WaterBody
+      - Aquifer
+      - VPU
+      match: concrete_subclass_of
+      ontology_parent: HydrologicFeature
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P17-STUDIESFEATURE-METHOD-BRANCH
+  targetKind: relation
+  displayLabel: studiesFeature — Method branch
+  shortDefinition: A specific Method is explicitly applied to the feature.
+  boundaryHint: Do not derive automatically from Paper-level study area.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: discourse_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: discourse_relations
+  displayOrder: 55
+  operationalRelation: studiesFeature — Method branch
+  domainClasses:
+  - Method
+  rangeClasses:
+  - Aquifer
+  - Gauge
+  - RiverReach
+  - VPU
+  - WaterBody
+  - Watershed
+  operationalSignatures:
+  - domain:
+      classes:
+      - Method
+      match: exact
+    range:
+      classes:
+      - Watershed
+      - RiverReach
+      - Gauge
+      - WaterBody
+      - Aquifer
+      - VPU
+      match: concrete_subclass_of
+      ontology_parent: HydrologicFeature
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH
+  targetKind: relation
+  displayLabel: studiesPlace — Paper branch
+  shortDefinition: NamedPlace is a study area, model domain, data coverage area, or result location.
+  boundaryHint: Use studiesFeature for watersheds, rivers, gauges, water bodies, aquifers, and VPUs.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: discourse_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: discourse_relations
+  displayOrder: 56
+  operationalRelation: studiesPlace — Paper branch
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - NamedPlace
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - NamedPlace
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P18-STUDIESPLACE-METHOD-BRANCH
+  targetKind: relation
+  displayLabel: studiesPlace — Method branch
+  shortDefinition: A specific Method is explicitly applied in the place.
+  boundaryHint: Do not derive automatically from Paper-level location.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: discourse_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: discourse_relations
+  displayOrder: 57
+  operationalRelation: studiesPlace — Method branch
+  domainClasses:
+  - Method
+  rangeClasses:
+  - NamedPlace
+  operationalSignatures:
+  - domain:
+      classes:
+      - Method
+      match: exact
+    range:
+      classes:
+      - NamedPlace
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P19-HASSPATIALCOVERAGE
+  targetKind: relation
+  displayLabel: hasSpatialCoverage
+  shortDefinition: Explicit structured geometry only.
+  boundaryHint: No LLM-generated geometry.
+  pilotTreatment: out_of_scope
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: hasSpatialCoverage
+  domainClasses:
+  - Paper
+  - Place
+  rangeClasses:
+  - SpatialCoverage
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      - Place
+      match: one_of
+    range:
+      classes:
+      - SpatialCoverage
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P20-USESDATASET-EXISTING-PHASE-B-EDGE
+  targetKind: relation
+  displayLabel: usesDataset — existing Phase B edge
+  shortDefinition: Frozen Phase B data-use edge.
+  boundaryHint: Not recreated.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: usesDataset — existing Phase B edge
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - DatasetMention
+  - DatasetResource
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - DatasetMention
+      - DatasetResource
+      match: one_of
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE
+  targetKind: relation
+  displayLabel: usesDataset — new prose evidence
+  shortDefinition: Dataset was actually used for training, testing, forcing, analysis, observation, or benchmarking.
+  boundaryHint: Use takes precedence over mentionsDataset; may coexist with referencesDataset.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: use_mention_reference_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: use_mention_reference_relations
+  displayOrder: 58
+  operationalRelation: usesDataset — new prose evidence
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - DatasetMention
+  - DatasetResource
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - DatasetMention
+      - DatasetResource
+      match: one_of
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P21-CITES
+  targetKind: relation
+  displayLabel: cites
+  shortDefinition: Generic DOI-backed citation edge.
+  boundaryHint: Typed citation semantics require a separate protocol.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: cites
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - Paper
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Paper
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P22-CORRECTS
+  targetKind: relation
+  displayLabel: corrects
+  shortDefinition: Frozen generic corrigendum relation.
+  boundaryHint: Fine-grained correction targets require a separate protocol.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: corrects
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - Paper
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+      constraints:
+      - record_type=corrigendum
+    range:
+      classes:
+      - Paper
+      match: exact
+      constraints:
+      - role=corrected_original
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P23-MENTIONSMODEL
+  targetKind: relation
+  displayLabel: mentionsModel
+  shortDefinition: Model appears in background, related work, definition, comparison context, or future work without
+    proof of use.
+  boundaryHint: Do not retain alongside usesModel for the same pair.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: use_mention_reference_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: use_mention_reference_relations
+  displayOrder: 59
+  operationalRelation: mentionsModel
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - ConceptualModel
+  - MLModel
+  - ProcessBasedModel
+  - StatisticalModel
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - ProcessBasedModel
+      - ConceptualModel
+      - StatisticalModel
+      - MLModel
+      match: concrete_subclass_of
+      ontology_parent: ComputationalModel
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P24-MENTIONSDATASET
+  targetKind: relation
+  displayLabel: mentionsDataset
+  shortDefinition: Dataset is discussed without proof of use or formal dataset citation.
+  boundaryHint: Do not retain alongside usesDataset for the same pair.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: use_mention_reference_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: use_mention_reference_relations
+  displayOrder: 60
+  operationalRelation: mentionsDataset
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - DatasetMention
+  - DatasetResource
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - DatasetMention
+      - DatasetResource
+      match: one_of
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P25-REPORTSMETRIC
+  targetKind: relation
+  displayLabel: reportsMetric
+  shortDefinition: Metric occurrence is explicitly reported by the Finding or Experiment.
+  boundaryHint: Metric and endpoint must be contextually aligned, especially in tables.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: discourse_relations
+  samplingStratum: measurement_context_relations
+  humanVisible: true
+  displayGroup: discourse_relations
+  displayOrder: 61
+  operationalRelation: reportsMetric
+  domainClasses:
+  - Experiment
+  - Finding
+  rangeClasses:
+  - EvaluationMetric
+  operationalSignatures:
+  - domain:
+      classes:
+      - Finding
+      - Experiment
+      match: one_of
+    range:
+      classes:
+      - EvaluationMetric
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P26-EVALUATES
+  targetKind: relation
+  displayLabel: evaluates
+  shortDefinition: Evidence identifies what the metric evaluates.
+  boundaryHint: Textual proximity alone is insufficient.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: discourse_relations
+  samplingStratum: measurement_context_relations
+  humanVisible: true
+  displayGroup: discourse_relations
+  displayOrder: 62
+  operationalRelation: evaluates
+  domainClasses:
+  - EvaluationMetric
+  rangeClasses:
+  - ConceptualModel
+  - MLModel
+  - Method
+  - ProcessBasedModel
+  - StatisticalModel
+  operationalSignatures:
+  - domain:
+      classes:
+      - EvaluationMetric
+      match: exact
+    range:
+      classes:
+      - Method
+      - ProcessBasedModel
+      - ConceptualModel
+      - StatisticalModel
+      - MLModel
+      match: one_of_or_concrete_subclass_of
+      ontology_parent: ComputationalModel
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P27-HASPARAMETER
+  targetKind: relation
+  displayLabel: hasParameter
+  shortDefinition: Evidence identifies the parameter owner or experimental context.
+  boundaryHint: Do not connect every parameter only to the Paper.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: discourse_relations
+  samplingStratum: measurement_context_relations
+  humanVisible: true
+  displayGroup: discourse_relations
+  displayOrder: 63
+  operationalRelation: hasParameter
+  domainClasses:
+  - ConceptualModel
+  - Experiment
+  - MLModel
+  - Method
+  - ProcessBasedModel
+  - StatisticalModel
+  rangeClasses:
+  - Parameter
+  operationalSignatures:
+  - domain:
+      classes:
+      - Method
+      - Experiment
+      - ProcessBasedModel
+      - ConceptualModel
+      - StatisticalModel
+      - MLModel
+      match: one_of_or_concrete_subclass_of
+      ontology_parent: ComputationalModel
+    range:
+      classes:
+      - Parameter
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P28-USESALGORITHM
+  targetKind: relation
+  displayLabel: usesAlgorithm
+  shortDefinition: Method explicitly uses a named, reusable Algorithm.
+  boundaryHint: No Paper→usesAlgorithm shortcut is created.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: use_mention_reference_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: use_mention_reference_relations
+  displayOrder: 64
+  operationalRelation: usesAlgorithm
+  domainClasses:
+  - Method
+  rangeClasses:
+  - Algorithm
+  operationalSignatures:
+  - domain:
+      classes:
+      - Method
+      match: exact
+    range:
+      classes:
+      - Algorithm
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P29-REFERENCESDATASET-EXISTING-PHASE-B-EDGE
+  targetKind: relation
+  displayLabel: referencesDataset — existing Phase B edge
+  shortDefinition: Formal bibliographic dataset reference already typed by Phase B.
+  boundaryHint: Distinct from use and mention.
+  pilotTreatment: context_only
+  decisionRole: excluded_or_follow_on
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: false
+  displayGroup: excluded_or_follow_on
+  displayOrder: null
+  operationalRelation: referencesDataset — existing Phase B edge
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - DatasetResource
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - DatasetResource
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P29-REFERENCESDATASET-EXACT-OMITTED-IDENTIFIER
+  targetKind: relation
+  displayLabel: referencesDataset — exact omitted identifier
+  shortDefinition: LLM identifies citation/reference role; deterministic resolver validates and types the exact
+    dataset identity.
+  boundaryHint: Not ordinary open discovery.
+  pilotTreatment: deferred_resolution
+  decisionRole: deferred_resolution_only
+  reportingFamily: null
+  samplingStratum: null
+  humanVisible: true
+  displayGroup: deferred_resolution_only
+  displayOrder: 65
+  operationalRelation: referencesDataset — exact omitted identifier
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - DatasetResource
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - DatasetResource
+      match: exact
+  requiresDeterministicEndpoint: true
+- operationalTargetID: PUB-R-C-P30-MENTIONSCONCEPT
+  targetKind: relation
+  displayLabel: mentionsConcept
+  shortDefinition: Specific concept is substantively discussed, defined, analyzed, or applied.
+  boundaryHint: Weaker than hasSubject; avoid terminology flooding.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: use_mention_reference_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: use_mention_reference_relations
+  displayOrder: 66
+  operationalRelation: mentionsConcept
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - Concept
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Concept
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P31-MENTIONSTOOL
+  targetKind: relation
+  displayLabel: mentionsTool
+  shortDefinition: Tool is mentioned without proof of actual use.
+  boundaryHint: Do not retain alongside usesTool for the same pair.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: use_mention_reference_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: use_mention_reference_relations
+  displayOrder: 67
+  operationalRelation: mentionsTool
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - Tool
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Tool
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P32-REFERENCESREPOSITORY
+  targetKind: relation
+  displayLabel: referencesRepository
+  shortDefinition: Explicit repository reference without evidence that it is the associated code repository.
+  boundaryHint: Stronger hasCodeRepository takes precedence.
+  pilotTreatment: extract_and_monitor
+  decisionRole: monitored
+  reportingFamily: use_mention_reference_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: use_mention_reference_relations
+  displayOrder: 68
+  operationalRelation: referencesRepository
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - Repository
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Repository
+      match: exact
+  requiresDeterministicEndpoint: false
+- operationalTargetID: PUB-R-C-P33-HASCODEREPOSITORY
+  targetKind: relation
+  displayLabel: hasCodeRepository
+  shortDefinition: Explicit evidence that the repository contains code, implementation, scripts, or workflow associated
+    with the study.
+  boundaryHint: Emit only this specific edge; referencesRepository may be derived as its parent property.
+  pilotTreatment: extract_and_evaluate
+  decisionRole: blocking
+  reportingFamily: use_mention_reference_relations
+  samplingStratum: entity_role_and_study_context_relations
+  humanVisible: true
+  displayGroup: use_mention_reference_relations
+  displayOrder: 69
+  operationalRelation: hasCodeRepository
+  domainClasses:
+  - Paper
+  rangeClasses:
+  - Repository
+  operationalSignatures:
+  - domain:
+      classes:
+      - Paper
+      match: exact
+    range:
+      classes:
+      - Repository
+      match: exact
+  requiresDeterministicEndpoint: false

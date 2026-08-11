@@ -1,0 +1,110 @@
+blockAInfrastructureVersion: 0.1.2
+policyVersion: 0.1.2
+status: draft_pending_human_screening
+populationHash: 7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e
+screening:
+  version: 0.1.1
+  hash: null
+routing:
+  version: 0.1.1
+  hash: null
+eligiblePrimaryRule: sourceEligibility=eligible AND requestEligible=true AND screeningStatus=reviewed AND at least
+  one routed blocking/monitored target
+artifactIdentityRule: sourceArtifactID is canonicalArtifactID; paperID is the local grouping key for per-artifact
+  candidate order and quota activation
+routingMetadataDerivationRule: likelyReportingFamilies and likelySamplingStrata are sorted unique values derived
+  from routed blocking/monitored targets through target-family mapping 0.1.0; deferred-resolution-only targets contribute
+  neither
+prospectiveCompletenessRule:
+  defaultExhaustiveTreatments:
+  - extract_and_evaluate
+  defaultNonExhaustiveMonitorTreatments:
+  - extract_and_monitor
+  monitorPromotion: requires explicit pre-annotation promotion not implemented in Block A 0.1.2
+  likelyExhaustiveEmptyTargetIDs: may contain only routed default-exhaustive targets
+calibrationSelectionRule:
+  targetCount: 16
+  allowedRange:
+  - 12
+  - 16
+  method: deterministic greedy maximum new prospective coverage, then lowest exposure, then lexical sourceUnitID
+  dimensions:
+  - lengthBand
+  - sectionGroup
+  - routingLoadBand
+  - expectedAssertionDensity
+  - expectedRelationDensity
+  - routingComplexity
+  - likelyReportingFamilies
+  - likelySamplingStrata
+  - likelyExhaustiveEmptyCapability
+  - likelyRecurringDistinctions
+  - routedOperationalTargetIDs
+  - deterministicEndpointLikely
+  - distributedEvidenceLikely
+  - sectionContextUseful
+  - sourceConversionStatus
+  knownRecurringAnnotationDistinctions:
+  - Model/Method/Algorithm/Tool
+  - Finding/Conclusion
+  - ResearchProblem/ResearchGoal
+  - use/mention/reference
+  - EvaluationMetric/Parameter
+  deferredResolutionRule: Deferred-resolution-only routing does not establish primary-candidate eligibility.
+  noEligibleTargetRule: A reviewed structurally eligible unit with zero blocking/monitored routed targets receives
+    reviewed_no_eligible_target and is excluded from calibration and candidate order.
+  exclusions:
+  - primary extraction metrics
+  - IAA
+postCalibrationCandidateOrderingRule: Within each artifact, greedily rank greatest new prospective coverage contribution;
+  then higher routing load, then lexical sourceUnitID. Timing never enters the order.
+selectionTierDefinitions:
+  must_cover: adds a previously uncovered reporting family, sampling stratum, or section group within the artifact
+  preferred: adds another prospective coverage dimension
+  reserve: adds no new prospective dimension at its rank
+coverageDimensions:
+- artifact identity
+- section group
+- source-unit length
+- likely reporting families
+- likely sampling strata
+- expected assertion density
+- expected relation density
+- routing complexity
+- deterministic endpoint presence
+- distributed-evidence likelihood
+- likely exhaustive-empty capability
+- source conversion/special condition
+sectionGroupMapping:
+  framing:
+  - abstract
+  - introduction
+  - background
+  - related_work
+  methods_data:
+  - methods
+  - data
+  - study_area
+  results:
+  - results
+  interpretation:
+  - discussion
+  - conclusion
+  - limitations
+  - future_work
+  other_eligible:
+  - other
+tieBreakRule: lexical sourceUnitID after all predeclared criteria
+artifactRepresentationRule: Calibration need not cover every artifact; post-Gate-0 ordering is per artifact.
+leakageControls:
+- no model prediction, confidence, validator output, annotation count, gold, or timing value
+- screening expectations are prospective and never gold
+armBlindnessRule: No experiment arm, model, or prompt-result field is accepted or emitted.
+gate0HandoffRule: Gate 0 activates quota 5 or 4; Block B takes prefixes of frozen per-artifact orders without reranking.
+blockBOnlyFields:
+- reliabilitySourceUnitIDs
+- remainingEvaluationSourceUnitIDs
+- reservedDiagnosticSourceUnitIDs
+- finalPublicationUnitQuotaPerArtifact
+- finalSampleSelectionManifest
+- completenessModeByTarget

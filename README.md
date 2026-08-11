@@ -41,6 +41,7 @@ The intended final system will be evaluated against non-retrieval, web-search, v
 | Publication Pilot 1 evaluation matching contract | Complete and frozen — version 0.1.0 |
 | Publication Pilot 1 source-unit builder | Accepted — version 0.1.4 |
 | Publication Pilot 1 source-unit inventory | Fifth twelve-artifact population materialization available for review |
+| Publication Pilot 1 Block A | Screening/routing infrastructure prepared; human screening pending |
 | Publication Pilot 1 sample and input freeze record | Candidate; not frozen — population materialized, screening and selection not started |
 | Publication Pilot 1 LLM extractor | Not yet implemented |
 | Request builder, candidate parser, and evidence validator | Not yet implemented |
@@ -173,7 +174,8 @@ tests/                           Unit, regression, contract, and frozen-snapshot
 - [Publication Pilot 1 evidence-validation contract](docs/publication_evidence_validation_contract.md)
 - [Publication Pilot 1 annotation and adjudication guidelines](docs/publication_annotation_adjudication_guidelines.md)
 - [Publication Pilot 1 evaluation matching contract — complete and frozen, version 0.1.0](docs/publication_evaluation_matching_contract.md)
-- [Publication Pilot 1 sample and input freeze record — candidate; not frozen; population materialized; screening and selection not started](docs/publication_pilot1_sample_input_freeze.md)
+- [Publication Pilot 1 Block A screening, routing, selection, and Gate-0 record](docs/publication_pilot1_block_a_screening_routing_selection.md)
+- [Publication Pilot 1 sample and input freeze record — candidate; not frozen; population materialized, screening and selection not started](docs/publication_pilot1_sample_input_freeze.md)
 - [Final publication ontology observations register](docs/publication_ontology_observations_register.md)
 
 ### Evaluation
