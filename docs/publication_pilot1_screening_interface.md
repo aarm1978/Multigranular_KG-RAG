@@ -32,7 +32,7 @@ The frozen production-screening provenance anchor is:
 
 | Screening authority | SHA-256 |
 | --- | --- |
-| Screening handbook 0.1.1 | `bb4fd99244ceede711d806ee9c6392d8203d8fdae4327b4910fa7f19b0ebd9a1` |
+| Screening handbook 0.1.1 | `c8a8099286871e22616022b5964ef42b10e251601131732968977fcfc3711bc2` |
 
 ## Startup
 
@@ -77,7 +77,7 @@ The five recurring distinctions and all density/complexity values come from froz
 
 ## Frozen handbook and manual UI aids
 
-The authoritative quick reference is [`publication_pilot1_screening_handbook.md`](publication_pilot1_screening_handbook.md), version `0.1.1`, frozen on 2026-08-11 after the final discarded smoke test was accepted. Its SHA-256 is `bb4fd99244ceede711d806ee9c6392d8203d8fdae4327b4910fa7f19b0ebd9a1`. The persistent **Handbook / Quick reference** control opens that repository document in a separate read-only browser view without replacing the current form.
+The authoritative quick reference is [`publication_pilot1_screening_handbook.md`](publication_pilot1_screening_handbook.md), version `0.1.1`, frozen on 2026-08-11 after the final discarded smoke test was accepted. Its SHA-256 is `c8a8099286871e22616022b5964ef42b10e251601131732968977fcfc3711bc2`. The persistent **Handbook / Quick reference** control opens that repository document in a separate read-only browser view without replacing the current form.
 
 The handbook preserves two important routing boundaries. For Paper-branch `usesModel`, `usesTool`, `usesDataset`, `studiesFeature`, and `studiesPlace`, the subject is the current paper; a cited study's action must not be attributed to the current paper. Use-over-mention precedence applies to the same source–target pair, not globally to the unit, so use and mention targets may both be legitimate for different endpoints. Its mixed Introduction / Related Work fast path applies both rules explicitly.
 

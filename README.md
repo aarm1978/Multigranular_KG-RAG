@@ -177,7 +177,7 @@ tests/                           Unit, regression, contract, and frozen-snapshot
 - [Publication Pilot 1 evaluation matching contract — complete and frozen, version 0.1.0](docs/publication_evaluation_matching_contract.md)
 - [Publication Pilot 1 Block A screening, routing, selection, and Gate-0 record](docs/publication_pilot1_block_a_screening_routing_selection.md)
 - [Publication Pilot 1 local screening interface MVP](docs/publication_pilot1_screening_interface.md)
-- [Publication Pilot 1 screening handbook — version 0.1.1 frozen; SHA-256 `bb4fd99244ceede711d806ee9c6392d8203d8fdae4327b4910fa7f19b0ebd9a1`](docs/publication_pilot1_screening_handbook.md)
+- [Publication Pilot 1 screening handbook — version 0.1.1 frozen; SHA-256 `c8a8099286871e22616022b5964ef42b10e251601131732968977fcfc3711bc2`](docs/publication_pilot1_screening_handbook.md)
 - [Publication Pilot 1 sample and input freeze record — candidate; not frozen; population materialized, screening and selection not started](docs/publication_pilot1_sample_input_freeze.md)
 - [Final publication ontology observations register](docs/publication_ontology_observations_register.md)
 
