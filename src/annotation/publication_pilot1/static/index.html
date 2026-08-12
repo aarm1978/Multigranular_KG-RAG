@@ -13,6 +13,7 @@
       <h1>Source-unit review</h1>
     </div>
     <div class="session">
+      <a id="handbookLink" class="button-link" href="/handbook" target="_blank" rel="noopener">Handbook / Quick reference</a>
       <span id="modeBadge" class="badge"></span>
       <button id="reviewerButton" class="quiet">Reviewer: <span id="reviewerLabel">not set</span></button>
       <strong id="progressLabel">0 / 267 reviewed</strong>
@@ -20,6 +21,8 @@
   </header>
 
   <div id="notice" class="notice hidden" role="status"></div>
+  <div id="productionBanner" class="integrity-banner hidden" role="note">Screening is prospective routing, not annotation. Use only the displayed canonical source unit and approved handbook. Do not use external search or AI assistance for unit-specific routing.</div>
+  <div id="dryRunBanner" class="integrity-banner dry-run hidden" role="note">Dry-run mode: all decisions are discarded/non-production. Production human screening has not begun.</div>
   <main>
     <aside class="sidebar">
       <section>
@@ -35,6 +38,7 @@
             <option value="pending">Pending</option>
             <option value="">All</option>
             <option value="reviewed">Reviewed</option>
+            <option value="revisit">Revisit</option>
           </select>
         </label>
         <label>Go to sourceUnitID
@@ -63,6 +67,10 @@
           <span id="completionBadge" class="badge"></span>
         </div>
         <dl id="metadata" class="metadata"></dl>
+        <details id="referencePanel" class="reference-panel">
+          <summary>Deterministic / deferred references</summary>
+          <dl id="referenceMetadata" class="reference-metadata"></dl>
+        </details>
         <div id="textError" class="error hidden"></div>
         <pre id="sourceText" class="source-text"></pre>
       </section>
@@ -74,6 +82,14 @@
         <label>Screening rationale <span class="required">required to complete</span>
           <textarea id="screeningRationale" rows="4"></textarea>
         </label>
+        <div class="manual-aids">
+          <label>Rationale template (manual)
+            <select id="rationaleTemplate"><option value="">Choose a template…</option></select>
+          </label>
+          <button id="noSemanticTargetsButton" type="button">No semantic targets</button>
+          <button id="revisitButton" type="button" aria-pressed="false">Revisit</button>
+        </div>
+        <p class="muted">Templates insert editable text only after manual selection. Replace bracketed placeholders. No aid recommends or selects semantic targets.</p>
 
         <div class="three-columns">
           <fieldset><legend>Assertion density</legend><div id="expectedAssertionDensity" class="choice-row"></div></fieldset>
@@ -126,6 +142,7 @@
       <div class="dialog-actions"><button id="reviewerCancel" value="cancel">Cancel</button><button id="reviewerSave" value="default" class="primary">Save reviewer ID</button></div>
     </form>
   </dialog>
+  <script src="/ui_aids.js"></script>
   <script src="/save_coordinator.js"></script>
   <script src="/app.js"></script>
 </body>

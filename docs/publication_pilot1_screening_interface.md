@@ -1,7 +1,7 @@
-# Publication Pilot 1 Screening Interface MVP
+# Publication Pilot 1 Screening Interface
 
-**Interface version:** 0.1.0
-**Status:** implemented for independent review; production human screening has not begun
+**Interface version:** 0.1.1
+**Status:** frozen and ready for production human screening; production screening has not begun
 **Boundary:** local human screening of the 267 structurally eligible Publication Pilot 1 source units
 
 ## Purpose and scope
@@ -12,7 +12,7 @@ The existing Block A worklist, policies, schemas, target mapping/catalog, invent
 
 ## Technology choice
 
-The MVP uses Python's standard-library loopback HTTP server, a vanilla HTML/CSS/JavaScript browser client, and standard-library SQLite. PyYAML 6.0 is pinned in `src/annotation/publication_pilot1/requirements.txt` because the accepted target display catalog is YAML. There is no framework, Node build, Docker service, CDN, analytics, or production database server. A browser UI preserves a direct extension path for later browser-selection to Unicode-code-point conversion without implementing annotation mode now.
+The interface uses Python's standard-library loopback HTTP server, a vanilla HTML/CSS/JavaScript browser client, and standard-library SQLite. PyYAML 6.0 is pinned in `src/annotation/publication_pilot1/requirements.txt` because the accepted target display catalog is YAML. There is no framework, Node build, Docker service, CDN, analytics, or production database server. A browser UI preserves a direct extension path for later browser-selection to Unicode-code-point conversion without implementing annotation mode now.
 
 ## Protected upstream anchors
 
@@ -28,13 +28,18 @@ The MVP uses Python's standard-library loopback HTTP server, a vanilla HTML/CSS/
 | Source-unit inventory | `7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e` |
 | Source-unit manifest | `42684d340af99440d5f72129a5c5299edcb237d77ce2b3d36456b049bee83823` |
 
+The frozen production-screening provenance anchor is:
+
+| Screening authority | SHA-256 |
+| --- | --- |
+| Screening handbook 0.1.1 | `bb4fd99244ceede711d806ee9c6392d8203d8fdae4327b4910fa7f19b0ebd9a1` |
+
 ## Startup
 
-From the repository root, install the one pinned runtime dependency in the chosen Publication interface environment, then start production mode:
+From the repository root, install the one pinned runtime dependency in the chosen Publication interface environment:
 
 ```bash
 python -m pip install -r src/annotation/publication_pilot1/requirements.txt
-python -m src.annotation.publication_pilot1.app
 ```
 
 The server validates upstream files before creating/loading state, binds only to `127.0.0.1` by default, and prints the local URL and private draft path. A non-loopback `--host` is rejected.
@@ -51,15 +56,34 @@ To delete only dry-run decisions and revisions:
 python -m src.annotation.publication_pilot1.app --reset-dry-run
 ```
 
+After this freeze task is independently accepted and committed, use the exact production-start sequence:
+
+```bash
+python -m src.annotation.publication_pilot1.app --reset-dry-run
+python -m src.annotation.publication_pilot1.app
+```
+
+The production reviewer must then choose the stable production reviewer ID manually. The application does not hard-code or infer it.
+
 `--state-dir` and `--export-dir` accept explicit local destinations. Production and dry-run always use distinct `production.sqlite3` and `dry-run.sqlite3` databases. A dry-run cannot create the compiler-ready filename.
 
 ## Review workflow
 
-The reviewer deliberately sets a stable reviewer ID, then navigates with Previous, Next, Next pending, or an exact source-unit ID. The ID may be changed until the first draft revision is saved. The first saved revision locks the single-local-reviewer identity, preventing later drafts or completed units from being reattributed. Dry-run identity can be changed only after an explicit dry-run reset. Filters cover paper, section role, and pending/reviewed status. Progress reports reviewed and remaining counts against 267.
+The reviewer deliberately sets a stable reviewer ID, then navigates with Previous, Next, Next pending, or an exact source-unit ID. The ID may be changed until the first draft revision is saved. The first saved revision locks the single-local-reviewer identity, preventing later drafts or completed units from being reattributed. Dry-run identity can be changed only after an explicit dry-run reset. Filters cover paper, section role, pending/reviewed status, and the interface-local Revisit bookmark. Progress reports reviewed and remaining counts against 267. A reviewed unit may remain bookmarked until the reviewer manually clears it; the bookmark never changes reviewed status.
 
 Every open unit displays paper/artifact identity, source-unit identity, section title and role, character count, content types, conversion status, review-required metadata, and the exact canonical Markdown slice. Each debounced autosave captures an immutable source-unit ID and form snapshot. Every navigation action flushes and awaits that bound snapshot before replacing the form, and a stale response cannot populate another unit. “Mark reviewed & next” saves and validates completion before moving. The browser warns before close/reload while a pending, in-flight, or failed save leaves genuinely unsaved changes. Completion additionally requires a rationale, both densities, routing complexity, and explicit answers for all three boolean flags. Zero routed targets is valid.
 
 The five recurring distinctions and all density/complexity values come from frozen controlled vocabularies. Open units never offer `not_applicable`.
+
+## Frozen handbook and manual UI aids
+
+The authoritative quick reference is [`publication_pilot1_screening_handbook.md`](publication_pilot1_screening_handbook.md), version `0.1.1`, frozen on 2026-08-11 after the final discarded smoke test was accepted. Its SHA-256 is `bb4fd99244ceede711d806ee9c6392d8203d8fdae4327b4910fa7f19b0ebd9a1`. The persistent **Handbook / Quick reference** control opens that repository document in a separate read-only browser view without replacing the current form.
+
+The handbook preserves two important routing boundaries. For Paper-branch `usesModel`, `usesTool`, `usesDataset`, `studiesFeature`, and `studiesPlace`, the subject is the current paper; a cited study's action must not be attributed to the current paper. Use-over-mention precedence applies to the same source–target pair, not globally to the unit, so use and mention targets may both be legitimate for different endpoints. Its mixed Introduction / Related Work fast path applies both rules explicitly.
+
+The rationale-template selector contains the eleven handbook templates. It starts blank, runs only after a manual selection, inserts editable text, and requires confirmation before replacing a non-empty rationale. It never chooses a template from section role or source text and never fills bracketed placeholders. **No semantic targets** is a separately confirmed manual action that clears node routes, relation routes, exhaustive-empty choices, and recurring distinctions. It does not set either density, routing complexity, or any boolean flag; it offers the matching rationale only through a second explicit reviewer confirmation.
+
+The compact deterministic/deferred-reference panel displays the exact accepted `deterministicNodeRefs`, `deterministicEdgeRefs`, and `deferredRecordRefs` strings, or `None`. It does not interpret them or set `deterministicEndpointLikely`. **Revisit** is a manual local SQLite/audit bookmark that persists across restarts and supports filtering, but is not a worklist field and cannot appear in either CSV export. A production-integrity banner repeats that screening is prospective routing, only the displayed unit and handbook may be used, and external search or AI assistance must not make unit-specific decisions. Dry-run mode instead remains visibly identified as discarded/non-production. None of these aids performs semantic inference, supplies a routing recommendation, or changes target semantics.
 
 ## Source-text validation
 
@@ -79,9 +103,9 @@ Default private state is under:
 var/publication_pilot1_screening/
 ```
 
-That directory is Git-ignored. SQLite holds reviewer identity, drafts, completion state, timestamps, and immutable revision snapshots. On reopen, the application compares the stored interface version, state namespace, worklist hash, catalog hash, mapping hash, screening-schema hash, and selection-policy hash with current expected values. Any mismatch stops startup with `SCREENING_STATE_CONTRACT_MISMATCH:<field>`; production state is never rewritten or reset automatically. The explicit dry-run reset deletes and reinitializes only dry-run state.
+That directory is Git-ignored. SQLite holds reviewer identity, drafts, completion state, timestamps, immutable revision snapshots, and local Revisit bookmarks. On reopen, the application compares the stored interface version, state namespace, worklist hash, catalog hash, mapping hash, screening-schema hash, selection-policy hash, and `screeningHandbookSha256` with current expected values. Any mismatch stops startup with `SCREENING_STATE_CONTRACT_MISMATCH:<field>`; production state is never rewritten or reset automatically. A handbook-binding mismatch therefore fails with `SCREENING_STATE_CONTRACT_MISMATCH:screeningHandbookSha256`. The explicit dry-run reset deletes and reinitializes only dry-run state.
 
-An adjacent `.session.json` sidecar records interface/contract hashes, reviewer/session times, completed count, latest per-unit revision timestamps, `lastExportKind`, `lastExportTimestamp`, and `lastExportHash`. A successful complete production export additionally sets `exportedReviewedCsvHash` and `exportedReviewedCsvTimestamp`; later incomplete backups do not overwrite those compiler-ready provenance fields. Viewing a completed unit does not change `screenedAt`; editing and resaving preserves it while adding a local audit revision. No source text or screening decision is sent off-machine.
+An adjacent `.session.json` sidecar records interface/contract hashes, `screeningHandbookSha256`, reviewer/session times, completed count, latest per-unit revision timestamps, `lastExportKind`, `lastExportTimestamp`, and `lastExportHash`. Bootstrap provenance exposes the interface version and frozen handbook digest. A successful complete production export additionally sets `exportedReviewedCsvHash` and `exportedReviewedCsvTimestamp`; later incomplete backups do not overwrite those compiler-ready provenance fields. Viewing a completed unit does not change `screenedAt`; editing and resaving preserves it while adding a local audit revision. No source text or screening decision is sent off-machine.
 
 ## Export
 
@@ -103,8 +127,8 @@ Run the focused interface suite:
 python -m pytest tests/test_publication_pilot1_screening_interface.py
 ```
 
-The suite covers hashes and cardinalities, canonical text slicing, no semantic defaults, immutable fields, source-unit-bound navigation/autosave ordering, persisted-state contract compatibility, reviewer locking, split export audit semantics, controlled values, target routing and exhaustive-empty enforcement, all-row exports, dry-run isolation, Git-ignore coverage, and the Block A materialization boundary. Existing Block A and Publication-focused tests remain separate acceptance checks.
+The suite covers hashes and cardinalities, the frozen handbook version/status/date/hash, exact handbook/UI template parity, handbook state binding and mismatch rejection, manual-only rationale templates and no-target clearing, exact reference display, local Revisit persistence/export exclusion, the integrity banner, canonical text slicing, no semantic defaults, immutable fields, source-unit-bound navigation/autosave ordering, persisted-state contract compatibility, reviewer locking, split export audit semantics, controlled values, target routing and exhaustive-empty enforcement, all-row exports, dry-run isolation, Git-ignore coverage, and the Block A materialization boundary. Existing Block A and Publication-focused tests remain separate acceptance checks.
 
 ## Known limitations and extension point
 
-This MVP is a single-local-reviewer application with no authentication, concurrent editing, network deployment, or in-browser file picker. The export directory is selected at startup. It intentionally has no evidence highlighting, annotations, endpoint linking, reliability blinding, adjudication, calibration telemetry, or Gate-0 behavior. Exact source text is rendered in a selection-capable browser element, while the server owns code-point offsets and canonical validation; Annotation Mode can add explicit selection-offset conversion later without changing source-unit identity or draft/export contracts.
+This is a single-local-reviewer application with no authentication, concurrent editing, network deployment, or in-browser file picker. The export directory is selected at startup. It intentionally has no evidence highlighting, annotations, endpoint linking, reliability blinding, adjudication, calibration telemetry, or Gate-0 behavior. Exact source text is rendered in a selection-capable browser element, while the server owns code-point offsets and canonical validation; Annotation Mode can add explicit selection-offset conversion later without changing source-unit identity or draft/export contracts.

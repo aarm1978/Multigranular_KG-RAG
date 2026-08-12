@@ -1,6 +1,6 @@
 # Multigranular KG-RAG for Operational Hydrology
 
-> **Project status:** Active doctoral dissertation research. Ontology v0.1.3, the deterministic extraction layer, and the Publication Pilot 1 target profile, source-unit contract, candidate-output JSON Schema, evidence-validation contract, annotation and adjudication guidelines, and evaluation matching contract are complete and frozen. The Publication Pilot 1 source-unit builder component and its fifth twelve-artifact materialization are independently accepted at version 0.1.4. The Publication Pilot 1 Screening Interface MVP is implemented for review; production human screening has not yet begun. The annotator handbook has not yet been created. The pilot sample/input record and model/reproducibility policy are not yet frozen; exact source-unit selection has not started. The request builder, candidate parser, evidence validator, LLM extractor, and production annotation interface/storage are not yet implemented. Annotation execution and gold construction have not occurred. LLM extraction and pilot evaluation have not occurred. Cross-source alignment, final graph assembly, retrieval, and comparative question-answering evaluation are also not yet completed.
+> **Project status:** Active doctoral dissertation research. Ontology v0.1.3, the deterministic extraction layer, and the Publication Pilot 1 target profile, source-unit contract, candidate-output JSON Schema, evidence-validation contract, annotation and adjudication guidelines, and evaluation matching contract are complete and frozen. The Publication Pilot 1 source-unit builder component and its fifth twelve-artifact materialization are independently accepted at version 0.1.4. Publication Pilot 1 Screening Interface `0.1.1` and screening handbook `0.1.1` are frozen and ready for production human screening following acceptance and commit of this freeze; production screening has not begun. The final discarded interface smoke test was accepted. The separate annotator handbook has not yet been created. The pilot sample/input record and model/reproducibility policy are not yet frozen; exact source-unit selection has not started. The request builder, candidate parser, evidence validator, LLM extractor, and production annotation interface/storage are not yet implemented. Annotation execution and gold construction have not occurred. LLM extraction and pilot evaluation have not occurred. Cross-source alignment, final graph assembly, retrieval, and comparative question-answering evaluation are also not yet completed.
 
 This repository supports the construction and evaluation of an ontology-guided, multigranular knowledge graph and KG-RAG system for **scientific cross-artifact question answering in operational hydrology**.
 
@@ -42,7 +42,7 @@ The intended final system will be evaluated against non-retrieval, web-search, v
 | Publication Pilot 1 source-unit builder | Accepted — version 0.1.4 |
 | Publication Pilot 1 source-unit inventory | Fifth twelve-artifact population materialization available for review |
 | Publication Pilot 1 Block A | Screening/routing infrastructure prepared; human screening pending |
-| Publication Pilot 1 screening interface | MVP implemented for review; production human screening has not begun |
+| Publication Pilot 1 screening interface | Version 0.1.1 frozen and ready for production human screening; production screening has not begun |
 | Publication Pilot 1 sample and input freeze record | Candidate; not frozen — population materialized, screening and selection not started |
 | Publication Pilot 1 LLM extractor | Not yet implemented |
 | Request builder, candidate parser, and evidence validator | Not yet implemented |
@@ -177,6 +177,7 @@ tests/                           Unit, regression, contract, and frozen-snapshot
 - [Publication Pilot 1 evaluation matching contract — complete and frozen, version 0.1.0](docs/publication_evaluation_matching_contract.md)
 - [Publication Pilot 1 Block A screening, routing, selection, and Gate-0 record](docs/publication_pilot1_block_a_screening_routing_selection.md)
 - [Publication Pilot 1 local screening interface MVP](docs/publication_pilot1_screening_interface.md)
+- [Publication Pilot 1 screening handbook — version 0.1.1 frozen; SHA-256 `bb4fd99244ceede711d806ee9c6392d8203d8fdae4327b4910fa7f19b0ebd9a1`](docs/publication_pilot1_screening_handbook.md)
 - [Publication Pilot 1 sample and input freeze record — candidate; not frozen; population materialized, screening and selection not started](docs/publication_pilot1_sample_input_freeze.md)
 - [Final publication ontology observations register](docs/publication_ontology_observations_register.md)
 

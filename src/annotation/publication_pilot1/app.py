@@ -31,6 +31,7 @@ def _audit_hashes(observed: dict[str, str]) -> dict[str, str]:
         "targetFamilyMappingHash": observed["data/curation/papers/pilot1/publication_pilot1_target_family_mapping.yaml"],
         "screeningSchemaHash": observed["schemas/publication_pilot1_screening_record.schema.json"],
         "selectionPolicyHash": observed["data/curation/papers/pilot1/publication_pilot1_selection_policy.yaml"],
+        "screeningHandbookSha256": observed["docs/publication_pilot1_screening_handbook.md"],
     }
 
 
@@ -72,6 +73,16 @@ def make_handler(service: ScreeningService) -> type[BaseHTTPRequestHandler]:
                 if parsed.path == "/api/bootstrap":
                     self._json(HTTPStatus.OK, service.bootstrap())
                     return
+                if parsed.path == "/handbook":
+                    path = service.contracts.root / "docs/publication_pilot1_screening_handbook.md"
+                    body = path.read_bytes()
+                    self.send_response(HTTPStatus.OK)
+                    self.send_header("Content-Type", "text/markdown; charset=utf-8")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.send_header("Cache-Control", "no-store")
+                    self.end_headers()
+                    self.wfile.write(body)
+                    return
                 if parsed.path.startswith("/api/units/"):
                     self._json(HTTPStatus.OK, service.unit(unquote(parsed.path.removeprefix("/api/units/"))))
                     return
@@ -105,6 +116,13 @@ def make_handler(service: ScreeningService) -> type[BaseHTTPRequestHandler]:
                 if self.path == "/api/export":
                     path = service.export(complete=body.get("kind") == "complete")
                     self._json(HTTPStatus.OK, {"path": str(path), "complete": body.get("kind") == "complete"})
+                    return
+                if self.path == "/api/revisit":
+                    source_unit_id = str(body.get("sourceUnitID", ""))
+                    revisit = body.get("revisit")
+                    if not isinstance(revisit, bool):
+                        raise ContractError("SCREENING_REVISIT_BOOLEAN_REQUIRED")
+                    self._json(HTTPStatus.OK, service.set_revisit(source_unit_id, revisit))
                     return
                 if self.path == "/api/dry-run/reset":
                     if not service.dry_run:

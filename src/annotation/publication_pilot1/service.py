@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Mapping
 
+from . import INTERFACE_VERSION
 from .contracts import (
     BOOLEAN_FIELDS,
     DENSITIES,
@@ -56,6 +57,7 @@ class ScreeningService:
         """Return deterministic controls, target catalog, and session state for the UI."""
 
         drafts = self.store.all_drafts()
+        revisit_ids = self.store.revisit_ids()
         units = []
         for row in self.contracts.open_rows:
             draft = drafts.get(row["sourceUnitID"], {})
@@ -67,9 +69,14 @@ class ScreeningService:
                 "characterCount": int(row["characterCount"]),
                 "sourceConversionStatus": row["sourceConversionStatus"],
                 "completed": bool(draft.get("completed", False)),
+                "revisit": row["sourceUnitID"] in revisit_ids,
             })
         return {
             "mode": "dry-run" if self.dry_run else "production",
+            "provenance": {
+                "screeningInterfaceVersion": INTERFACE_VERSION,
+                "screeningHandbookSha256": self.store.get_metadata("screeningHandbookSha256"),
+            },
             "reviewerID": self.store.reviewer_id(),
             "reviewerLocked": self.store.reviewer_locked(),
             "progress": self.progress(),
@@ -112,12 +119,25 @@ class ScreeningService:
                 "reviewRequired": row["reviewRequired"] == "true",
                 "reviewReasons": row["reviewReasons"].split("|") if row["reviewReasons"] else [],
                 "sourceUnitTextHash": row["sourceUnitTextHash"],
+                "deterministicNodeRefs": row["deterministicNodeRefs"],
+                "deterministicEdgeRefs": row["deterministicEdgeRefs"],
+                "deferredRecordRefs": row["deferredRecordRefs"],
             },
             "text": text,
             "textValidationError": validation_error,
             "reviewBlocked": validation_error is not None,
             "draft": self.store.load_draft(source_unit_id),
+            "revisit": source_unit_id in self.store.revisit_ids(),
         }
+
+    def set_revisit(self, source_unit_id: str, revisit: bool) -> dict[str, Any]:
+        """Persist a manual interface-local revisit flag for one open unit."""
+
+        row = self.rows_by_id.get(source_unit_id)
+        if row is None or not is_open(row):
+            raise ContractError(f"SCREENING_UNIT_NOT_OPEN:{source_unit_id}")
+        self.store.set_revisit(source_unit_id, revisit)
+        return {"sourceUnitID": source_unit_id, "revisit": revisit}
 
     def _clean_payload(self, payload: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
         """Validate draft shape and clear incompatible exhaustive-empty selections."""

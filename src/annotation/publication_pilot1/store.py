@@ -50,6 +50,10 @@ class DraftStore:
                 completed INTEGER NOT NULL,
                 revised_at TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS revisit_bookmarks (
+                source_unit_id TEXT PRIMARY KEY,
+                bookmarked_at TEXT NOT NULL
+            );
             """
         )
         bindings = {
@@ -181,6 +185,30 @@ class DraftStore:
         row = self.connection.execute("SELECT COUNT(*) AS count FROM drafts WHERE completed = 1").fetchone()
         return int(row["count"])
 
+    def revisit_ids(self) -> set[str]:
+        """Return source-unit IDs manually bookmarked for local revisit."""
+
+        return {
+            str(row["source_unit_id"])
+            for row in self.connection.execute("SELECT source_unit_id FROM revisit_bookmarks")
+        }
+
+    def set_revisit(self, source_unit_id: str, revisit: bool) -> None:
+        """Set or clear one interface-local bookmark without changing its draft."""
+
+        if revisit:
+            self.connection.execute(
+                "INSERT INTO revisit_bookmarks(source_unit_id, bookmarked_at) VALUES (?, ?) "
+                "ON CONFLICT(source_unit_id) DO UPDATE SET bookmarked_at=excluded.bookmarked_at",
+                (source_unit_id, utc_now()),
+            )
+        else:
+            self.connection.execute(
+                "DELETE FROM revisit_bookmarks WHERE source_unit_id = ?", (source_unit_id,)
+            )
+        self.connection.commit()
+        self.write_sidecar()
+
     def record_export(self, kind: str, timestamp: str, digest: str) -> None:
         """Record the latest export and preserve complete-reviewed provenance."""
 
@@ -215,11 +243,13 @@ class DraftStore:
             "targetFamilyMappingHash": metadata["targetFamilyMappingHash"],
             "screeningSchemaHash": metadata["screeningSchemaHash"],
             "selectionPolicyHash": metadata["selectionPolicyHash"],
+            "screeningHandbookSha256": metadata["screeningHandbookSha256"],
             "reviewerID": metadata["reviewerID"],
             "sessionCreatedAt": metadata["sessionCreatedAt"],
             "lastSavedAt": metadata["lastSavedAt"],
             "completedUnitCount": self.completed_count(),
             "perUnitRevisionTimestamps": revisions,
+            "revisitSourceUnitIDs": sorted(self.revisit_ids()),
             "lastExportKind": metadata["lastExportKind"],
             "lastExportTimestamp": metadata["lastExportTimestamp"],
             "lastExportHash": metadata["lastExportHash"],
@@ -240,6 +270,7 @@ class DraftStore:
 
         self.connection.execute("DELETE FROM drafts")
         self.connection.execute("DELETE FROM revisions")
+        self.connection.execute("DELETE FROM revisit_bookmarks")
         self.set_metadata("reviewerID", "")
         self.set_metadata("lastSavedAt", utc_now())
         self.set_metadata("lastExportKind", "")

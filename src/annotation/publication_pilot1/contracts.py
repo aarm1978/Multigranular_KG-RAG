@@ -24,6 +24,8 @@ PROTECTED_HASHES = {
 }
 INVENTORY_HASH = "7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e"
 MANIFEST_HASH = "42684d340af99440d5f72129a5c5299edcb237d77ce2b3d36456b049bee83823"
+SCREENING_HANDBOOK_PATH = "docs/publication_pilot1_screening_handbook.md"
+SCREENING_HANDBOOK_SHA256 = "bb4fd99244ceede711d806ee9c6392d8203d8fdae4327b4910fa7f19b0ebd9a1"
 DETERMINISTIC_COLUMN_COUNT = 23
 OPEN_UNIT_COUNT = 267
 TOTAL_UNIT_COUNT = 358
@@ -77,6 +79,10 @@ def validate_protected_hashes(root: Path) -> dict[str, str]:
         raise ContractError("SCREENING_MVP_BLOCKED_BY_UPSTREAM_DRIFT:source_unit_inventory")
     if sha256_file(manifest) != MANIFEST_HASH:
         raise ContractError("SCREENING_MVP_BLOCKED_BY_UPSTREAM_DRIFT:source_unit_manifest")
+    handbook = root / SCREENING_HANDBOOK_PATH
+    if not handbook.is_file() or sha256_file(handbook) != SCREENING_HANDBOOK_SHA256:
+        raise ContractError("SCREENING_FROZEN_HANDBOOK_HASH_MISMATCH")
+    observed[SCREENING_HANDBOOK_PATH] = SCREENING_HANDBOOK_SHA256
     return observed
 
 

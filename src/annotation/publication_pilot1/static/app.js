@@ -3,7 +3,7 @@
 const $ = (id) => document.getElementById(id);
 const state = {
   bootstrap:null, filtered:[], currentID:null, draft:{}, coordinator:null,
-  navigationChain:Promise.resolve(), changeSerial:0, loading:false
+  navigationChain:Promise.resolve(), changeSerial:0, loading:false, currentRevisit:false
 };
 const editableText = ["screeningRationale", "screeningNotes"];
 const booleans = ["distributedEvidenceLikely", "sectionContextUseful", "deterministicEndpointLikely"];
@@ -38,9 +38,10 @@ function initControls() {
   roles.forEach(value=>$("roleFilter").add(new Option(value,value)));
   renderTargets("node"); renderTargets("relation");
   document.querySelectorAll("input, textarea, select").forEach(el=>{
-    if (!["paperFilter","roleFilter","statusFilter","goToID","nodeSearch","relationSearch","reviewerInput"].includes(el.id)) el.addEventListener("change", scheduleAutosave);
+    if (!["paperFilter","roleFilter","statusFilter","goToID","nodeSearch","relationSearch","reviewerInput","rationaleTemplate"].includes(el.id)) el.addEventListener("change", scheduleAutosave);
   });
   editableText.forEach(id=>$(id).addEventListener("input",scheduleAutosave));
+  Object.keys(ScreeningUIAids.rationaleTemplates).forEach(name=>$("rationaleTemplate").add(new Option(name,name)));
 }
 
 function renderTargets(kind) {
@@ -97,7 +98,7 @@ function populateDraft(draft) {
 
 function applyFilters(keepCurrent=true) {
   const paper=$("paperFilter").value, role=$("roleFilter").value, status=$("statusFilter").value;
-  state.filtered=state.bootstrap.units.filter(u=>(!paper||u.paperID===paper)&&(!role||u.sectionRole===role)&&(!status||(status==="reviewed")===u.completed));
+  state.filtered=state.bootstrap.units.filter(u=>(!paper||u.paperID===paper)&&(!role||u.sectionRole===role)&&(!status||(status==="revisit"?u.revisit:(status==="reviewed")===u.completed)));
   let index=state.filtered.findIndex(u=>u.sourceUnitID===state.currentID); if(index<0) index=0;
   if(state.filtered.length && (!keepCurrent || !state.filtered.some(u=>u.sourceUnitID===state.currentID))) navigateSafely(state.filtered[index].sourceUnitID);
   else updatePosition();
@@ -118,9 +119,18 @@ async function loadUnitDirect(id) {
     const data=await api(`/api/units/${encodeURIComponent(id)}`); state.currentID=id;
     const m=data.metadata; $("unitID").textContent=m.sourceUnitID; $("sectionTitle").textContent=m.sectionTitle||"Untitled section";
     $("metadata").innerHTML=[["Paper",m.paperID],["Artifact",m.sourceArtifactID],["Role",m.sectionRole],["Characters",m.characterCount.toLocaleString()],["Content",m.contentTypes.join(", ")],["Conversion",m.sourceConversionStatus],["Review required",m.reviewRequired?"yes":"no"],["Review reasons",m.reviewReasons.join(", ")||"none"]].map(([k,v])=>`<div><dt>${escapeHTML(k)}</dt><dd>${escapeHTML(v)}</dd></div>`).join("");
+    renderReferences(m); state.currentRevisit=Boolean(data.revisit); updateRevisitControl();
     $("sourceText").textContent=data.text; $("textError").textContent=data.textValidationError||""; $("textError").classList.toggle("hidden",!data.textValidationError); setFormBusy(data.reviewBlocked);
     populateDraft(data.draft); updatePosition();
   } finally { state.loading=false; }
+}
+
+function renderReferences(metadata) {
+  const host=$("referenceMetadata"); host.replaceChildren();
+  const fields=[["Deterministic node refs",metadata.deterministicNodeRefs],["Deterministic edge refs",metadata.deterministicEdgeRefs],["Deferred record refs",metadata.deferredRecordRefs]];
+  const present=fields.filter(([,value])=>value);
+  if(!present.length){const p=document.createElement("p");p.className="muted";p.textContent="None";host.append(p);return;}
+  present.forEach(([label,value])=>{const row=document.createElement("div"),dt=document.createElement("dt"),dd=document.createElement("dd");dt.textContent=label;dd.textContent=value;row.append(dt,dd);host.append(row);});
 }
 
 async function persistBoundSnapshot(request) {
@@ -170,6 +180,34 @@ function move(delta){const i=state.filtered.findIndex(u=>u.sourceUnitID===state.
 function findNextPending(sourceUnitID=state.currentID){const all=state.bootstrap.units,start=Math.max(0,all.findIndex(u=>u.sourceUnitID===sourceUnitID));return[...all.slice(start+1),...all.slice(0,start+1)].find(u=>!u.completed);}
 function nextPending(){const target=findNextPending();if(target)navigateSafely(target.sourceUnitID);else notify("All open units are reviewed.");}
 
+function applyRationaleTemplate() {
+  const selector=$("rationaleTemplate"), name=selector.value;
+  if(!name)return;
+  const rationale=$("screeningRationale"), existing=rationale.value;
+  const confirmed=!existing.trim()||confirm("Replace the current non-empty rationale with the selected editable template?");
+  const result=ScreeningUIAids.selectRationaleTemplate(existing,name,confirmed); selector.value="";
+  if(!result.applied)return;
+  rationale.value=result.value; scheduleAutosave(); rationale.focus();
+}
+
+function clearSemanticTargetsManually() {
+  if(!confirm("Clear all routed node/relation targets, exhaustive-empty selections, and recurring distinctions for this unit?"))return;
+  const cleared=ScreeningUIAids.clearSemanticTargets(collectDraft());
+  document.querySelectorAll("input[name=nodeTarget],input[name=relationTarget]").forEach(x=>x.checked=false);
+  $("recurringDistinctions").querySelectorAll("input").forEach(x=>x.checked=false);
+  renderExhaustive(false); scheduleAutosave();
+  if(!cleared.screeningRationale.trim()&&confirm("Insert the editable ‘No semantic target’ rationale template?")){
+    $("screeningRationale").value=ScreeningUIAids.rationaleTemplates["No semantic target"]; scheduleAutosave();
+  }
+}
+
+function updateRevisitControl(){$("revisitButton").setAttribute("aria-pressed",String(state.currentRevisit));$("revisitButton").textContent=state.currentRevisit?"Revisit ✓":"Revisit";}
+async function toggleRevisit(){
+  if(!state.currentID)return;
+  const next=!state.currentRevisit;
+  try{const result=await api("/api/revisit",{method:"POST",body:JSON.stringify({sourceUnitID:state.currentID,revisit:next})});state.currentRevisit=result.revisit;const unit=state.bootstrap.units.find(x=>x.sourceUnitID===state.currentID);if(unit)unit.revisit=result.revisit;updateRevisitControl();notify(result.revisit?"Marked for local revisit.":"Removed local revisit bookmark.");if($("statusFilter").value==="revisit"&&!result.revisit)applyFilters(false);}catch(error){notify(error.message,true);}
+}
+
 function updateReviewerControl(){
   const locked=Boolean(state.bootstrap.reviewerLocked), reviewer=state.bootstrap.reviewerID||"not set";
   $("reviewerLabel").textContent=locked?`${reviewer} (locked)`:reviewer;
@@ -186,10 +224,12 @@ async function exportFile(kind){try{const result=await api("/api/export",{method
 async function start() {
   try {
     state.bootstrap=await api("/api/bootstrap"); state.coordinator=new BoundSaveCoordinator(persistBoundSnapshot,650); $("modeBadge").textContent=state.bootstrap.mode; updateReviewerControl(); updateProgress(); initControls();
+    $("productionBanner").classList.toggle("hidden",state.bootstrap.mode!=="production"); $("dryRunBanner").classList.toggle("hidden",state.bootstrap.mode!=="dry-run");
     $("resetDryRunButton").classList.toggle("hidden",state.bootstrap.mode!=="dry-run"); $("completeExportButton").disabled=state.bootstrap.mode==="dry-run";
     ["paperFilter","roleFilter","statusFilter"].forEach(id=>$(id).addEventListener("change",()=>applyFilters(false)));
     ["node","relation"].forEach(kind=>$(kind+"Search").addEventListener("input",()=>filterTargets(kind)));
     $("previousButton").onclick=()=>move(-1); $("nextButton").onclick=()=>move(1); $("nextPendingButton").onclick=nextPending; $("saveButton").onclick=()=>save(false); $("saveNextButton").onclick=()=>save(true);
+    $("rationaleTemplate").onchange=applyRationaleTemplate; $("noSemanticTargetsButton").onclick=clearSemanticTargetsManually; $("revisitButton").onclick=toggleRevisit;
     $("goButton").onclick=()=>{const id=$("goToID").value.trim(), unit=state.bootstrap.units.find(x=>x.sourceUnitID===id); unit?navigateSafely(id):notify("That sourceUnitID is not an open screening unit.",true);};
     $("reviewerButton").onclick=()=>{$("reviewerInput").value=state.bootstrap.reviewerID;$("reviewerCancel").classList.remove("hidden");$("reviewerDialog").showModal();}; $("reviewerSave").onclick=(event)=>{event.preventDefault();setReviewer();};
     $("reviewerDialog").addEventListener("cancel",event=>{if(!state.bootstrap.reviewerID)event.preventDefault();});

@@ -6,19 +6,25 @@ import csv
 import hashlib
 import importlib.util
 import json
+import re
 import sqlite3
 import subprocess
 import tempfile
 import threading
 import unittest
 import urllib.request
+from dataclasses import replace
 from http.server import HTTPServer
 from pathlib import Path
 
+from src.annotation.publication_pilot1 import INTERFACE_VERSION
 from src.annotation.publication_pilot1.app import build_service, make_handler
+from src.annotation.publication_pilot1.service import ScreeningService
 from src.annotation.publication_pilot1.contracts import (
     PROTECTED_HASHES,
     RECURRING_DISTINCTIONS,
+    SCREENING_HANDBOOK_PATH,
+    SCREENING_HANDBOOK_SHA256,
     ContractError,
     load_contracts,
     sha256_file,
@@ -84,7 +90,9 @@ class ScreeningInterfaceTests(unittest.TestCase):
     def test_protected_hashes_and_population_counts(self) -> None:
         """Protected anchors and the 358/267/49/39/3 population remain exact."""
 
-        self.assertEqual(dict(self.contracts.protected_hashes), PROTECTED_HASHES)
+        for path, digest in PROTECTED_HASHES.items():
+            self.assertEqual(self.contracts.protected_hashes[path], digest)
+        self.assertEqual(self.contracts.protected_hashes[SCREENING_HANDBOOK_PATH], SCREENING_HANDBOOK_SHA256)
         self.assertEqual(len(self.contracts.rows), 358)
         self.assertEqual(len(self.contracts.open_rows), 267)
         counts = {status: sum(row["sourceEligibility"] == status for row in self.contracts.rows) for status in ("context_only", "excluded", "needs_review")}
@@ -99,6 +107,23 @@ class ScreeningInterfaceTests(unittest.TestCase):
         self.assertEqual(unit["text"], record["text"])
         self.assertEqual(hashlib.sha256(unit["text"].encode()).hexdigest(), record["textHash"])
 
+    def test_frozen_handbook_rules_hash_and_quick_reference_are_available(self) -> None:
+        """The frozen repository handbook is hash-bound and locally available."""
+
+        handbook = ROOT / "docs/publication_pilot1_screening_handbook.md"
+        text = handbook.read_text(encoding="utf-8")
+        self.assertIn("**Version:** 0.1.1", text)
+        self.assertIn("**Status:** Frozen for Publication Pilot 1 production screening", text)
+        self.assertIn("**Freeze date:** 2026-08-11", text)
+        self.assertEqual(sha256_file(handbook), SCREENING_HANDBOOK_SHA256)
+        self.assertEqual(INTERFACE_VERSION, "0.1.1")
+        self.assertIn("## 5. Current-artifact ownership rule", text)
+        self.assertIn("same source–target pair", text)
+        self.assertIn("### 14.6 Mixed Introduction / Related Work", text)
+        html = (ROOT / "src/annotation/publication_pilot1/static/index.html").read_text(encoding="utf-8")
+        self.assertIn("Handbook / Quick reference", html)
+        self.assertIn('href="/handbook"', html)
+
     def test_blank_draft_has_no_semantic_preselection(self) -> None:
         """A new unit contains no inferred targets, flags, density, or complexity."""
 
@@ -106,6 +131,85 @@ class ScreeningInterfaceTests(unittest.TestCase):
         self.assertFalse(draft["completed"])
         for key in ("routedNodeOperationalTargetIDs", "routedRelationOperationalTargetIDs"):
             self.assertNotIn(key, draft)
+
+    def test_manual_ui_aids_do_not_create_semantic_defaults(self) -> None:
+        """Templates require a choice and no-target clearing preserves every judgment field."""
+
+        module = ROOT / "src/annotation/publication_pilot1/static/ui_aids.js"
+        payload = neutral_review()
+        payload.update({
+            "routedNodeOperationalTargetIDs": ["node-a"],
+            "routedRelationOperationalTargetIDs": ["relation-a"],
+            "likelyExhaustiveEmptyTargetIDs": ["node-a"],
+            "likelyRecurringDistinctions": ["use/mention/reference"],
+            "expectedAssertionDensity": "high",
+            "expectedRelationDensity": "medium",
+            "routingComplexity": "high",
+            "distributedEvidenceLikely": True,
+            "sectionContextUseful": False,
+            "deterministicEndpointLikely": True,
+            "screeningRationale": "Reviewer-authored text",
+        })
+        script = f"""
+          const aids = require({json.dumps(str(module))});
+          const draft = {json.dumps(payload)};
+          const blank = aids.selectRationaleTemplate(draft.screeningRationale, "", false);
+          const refused = aids.selectRationaleTemplate(draft.screeningRationale, "Results", false);
+          const accepted = aids.selectRationaleTemplate(draft.screeningRationale, "Results", true);
+          const cleared = aids.clearSemanticTargets(draft);
+          if (Object.keys(aids.rationaleTemplates).length !== 11) process.exit(2);
+          if (blank.applied || blank.value !== draft.screeningRationale) process.exit(3);
+          if (refused.applied || refused.value !== draft.screeningRationale) process.exit(4);
+          if (!accepted.applied || !accepted.value.includes("[findings/comparisons/metrics]")) process.exit(5);
+          for (const key of ["routedNodeOperationalTargetIDs","routedRelationOperationalTargetIDs","likelyExhaustiveEmptyTargetIDs","likelyRecurringDistinctions"]) if (cleared[key].length) process.exit(6);
+          for (const key of ["expectedAssertionDensity","expectedRelationDensity","routingComplexity","distributedEvidenceLikely","sectionContextUseful","deterministicEndpointLikely","screeningRationale","screeningNotes"]) if (cleared[key] !== draft[key]) process.exit(7);
+        """
+        result = subprocess.run(["node", "-e", script], cwd=ROOT, check=False, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        aids_source = module.read_text(encoding="utf-8")
+        self.assertNotIn("sectionRole", aids_source)
+        self.assertNotIn("sourceText", aids_source)
+
+    def test_frozen_handbook_templates_exactly_match_ui_templates(self) -> None:
+        """Template names, order, and text cannot drift from the frozen handbook."""
+
+        handbook = (ROOT / SCREENING_HANDBOOK_PATH).read_text(encoding="utf-8")
+        section = handbook.split("## 13. Human screening judgment templates", 1)[1].split(
+            "### Optional screening-note templates", 1
+        )[0]
+        matches = re.findall(
+            r"^### Template [A-K] — (.+?)\n\n```text\n(.+?)\n```$",
+            section,
+            flags=re.MULTILINE | re.DOTALL,
+        )
+        handbook_templates: dict[str, str] = {}
+        for heading, template in matches:
+            name = heading.removesuffix(" unit").replace("related-work", "Related work")
+            name = name[0].upper() + name[1:]
+            handbook_templates[name] = template
+        module = ROOT / "src/annotation/publication_pilot1/static/ui_aids.js"
+        script = f"const aids=require({json.dumps(str(module))});process.stdout.write(JSON.stringify(aids.rationaleTemplates));"
+        result = subprocess.run(["node", "-e", script], cwd=ROOT, check=True, capture_output=True, text=True)
+        ui_templates = json.loads(result.stdout)
+        self.assertEqual(len(handbook_templates), 11)
+        self.assertEqual(list(handbook_templates.items()), list(ui_templates.items()))
+
+    def test_deterministic_and_deferred_refs_are_exact_and_do_not_set_flag(self) -> None:
+        """Accepted reference strings are read-only context and never set a semantic boolean."""
+
+        source_id = self.first_id
+        exact = {
+            "deterministicNodeRefs": "node:exact-a|node:exact-b",
+            "deterministicEdgeRefs": "edge:exact-a",
+            "deferredRecordRefs": "deferred:exact-a",
+        }
+        rows = tuple({**row, **exact} if row["sourceUnitID"] == source_id else row for row in self.contracts.rows)
+        synthetic_contracts = replace(self.contracts, rows=rows)
+        service = ScreeningService(synthetic_contracts, self.service.store, Path(self.temp.name) / "exports", False)
+        unit = service.unit(source_id)
+        for field in ("deterministicNodeRefs", "deterministicEdgeRefs", "deferredRecordRefs"):
+            self.assertEqual(unit["metadata"][field], exact[field])
+        self.assertNotIn("deterministicEndpointLikely", unit["draft"])
 
     def test_deterministic_fields_cannot_be_edited(self) -> None:
         """The service rejects attempts to submit canonical metadata as human fields."""
@@ -173,6 +277,10 @@ class ScreeningInterfaceTests(unittest.TestCase):
         first.store.close()
         compatible = build_service(ROOT, base / "state", base / "exports", False)
         self.assertEqual(compatible.store.reviewer_id(), "binding-reviewer")
+        self.assertEqual(compatible.store.get_metadata("screeningHandbookSha256"), SCREENING_HANDBOOK_SHA256)
+        sidecar = json.loads(compatible.store.sidecar_path.read_text(encoding="utf-8"))
+        self.assertEqual(sidecar["screeningHandbookSha256"], SCREENING_HANDBOOK_SHA256)
+        self.assertEqual(compatible.bootstrap()["provenance"]["screeningHandbookSha256"], SCREENING_HANDBOOK_SHA256)
         compatible.store.close()
         with sqlite3.connect(path) as connection:
             connection.execute("UPDATE metadata SET value = ? WHERE key = ?", ("drift", "canonicalWorklistHash"))
@@ -181,6 +289,23 @@ class ScreeningInterfaceTests(unittest.TestCase):
         with sqlite3.connect(path) as connection:
             observed = connection.execute("SELECT value FROM metadata WHERE key = 'canonicalWorklistHash'").fetchone()[0]
         self.assertEqual(observed, "drift")
+        with sqlite3.connect(path) as connection:
+            connection.execute(
+                "UPDATE metadata SET value = ? WHERE key = ?",
+                (PROTECTED_HASHES["data/curation/papers/pilot1/publication_pilot1_screening_worklist.csv"], "canonicalWorklistHash"),
+            )
+            connection.execute(
+                "UPDATE metadata SET value = ? WHERE key = ?", ("drift", "screeningHandbookSha256")
+            )
+        with self.assertRaisesRegex(
+            ValueError, "SCREENING_STATE_CONTRACT_MISMATCH:screeningHandbookSha256"
+        ):
+            build_service(ROOT, base / "state", base / "exports", False)
+        with sqlite3.connect(path) as connection:
+            observed = connection.execute(
+                "SELECT value FROM metadata WHERE key = 'screeningHandbookSha256'"
+            ).fetchone()[0]
+        self.assertEqual(observed, "drift")
 
         dry = build_service(ROOT, base / "dry-state", base / "dry-exports", True)
         dry_path = dry.store.path
@@ -188,7 +313,8 @@ class ScreeningInterfaceTests(unittest.TestCase):
         with sqlite3.connect(dry_path) as connection:
             connection.execute("UPDATE metadata SET value = ? WHERE key = ?", ("old-interface", "screeningInterfaceVersion"))
         reset = build_service(ROOT, base / "dry-state", base / "dry-exports", True, reset_dry_run=True)
-        self.assertEqual(reset.store.get_metadata("screeningInterfaceVersion"), "0.1.0")
+        self.assertEqual(reset.store.get_metadata("screeningInterfaceVersion"), "0.1.1")
+        self.assertEqual(reset.store.get_metadata("screeningHandbookSha256"), SCREENING_HANDBOOK_SHA256)
         self.assertFalse(reset.store.all_drafts())
         reset.store.close()
 
@@ -332,12 +458,14 @@ class ScreeningInterfaceTests(unittest.TestCase):
         try:
             dry.store.change_reviewer("dry-reviewer")
             dry.save(self.first_id, neutral_review(), False)
+            dry.set_revisit(self.first_id, True)
             with self.assertRaisesRegex(ValueError, "SCREENING_REVIEWER_ID_LOCKED_AFTER_FIRST_REVISION"):
                 dry.store.change_reviewer("other-dry-reviewer")
             self.assertNotEqual(dry.store.path, self.service.store.path)
             self.assertFalse(self.service.unit(self.first_id)["draft"]["updatedAt"])
             dry.store.reset()
             self.assertFalse(dry.unit(self.first_id)["draft"]["updatedAt"])
+            self.assertFalse(dry.store.revisit_ids())
             self.assertEqual(dry.store.reviewer_id(), "")
             dry.store.change_reviewer("other-dry-reviewer")
             self.assertEqual(dry.store.reviewer_id(), "other-dry-reviewer")
@@ -346,14 +474,35 @@ class ScreeningInterfaceTests(unittest.TestCase):
         finally:
             dry.store.close()
 
+    def test_revisit_is_local_persistent_filter_state_and_never_exported(self) -> None:
+        """A manual bookmark survives reopen but cannot alter the canonical CSV contract."""
+
+        self.service.set_revisit(self.first_id, True)
+        self.assertTrue(self.service.unit(self.first_id)["revisit"])
+        self.assertTrue(next(u for u in self.service.bootstrap()["units"] if u["sourceUnitID"] == self.first_id)["revisit"])
+        self.service.store.close()
+        base = Path(self.temp.name)
+        self.service = build_service(ROOT, base / "state", base / "exports", False)
+        self.assertIn(self.first_id, self.service.store.revisit_ids())
+        path = self.service.export(False)
+        with path.open(newline="", encoding="utf-8") as handle:
+            reader = csv.DictReader(handle)
+            self.assertNotIn("revisit", reader.fieldnames or [])
+            self.assertEqual(tuple(reader.fieldnames or ()), self.contracts.headers)
+        sidecar = json.loads(self.service.store.sidecar_path.read_text())
+        self.assertEqual(sidecar["revisitSourceUnitIDs"], [self.first_id])
+        self.service.set_revisit(self.first_id, False)
+        self.assertNotIn(self.first_id, self.service.store.revisit_ids())
+
     def test_local_artifacts_ignored_and_no_inference_dependencies(self) -> None:
         """Private state is Git-ignored and the application imports no inference clients."""
 
         self.assertIn("var/publication_pilot1_screening/", (ROOT / ".gitignore").read_text())
         package = ROOT / "src/annotation/publication_pilot1"
-        source = "\n".join(path.read_text() for path in package.glob("*.py"))
+        source = "\n".join(path.read_text() for pattern in ("*.py", "static/*.js") for path in package.glob(pattern))
         for forbidden in ("import openai", "from openai", "import requests", "import httpx", "anthropic"):
             self.assertNotIn(forbidden, source.lower())
+        self.assertNotIn('fetch("http', source.lower())
 
     def test_interface_does_not_materialize_block_a_outputs(self) -> None:
         """Saving and backup export do not invoke the Block A materialization boundary."""
@@ -380,8 +529,15 @@ class ScreeningInterfaceTests(unittest.TestCase):
                 self.assertIn(b"Publication Pilot 1", response.read())
             with urllib.request.urlopen(base + "/api/bootstrap", timeout=3) as response:
                 bootstrap = json.load(response)
+            with urllib.request.urlopen(base + "/handbook", timeout=3) as response:
+                self.assertIn(b"Frozen for Publication Pilot 1 production screening", response.read())
             self.assertEqual(bootstrap["progress"]["total"], 267)
             self.assertEqual(len(bootstrap["targets"]), 69)
+            self.assertEqual(bootstrap["provenance"]["screeningInterfaceVersion"], "0.1.1")
+            self.assertEqual(bootstrap["provenance"]["screeningHandbookSha256"], SCREENING_HANDBOOK_SHA256)
+            page = (ROOT / "src/annotation/publication_pilot1/static/index.html").read_text(encoding="utf-8")
+            self.assertIn("Screening is prospective routing, not annotation.", page)
+            self.assertIn("Do not use external search or AI assistance", page)
         finally:
             server.shutdown()
             server.server_close()
