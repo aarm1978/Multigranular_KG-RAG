@@ -15,7 +15,7 @@ import yaml
 
 PROTECTED_HASHES = {
     "data/curation/papers/pilot1/publication_pilot1_screening_worklist.csv": "b950c8f4389d3af36c3c324572c53f4668304e7fd52c1539e079f72c658e232b",
-    "data/curation/papers/pilot1/publication_pilot1_selection_policy.yaml": "ea0b9fe9dad9fc05181f4c6e811d9b4df65512eacde78459c69e236da4ba0685",
+    "data/curation/papers/pilot1/publication_pilot1_selection_policy.yaml": "be7fcb145a1b6a2fcc1a957f472c8cd4954b7df375f5177e5ccdf560fa69a56a",
     "schemas/publication_pilot1_screening_record.schema.json": "473e524e679fc19cf267a078cecd09bd21b2e06ddcdb05fdfcc5a8c8a21363f3",
     "schemas/publication_pilot1_unit_routing.schema.json": "b023a4744d9064c286a608191181c51bc431e117e4abd8c8587c8b1906fdb6b1",
     "data/curation/papers/pilot1/publication_pilot1_target_family_mapping.yaml": "fbf1da8f43174791a160106014975fd7084c18de5df2f14a5203368418f081fe",

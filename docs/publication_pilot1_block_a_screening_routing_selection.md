@@ -1,22 +1,22 @@
 # Publication Pilot 1 Block A — Screening, Routing, Selection, and Gate 0
 
-**Block A infrastructure version:** 0.1.2
+**Block A infrastructure version:** 0.1.3
 
 **Screening/routing schema versions:** 0.1.1
 
-**Status:** screening/routing infrastructure prepared; human screening pending
+**Status:** Publication Pilot 1 Block A screening/routing and calibration-selection artifacts available for independent review; Gate 0 not yet executed; final sample not frozen
 
 **Boundary:** Publication Pilot 1 only
 
 Artifact versions are intentionally independent:
 
 ```text
-Block A infrastructure       0.1.2
+Block A infrastructure       0.1.3
 screening/schema             0.1.1
 routing/schema               0.1.1
-selection policy             0.1.2
-pre-Gate-0 candidate order   0.1.1 (future materialization)
-calibration manifest         0.1.1 (future materialization)
+selection policy             0.1.3
+pre-Gate-0 candidate order   0.1.2
+calibration manifest         0.1.2
 target-family mapping        0.1.0
 target display catalog       0.1.0
 Gate-0 policy                0.1.0
@@ -24,8 +24,8 @@ Gate-0 policy                0.1.0
 
 The mapping, display catalog, and Gate-0 policy remain at 0.1.0 because their content did
 not change in the infrastructure corrections. Screening/routing schemas and future
-candidate-order/calibration formats remain at 0.1.1 because the 0.1.2 correction changes
-only completeness validation and selection policy behavior.
+Candidate order and calibration manifest are 0.1.2 because both record explicit artifact
+quota-role provenance without changing candidate or calibration membership or order.
 
 ## Purpose and inputs
 
@@ -41,7 +41,8 @@ The generator is:
 src/extraction/llm/publications/build_publication_pilot1_block_a.py
 ```
 
-Run it from the repository root:
+The initial infrastructure-only materialization, used before a reviewed worklist exists,
+is run from the repository root as:
 
 ```bash
 python -m src.extraction.llm.publications.build_publication_pilot1_block_a
@@ -51,6 +52,16 @@ It validates the accepted inventory, accepted manifest, and target-profile hashe
 worklist, complete target-family mapping, display catalog, selection-policy draft, and
 Publication-only Gate-0 policy byte-for-byte. Re-running it with unchanged inputs is
 idempotent.
+
+The completed production compilation path uses the authoritative reviewed worklist:
+
+```bash
+python -m src.extraction.llm.publications.build_publication_pilot1_block_a \
+  --reviewed-worklist var/publication_pilot1_screening/exports/publication_pilot1_screening_worklist_reviewed.csv
+```
+
+This path validates the human-reviewed input and materializes screening JSONL, routing,
+coverage, calibration selection, and the pre-Gate-0 per-artifact candidate order.
 
 ## Human-screening boundary
 
@@ -95,7 +106,7 @@ those are the only targets that default to prospective `exhaustive` completeness
 sampling-stratum, primary-candidate, calibration-diversity, and candidate-order coverage,
 but default to `non_exhaustive_monitor` and are rejected from the exhaustive-empty field.
 A future monitored-pair promotion would require an explicit pre-annotation completeness
-decision not present in Block A 0.1.2. Closed, out-of-scope, and deferred-resolution-only
+decision not present in Block A 0.1.3. Closed, out-of-scope, and deferred-resolution-only
 targets also remain rejected.
 
 `likelyRecurringDistinctions` uses only these exact values:
@@ -158,13 +169,13 @@ discourse versus scientific-entity nodes, core discourse relations, entity-role/
 context relations, and measurement-context relations. Completeness and conditional
 family/role validation are enforced against the frozen target profile.
 
-## Resume after human review
+## Reviewed-worklist compilation
 
-Resume in this same Block A task with the completed CSV:
+Production human screening is complete. The reviewed CSV is compiled with:
 
 ```bash
 python -m src.extraction.llm.publications.build_publication_pilot1_block_a \
-  --reviewed-worklist /absolute/path/to/completed_publication_pilot1_screening_worklist.csv
+  --reviewed-worklist var/publication_pilot1_screening/exports/publication_pilot1_screening_worklist_reviewed.csv
 ```
 
 The compiler rejects missing/duplicate units, hash or metadata drift, unknown controlled
@@ -220,15 +231,44 @@ Gate 0 may activate a quota of five (GREEN) or four (AMBER); Block B takes the a
 prefix without semantic or timing-based reranking. RED pauses Block B and does not invent
 a smaller quota.
 
+The accepted manifest's predeclared artifact role controls quota applicability through
+machine-readable artifact quota-role policy 0.1.0:
+
+```text
+recordType != corrigendum
+    artifactQuotaRole = primary_publication
+    quotaBearing = true
+    Block-B partitions = reliability | remaining_evaluation | reserved_diagnostic
+
+recordType = corrigendum
+    artifactQuotaRole = corrigendum_diagnostic
+    quotaBearing = false
+    Block-B partition = reserved_diagnostic only
+```
+
+Accordingly, the GREEN/AMBER quota applies to the eleven primary publication artifacts.
+`87-corrigendum` is exempt. Its three post-calibration candidates remain in their frozen
+order but cannot enter primary reliability or remaining-evaluation partitions. Block A
+does not select any reserved-diagnostic IDs. Compilation fails if any quota-bearing
+artifact has fewer than five post-calibration candidates, ensuring both GREEN and AMBER
+remain mechanically activatable before timing is observed.
+
 Block A does not select reliability, remaining-evaluation, or reserved-diagnostic IDs; it
 does not freeze final completeness or publication quota; and it does not update the
 candidate sample scaffold before reviewed screening and independent Block A review.
 
-## Current stop condition
+## Production screening and current handoff
 
-No completed human-reviewed screening file existed at first materialization. Therefore
-the correct leakage-control classification is:
+Production human screening was completed before the quota-role amendment. The
+authoritative reviewed CSV remains unchanged:
 
 ```text
-BLOCK_A_HUMAN_SCREENING_REQUIRED
+var/publication_pilot1_screening/exports/publication_pilot1_screening_worklist_reviewed.csv
+SHA-256: 2cba7bdb025f063b0cfbc0b05c375feee341231b34926abe43e7cd9790ce2c01
 ```
+
+Quota-role amendment 0.1.3 changes only post-screening sample/quota handling. It does not
+change screening semantics, the reviewed worklist, any human decision, screening JSONL,
+or routing JSONL. The current stop condition is independent review and pre-Gate-0
+handoff. Gate 0 has not been executed, no Block-B IDs have been selected, the publication
+quota is not frozen, and the final sample remains candidate and unfrozen.

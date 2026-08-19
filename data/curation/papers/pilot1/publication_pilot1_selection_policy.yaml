@@ -1,17 +1,129 @@
-blockAInfrastructureVersion: 0.1.2
-policyVersion: 0.1.2
-status: draft_pending_human_screening
+blockAInfrastructureVersion: 0.1.3
+policyVersion: 0.1.3
+status: candidate_for_review
 populationHash: 7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e
 screening:
   version: 0.1.1
-  hash: null
+  hash: a34e2ca153a066cf58188f1d332e62b4077622bd5b3a2c1a68939a24c0a0db90
 routing:
   version: 0.1.1
-  hash: null
+  hash: ff2b15890c707e0d0d2722956119bbf6fc6547e076e64a5010ab50a54eb01a18
 eligiblePrimaryRule: sourceEligibility=eligible AND requestEligible=true AND screeningStatus=reviewed AND at least
   one routed blocking/monitored target
 artifactIdentityRule: sourceArtifactID is canonicalArtifactID; paperID is the local grouping key for per-artifact
   candidate order and quota activation
+artifactQuotaRoles:
+  artifactQuotaRolePolicyVersion: 0.1.0
+  derivationRule:
+    recordType=corrigendum: corrigendum_diagnostic; non-quota-bearing; reserved_diagnostic only
+    allOtherAcceptedPublicationRecordTypes: primary_publication; quota-bearing
+  artifacts:
+  - paperID: '10'
+    sourceArtifactID: https://doi.org/10.1016/j.jhydrol.2017.11.036
+    recordType: journal_article
+    artifactQuotaRole: primary_publication
+    quotaBearing: true
+    postCalibrationAllowedBlockBPartitions:
+    - reliability
+    - remaining_evaluation
+    - reserved_diagnostic
+  - paperID: '15'
+    sourceArtifactID: https://doi.org/10.1007/978-3-031-66428-1_13
+    recordType: book_chapter
+    artifactQuotaRole: primary_publication
+    quotaBearing: true
+    postCalibrationAllowedBlockBPartitions:
+    - reliability
+    - remaining_evaluation
+    - reserved_diagnostic
+  - paperID: '16'
+    sourceArtifactID: https://doi.org/10.1080/02626667.2024.2355202
+    recordType: journal_article
+    artifactQuotaRole: primary_publication
+    quotaBearing: true
+    postCalibrationAllowedBlockBPartitions:
+    - reliability
+    - remaining_evaluation
+    - reserved_diagnostic
+  - paperID: '18'
+    sourceArtifactID: https://doi.org/10.5194/hess-28-4127-2024
+    recordType: journal_article
+    artifactQuotaRole: primary_publication
+    quotaBearing: true
+    postCalibrationAllowedBlockBPartitions:
+    - reliability
+    - remaining_evaluation
+    - reserved_diagnostic
+  - paperID: '34'
+    sourceArtifactID: https://doi.org/10.1029/2023wr035337
+    recordType: journal_article
+    artifactQuotaRole: primary_publication
+    quotaBearing: true
+    postCalibrationAllowedBlockBPartitions:
+    - reliability
+    - remaining_evaluation
+    - reserved_diagnostic
+  - paperID: '37'
+    sourceArtifactID: https://doi.org/10.1016/j.advwatres.2024.104858
+    recordType: journal_article
+    artifactQuotaRole: primary_publication
+    quotaBearing: true
+    postCalibrationAllowedBlockBPartitions:
+    - reliability
+    - remaining_evaluation
+    - reserved_diagnostic
+  - paperID: '46'
+    sourceArtifactID: https://doi.org/10.1016/j.envsoft.2024.106239
+    recordType: journal_article
+    artifactQuotaRole: primary_publication
+    quotaBearing: true
+    postCalibrationAllowedBlockBPartitions:
+    - reliability
+    - remaining_evaluation
+    - reserved_diagnostic
+  - paperID: '54'
+    sourceArtifactID: https://doi.org/10.5194/hess-29-2521-2025
+    recordType: journal_article
+    artifactQuotaRole: primary_publication
+    quotaBearing: true
+    postCalibrationAllowedBlockBPartitions:
+    - reliability
+    - remaining_evaluation
+    - reserved_diagnostic
+  - paperID: '79'
+    sourceArtifactID: https://doi.org/10.1111/1752-1688.12946
+    recordType: journal_article
+    artifactQuotaRole: primary_publication
+    quotaBearing: true
+    postCalibrationAllowedBlockBPartitions:
+    - reliability
+    - remaining_evaluation
+    - reserved_diagnostic
+  - paperID: '276'
+    sourceArtifactID: https://doi.org/10.1016/j.envsoft.2025.106665
+    recordType: journal_article
+    artifactQuotaRole: primary_publication
+    quotaBearing: true
+    postCalibrationAllowedBlockBPartitions:
+    - reliability
+    - remaining_evaluation
+    - reserved_diagnostic
+  - paperID: '87'
+    sourceArtifactID: https://doi.org/10.5194/hess-26-3377-2022
+    recordType: journal_article
+    artifactQuotaRole: primary_publication
+    quotaBearing: true
+    postCalibrationAllowedBlockBPartitions:
+    - reliability
+    - remaining_evaluation
+    - reserved_diagnostic
+  - paperID: 87-corrigendum
+    sourceArtifactID: https://doi.org/10.5194/hess-26-3377-2022-corrigendum
+    recordType: corrigendum
+    artifactQuotaRole: corrigendum_diagnostic
+    quotaBearing: false
+    postCalibrationAllowedBlockBPartitions:
+    - reserved_diagnostic
 routingMetadataDerivationRule: likelyReportingFamilies and likelySamplingStrata are sorted unique values derived
   from routed blocking/monitored targets through target-family mapping 0.1.0; deferred-resolution-only targets contribute
   neither
@@ -20,7 +132,7 @@ prospectiveCompletenessRule:
   - extract_and_evaluate
   defaultNonExhaustiveMonitorTreatments:
   - extract_and_monitor
-  monitorPromotion: requires explicit pre-annotation promotion not implemented in Block A 0.1.2
+  monitorPromotion: requires explicit pre-annotation promotion not implemented in Block A 0.1.3
   likelyExhaustiveEmptyTargetIDs: may contain only routed default-exhaustive targets
 calibrationSelectionRule:
   targetCount: 16
@@ -95,12 +207,16 @@ sectionGroupMapping:
   other_eligible:
   - other
 tieBreakRule: lexical sourceUnitID after all predeclared criteria
-artifactRepresentationRule: Calibration need not cover every artifact; post-Gate-0 ordering is per artifact.
+artifactRepresentationRule: Calibration need not cover every artifact. Gate-0 quota activation is per quota-bearing
+  primary publication artifact. Corrigendum post-calibration candidates remain ordered but are eligible only for
+  reserved_diagnostic assignment in Block B.
 leakageControls:
 - no model prediction, confidence, validator output, annotation count, gold, or timing value
 - screening expectations are prospective and never gold
 armBlindnessRule: No experiment arm, model, or prompt-result field is accepted or emitted.
-gate0HandoffRule: Gate 0 activates quota 5 or 4; Block B takes prefixes of frozen per-artifact orders without reranking.
+gate0HandoffRule: Gate 0 activates quota 5 or 4 only for artifacts with quotaBearing=true; Block B takes prefixes
+  of their frozen per-artifact orders without reranking. Non-quota-bearing corrigendum candidates may be assigned
+  only to reserved_diagnostic.
 blockBOnlyFields:
 - reliabilitySourceUnitIDs
 - remainingEvaluationSourceUnitIDs

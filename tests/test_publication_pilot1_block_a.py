@@ -23,7 +23,11 @@ MAPPING = DATA / "publication_pilot1_target_family_mapping.yaml"
 CATALOG = DATA / "publication_pilot1_target_display_catalog.yaml"
 SELECTION = DATA / "publication_pilot1_selection_policy.yaml"
 GATE0 = DATA / "publication_pilot1_gate0_policy.yaml"
+ORDER = DATA / "publication_pilot1_pre_gate0_candidate_order.json"
+CALIBRATION = DATA / "publication_pilot1_calibration_manifest.json"
 PROFILE = ROOT / "src/extraction/llm/publications/publication_target_inventory.yaml"
+FROZEN_CANDIDATE_ID_ORDER_HASH = "924238cba596513d66672bc138ee0f614def0295dfee236beed958376ac766d4"
+FROZEN_CALIBRATION_ID_ORDER_HASH = "763a0dd3d4e4e4f789ecfa7cf4643d01f59e099571faf174f3c333ceb8750194"
 
 
 class PublicationPilot1BlockATests(unittest.TestCase):
@@ -40,6 +44,8 @@ class PublicationPilot1BlockATests(unittest.TestCase):
         cls.catalog = yaml.safe_load(CATALOG.read_text(encoding="utf-8"))
         cls.selection = yaml.safe_load(SELECTION.read_text(encoding="utf-8"))
         cls.gate0 = yaml.safe_load(GATE0.read_text(encoding="utf-8"))
+        cls.order = json.loads(ORDER.read_text(encoding="utf-8"))
+        cls.calibration = json.loads(CALIBRATION.read_text(encoding="utf-8"))
         cls.profile = yaml.safe_load(PROFILE.read_text(encoding="utf-8"))
         cls.manifest = json.loads((DATA / "publication_pilot1_source_unit_manifest.json").read_text(encoding="utf-8"))
         cls.conversion_by_paper = block_a._conversion_by_paper(cls.manifest)
@@ -190,17 +196,63 @@ class PublicationPilot1BlockATests(unittest.TestCase):
     def test_artifact_versions_are_explicit_and_independent(self) -> None:
         """Changed and unchanged Block A artifacts retain their own correct versions."""
 
-        self.assertEqual(block_a.BLOCK_A_INFRASTRUCTURE_VERSION, "0.1.2")
+        self.assertEqual(block_a.BLOCK_A_INFRASTRUCTURE_VERSION, "0.1.3")
         self.assertEqual(block_a.SCREENING_SCHEMA_VERSION, "0.1.1")
         self.assertEqual(block_a.ROUTING_SCHEMA_VERSION, "0.1.1")
-        self.assertEqual(block_a.SELECTION_POLICY_VERSION, "0.1.2")
-        self.assertEqual(block_a.CANDIDATE_ORDER_VERSION, "0.1.1")
-        self.assertEqual(block_a.CALIBRATION_MANIFEST_VERSION, "0.1.1")
+        self.assertEqual(block_a.SELECTION_POLICY_VERSION, "0.1.3")
+        self.assertEqual(block_a.CANDIDATE_ORDER_VERSION, "0.1.2")
+        self.assertEqual(block_a.CALIBRATION_MANIFEST_VERSION, "0.1.2")
+        self.assertEqual(self.calibration["calibrationManifestVersion"], "0.1.2")
         self.assertEqual(block_a.DEFAULT_EXHAUSTIVE_TREATMENTS, {"extract_and_evaluate"})
         self.assertEqual(block_a.SEMANTIC_TREATMENTS, {"extract_and_evaluate", "extract_and_monitor"})
         self.assertEqual(self.mapping["mappingVersion"], "0.1.0")
         self.assertEqual(self.catalog["catalogVersion"], "0.1.0")
         self.assertEqual(self.gate0["gate0PolicyVersion"], "0.1.0")
+
+    def test_quota_roles_are_explicit_capacity_safe_and_partition_guarded(self) -> None:
+        """Only primary publications bear quotas and every one can activate GREEN."""
+
+        policy = self.selection["artifactQuotaRoles"]
+        self.assertEqual(policy["artifactQuotaRolePolicyVersion"], "0.1.0")
+        roles = {row["paperID"]: row for row in policy["artifacts"]}
+        self.assertEqual(set(roles), set(self.order["ordersByArtifact"]))
+        corrigendum = roles["87-corrigendum"]
+        self.assertEqual(corrigendum["recordType"], "corrigendum")
+        self.assertEqual(corrigendum["artifactQuotaRole"], "corrigendum_diagnostic")
+        self.assertFalse(corrigendum["quotaBearing"])
+        self.assertEqual(corrigendum["postCalibrationAllowedBlockBPartitions"], ["reserved_diagnostic"])
+        self.assertEqual(len(self.order["ordersByArtifact"]["87-corrigendum"]), 3)
+        for paper_id, role in roles.items():
+            if role["quotaBearing"]:
+                self.assertEqual(role["artifactQuotaRole"], "primary_publication")
+                self.assertGreaterEqual(len(self.order["ordersByArtifact"][paper_id]), 5)
+                self.assertIn("reliability", role["postCalibrationAllowedBlockBPartitions"])
+                self.assertIn("remaining_evaluation", role["postCalibrationAllowedBlockBPartitions"])
+        for row in self.order["ordersByArtifact"]["87-corrigendum"]:
+            self.assertFalse(row["quotaBearing"])
+            self.assertEqual(row["postCalibrationAllowedBlockBPartitions"], ["reserved_diagnostic"])
+
+    def test_quota_amendment_preserves_calibration_and_candidate_identity_orders(self) -> None:
+        """Quota-role provenance cannot change the already-reviewed selection outcome."""
+
+        candidate_projection = {
+            paper_id: [row["sourceUnitID"] for row in rows]
+            for paper_id, rows in self.order["ordersByArtifact"].items()
+        }
+        candidate_hash = hashlib.sha256(
+            json.dumps(candidate_projection, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+        calibration_hash = hashlib.sha256(
+            json.dumps(
+                self.calibration["calibrationSourceUnitIDs"],
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
+        ).hexdigest()
+        self.assertEqual(sum(map(len, candidate_projection.values())), 215)
+        self.assertEqual(len(self.calibration["calibrationSourceUnitIDs"]), 16)
+        self.assertEqual(candidate_hash, FROZEN_CANDIDATE_ID_ORDER_HASH)
+        self.assertEqual(calibration_hash, FROZEN_CALIBRATION_ID_ORDER_HASH)
 
     def test_exhaustive_empty_expectation_uses_default_exhaustive_treatment_only(self) -> None:
         """Only routed evaluate targets may carry prospective exhaustive-empty expectations."""
@@ -270,7 +322,7 @@ class PublicationPilot1BlockATests(unittest.TestCase):
         """The prospective policy cannot consume model/timing results or select final partitions."""
 
         text = SELECTION.read_text(encoding="utf-8")
-        self.assertIn("post-Gate-0 ordering is per artifact", text)
+        self.assertIn("Gate-0 quota activation is per quota-bearing", text)
         self.assertIn("Timing never enters the order", text)
         self.assertIn("experiment arm", text)
         self.assertIn("reliabilitySourceUnitIDs", self.selection["blockBOnlyFields"])

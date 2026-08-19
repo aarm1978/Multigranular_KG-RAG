@@ -21,17 +21,18 @@ from typing import Any, Iterable, Mapping, Sequence
 import yaml
 
 
-BLOCK_A_INFRASTRUCTURE_VERSION = "0.1.2"
+BLOCK_A_INFRASTRUCTURE_VERSION = "0.1.3"
 SCREENING_SCHEMA_VERSION = "0.1.1"
 SCREENING_VERSION = "0.1.1"
 ROUTING_SCHEMA_VERSION = "0.1.1"
 ROUTING_VERSION = "0.1.1"
-SELECTION_POLICY_VERSION = "0.1.2"
+SELECTION_POLICY_VERSION = "0.1.3"
 TARGET_MAPPING_VERSION = "0.1.0"
 TARGET_DISPLAY_CATALOG_VERSION = "0.1.0"
-CANDIDATE_ORDER_VERSION = "0.1.1"
-CALIBRATION_MANIFEST_VERSION = "0.1.1"
+CANDIDATE_ORDER_VERSION = "0.1.2"
+CALIBRATION_MANIFEST_VERSION = "0.1.2"
 GATE0_POLICY_VERSION = "0.1.0"
+ARTIFACT_QUOTA_ROLE_POLICY_VERSION = "0.1.0"
 
 INVENTORY_HASH = "7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e"
 MANIFEST_HASH = "42684d340af99440d5f72129a5c5299edcb237d77ce2b3d36456b049bee83823"
@@ -79,6 +80,13 @@ RECURRING_DISTINCTIONS = (
     "use/mention/reference",
     "EvaluationMetric/Parameter",
 )
+SECTION_GROUP_MAPPING = {
+    "framing": ["abstract", "introduction", "background", "related_work"],
+    "methods_data": ["methods", "data", "study_area"],
+    "results": ["results"],
+    "interpretation": ["discussion", "conclusion", "limitations", "future_work"],
+    "other_eligible": ["other"],
+}
 CONVERSION_STATUS_SUMMARIES = {
     "canonical_markdown_available",
     "canonical_markdown_sanitized_forbidden_controls",
@@ -406,7 +414,34 @@ def build_worklist(records: Sequence[Mapping[str, Any]], conversion_by_paper: Ma
     return stream.getvalue().encode("utf-8")
 
 
-def selection_policy() -> dict[str, Any]:
+def build_artifact_quota_role_policy(manifest: Mapping[str, Any]) -> dict[str, Any]:
+    """Derive auditable quota roles from accepted manifest artifact record types."""
+
+    artifacts: list[dict[str, Any]] = []
+    for record in manifest["artifactRecords"]:
+        is_corrigendum = record["recordType"] == "corrigendum"
+        artifacts.append({
+            "paperID": record["paperID"],
+            "sourceArtifactID": record["canonicalArtifactID"],
+            "recordType": record["recordType"],
+            "artifactQuotaRole": "corrigendum_diagnostic" if is_corrigendum else "primary_publication",
+            "quotaBearing": not is_corrigendum,
+            "postCalibrationAllowedBlockBPartitions": (
+                ["reserved_diagnostic"] if is_corrigendum else
+                ["reliability", "remaining_evaluation", "reserved_diagnostic"]
+            ),
+        })
+    return {
+        "artifactQuotaRolePolicyVersion": ARTIFACT_QUOTA_ROLE_POLICY_VERSION,
+        "derivationRule": {
+            "recordType=corrigendum": "corrigendum_diagnostic; non-quota-bearing; reserved_diagnostic only",
+            "allOtherAcceptedPublicationRecordTypes": "primary_publication; quota-bearing",
+        },
+        "artifacts": artifacts,
+    }
+
+
+def selection_policy(artifact_quota_roles: Mapping[str, Any] | None = None) -> dict[str, Any]:
     """Return the prospective, timing-blind selection policy."""
 
     return {
@@ -424,6 +459,7 @@ def selection_policy() -> dict[str, Any]:
             "sourceArtifactID is canonicalArtifactID; paperID is the local grouping key for "
             "per-artifact candidate order and quota activation"
         ),
+        "artifactQuotaRoles": artifact_quota_roles,
         "routingMetadataDerivationRule": (
             "likelyReportingFamilies and likelySamplingStrata are sorted unique values derived "
             "from routed blocking/monitored targets through target-family mapping 0.1.0; "
@@ -432,7 +468,7 @@ def selection_policy() -> dict[str, Any]:
         "prospectiveCompletenessRule": {
             "defaultExhaustiveTreatments": sorted(DEFAULT_EXHAUSTIVE_TREATMENTS),
             "defaultNonExhaustiveMonitorTreatments": ["extract_and_monitor"],
-            "monitorPromotion": "requires explicit pre-annotation promotion not implemented in Block A 0.1.2",
+            "monitorPromotion": "requires explicit pre-annotation promotion not implemented in Block A 0.1.3",
             "likelyExhaustiveEmptyTargetIDs": "may contain only routed default-exhaustive targets",
         },
         "calibrationSelectionRule": {
@@ -469,21 +505,23 @@ def selection_policy() -> dict[str, Any]:
             "routing complexity", "deterministic endpoint presence", "distributed-evidence likelihood",
             "likely exhaustive-empty capability", "source conversion/special condition",
         ],
-        "sectionGroupMapping": {
-            "framing": ["abstract", "introduction", "background", "related_work"],
-            "methods_data": ["methods", "data", "study_area"],
-            "results": ["results"],
-            "interpretation": ["discussion", "conclusion", "limitations", "future_work"],
-            "other_eligible": ["other"],
-        },
+        "sectionGroupMapping": SECTION_GROUP_MAPPING,
         "tieBreakRule": "lexical sourceUnitID after all predeclared criteria",
-        "artifactRepresentationRule": "Calibration need not cover every artifact; post-Gate-0 ordering is per artifact.",
+        "artifactRepresentationRule": (
+            "Calibration need not cover every artifact. Gate-0 quota activation is per quota-bearing "
+            "primary publication artifact. Corrigendum post-calibration candidates remain ordered but "
+            "are eligible only for reserved_diagnostic assignment in Block B."
+        ),
         "leakageControls": [
             "no model prediction, confidence, validator output, annotation count, gold, or timing value",
             "screening expectations are prospective and never gold",
         ],
         "armBlindnessRule": "No experiment arm, model, or prompt-result field is accepted or emitted.",
-        "gate0HandoffRule": "Gate 0 activates quota 5 or 4; Block B takes prefixes of frozen per-artifact orders without reranking.",
+        "gate0HandoffRule": (
+            "Gate 0 activates quota 5 or 4 only for artifacts with quotaBearing=true; Block B takes "
+            "prefixes of their frozen per-artifact orders without reranking. Non-quota-bearing "
+            "corrigendum candidates may be assigned only to reserved_diagnostic."
+        ),
         "blockBOnlyFields": [
             "reliabilitySourceUnitIDs", "remainingEvaluationSourceUnitIDs", "reservedDiagnosticSourceUnitIDs",
             "finalPublicationUnitQuotaPerArtifact", "finalSampleSelectionManifest", "completenessModeByTarget",
@@ -567,7 +605,10 @@ def materialize_infrastructure(root: Path) -> dict[str, Any]:
     _write_if_changed(paths["worklist"], build_worklist(records, _conversion_by_paper(manifest)))
     _write_if_changed(paths["mapping"], _yaml_bytes(mapping))
     _write_if_changed(paths["catalog"], _yaml_bytes(catalog))
-    _write_if_changed(paths["selectionPolicy"], _yaml_bytes(selection_policy()))
+    _write_if_changed(
+        paths["selectionPolicy"],
+        _yaml_bytes(selection_policy(build_artifact_quota_role_policy(manifest))),
+    )
     _write_if_changed(paths["gate0Policy"], _yaml_bytes(gate0_policy()))
     return {
         "sourceUnitCount": len(records),
@@ -718,7 +759,7 @@ def _validate_reviewed_rows(
 def _section_group(role: str) -> str:
     """Map a frozen section role to the selection policy's group."""
 
-    for group, roles in selection_policy()["sectionGroupMapping"].items():
+    for group, roles in SECTION_GROUP_MAPPING.items():
         if role in roles:
             return group
     return "other_eligible"
@@ -796,6 +837,11 @@ def compile_reviewed_worklist(root: Path, reviewed_worklist: Path) -> dict[str, 
     s_by, r_by, i_by = ({x["sourceUnitID"]: x for x in values} for values in (screening, routing, inventory))
     calibration, contribution = _select_calibration(screening, routing, inventory)
     calibration_set = set(calibration)
+    artifact_quota_policy = build_artifact_quota_role_policy(manifest)
+    quota_by_paper = {
+        artifact["paperID"]: artifact
+        for artifact in artifact_quota_policy["artifacts"]
+    }
     orders: dict[str, list[dict[str, Any]]] = {}
     coverage_rows: list[dict[str, Any]] = []
     for paper_id in sorted({x["paperID"] for x in inventory}):
@@ -812,6 +858,9 @@ def compile_reviewed_worklist(root: Path, reviewed_worklist: Path) -> dict[str, 
             tier = "must_cover" if any(x.startswith(("family:", "stratum:", "section:")) for x in new) else "preferred" if new else "reserve"
             ordered.append({
                 "sourceArtifactID": i_by[chosen]["canonicalArtifactID"], "paperID": paper_id,
+                "artifactQuotaRole": quota_by_paper[paper_id]["artifactQuotaRole"],
+                "quotaBearing": quota_by_paper[paper_id]["quotaBearing"],
+                "postCalibrationAllowedBlockBPartitions": quota_by_paper[paper_id]["postCalibrationAllowedBlockBPartitions"],
                 "sourceUnitID": chosen, "sourceUnitTextHash": i_by[chosen]["textHash"],
                 "candidateRankWithinArtifact": len(ordered) + 1, "selectionTier": tier,
                 "coverageContribution": new, "sectionGroup": _section_group(i_by[chosen]["sectionRole"]),
@@ -833,6 +882,12 @@ def compile_reviewed_worklist(root: Path, reviewed_worklist: Path) -> dict[str, 
             covered.update(_coverage_tokens(s_by[chosen], r_by[chosen], i_by[chosen]))
             candidates.remove(chosen)
         orders[paper_id] = ordered
+    for paper_id, order_rows in orders.items():
+        quota_role = quota_by_paper[paper_id]
+        if quota_role["quotaBearing"] and len(order_rows) < 5:
+            raise BlockAValidationError(
+                f"BLOCK_A_QUOTA_BEARING_ARTIFACT_CAPACITY_BELOW_GREEN:{paper_id}:{len(order_rows)}"
+            )
     for source in inventory:
         uid = source["sourceUnitID"]
         route, screen = r_by[uid], s_by[uid]
@@ -844,6 +899,11 @@ def compile_reviewed_worklist(root: Path, reviewed_worklist: Path) -> dict[str, 
         )
         coverage_rows.append({
             "sourceArtifactID": source["canonicalArtifactID"], "paperID": source["paperID"],
+            "artifactQuotaRole": quota_by_paper[source["paperID"]]["artifactQuotaRole"],
+            "quotaBearing": str(quota_by_paper[source["paperID"]]["quotaBearing"]).lower(),
+            "postCalibrationAllowedBlockBPartitions": _join_multi(
+                quota_by_paper[source["paperID"]]["postCalibrationAllowedBlockBPartitions"]
+            ),
             "sourceUnitID": uid, "sectionTitle": source["sectionTitleRaw"] or source["sectionTitleNormalized"],
             "sourceEligibility": source["eligibility"], "partitionStatus": partition,
             "eligibleNodeOperationalTargetIDs": _join_multi(route["eligibleNodeOperationalTargetIDs"]),
@@ -870,7 +930,7 @@ def compile_reviewed_worklist(root: Path, reviewed_worklist: Path) -> dict[str, 
     writer.writerows(coverage_rows)
     _write_if_changed(output / "publication_pilot1_target_coverage_matrix.csv", coverage_stream.getvalue().encode())
     screening_hash, routing_hash = hashlib.sha256(screening_bytes).hexdigest(), hashlib.sha256(routing_bytes).hexdigest()
-    reviewed_policy = selection_policy()
+    reviewed_policy = selection_policy(artifact_quota_policy)
     reviewed_policy["status"] = "candidate_for_review"
     reviewed_policy["screening"]["hash"] = screening_hash
     reviewed_policy["routing"]["hash"] = routing_hash
@@ -880,6 +940,8 @@ def compile_reviewed_worklist(root: Path, reviewed_worklist: Path) -> dict[str, 
         "candidateOrderVersion": CANDIDATE_ORDER_VERSION, "status": "candidate_for_review",
         "sourceUnitInventoryHash": INVENTORY_HASH, "screeningHash": screening_hash,
         "routingHash": routing_hash, "selectionPolicyHash": selection_policy_hash,
+        "artifactQuotaRolePolicyVersion": ARTIFACT_QUOTA_ROLE_POLICY_VERSION,
+        "artifactQuotaRoles": artifact_quota_policy["artifacts"],
         "ordersByArtifact": orders,
     }
     _write_if_changed(output / "publication_pilot1_pre_gate0_candidate_order.json", canonical_json(order))
@@ -887,6 +949,7 @@ def compile_reviewed_worklist(root: Path, reviewed_worklist: Path) -> dict[str, 
         "calibrationManifestVersion": CALIBRATION_MANIFEST_VERSION, "status": "candidate_for_review", "sourceUnitInventoryHash": INVENTORY_HASH,
         "screeningHash": screening_hash, "routingHash": routing_hash,
         "selectionPolicyHash": selection_policy_hash,
+        "artifactQuotaRolePolicyVersion": ARTIFACT_QUOTA_ROLE_POLICY_VERSION,
         "calibrationSourceUnitIDs": calibration, "sourceUnitHashes": {uid: i_by[uid]["textHash"] for uid in calibration},
         "artifactExposure": {
             paper_id: {
