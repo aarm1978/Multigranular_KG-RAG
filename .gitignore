@@ -74,3 +74,6 @@ Thumbs.db
 
 # Local Publication Pilot 1 screening drafts, revisions, audit sidecars, and exports
 var/publication_pilot1_screening/
+
+# Temporary folder used to store intermediate files during the development. Not used in production.
+/temp/
