@@ -661,7 +661,7 @@ def _package_source_paths(root: Path) -> list[Path]:
     """Return the minimal code, contracts, inputs, and canonical documents needed locally."""
 
     relative = [
-        Path("src/__init__.py"), Path("src/annotation/__init__.py"),
+        Path("src/annotation/__init__.py"),
         Path("src/annotation/publication_pilot1/__init__.py"),
         Path("src/annotation/publication_pilot1/contracts.py"),
         Path("src/annotation/publication_pilot1/calibration"),

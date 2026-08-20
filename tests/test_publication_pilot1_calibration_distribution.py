@@ -24,6 +24,7 @@ from src.annotation.publication_pilot1.calibration.distribution import (
     BUNDLE_FILES,
     _git_build_checkpoint,
     _launcher_text,
+    _package_source_paths,
     build_distribution_package,
     build_export_bundle,
     import_validated_bundles,
@@ -343,6 +344,17 @@ class CalibrationDistributionTests(unittest.TestCase):
         self.assertIn("Python 3.10+", launcher)
         self.assertNotIn("pip install", launcher)
         self.assertNotIn("conda install", launcher)
+
+    def test_real_package_source_paths_exist_in_namespace_package_layout(self) -> None:
+        """Every declared package input exists without requiring a src package marker."""
+
+        paths = _package_source_paths(ROOT)
+        missing = [str(path.relative_to(ROOT)) for path in paths if not path.exists()]
+        self.assertEqual(missing, [])
+        self.assertNotIn(ROOT / "src/__init__.py", paths)
+        self.assertIn(ROOT / "src/annotation/__init__.py", paths)
+        self.assertIn(ROOT / "src/annotation/publication_pilot1/__init__.py", paths)
+        self.assertIn(ROOT / "src/annotation/publication_pilot1/calibration", paths)
 
     def test_package_builder_is_deterministic_with_discarded_inputs(self) -> None:
         """Package assembly and executable modes work without touching real calibration text."""
