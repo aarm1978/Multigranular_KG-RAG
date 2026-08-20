@@ -35,6 +35,9 @@ from . import (
 from .contracts import (
     ACTIVATION_SCHEMA_VERSION,
     CALIBRATION_ID_ORDER_HASH,
+    PRIVATE_SCREENING_HASH,
+    PRIVATE_SCREENING_RELATIVE,
+    PROTECTED_HASHES,
     ANNOTATION_MVP_BASE_CHECKPOINT,
     AnnotationContractError,
     AnnotationContracts,
@@ -685,16 +688,74 @@ def _package_source_paths(root: Path) -> list[Path]:
     return [root / value for value in relative]
 
 
+def _tracked_files_at_checkpoint(root: Path, checkpoint: str) -> frozenset[Path]:
+    """Return the exact repository file inventory recorded by one Git checkpoint."""
+
+    try:
+        result = subprocess.run(
+            ["git", "ls-tree", "-r", "--name-only", "-z", checkpoint], cwd=root,
+            check=True, capture_output=True,
+        ).stdout
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise AnnotationContractError("CALIBRATION_PACKAGE_TRACKED_INVENTORY_INVALID") from exc
+    try:
+        names = result.decode("utf-8").split("\0")
+    except UnicodeDecodeError as exc:
+        raise AnnotationContractError("CALIBRATION_PACKAGE_TRACKED_PATH_ENCODING_INVALID") from exc
+    return frozenset(Path(name) for name in names if name)
+
+
+def _authorized_private_package_files(root: Path) -> dict[Path, str]:
+    """Enumerate only hash-bound non-Git authorities required by production annotation."""
+
+    inventory_path = root / "data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl"
+    rows = [json.loads(line) for line in inventory_path.read_text(encoding="utf-8").splitlines() if line]
+    phase_b_relative = Path("data/interim/papers/publication_nodes_edges.json")
+    authorized = {
+        Path(PRIVATE_SCREENING_RELATIVE): PRIVATE_SCREENING_HASH,
+        phase_b_relative: PROTECTED_HASHES[str(phase_b_relative)],
+    }
+    for row in rows:
+        relative = Path(str(row["sourceFile"])); expected = str(row["rawFileSha256"])
+        prior = authorized.get(relative)
+        if prior is not None and prior != expected:
+            raise AnnotationContractError(f"CALIBRATION_PACKAGE_PRIVATE_HASH_CONFLICT:{relative}")
+        authorized[relative] = expected
+    return authorized
+
+
+def _selected_package_files(root: Path, checkpoint: str) -> tuple[list[Path], frozenset[Path], dict[Path, str]]:
+    """Select required files from tracked HEAD content plus explicit private authorities."""
+
+    tracked = _tracked_files_at_checkpoint(root, checkpoint)
+    private = _authorized_private_package_files(root)
+    selected: set[Path] = set()
+    for source in _package_source_paths(root):
+        relative = source.relative_to(root)
+        if source.is_dir():
+            prefix = relative.parts
+            members = {path for path in tracked if path.parts[:len(prefix)] == prefix}
+            if not members:
+                raise AnnotationContractError(f"CALIBRATION_PACKAGE_REQUIRED_TRACKED_DIRECTORY_EMPTY:{relative}")
+            selected.update(members)
+        elif source.is_file():
+            if relative not in tracked and relative not in private:
+                raise AnnotationContractError(f"CALIBRATION_PACKAGE_REQUIRED_FILE_NOT_AUTHORIZED:{relative}")
+            selected.add(relative)
+        else:
+            raise AnnotationContractError(f"CALIBRATION_PACKAGE_REQUIRED_FILE_MISSING:{relative}")
+    for relative in selected & private.keys():
+        path = root / relative
+        if not path.is_file() or sha256_file(path) != private[relative]:
+            raise AnnotationContractError(f"CALIBRATION_PACKAGE_PRIVATE_FILE_HASH_MISMATCH:{relative}")
+    return [root / relative for relative in sorted(selected)], tracked, private
+
+
 def _copy_package_path(source: Path, root: Path, destination: Path) -> None:
-    """Copy one repository-relative file or tree without mutable runtime state."""
+    """Copy one previously authorized package file and fail closed if it is missing."""
 
     relative = source.relative_to(root); target = destination / relative
-    if source.is_dir():
-        shutil.copytree(
-            source, target, dirs_exist_ok=True,
-            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache"),
-        )
-    elif source.is_file():
+    if source.is_file():
         target.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(source, target)
     else:
         raise AnnotationContractError(f"CALIBRATION_PACKAGE_REQUIRED_FILE_MISSING:{relative}")
@@ -757,13 +818,17 @@ def build_distribution_package(
     with tempfile.TemporaryDirectory() as temporary_name:
         package = Path(temporary_name) / f"publication_pilot1_calibration_{annotator}"
         package.mkdir()
-        for source in _package_source_paths(root):
+        selected_files, tracked_files, private_files = _selected_package_files(root, build_checkpoint)
+        for source in selected_files:
             _copy_package_path(source, root, package)
         activation_path = package / "activation/calibration_activation.json"
         write_activation(
             root, annotator, session, activation_path, package_build_checkpoint=build_checkpoint,
         )
         guide = root / "docs/publication_pilot1_calibration_annotator_distribution.md"
+        guide_relative = guide.relative_to(root)
+        if guide_relative not in tracked_files or guide_relative in private_files or not guide.is_file():
+            raise AnnotationContractError("CALIBRATION_PACKAGE_ANNOTATOR_GUIDE_NOT_TRACKED")
         shutil.copy2(guide, package / "README_ANNOTATOR.md")
         scripts = {
             "launch_annotation.command": _launcher_text(annotator, session),

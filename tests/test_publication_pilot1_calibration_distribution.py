@@ -22,9 +22,13 @@ from src.annotation.publication_pilot1.calibration.contracts import (
 )
 from src.annotation.publication_pilot1.calibration.distribution import (
     BUNDLE_FILES,
+    _authorized_private_package_files,
+    _copy_package_path,
     _git_build_checkpoint,
     _launcher_text,
     _package_source_paths,
+    _selected_package_files,
+    _tracked_files_at_checkpoint,
     build_distribution_package,
     build_export_bundle,
     import_validated_bundles,
@@ -355,6 +359,68 @@ class CalibrationDistributionTests(unittest.TestCase):
         self.assertIn(ROOT / "src/annotation/__init__.py", paths)
         self.assertIn(ROOT / "src/annotation/publication_pilot1/__init__.py", paths)
         self.assertIn(ROOT / "src/annotation/publication_pilot1/calibration", paths)
+        private = _authorized_private_package_files(ROOT)
+        reviewed = Path("var/publication_pilot1_screening/exports/publication_pilot1_screening_worklist_reviewed.csv")
+        self.assertIn(reviewed, private)
+        self.assertEqual(hashlib.sha256((ROOT / reviewed).read_bytes()).hexdigest(), private[reviewed])
+        checkpoint = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, check=True, capture_output=True, text=True,
+        ).stdout.strip()
+        selected, tracked, private = _selected_package_files(ROOT, checkpoint)
+        selected_relative = {path.relative_to(ROOT) for path in selected}
+        self.assertNotIn(Path("data/curation/papers/pilot1/.DS_Store"), selected_relative)
+        self.assertNotIn(Path("src/annotation/publication_pilot1/calibration/.DS_Store"), selected_relative)
+        self.assertTrue(selected_relative <= tracked | private.keys())
+
+    def test_package_selection_excludes_ignored_content_and_keeps_tracked_and_private_files(self) -> None:
+        """Checkpoint selection excludes local files and retains one explicit private authority."""
+
+        repository = self.runtime / "content-selection-repository"; repository.mkdir()
+
+        def git(*arguments: str) -> str:
+            """Run one Git command in the discarded content-selection repository."""
+
+            return subprocess.run(
+                ["git", *arguments], cwd=repository, check=True, capture_output=True, text=True,
+            ).stdout.strip()
+
+        git("init", "-q"); git("config", "user.email", "discarded@example.invalid")
+        git("config", "user.name", "Discarded Test")
+        required = repository / "required"; required.mkdir()
+        tracked_file = required / "tracked.txt"; tracked_file.write_text("tracked\n", encoding="utf-8")
+        ignore = repository / ".gitignore"; ignore.write_text(".DS_Store\n*.local\n/var/\n", encoding="utf-8")
+        git("add", ".gitignore", "required/tracked.txt"); git("commit", "-q", "-m", "tracked package content")
+        checkpoint = git("rev-parse", "HEAD")
+        (required / ".DS_Store").write_text("ignored finder metadata\n", encoding="utf-8")
+        (required / "machine.local").write_text("ignored machine state\n", encoding="utf-8")
+        reviewed_relative = Path(
+            "var/publication_pilot1_screening/exports/publication_pilot1_screening_worklist_reviewed.csv"
+        )
+        reviewed = repository / reviewed_relative; reviewed.parent.mkdir(parents=True)
+        reviewed.write_text("discarded reviewed authority\n", encoding="utf-8")
+        private = {reviewed_relative: hashlib.sha256(reviewed.read_bytes()).hexdigest()}
+        with patch(
+            "src.annotation.publication_pilot1.calibration.distribution._package_source_paths",
+            return_value=[required, reviewed],
+        ), patch(
+            "src.annotation.publication_pilot1.calibration.distribution._authorized_private_package_files",
+            return_value=private,
+        ):
+            selected, tracked, authorized = _selected_package_files(repository, checkpoint)
+        destination = self.runtime / "selected-package"
+        for source in selected:
+            _copy_package_path(source, repository, destination)
+        packaged = {
+            path.relative_to(destination) for path in destination.rglob("*") if path.is_file()
+        }
+        self.assertIn(Path("required/tracked.txt"), packaged)
+        self.assertIn(reviewed_relative, packaged)
+        self.assertNotIn(Path("required/.DS_Store"), packaged)
+        self.assertNotIn(Path("required/machine.local"), packaged)
+        self.assertTrue(packaged <= tracked | authorized.keys())
+        tracked_file.unlink()
+        with self.assertRaisesRegex(AnnotationContractError, "REQUIRED_FILE_MISSING"):
+            _copy_package_path(repository / "required/tracked.txt", repository, self.runtime / "missing-package")
 
     def test_package_builder_is_deterministic_with_discarded_inputs(self) -> None:
         """Package assembly and executable modes work without touching real calibration text."""
@@ -382,13 +448,18 @@ class CalibrationDistributionTests(unittest.TestCase):
         patches = (
             patch("src.annotation.publication_pilot1.calibration.distribution._git_build_checkpoint", return_value="b" * 40),
             patch("src.annotation.publication_pilot1.calibration.distribution._package_source_paths", return_value=[runtime_file.resolve()]),
+            patch(
+                "src.annotation.publication_pilot1.calibration.distribution._tracked_files_at_checkpoint",
+                return_value=frozenset({Path("discarded/runtime.txt"), Path("docs/publication_pilot1_calibration_annotator_distribution.md")}),
+            ),
+            patch("src.annotation.publication_pilot1.calibration.distribution._authorized_private_package_files", return_value={}),
             patch("src.annotation.publication_pilot1.calibration.distribution.write_activation", side_effect=discarded_activation),
             patch(
                 "src.annotation.publication_pilot1.calibration.distribution.production_activation_payload",
                 return_value={"gate0PolicyHash": "f" * 64},
             ),
         )
-        with patches[0], patches[1], patches[2], patches[3]:
+        with patches[0], patches[1], patches[2], patches[3], patches[4], patches[5]:
             first = build_distribution_package(
                 fixture_root, "discarded-a", "discarded-session-a", self.runtime / "package-a.zip",
             )
