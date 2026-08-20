@@ -31,7 +31,7 @@ def main() -> int:
         return 0
     compiled = compile_reviewed_worklist(args.root, args.reviewed_worklist)
     print(json.dumps(compiled, indent=2, sort_keys=True))
-    print("PUBLICATION_PILOT1_BLOCK_A_READY_FOR_INDEPENDENT_REVIEW")
+    print("PUBLICATION_PILOT1_BLOCK_A_DEFERRED_ROUTING_CORRECTION_READY_FOR_INDEPENDENT_REVIEW")
     return 0
 
 

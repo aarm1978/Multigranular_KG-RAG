@@ -1,21 +1,22 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://w3id.org/ciroh/kg/schemas/publication-pilot1-unit-routing-0.1.1.json",
+  "$id": "https://w3id.org/ciroh/kg/schemas/publication-pilot1-unit-routing-0.1.2.json",
   "title": "Publication Pilot 1 unit routing record",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "routingSchemaVersion", "routingVersion", "sourceArtifactID", "paperID", "sourceUnitID",
     "sourceUnitTextHash", "sectionID", "sectionRole", "routingStatus", "routingBasis",
+    "humanScreenedNodeOperationalTargetIDs", "humanScreenedRelationOperationalTargetIDs",
     "eligibleNodeOperationalTargetIDs", "eligibleRelationOperationalTargetIDs",
-    "primaryEligibleOperationalTargetIDs",
+    "primaryEligibleOperationalTargetIDs", "structurallyUnavailableOperationalTargets",
     "likelyReportingFamilies", "likelySamplingStrata", "likelyRecurringDistinctions",
     "sourceConversionStatus", "deterministicEndpointRefs",
     "contextFlags", "menuDiagnostics", "routingDoesNotAssertPresence"
   ],
   "properties": {
-    "routingSchemaVersion": {"const": "0.1.1"},
-    "routingVersion": {"const": "0.1.1"},
+    "routingSchemaVersion": {"const": "0.1.2"},
+    "routingVersion": {"const": "0.1.2"},
     "sourceArtifactID": {"type": "string", "minLength": 1},
     "paperID": {"type": "string", "minLength": 1},
     "sourceUnitID": {"type": "string", "minLength": 1},
@@ -24,9 +25,24 @@
     "sectionRole": {"type": "string", "minLength": 1},
     "routingStatus": {"enum": ["routed", "reviewed_no_eligible_target", "not_open_annotation_target", "blocked_needs_review"]},
     "routingBasis": {"enum": ["human_screened", "deterministic_only", "structurally_blocked"]},
+    "humanScreenedNodeOperationalTargetIDs": {"$ref": "#/$defs/idArray"},
+    "humanScreenedRelationOperationalTargetIDs": {"$ref": "#/$defs/idArray"},
     "eligibleNodeOperationalTargetIDs": {"$ref": "#/$defs/idArray"},
     "eligibleRelationOperationalTargetIDs": {"$ref": "#/$defs/idArray"},
     "primaryEligibleOperationalTargetIDs": {"$ref": "#/$defs/idArray"},
+    "structurallyUnavailableOperationalTargets": {
+      "type": "array", "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["operationalTargetID", "targetKind", "pilotTreatment", "reason"],
+        "properties": {
+          "operationalTargetID": {"type": "string", "pattern": "^PUB-[NR]-"},
+          "targetKind": {"enum": ["node", "relation"]},
+          "pilotTreatment": {"const": "deferred_resolution"},
+          "reason": {"const": "deferred_record_binding_absent"}
+        }
+      }
+    },
     "likelyReportingFamilies": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
     "likelySamplingStrata": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
     "likelyRecurringDistinctions": {"type": "array", "uniqueItems": true, "items": {"enum": [
@@ -46,10 +62,17 @@
     },
     "menuDiagnostics": {
       "type": "object", "additionalProperties": false,
-      "required": ["nodeTargetCount", "relationTargetCountBeforeEndpointFiltering"],
+      "required": [
+        "nodeTargetCount", "relationTargetCountBeforeEndpointFiltering",
+        "humanScreenedNodeTargetCount", "humanScreenedRelationTargetCount",
+        "structurallyUnavailableTargetCount"
+      ],
       "properties": {
         "nodeTargetCount": {"type": "integer", "minimum": 0},
-        "relationTargetCountBeforeEndpointFiltering": {"type": "integer", "minimum": 0}
+        "relationTargetCountBeforeEndpointFiltering": {"type": "integer", "minimum": 0},
+        "humanScreenedNodeTargetCount": {"type": "integer", "minimum": 0},
+        "humanScreenedRelationTargetCount": {"type": "integer", "minimum": 0},
+        "structurallyUnavailableTargetCount": {"type": "integer", "minimum": 0}
       }
     },
     "routingDoesNotAssertPresence": {"const": true}

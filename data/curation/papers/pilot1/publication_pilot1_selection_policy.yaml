@@ -1,13 +1,13 @@
-blockAInfrastructureVersion: 0.1.3
-policyVersion: 0.1.3
+blockAInfrastructureVersion: 0.1.4
+policyVersion: 0.1.4
 status: candidate_for_review
 populationHash: 7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e
 screening:
   version: 0.1.1
   hash: a34e2ca153a066cf58188f1d332e62b4077622bd5b3a2c1a68939a24c0a0db90
 routing:
-  version: 0.1.1
-  hash: ff2b15890c707e0d0d2722956119bbf6fc6547e076e64a5010ab50a54eb01a18
+  version: 0.1.2
+  hash: 66725306608139ccf3647ac7fd4a9fc150df67426498b6e3e7408320cb8c4a1f
 eligiblePrimaryRule: sourceEligibility=eligible AND requestEligible=true AND screeningStatus=reviewed AND at least
   one routed blocking/monitored target
 artifactIdentityRule: sourceArtifactID is canonicalArtifactID; paperID is the local grouping key for per-artifact
@@ -127,12 +127,19 @@ artifactQuotaRoles:
 routingMetadataDerivationRule: likelyReportingFamilies and likelySamplingStrata are sorted unique values derived
   from routed blocking/monitored targets through target-family mapping 0.1.0; deferred-resolution-only targets contribute
   neither
+effectiveRoutingAvailabilityRule:
+  humanRouteHistory: Human-screened operational target IDs remain preserved in routing provenance.
+  deferredResolution: A deferred_resolution target enters effective routing only when the accepted source-unit record
+    has at least one exact deferredRecordRef.
+  unavailableReason: deferred_record_binding_absent
+  downstreamUse: Only effective operational targets contribute prospective coverage, calibration selection, or candidate
+    ordering.
 prospectiveCompletenessRule:
   defaultExhaustiveTreatments:
   - extract_and_evaluate
   defaultNonExhaustiveMonitorTreatments:
   - extract_and_monitor
-  monitorPromotion: requires explicit pre-annotation promotion not implemented in Block A 0.1.3
+  monitorPromotion: requires explicit pre-annotation promotion not implemented in Block A 0.1.4
   likelyExhaustiveEmptyTargetIDs: may contain only routed default-exhaustive targets
 calibrationSelectionRule:
   targetCount: 16

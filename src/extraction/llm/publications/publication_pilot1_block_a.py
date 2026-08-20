@@ -21,18 +21,20 @@ from typing import Any, Iterable, Mapping, Sequence
 import yaml
 
 
-BLOCK_A_INFRASTRUCTURE_VERSION = "0.1.3"
+BLOCK_A_INFRASTRUCTURE_VERSION = "0.1.4"
 SCREENING_SCHEMA_VERSION = "0.1.1"
 SCREENING_VERSION = "0.1.1"
-ROUTING_SCHEMA_VERSION = "0.1.1"
-ROUTING_VERSION = "0.1.1"
-SELECTION_POLICY_VERSION = "0.1.3"
+ROUTING_SCHEMA_VERSION = "0.1.2"
+ROUTING_VERSION = "0.1.2"
+SELECTION_POLICY_VERSION = "0.1.4"
 TARGET_MAPPING_VERSION = "0.1.0"
 TARGET_DISPLAY_CATALOG_VERSION = "0.1.0"
-CANDIDATE_ORDER_VERSION = "0.1.2"
-CALIBRATION_MANIFEST_VERSION = "0.1.2"
+CANDIDATE_ORDER_VERSION = "0.1.3"
+CALIBRATION_MANIFEST_VERSION = "0.1.3"
 GATE0_POLICY_VERSION = "0.1.0"
 ARTIFACT_QUOTA_ROLE_POLICY_VERSION = "0.1.0"
+TARGET_COVERAGE_MATRIX_VERSION = "0.1.0"
+DEFERRED_ROUTE_UNAVAILABLE_REASON = "deferred_record_binding_absent"
 
 INVENTORY_HASH = "7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e"
 MANIFEST_HASH = "42684d340af99440d5f72129a5c5299edcb237d77ce2b3d36456b049bee83823"
@@ -465,10 +467,24 @@ def selection_policy(artifact_quota_roles: Mapping[str, Any] | None = None) -> d
             "from routed blocking/monitored targets through target-family mapping 0.1.0; "
             "deferred-resolution-only targets contribute neither"
         ),
+        "effectiveRoutingAvailabilityRule": {
+            "humanRouteHistory": (
+                "Human-screened operational target IDs remain preserved in routing provenance."
+            ),
+            "deferredResolution": (
+                "A deferred_resolution target enters effective routing only when the accepted "
+                "source-unit record has at least one exact deferredRecordRef."
+            ),
+            "unavailableReason": DEFERRED_ROUTE_UNAVAILABLE_REASON,
+            "downstreamUse": (
+                "Only effective operational targets contribute prospective coverage, calibration "
+                "selection, or candidate ordering."
+            ),
+        },
         "prospectiveCompletenessRule": {
             "defaultExhaustiveTreatments": sorted(DEFAULT_EXHAUSTIVE_TREATMENTS),
             "defaultNonExhaustiveMonitorTreatments": ["extract_and_monitor"],
-            "monitorPromotion": "requires explicit pre-annotation promotion not implemented in Block A 0.1.3",
+            "monitorPromotion": "requires explicit pre-annotation promotion not implemented in Block A 0.1.4",
             "likelyExhaustiveEmptyTargetIDs": "may contain only routed default-exhaustive targets",
         },
         "calibrationSelectionRule": {
@@ -673,22 +689,23 @@ def _validate_reviewed_rows(
         recurring_distinctions = _split_multi(row["likelyRecurringDistinctions"])
         if any(value not in RECURRING_DISTINCTIONS for value in recurring_distinctions):
             raise BlockAValidationError(f"SCREENING_UNKNOWN_RECURRING_DISTINCTION:{row['sourceUnitID']}")
-        node_ids, relation_ids = _split_multi(row["routedNodeOperationalTargetIDs"]), _split_multi(row["routedRelationOperationalTargetIDs"])
-        all_routed = node_ids + relation_ids
-        if not set(exhaustive_empty_ids).issubset(all_routed):
+        human_node_ids = _split_multi(row["routedNodeOperationalTargetIDs"])
+        human_relation_ids = _split_multi(row["routedRelationOperationalTargetIDs"])
+        all_human_routed = human_node_ids + human_relation_ids
+        if not set(exhaustive_empty_ids).issubset(all_human_routed):
             raise BlockAValidationError(f"SCREENING_EXHAUSTIVE_EMPTY_TARGET_NOT_ROUTED:{row['sourceUnitID']}")
-        for target_id in all_routed:
+        for target_id in all_human_routed:
             if target_id not in targets:
                 raise BlockAValidationError(f"ROUTING_UNKNOWN_OPERATIONAL_TARGET:{row['sourceUnitID']}:{target_id}")
             kind, target = targets[target_id]
-            expected_kind = "node" if target_id in node_ids else "relation"
+            expected_kind = "node" if target_id in human_node_ids else "relation"
             if kind != expected_kind:
                 raise BlockAValidationError(f"ROUTING_TARGET_KIND_MISMATCH:{row['sourceUnitID']}:{target_id}")
             if target["pilot_treatment"] not in OPEN_TREATMENTS:
                 raise BlockAValidationError(f"ROUTING_TARGET_NOT_OPEN:{row['sourceUnitID']}:{target_id}")
             if kind == "node" and not target["direct_instantiation"]:
                 raise BlockAValidationError(f"ROUTING_ABSTRACT_CLASS:{row['sourceUnitID']}:{target_id}")
-        if not open_unit and all_routed:
+        if not open_unit and all_human_routed:
             raise BlockAValidationError(f"ROUTING_STRUCTURALLY_BLOCKED_UNIT:{row['sourceUnitID']}")
         for field, vocabulary in (("expectedAssertionDensity", DENSITIES), ("expectedRelationDensity", DENSITIES), ("routingComplexity", ROUTING_COMPLEXITIES)):
             if row[field] not in vocabulary:
@@ -700,8 +717,28 @@ def _validate_reviewed_rows(
         distributed = _parse_bool(row["distributedEvidenceLikely"], "distributedEvidenceLikely")
         section_context = _parse_bool(row["sectionContextUseful"], "sectionContextUseful")
         endpoint = _parse_bool(row["deterministicEndpointLikely"], "deterministicEndpointLikely")
+        unavailable: list[dict[str, str]] = []
+        effective_node_ids: list[str] = []
+        effective_relation_ids: list[str] = []
+        has_deferred_binding = bool(source["deferredRecordRefs"])
+        for kind, human_ids, effective_ids in (
+            ("node", human_node_ids, effective_node_ids),
+            ("relation", human_relation_ids, effective_relation_ids),
+        ):
+            for target_id in human_ids:
+                treatment = targets[target_id][1]["pilot_treatment"]
+                if treatment == "deferred_resolution" and not has_deferred_binding:
+                    unavailable.append({
+                        "operationalTargetID": target_id,
+                        "targetKind": kind,
+                        "pilotTreatment": treatment,
+                        "reason": DEFERRED_ROUTE_UNAVAILABLE_REASON,
+                    })
+                else:
+                    effective_ids.append(target_id)
+        effective_routed_ids = effective_node_ids + effective_relation_ids
         primary_routed_ids = [
-            target_id for target_id in all_routed
+            target_id for target_id in effective_routed_ids
             if targets[target_id][1]["pilot_treatment"] in SEMANTIC_TREATMENTS
         ]
         families = sorted({
@@ -743,14 +780,26 @@ def _validate_reviewed_rows(
             "sectionRole": source["sectionRole"],
             "routingStatus": routing_status,
             "routingBasis": "human_screened" if open_unit else "structurally_blocked",
-            "eligibleNodeOperationalTargetIDs": node_ids, "eligibleRelationOperationalTargetIDs": relation_ids,
+            "humanScreenedNodeOperationalTargetIDs": human_node_ids,
+            "humanScreenedRelationOperationalTargetIDs": human_relation_ids,
+            "eligibleNodeOperationalTargetIDs": effective_node_ids,
+            "eligibleRelationOperationalTargetIDs": effective_relation_ids,
             "primaryEligibleOperationalTargetIDs": sorted(primary_routed_ids),
+            "structurallyUnavailableOperationalTargets": sorted(
+                unavailable, key=lambda item: item["operationalTargetID"]
+            ),
             "likelyReportingFamilies": families, "likelySamplingStrata": strata,
             "likelyRecurringDistinctions": recurring_distinctions,
             "sourceConversionStatus": row["sourceConversionStatus"],
             "deterministicEndpointRefs": sorted(source["deterministicNodeRefs"] + source["deferredRecordRefs"]),
             "contextFlags": {"sectionContextUseful": section_context, "distributedEvidenceLikely": distributed, "deterministicEndpointLikely": endpoint},
-            "menuDiagnostics": {"nodeTargetCount": len(node_ids), "relationTargetCountBeforeEndpointFiltering": len(relation_ids)},
+            "menuDiagnostics": {
+                "nodeTargetCount": len(effective_node_ids),
+                "relationTargetCountBeforeEndpointFiltering": len(effective_relation_ids),
+                "humanScreenedNodeTargetCount": len(human_node_ids),
+                "humanScreenedRelationTargetCount": len(human_relation_ids),
+                "structurallyUnavailableTargetCount": len(unavailable),
+            },
             "routingDoesNotAssertPresence": True,
         })
     return screening, routing
@@ -898,6 +947,10 @@ def compile_reviewed_worklist(root: Path, reviewed_worklist: Path) -> dict[str, 
             route["routingStatus"]
         )
         coverage_rows.append({
+            "targetCoverageMatrixVersion": TARGET_COVERAGE_MATRIX_VERSION,
+            "blockAInfrastructureVersion": BLOCK_A_INFRASTRUCTURE_VERSION,
+            "routingVersion": ROUTING_VERSION,
+            "selectionPolicyVersion": SELECTION_POLICY_VERSION,
             "sourceArtifactID": source["canonicalArtifactID"], "paperID": source["paperID"],
             "artifactQuotaRole": quota_by_paper[source["paperID"]]["artifactQuotaRole"],
             "quotaBearing": str(quota_by_paper[source["paperID"]]["quotaBearing"]).lower(),
@@ -908,6 +961,10 @@ def compile_reviewed_worklist(root: Path, reviewed_worklist: Path) -> dict[str, 
             "sourceEligibility": source["eligibility"], "partitionStatus": partition,
             "eligibleNodeOperationalTargetIDs": _join_multi(route["eligibleNodeOperationalTargetIDs"]),
             "eligibleRelationOperationalTargetIDs": _join_multi(route["eligibleRelationOperationalTargetIDs"]),
+            "structurallyUnavailableOperationalTargetIDs": _join_multi(
+                item["operationalTargetID"]
+                for item in route["structurallyUnavailableOperationalTargets"]
+            ),
             "likelyReportingFamilies": _join_multi(screen["likelyReportingFamilies"]), "likelySamplingStrata": _join_multi(screen["likelySamplingStrata"]),
             "screeningVersion": SCREENING_VERSION, "screeningStatus": screen["screeningStatus"], "sourceConversionStatus": screen["sourceConversionStatus"],
             "observedDeterministicMetadata": _join_multi(source["contentTypes"]),
@@ -939,7 +996,8 @@ def compile_reviewed_worklist(root: Path, reviewed_worklist: Path) -> dict[str, 
     order = {
         "candidateOrderVersion": CANDIDATE_ORDER_VERSION, "status": "candidate_for_review",
         "sourceUnitInventoryHash": INVENTORY_HASH, "screeningHash": screening_hash,
-        "routingHash": routing_hash, "selectionPolicyHash": selection_policy_hash,
+        "routingVersion": ROUTING_VERSION, "routingHash": routing_hash,
+        "selectionPolicyHash": selection_policy_hash,
         "artifactQuotaRolePolicyVersion": ARTIFACT_QUOTA_ROLE_POLICY_VERSION,
         "artifactQuotaRoles": artifact_quota_policy["artifacts"],
         "ordersByArtifact": orders,
@@ -947,7 +1005,8 @@ def compile_reviewed_worklist(root: Path, reviewed_worklist: Path) -> dict[str, 
     _write_if_changed(output / "publication_pilot1_pre_gate0_candidate_order.json", canonical_json(order))
     manifest = {
         "calibrationManifestVersion": CALIBRATION_MANIFEST_VERSION, "status": "candidate_for_review", "sourceUnitInventoryHash": INVENTORY_HASH,
-        "screeningHash": screening_hash, "routingHash": routing_hash,
+        "screeningHash": screening_hash, "routingVersion": ROUTING_VERSION,
+        "routingHash": routing_hash,
         "selectionPolicyHash": selection_policy_hash,
         "artifactQuotaRolePolicyVersion": ARTIFACT_QUOTA_ROLE_POLICY_VERSION,
         "calibrationSourceUnitIDs": calibration, "sourceUnitHashes": {uid: i_by[uid]["textHash"] for uid in calibration},

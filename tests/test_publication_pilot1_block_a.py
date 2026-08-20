@@ -25,9 +25,15 @@ SELECTION = DATA / "publication_pilot1_selection_policy.yaml"
 GATE0 = DATA / "publication_pilot1_gate0_policy.yaml"
 ORDER = DATA / "publication_pilot1_pre_gate0_candidate_order.json"
 CALIBRATION = DATA / "publication_pilot1_calibration_manifest.json"
+ROUTING = DATA / "publication_pilot1_unit_routing.jsonl"
+COVERAGE = DATA / "publication_pilot1_target_coverage_matrix.csv"
+REVIEWED = ROOT / "var/publication_pilot1_screening/exports/publication_pilot1_screening_worklist_reviewed.csv"
+PHASE_B = ROOT / "data/interim/papers/publication_nodes_edges.json"
 PROFILE = ROOT / "src/extraction/llm/publications/publication_target_inventory.yaml"
-FROZEN_CANDIDATE_ID_ORDER_HASH = "924238cba596513d66672bc138ee0f614def0295dfee236beed958376ac766d4"
-FROZEN_CALIBRATION_ID_ORDER_HASH = "763a0dd3d4e4e4f789ecfa7cf4643d01f59e099571faf174f3c333ceb8750194"
+REVIEWED_WORKLIST_HASH = "2cba7bdb025f063b0cfbc0b05c375feee341231b34926abe43e7cd9790ce2c01"
+GATE0_POLICY_HASH = "f9285a4912e55a154d9037e7fa97a6176f1e37194272ec6907ce8af4f10888ae"
+CORRECTED_CANDIDATE_ID_ORDER_HASH = "e95429c597fc6de4256c9a69343e1cda52d8b9414571264d90fc3087a1c4a40b"
+CORRECTED_CALIBRATION_ID_ORDER_HASH = "182710041594edb979dcfd8e39041cf98523e383c9f3498ac1d74293d0378b98"
 
 
 class PublicationPilot1BlockATests(unittest.TestCase):
@@ -46,6 +52,7 @@ class PublicationPilot1BlockATests(unittest.TestCase):
         cls.gate0 = yaml.safe_load(GATE0.read_text(encoding="utf-8"))
         cls.order = json.loads(ORDER.read_text(encoding="utf-8"))
         cls.calibration = json.loads(CALIBRATION.read_text(encoding="utf-8"))
+        cls.routing = [json.loads(line) for line in ROUTING.read_text(encoding="utf-8").splitlines()]
         cls.profile = yaml.safe_load(PROFILE.read_text(encoding="utf-8"))
         cls.manifest = json.loads((DATA / "publication_pilot1_source_unit_manifest.json").read_text(encoding="utf-8"))
         cls.conversion_by_paper = block_a._conversion_by_paper(cls.manifest)
@@ -190,19 +197,45 @@ class PublicationPilot1BlockATests(unittest.TestCase):
         )
         self.assertEqual(deferred_routes[0]["routingStatus"], "reviewed_no_eligible_target")
         self.assertEqual(deferred_routes[0]["primaryEligibleOperationalTargetIDs"], [])
+        self.assertEqual(deferred_routes[0]["eligibleNodeOperationalTargetIDs"], [])
+        self.assertEqual(
+            deferred_routes[0]["humanScreenedNodeOperationalTargetIDs"],
+            ["PUB-N-A-D01-DATASETRESOURCE-EXACT-IDENTIFIER-OMITTED-BY-PHASE-B"],
+        )
+        self.assertEqual(
+            deferred_routes[0]["structurallyUnavailableOperationalTargets"][0]["reason"],
+            block_a.DEFERRED_ROUTE_UNAVAILABLE_REASON,
+        )
         self.assertEqual(deferred_routes[0]["likelyReportingFamilies"], [])
         self.assertEqual(deferred_routes[0]["likelySamplingStrata"], [])
+
+        bound_source = dict(source, deferredRecordRefs=["phase-b-deferred:exact-synthetic-record"])
+        bound_row = dict(deferred, deferredRecordRefs="phase-b-deferred:exact-synthetic-record")
+        _, bound_routes = block_a._validate_reviewed_rows(
+            [bound_row], [bound_source], self.profile,
+            {"synthetic": "canonical_markdown_available"},
+        )
+        self.assertEqual(
+            bound_routes[0]["eligibleNodeOperationalTargetIDs"],
+            ["PUB-N-A-D01-DATASETRESOURCE-EXACT-IDENTIFIER-OMITTED-BY-PHASE-B"],
+        )
+        self.assertEqual(bound_routes[0]["structurallyUnavailableOperationalTargets"], [])
+        self.assertEqual(
+            bound_routes[0]["deterministicEndpointRefs"],
+            ["phase-b-deferred:exact-synthetic-record"],
+        )
 
     def test_artifact_versions_are_explicit_and_independent(self) -> None:
         """Changed and unchanged Block A artifacts retain their own correct versions."""
 
-        self.assertEqual(block_a.BLOCK_A_INFRASTRUCTURE_VERSION, "0.1.3")
+        self.assertEqual(block_a.BLOCK_A_INFRASTRUCTURE_VERSION, "0.1.4")
         self.assertEqual(block_a.SCREENING_SCHEMA_VERSION, "0.1.1")
-        self.assertEqual(block_a.ROUTING_SCHEMA_VERSION, "0.1.1")
-        self.assertEqual(block_a.SELECTION_POLICY_VERSION, "0.1.3")
-        self.assertEqual(block_a.CANDIDATE_ORDER_VERSION, "0.1.2")
-        self.assertEqual(block_a.CALIBRATION_MANIFEST_VERSION, "0.1.2")
-        self.assertEqual(self.calibration["calibrationManifestVersion"], "0.1.2")
+        self.assertEqual(block_a.ROUTING_SCHEMA_VERSION, "0.1.2")
+        self.assertEqual(block_a.SELECTION_POLICY_VERSION, "0.1.4")
+        self.assertEqual(block_a.CANDIDATE_ORDER_VERSION, "0.1.3")
+        self.assertEqual(block_a.CALIBRATION_MANIFEST_VERSION, "0.1.3")
+        self.assertEqual(block_a.TARGET_COVERAGE_MATRIX_VERSION, "0.1.0")
+        self.assertEqual(self.calibration["calibrationManifestVersion"], "0.1.3")
         self.assertEqual(block_a.DEFAULT_EXHAUSTIVE_TREATMENTS, {"extract_and_evaluate"})
         self.assertEqual(block_a.SEMANTIC_TREATMENTS, {"extract_and_evaluate", "extract_and_monitor"})
         self.assertEqual(self.mapping["mappingVersion"], "0.1.0")
@@ -232,8 +265,8 @@ class PublicationPilot1BlockATests(unittest.TestCase):
             self.assertFalse(row["quotaBearing"])
             self.assertEqual(row["postCalibrationAllowedBlockBPartitions"], ["reserved_diagnostic"])
 
-    def test_quota_amendment_preserves_calibration_and_candidate_identity_orders(self) -> None:
-        """Quota-role provenance cannot change the already-reviewed selection outcome."""
+    def test_corrected_selection_has_stable_identity_order_hashes(self) -> None:
+        """The prospective correction's recomputed selection stays deterministically frozen."""
 
         candidate_projection = {
             paper_id: [row["sourceUnitID"] for row in rows]
@@ -251,8 +284,96 @@ class PublicationPilot1BlockATests(unittest.TestCase):
         ).hexdigest()
         self.assertEqual(sum(map(len, candidate_projection.values())), 215)
         self.assertEqual(len(self.calibration["calibrationSourceUnitIDs"]), 16)
-        self.assertEqual(candidate_hash, FROZEN_CANDIDATE_ID_ORDER_HASH)
-        self.assertEqual(calibration_hash, FROZEN_CALIBRATION_ID_ORDER_HASH)
+        self.assertEqual(candidate_hash, CORRECTED_CANDIDATE_ID_ORDER_HASH)
+        self.assertEqual(calibration_hash, CORRECTED_CALIBRATION_ID_ORDER_HASH)
+
+    def test_real_deferred_routes_are_auditable_but_structurally_unavailable(self) -> None:
+        """Missing exact record bindings filter only deferred targets from effective routing."""
+
+        mapping = {row["operationalTargetID"]: row for row in self.mapping["targets"]}
+        affected = []
+        for route in self.routing:
+            unavailable_ids = {
+                row["operationalTargetID"]
+                for row in route["structurallyUnavailableOperationalTargets"]
+            }
+            if unavailable_ids:
+                affected.append(route["sourceUnitID"])
+            human_ids = set(route["humanScreenedNodeOperationalTargetIDs"]) | set(
+                route["humanScreenedRelationOperationalTargetIDs"]
+            )
+            effective_ids = set(route["eligibleNodeOperationalTargetIDs"]) | set(
+                route["eligibleRelationOperationalTargetIDs"]
+            )
+            self.assertEqual(effective_ids, human_ids - unavailable_ids)
+            self.assertTrue(all(
+                mapping[target_id]["pilotTreatment"] == "deferred_resolution"
+                for target_id in unavailable_ids
+            ))
+            self.assertTrue(all(
+                row["reason"] == block_a.DEFERRED_ROUTE_UNAVAILABLE_REASON
+                for row in route["structurallyUnavailableOperationalTargets"]
+            ))
+        self.assertEqual(len(affected), 10)
+
+    def test_unavailable_deferred_targets_contribute_no_prospective_coverage(self) -> None:
+        """Coverage and selection consume effective routes, never unavailable human routes."""
+
+        unavailable_by_id = {
+            route["sourceUnitID"]: {
+                row["operationalTargetID"]
+                for row in route["structurallyUnavailableOperationalTargets"]
+            }
+            for route in self.routing
+        }
+        with COVERAGE.open(encoding="utf-8", newline="") as handle:
+            coverage = list(csv.DictReader(handle))
+        for row in coverage:
+            unavailable = unavailable_by_id[row["sourceUnitID"]]
+            effective = set(block_a._split_multi(row["eligibleNodeOperationalTargetIDs"])) | set(
+                block_a._split_multi(row["eligibleRelationOperationalTargetIDs"])
+            )
+            self.assertTrue(unavailable.isdisjoint(effective))
+            self.assertEqual(
+                unavailable,
+                set(block_a._split_multi(row["structurallyUnavailableOperationalTargetIDs"])),
+            )
+        unavailable_tokens = {
+            f"target:{row['operationalTargetID']}"
+            for route in self.routing
+            for row in route["structurallyUnavailableOperationalTargets"]
+        }
+        self.assertTrue(unavailable_tokens.isdisjoint(self.calibration["coverageSummary"]))
+        for tokens in self.calibration["selectionRationale"].values():
+            self.assertTrue(unavailable_tokens.isdisjoint(tokens))
+        for rows in self.order["ordersByArtifact"].values():
+            for row in rows:
+                self.assertTrue(unavailable_tokens.isdisjoint(row["coverageContribution"]))
+
+    def test_frozen_human_and_policy_inputs_remain_byte_identical(self) -> None:
+        """Structural recompilation cannot rewrite screening, Gate 0, or quota roles."""
+
+        self.assertEqual(hashlib.sha256(REVIEWED.read_bytes()).hexdigest(), REVIEWED_WORKLIST_HASH)
+        self.assertEqual(hashlib.sha256(GATE0.read_bytes()).hexdigest(), GATE0_POLICY_HASH)
+        self.assertEqual(self.selection["artifactQuotaRoles"]["artifactQuotaRolePolicyVersion"], "0.1.0")
+
+    def test_frozen_phase_b_has_no_stable_deferred_record_ids(self) -> None:
+        """The compiler records the identity gap and never synthesizes a deferred ID."""
+
+        phase_b = json.loads(PHASE_B.read_text(encoding="utf-8"))
+        self.assertEqual(len(phase_b["deferred"]), 175)
+        self.assertTrue(all("deferredRecordID" not in row for row in phase_b["deferred"]))
+        serialized = ROUTING.read_text(encoding="utf-8")
+        self.assertNotIn('"deferredRecordID"', serialized)
+
+    def test_no_production_calibration_annotation_state_exists(self) -> None:
+        """The failed downstream startup retained no calibration annotation state."""
+
+        unexpected = [
+            path for path in (ROOT / "var").rglob("*")
+            if path.is_file() and any(token in path.name.lower() for token in ("calibration", "annotation"))
+        ]
+        self.assertEqual(unexpected, [])
 
     def test_exhaustive_empty_expectation_uses_default_exhaustive_treatment_only(self) -> None:
         """Only routed evaluate targets may carry prospective exhaustive-empty expectations."""
@@ -314,8 +435,8 @@ class PublicationPilot1BlockATests(unittest.TestCase):
             self.assertFalse(schema["additionalProperties"])
         routing_schema = json.loads((ROOT / "schemas/publication_pilot1_unit_routing.schema.json").read_text(encoding="utf-8"))
         fixtures = [json.loads(line) for line in (ROOT / "tests/fixtures/publication_pilot1_block_a_synthetic_routing.jsonl").read_text(encoding="utf-8").splitlines()]
-        for fixture in fixtures:
-            jsonschema.validate(fixture, routing_schema)
+        for record in fixtures + self.routing:
+            jsonschema.validate(record, routing_schema)
         self.assertEqual(fixtures[0]["menuDiagnostics"]["nodeTargetCount"], 13)
 
     def test_selection_policy_is_model_blind_per_artifact_and_block_b_safe(self) -> None:

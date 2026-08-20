@@ -1,8 +1,8 @@
 # Publication Pilot 1 Block A — Screening, Routing, Selection, and Gate 0
 
-**Block A infrastructure version:** 0.1.3
+**Block A infrastructure version:** 0.1.4
 
-**Screening/routing schema versions:** 0.1.1
+**Screening/routing schema versions:** 0.1.1 / 0.1.2
 
 **Status:** Publication Pilot 1 Block A screening/routing and calibration-selection artifacts available for independent review; Gate 0 not yet executed; final sample not frozen
 
@@ -11,21 +11,24 @@
 Artifact versions are intentionally independent:
 
 ```text
-Block A infrastructure       0.1.3
+Block A infrastructure       0.1.4
 screening/schema             0.1.1
-routing/schema               0.1.1
-selection policy             0.1.3
-pre-Gate-0 candidate order   0.1.2
-calibration manifest         0.1.2
+routing/schema               0.1.2
+selection policy             0.1.4
+target coverage matrix       0.1.0
+pre-Gate-0 candidate order   0.1.3
+calibration manifest         0.1.3
 target-family mapping        0.1.0
 target display catalog       0.1.0
 Gate-0 policy                0.1.0
 ```
 
-The mapping, display catalog, and Gate-0 policy remain at 0.1.0 because their content did
-not change in the infrastructure corrections. Screening/routing schemas and future
-Candidate order and calibration manifest are 0.1.2 because both record explicit artifact
-quota-role provenance without changing candidate or calibration membership or order.
+The mapping, display catalog, artifact quota-role policy, and Gate-0 policy remain at
+0.1.0 because their semantics did not change. Screening remains at 0.1.1 because the
+human-reviewed record is unchanged. Routing advances to 0.1.2 to distinguish historical
+human routing from structurally available effective routing. The coverage matrix gains
+an explicit 0.1.0 artifact version; candidate order and calibration manifest advance to
+0.1.3 because they were prospectively recompiled from corrected effective routing.
 
 ## Purpose and inputs
 
@@ -106,7 +109,7 @@ those are the only targets that default to prospective `exhaustive` completeness
 sampling-stratum, primary-candidate, calibration-diversity, and candidate-order coverage,
 but default to `non_exhaustive_monitor` and are rejected from the exhaustive-empty field.
 A future monitored-pair promotion would require an explicit pre-annotation completeness
-decision not present in Block A 0.1.3. Closed, out-of-scope, and deferred-resolution-only
+decision not present in Block A 0.1.4. Closed, out-of-scope, and deferred-resolution-only
 targets also remain rejected.
 
 `likelyRecurringDistinctions` uses only these exact values:
@@ -188,6 +191,18 @@ population coverage, the per-artifact candidate order, and the 16-unit calibrati
 manifest. Synthetic reviewed fixtures are used by tests; no generated semantic labels
 from the real population are test truth.
 
+Routing 0.1.2 separately records `humanScreenedNodeOperationalTargetIDs` and
+`humanScreenedRelationOperationalTargetIDs` as immutable screening provenance. The
+existing `eligibleNodeOperationalTargetIDs` and `eligibleRelationOperationalTargetIDs`
+are the effective operational route consumed downstream. Blocking and monitored targets
+pass through unchanged. A `deferred_resolution` target enters the effective route only
+when the accepted source-unit record supplies at least one exact `deferredRecordRef`.
+Otherwise the target remains visible in the human-screened fields and is recorded in
+`structurallyUnavailableOperationalTargets` with reason
+`deferred_record_binding_absent`; it contributes no prospective coverage and cannot
+influence calibration or candidate ordering. This is a deterministic availability check,
+not a replacement human judgment.
+
 ## Routing and interface contract
 
 Routing means that a target is available for annotation if supported by the source. It
@@ -267,8 +282,27 @@ var/publication_pilot1_screening/exports/publication_pilot1_screening_worklist_r
 SHA-256: 2cba7bdb025f063b0cfbc0b05c375feee341231b34926abe43e7cd9790ce2c01
 ```
 
-Quota-role amendment 0.1.3 changes only post-screening sample/quota handling. It does not
-change screening semantics, the reviewed worklist, any human decision, screening JSONL,
-or routing JSONL. The current stop condition is independent review and pre-Gate-0
-handoff. Gate 0 has not been executed, no Block-B IDs have been selected, the publication
-quota is not frozen, and the final sample remains candidate and unfrozen.
+Quota-role amendment 0.1.3 changed only post-screening sample/quota handling. It did not
+change screening semantics, the reviewed worklist, or any human decision.
+
+Accepted checkpoint `1a6f4a306ac52fbbdff00d2d8803584e6d7de121` exposed an upstream
+availability defect before calibration execution: ten human-screened units routed one or
+more deferred-resolution targets, but none of the 358 accepted source-unit records had a
+`deferredRecordRef`. The frozen Phase B output contains 175 descriptive deferred records
+with `category`, `phaseAField`, `publicationId`, `reason`, `sourceLine`, and `value`, but
+no stable `deferredRecordID`. Therefore no exact resolver binding can be established under
+the frozen contracts, and no identifier is synthesized or inferred from text, proximity,
+publication identity, DOI, or citation data. Stable Phase B deferred-record identity and
+resolver binding remain a dedicated follow-on implementation gap.
+
+Block A 0.1.4 filters those unavailable deferred targets structurally while preserving
+their human-screened history. The reviewed CSV and screening JSONL remain byte-identical;
+no unit was re-screened. No real calibration annotation, timing observation, or model
+exposure occurred before this correction. The prior calibration and candidate selection
+are superseded prospectively before exposure, using the same timing-blind greedy policy.
+Gate 0 has not been executed, no Block-B IDs have been selected, the publication quota is
+not frozen, and the final sample remains candidate and unfrozen. Current stop condition:
+
+```text
+PUBLICATION_PILOT1_BLOCK_A_DEFERRED_ROUTING_CORRECTION_READY_FOR_INDEPENDENT_REVIEW
+```
