@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ciroh.ua.edu/schemas/publication_pilot1_annotation_record.schema.json",
+  "title": "Publication Pilot 1 independent annotation record",
+  "description": "Closed interface-owned human annotation envelope derived from the frozen Publication annotation and candidate contracts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "annotationSchemaVersion", "annotationSessionID", "annotatorID", "sourceArtifactID", "sourceUnitID",
+    "primarySourceUnitID", "contextSourceUnitIDs", "contextPolicyName", "contextPolicyVersion", "contextExposureEvents",
+    "sourceUnitTextHash", "canonicalDocumentHash", "sectionID", "sectionTitle", "authorizedContextUnits",
+    "interfaceVersion", "guidelineVersion", "handbookVersion", "routingVersion", "workflowState",
+    "completenessTreatmentByTarget", "nodes", "relations", "evidenceSpans", "targetStates", "uncertainties"
+  ],
+  "properties": {
+    "annotationSchemaVersion": {"const": "0.1.0"},
+    "annotationSessionID": {"$ref": "#/$defs/nonEmptyString"},
+    "annotatorID": {"$ref": "#/$defs/nonEmptyString"},
+    "sourceArtifactID": {"$ref": "#/$defs/nonEmptyString"},
+    "sourceUnitID": {"$ref": "#/$defs/nonEmptyString"},
+    "primarySourceUnitID": {"$ref": "#/$defs/nonEmptyString"},
+    "contextSourceUnitIDs": {
+      "type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/nonEmptyString"}
+    },
+    "contextPolicyName": {"const": "bounded_human_annotation_context"},
+    "contextPolicyVersion": {"const": "0.1.0"},
+    "contextExposureEvents": {"type": "array", "items": {"$ref": "#/$defs/contextExposure"}},
+    "sourceUnitTextHash": {"$ref": "#/$defs/sha256"},
+    "canonicalDocumentHash": {"$ref": "#/$defs/sha256"},
+    "sectionID": {"$ref": "#/$defs/nonEmptyString"},
+    "sectionTitle": {"$ref": "#/$defs/stringOrNull"},
+    "authorizedContextUnits": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/contextBinding"}},
+    "interfaceVersion": {"const": "publication-pilot1-annotation-calibration/0.1.0"},
+    "guidelineVersion": {"const": "0.1.1"},
+    "handbookVersion": {"const": "0.1.0"},
+    "routingVersion": {"const": "0.1.2"},
+    "workflowState": {"enum": ["reading", "node_pass", "relation_pass", "review", "submitted", "reopened"]},
+    "completenessTreatmentByTarget": {
+      "type": "object",
+      "additionalProperties": {"enum": ["extract_and_evaluate", "extract_and_monitor", "deferred_resolution"]}
+    },
+    "nodes": {"type": "array", "items": {"$ref": "#/$defs/nodeAnnotation"}},
+    "relations": {"type": "array", "items": {"$ref": "#/$defs/relationAnnotation"}},
+    "evidenceSpans": {"type": "array", "items": {"$ref": "#/$defs/evidenceSpan"}},
+    "targetStates": {"type": "array", "items": {"$ref": "#/$defs/targetState"}},
+    "uncertainties": {"type": "array", "items": {"$ref": "#/$defs/uncertainty"}}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "nonEmptyString": {"type": "string", "minLength": 1},
+    "stringOrNull": {"type": ["string", "null"]},
+    "nonEmptyStringOrNull": {"oneOf": [{"$ref": "#/$defs/nonEmptyString"}, {"type": "null"}]},
+    "discoveryScope": {"enum": ["local_unit", "section_context", "document_reconciliation"]},
+    "evidenceIDs": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^evidence-[0-9]{4}$"}
+    },
+    "contextBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourceUnitID", "sourceUnitTextHash", "canonicalDocumentHash", "sectionID", "sectionTitle", "startOffsetInDocument", "endOffsetInDocument", "authorizationScope"],
+      "properties": {
+        "sourceUnitID": {"$ref": "#/$defs/nonEmptyString"},
+        "sourceUnitTextHash": {"$ref": "#/$defs/sha256"},
+        "canonicalDocumentHash": {"$ref": "#/$defs/sha256"},
+        "sectionID": {"$ref": "#/$defs/nonEmptyString"},
+        "sectionTitle": {"$ref": "#/$defs/stringOrNull"},
+        "startOffsetInDocument": {"type": "integer", "minimum": 0},
+        "endOffsetInDocument": {"type": "integer", "minimum": 1},
+        "authorizationScope": {"$ref": "#/$defs/discoveryScope"}
+      }
+    },
+    "contextExposure": {
+      "type": "object", "additionalProperties": false,
+      "required": ["exposureID", "primarySourceUnitID", "contextSourceUnitID", "contextScope", "contextPolicyName", "contextPolicyVersion", "contextSelectionReason", "taskBindingType", "taskBindingID", "exposedAt"],
+      "properties": {
+        "exposureID": {"type": "integer", "minimum": 1},
+        "primarySourceUnitID": {"$ref": "#/$defs/nonEmptyString"},
+        "contextSourceUnitID": {"$ref": "#/$defs/nonEmptyString"},
+        "contextScope": {"enum": ["section_context", "document_reconciliation"]},
+        "contextPolicyName": {"const": "bounded_human_annotation_context"},
+        "contextPolicyVersion": {"const": "0.1.0"},
+        "contextSelectionReason": {"enum": ["same_section_context", "distributed_assertion_evidence", "cross_section_coreference", "relation_endpoint_reconciliation", "document_local_entity_reconciliation"]},
+        "taskBindingType": {"enum": ["operational_target", "unresolved_assertion", null]},
+        "taskBindingID": {"$ref": "#/$defs/nonEmptyStringOrNull"},
+        "exposedAt": {"$ref": "#/$defs/nonEmptyString"}
+      }
+    },
+    "evidenceSpan": {
+      "type": "object", "additionalProperties": false,
+      "required": ["evidenceSpanID", "sourceArtifactID", "sourceUnitID", "sourceUnitTextHash", "canonicalDocumentHash", "sectionID", "sectionTitle", "evidenceText", "startOffsetInUnit", "endOffsetInUnit", "startOffsetInDocument", "endOffsetInDocument", "evidenceHash"],
+      "properties": {
+        "evidenceSpanID": {"type": "string", "pattern": "^evidence-[0-9]{4}$"},
+        "sourceArtifactID": {"$ref": "#/$defs/nonEmptyString"},
+        "sourceUnitID": {"$ref": "#/$defs/nonEmptyString"},
+        "sourceUnitTextHash": {"$ref": "#/$defs/sha256"},
+        "canonicalDocumentHash": {"$ref": "#/$defs/sha256"},
+        "sectionID": {"$ref": "#/$defs/nonEmptyString"},
+        "sectionTitle": {"$ref": "#/$defs/stringOrNull"},
+        "evidenceText": {"$ref": "#/$defs/nonEmptyString"},
+        "startOffsetInUnit": {"type": "integer", "minimum": 0},
+        "endOffsetInUnit": {"type": "integer", "minimum": 1},
+        "startOffsetInDocument": {"type": "integer", "minimum": 0},
+        "endOffsetInDocument": {"type": "integer", "minimum": 1},
+        "evidenceHash": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "nodeAttribute": {
+      "oneOf": [
+        {"$ref": "#/$defs/stringAttribute"},
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["attributeName", "value", "evidenceSpanIDs"],
+          "properties": {
+            "attributeName": {"const": "calibrationStatus"},
+            "value": {"enum": ["calibrated", "default"]},
+            "evidenceSpanIDs": {"$ref": "#/$defs/evidenceIDs"}
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["attributeName", "value", "evidenceSpanIDs"],
+          "properties": {
+            "attributeName": {"const": "fork"},
+            "value": {"type": "boolean"},
+            "evidenceSpanIDs": {"$ref": "#/$defs/evidenceIDs"}
+          }
+        }
+      ]
+    },
+    "stringAttribute": {
+      "type": "object", "additionalProperties": false,
+      "required": ["attributeName", "value", "evidenceSpanIDs"],
+      "properties": {
+        "attributeName": {"enum": ["value", "range", "commitSHA"]},
+        "value": {"$ref": "#/$defs/nonEmptyString"},
+        "evidenceSpanIDs": {"$ref": "#/$defs/evidenceIDs"}
+      }
+    },
+    "nodeAnnotation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidateID", "action", "origin", "operationalTargetID", "ontologyClassID", "className", "label", "labelMode", "normalizedLabelProposal", "identityScope", "artifactScope", "provisionalIdentity", "existingNodeID", "deferredRecordID", "discoveryScope", "distributedEvidenceReason", "attributes", "evidenceSpanIDs"],
+      "properties": {
+        "candidateID": {"type": "string", "pattern": "^node-[0-9]{4}$"},
+        "action": {"enum": ["propose_new", "link_existing"]},
+        "origin": {"enum": ["open_discovery", "deferred_resolution"]},
+        "operationalTargetID": {"$ref": "#/$defs/nonEmptyString"},
+        "ontologyClassID": {"$ref": "#/$defs/nonEmptyString"},
+        "className": {"$ref": "#/$defs/nonEmptyString"},
+        "label": {"$ref": "#/$defs/nonEmptyString"},
+        "labelMode": {"const": "verbatim"},
+        "normalizedLabelProposal": {"$ref": "#/$defs/stringOrNull"},
+        "identityScope": {"enum": ["source_local", "exact_existing_endpoint", "resolver_pending"]},
+        "artifactScope": {"enum": ["source_artifact", "external_artifact"]},
+        "provisionalIdentity": {"type": "boolean"},
+        "existingNodeID": {"$ref": "#/$defs/nonEmptyStringOrNull"},
+        "deferredRecordID": {"$ref": "#/$defs/nonEmptyStringOrNull"},
+        "discoveryScope": {"$ref": "#/$defs/discoveryScope"},
+        "distributedEvidenceReason": {"$ref": "#/$defs/nonEmptyStringOrNull"},
+        "attributes": {"type": "array", "items": {"$ref": "#/$defs/nodeAttribute"}},
+        "evidenceSpanIDs": {"$ref": "#/$defs/evidenceIDs"}
+      }
+    },
+    "endpoint": {
+      "type": "object", "additionalProperties": false,
+      "required": ["referenceType", "referenceID", "artifactID"],
+      "properties": {
+        "referenceType": {"enum": ["candidate_node", "deterministic_node"]},
+        "referenceID": {"$ref": "#/$defs/nonEmptyString"},
+        "artifactID": {"$ref": "#/$defs/stringOrNull"}
+      }
+    },
+    "relationAnnotation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidateID", "action", "origin", "operationalRelationID", "ontologyRelationID", "relationName", "relationScope", "source", "target", "deferredRecordID", "discoveryScope", "distributedEvidenceReason", "evidenceSpanIDs"],
+      "properties": {
+        "candidateID": {"type": "string", "pattern": "^edge-[0-9]{4}$"},
+        "action": {"enum": ["propose_edge", "resolve_deferred"]},
+        "origin": {"enum": ["open_discovery", "deferred_resolution"]},
+        "operationalRelationID": {"$ref": "#/$defs/nonEmptyString"},
+        "ontologyRelationID": {"$ref": "#/$defs/nonEmptyString"},
+        "relationName": {"$ref": "#/$defs/nonEmptyString"},
+        "relationScope": {"enum": ["intra_source", "inter_source"]},
+        "source": {"$ref": "#/$defs/endpoint"},
+        "target": {"$ref": "#/$defs/endpoint"},
+        "deferredRecordID": {"$ref": "#/$defs/nonEmptyStringOrNull"},
+        "discoveryScope": {"$ref": "#/$defs/discoveryScope"},
+        "distributedEvidenceReason": {"$ref": "#/$defs/nonEmptyStringOrNull"},
+        "evidenceSpanIDs": {"$ref": "#/$defs/evidenceIDs"}
+      }
+    },
+    "targetState": {
+      "type": "object", "additionalProperties": false,
+      "required": ["operationalTargetID", "state"],
+      "properties": {
+        "operationalTargetID": {"$ref": "#/$defs/nonEmptyString"},
+        "state": {"enum": ["reviewed_positive", "reviewed_no_positive", "monitored_review_complete", "deferred_task_review_complete", "abstained"]}
+      }
+    },
+    "uncertainty": {
+      "type": "object", "additionalProperties": false,
+      "required": ["uncertaintyID", "operationalTargetID", "category", "note", "evidenceSpanIDs"],
+      "properties": {
+        "uncertaintyID": {"type": "string", "pattern": "^uncertainty-[0-9]{4}$"},
+        "operationalTargetID": {"$ref": "#/$defs/nonEmptyString"},
+        "category": {"enum": ["ambiguous_class", "ambiguous_relation", "ambiguous_atomicity", "insufficient_evidence", "unresolved_endpoint", "source_conversion_problem", "possible_local_duplicate", "target_boundary_unclear"]},
+        "note": {"type": "string"},
+        "evidenceSpanIDs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^evidence-[0-9]{4}$"}}
+      }
+    }
+  },
+  "x-ciroh-contract": {
+    "candidateFieldAuthority": "schemas/publication_candidate_output.schema.json",
+    "evidenceRule": "No supported evidence span means no accepted semantic assertion.",
+    "offsetUnit": "Unicode code points",
+    "offsetInterval": "zero-based half-open"
+  }
+}
