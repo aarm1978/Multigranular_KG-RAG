@@ -355,9 +355,16 @@ class AnnotationStore:
         } for row in self.connection.execute(
             "SELECT source_unit_id,payload,status,revision_number,updated_at FROM drafts ORDER BY source_unit_id"
         )]
-        submissions = [dict(row) for row in self.connection.execute(
-            "SELECT submission_id,source_unit_id,revision_number,submitted_at FROM submissions ORDER BY submission_id"
-        )]
+        revisions = [{
+            "revisionID": int(row["revision_id"]), "sourceUnitID": str(row["source_unit_id"]),
+            "revisionNumber": int(row["revision_number"]), "annotation": json.loads(row["payload"]),
+            "action": str(row["action"]), "createdAt": str(row["created_at"]),
+        } for row in self.connection.execute("SELECT * FROM revisions ORDER BY revision_id")]
+        submissions = [{
+            "submissionID": int(row["submission_id"]), "sourceUnitID": str(row["source_unit_id"]),
+            "revisionNumber": int(row["revision_number"]), "annotation": json.loads(row["payload"]),
+            "submittedAt": str(row["submitted_at"]),
+        } for row in self.connection.execute("SELECT * FROM submissions ORDER BY submission_id")]
         actions = [dict(row) for row in self.connection.execute(
             "SELECT action_id,source_unit_id,action,detail,created_at FROM audit_actions ORDER BY action_id"
         )]
@@ -372,6 +379,7 @@ class AnnotationStore:
             "routingVersion": ROUTING_VERSION,
             "contextPolicyName": CONTEXT_POLICY_NAME, "contextPolicyVersion": CONTEXT_POLICY_VERSION,
             "annotations": annotations,
-            "submissions": submissions, "auditActions": actions, "timingEvents": timing,
+            "revisions": revisions, "submissions": submissions,
+            "auditActions": actions, "timingEvents": timing,
             "contextExposures": self.context_exposures(),
         }

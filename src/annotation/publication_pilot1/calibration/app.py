@@ -12,7 +12,13 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from ..contracts import sha256_file
-from .contracts import AnnotationContractError, canonical_json_hash, load_annotation_contracts
+from .contracts import (
+    ANNOTATION_MVP_BASE_CHECKPOINT,
+    AnnotationContractError,
+    canonical_json_hash,
+    load_annotation_contracts,
+    verify_production_activation,
+)
 from .service import AnnotationService
 from .store import AnnotationStore
 
@@ -138,6 +144,12 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
     root = repository_root()
     activation = None if args.activation_file is None else Path(args.activation_file).resolve()
     contracts = load_annotation_contracts(root, mode=args.mode, activation_path=activation)
+    activation_payload = None
+    if args.mode == "calibration":
+        activation_payload = verify_production_activation(
+            activation, root, annotator_id=args.annotator_id,
+            annotation_session_id=args.annotation_session_id,
+        )
     namespace = "synthetic" if args.mode == "synthetic" else "calibration/production"
     runtime = root / "var/publication_pilot1_annotation" / namespace
     state_path = runtime / "sessions" / f"{_safe_component(args.annotation_session_id)}.sqlite3"
@@ -151,7 +163,11 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
         "annotationSchemaHash": sha256_file(root / "schemas/publication_pilot1_annotation_record.schema.json"),
         "canonicalDocumentHashesHash": canonical_json_hash(dict(contracts.canonical_document_hashes)),
         "phaseBArtifactHash": contracts.hashes["data/interim/papers/publication_nodes_edges.json"],
+        "annotationMVPBaseCheckpoint": ANNOTATION_MVP_BASE_CHECKPOINT,
     }
+    if activation_payload is not None:
+        bindings["activationHash"] = canonical_json_hash(activation_payload)
+        bindings["packageBuildCheckpoint"] = str(activation_payload["packageBuildCheckpoint"])
     store = AnnotationStore(
         state_path, mode=args.mode, annotation_session_id=args.annotation_session_id,
         annotator_id=args.annotator_id, bindings=bindings,

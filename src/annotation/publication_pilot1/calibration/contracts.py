@@ -16,13 +16,23 @@ from typing import Any, Mapping, Sequence
 import yaml
 
 from ..contracts import _canonical_text, sha256_file
-from . import GUIDELINE_VERSION, HANDBOOK_VERSION, INTERFACE_VERSION, ROUTING_VERSION
+from . import (
+    ANNOTATION_OUTPUT_SCHEMA_VERSION,
+    CONTEXT_POLICY_NAME,
+    CONTEXT_POLICY_VERSION,
+    GUIDELINE_VERSION,
+    HANDBOOK_VERSION,
+    INTERFACE_VERSION,
+    ROUTING_VERSION,
+)
 
 
 CALIBRATION_ID_ORDER_HASH = "182710041594edb979dcfd8e39041cf98523e383c9f3498ac1d74293d0378b98"
 CANDIDATE_ID_ORDER_HASH = "e95429c597fc6de4256c9a69343e1cda52d8b9414571264d90fc3087a1c4a40b"
 ACTIVATION_PHRASE = "ACTIVATE_PUBLICATION_PILOT1_CALIBRATION_V1"
 REGRESSION_SOURCE_UNIT_ID = "pub:34:sec:0028:unit:0001"
+ANNOTATION_MVP_BASE_CHECKPOINT = "a67c5f3d70a3f4a71f79561646572781eeae89b4"
+ACTIVATION_SCHEMA_VERSION = "0.1.0"
 
 PROTECTED_HASHES = {
     "data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl": "7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e",
@@ -443,8 +453,53 @@ def _synthetic_contracts(root: Path, hashes: Mapping[str, str]) -> AnnotationCon
     )
 
 
-def _verify_activation(path: Path | None) -> None:
-    """Require an exact version-bound local activation document."""
+def production_activation_payload(
+    root: Path, annotator_id: str, annotation_session_id: str, *, package_build_checkpoint: str,
+) -> dict[str, Any]:
+    """Build the exact deterministic researcher-issued production activation payload."""
+
+    annotator = annotator_id.strip(); session = annotation_session_id.strip()
+    if not annotator or not session:
+        raise AnnotationContractError("CALIBRATION_ACTIVATION_IDENTITY_REQUIRED")
+    if len(package_build_checkpoint) != 40 or any(character not in "0123456789abcdef" for character in package_build_checkpoint):
+        raise AnnotationContractError("CALIBRATION_PACKAGE_BUILD_CHECKPOINT_INVALID")
+    hashes = verify_protected_hashes(root)
+    calibration_manifest = json.loads(
+        (root / "data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json").read_text(encoding="utf-8")
+    )
+    return {
+        "activationSchemaVersion": ACTIVATION_SCHEMA_VERSION,
+        "activation": ACTIVATION_PHRASE,
+        "mode": "calibration",
+        "annotationMVPBaseCheckpoint": ANNOTATION_MVP_BASE_CHECKPOINT,
+        "packageBuildCheckpoint": package_build_checkpoint,
+        "annotatorID": annotator,
+        "annotationSessionID": session,
+        "interfaceVersion": INTERFACE_VERSION,
+        "annotationSchemaVersion": ANNOTATION_OUTPUT_SCHEMA_VERSION,
+        "guidelineVersion": GUIDELINE_VERSION,
+        "guidelineHash": hashes["docs/publication_annotation_adjudication_guidelines.md"],
+        "handbookVersion": HANDBOOK_VERSION,
+        "routingVersion": ROUTING_VERSION,
+        "contextPolicyName": CONTEXT_POLICY_NAME,
+        "contextPolicyVersion": CONTEXT_POLICY_VERSION,
+        "calibrationCount": 16,
+        "calibrationManifestVersion": calibration_manifest["calibrationManifestVersion"],
+        "calibrationIdentityOrderHash": CALIBRATION_ID_ORDER_HASH,
+        "sourceUnitInventoryHash": hashes["data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl"],
+        "calibrationManifestHash": hashes["data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json"],
+        "routingHash": hashes["data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl"],
+        "gate0PolicyHash": hashes["data/curation/papers/pilot1/publication_pilot1_gate0_policy.yaml"],
+        "annotationSchemaHash": sha256_file(root / "schemas/publication_pilot1_annotation_record.schema.json"),
+        "handbookHash": sha256_file(root / "docs/publication_pilot1_annotation_calibration_handbook.md"),
+    }
+
+
+def verify_production_activation(
+    path: Path | None, root: Path, *, annotator_id: str | None = None,
+    annotation_session_id: str | None = None, expected_package_build_checkpoint: str | None = None,
+) -> dict[str, Any]:
+    """Require exact checkpoint, identity, version, and input bindings before production state."""
 
     if path is None or not path.is_file():
         raise AnnotationContractError("CALIBRATION_PRODUCTION_ACTIVATION_REQUIRED")
@@ -452,13 +507,19 @@ def _verify_activation(path: Path | None) -> None:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError) as exc:
         raise AnnotationContractError("CALIBRATION_PRODUCTION_ACTIVATION_INVALID") from exc
-    expected = {
-        "activation": ACTIVATION_PHRASE, "interfaceVersion": INTERFACE_VERSION,
-        "guidelineVersion": GUIDELINE_VERSION, "handbookVersion": HANDBOOK_VERSION,
-        "routingVersion": ROUTING_VERSION, "calibrationIdentityOrderHash": CALIBRATION_ID_ORDER_HASH,
-    }
+    payload_annotator = payload.get("annotatorID") if annotator_id is None else annotator_id
+    payload_session = payload.get("annotationSessionID") if annotation_session_id is None else annotation_session_id
+    package_checkpoint = (
+        payload.get("packageBuildCheckpoint")
+        if expected_package_build_checkpoint is None else expected_package_build_checkpoint
+    )
+    expected = production_activation_payload(
+        root, str(payload_annotator or ""), str(payload_session or ""),
+        package_build_checkpoint=str(package_checkpoint or ""),
+    )
     if payload != expected:
         raise AnnotationContractError("CALIBRATION_PRODUCTION_ACTIVATION_BINDING_MISMATCH")
+    return payload
 
 
 def load_annotation_contracts(root: Path, *, mode: str = "synthetic", activation_path: Path | None = None) -> AnnotationContracts:
@@ -470,7 +531,7 @@ def load_annotation_contracts(root: Path, *, mode: str = "synthetic", activation
         return _synthetic_contracts(root, hashes)
     if mode != "calibration":
         raise AnnotationContractError(f"ANNOTATION_MODE_UNKNOWN:{mode}")
-    _verify_activation(activation_path)
+    verify_production_activation(activation_path, root)
     manifest = json.loads((root / "data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json").read_text(encoding="utf-8"))
     order_ids = tuple(manifest["calibrationSourceUnitIDs"])
     if len(order_ids) != 16 or len(set(order_ids)) != 16:

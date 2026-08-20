@@ -15,7 +15,6 @@ from unittest.mock import patch
 from jsonschema import Draft202012Validator
 
 from src.annotation.publication_pilot1.calibration.contracts import (
-    ACTIVATION_PHRASE,
     CALIBRATION_ID_ORDER_HASH,
     CANDIDATE_ID_ORDER_HASH,
     PRIVATE_SCREENING_HASH,
@@ -26,6 +25,7 @@ from src.annotation.publication_pilot1.calibration.contracts import (
     AnnotationContracts,
     canonical_json_hash,
     load_annotation_contracts,
+    production_activation_payload,
     validate_effective_route,
     verify_protected_hashes,
 )
@@ -137,12 +137,10 @@ class AnnotationCalibrationTests(unittest.TestCase):
         """Write an exact temporary activation binding used only for read-only integrity loading."""
 
         path = self.runtime / "activation.json"
-        path.write_text(json.dumps({
-            "activation": ACTIVATION_PHRASE,
-            "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.0",
-            "guidelineVersion": "0.1.1", "handbookVersion": "0.1.0",
-            "routingVersion": "0.1.2", "calibrationIdentityOrderHash": CALIBRATION_ID_ORDER_HASH,
-        }), encoding="utf-8")
+        path.write_text(json.dumps(production_activation_payload(
+            ROOT, "synthetic-integrity-reviewer", "synthetic-integrity-session",
+            package_build_checkpoint="f" * 40,
+        )), encoding="utf-8")
         return path
 
     def test_exact_source_reconstruction_and_hash(self) -> None:
