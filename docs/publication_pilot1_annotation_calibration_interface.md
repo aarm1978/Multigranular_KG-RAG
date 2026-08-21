@@ -7,10 +7,10 @@ This synthetic/dry-run MVP is isolated under
 Screening Mode. It uses Python stdlib HTTP, vanilla JavaScript/CSS, SQLite, and the
 existing PyYAML dependency, with no network service, LLM, web search, or telemetry.
 
-- interface: `publication-pilot1-annotation-calibration/0.1.0`
-- annotation output schema: `0.1.0`
+- interface: `publication-pilot1-annotation-calibration/0.1.1`
+- annotation output schema: `0.1.1`
 - annotation guideline: `0.1.1`
-- operational annotation handbook: `0.1.0`
+- operational annotation handbook: `0.1.1`
 - effective routing: `0.1.2`
 
 The new handbook is required because the existing handbook governs screening, not
@@ -45,9 +45,9 @@ exact activation document:
 ```json
 {
   "activation": "ACTIVATE_PUBLICATION_PILOT1_CALIBRATION_V1",
-  "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.0",
+  "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.1",
   "guidelineVersion": "0.1.1",
-  "handbookVersion": "0.1.0",
+  "handbookVersion": "0.1.1",
   "routingVersion": "0.1.2",
   "calibrationIdentityOrderHash": "182710041594edb979dcfd8e39041cf98523e383c9f3498ac1d74293d0378b98"
 }
@@ -72,6 +72,12 @@ converts browser UTF-16 indices to zero-based half-open Unicode code-point offse
 rejects offsets inside surrogate pairs, and round-trips selected text. The server then
 requires `sourceText[start:end] == exactText` under Python code-point semantics and
 derives document offsets and evidence hashes.
+
+Each node also stores one independently validated `mentionSpan` with the same exact
+source-unit, document, hash, and Unicode code-point provenance. This span identifies the
+literal node mention; it does not replace or imply the separately required supporting
+evidence. Node discovery scope is derived from the union of its mention, node evidence,
+and attribute evidence source units.
 
 ## Canonical context and discovery scope
 

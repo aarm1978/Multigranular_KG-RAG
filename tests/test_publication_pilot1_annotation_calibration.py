@@ -116,7 +116,8 @@ class AnnotationCalibrationTests(unittest.TestCase):
 
         return {
             "localID": local_id, "operationalTargetID": target_id, "action": "propose_new",
-            "existingNodeID": None, "deferredRecordID": None, "evidence": [self.span(literal)],
+            "existingNodeID": None, "deferredRecordID": None, "mentionSpan": self.span(literal),
+            "evidence": [self.span(literal)],
         }
 
     def store(self, name: str, annotator: str = "annotator-a", clock=None) -> AnnotationStore:
@@ -235,6 +236,81 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         self.assertEqual(len(result["nodes"][0]["evidenceSpanIDs"]), 2)
         self.assertEqual(result["evidenceSpans"][0]["evidenceText"], "method")
 
+    def test_tool_mention_is_distinct_from_supporting_evidence(self) -> None:
+        """The smoke-test Tool has exact identity without treating its mention as class support."""
+
+        payload = self.payload()
+        node = self.node(
+            "node-0001", "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE", "hydroGOF"
+        )
+        node["evidence"] = [self.span("we used the R package hydroGOF")]
+        payload["nodes"] = [node]
+        normalized = validate_annotation(
+            self.contracts, self.unit_id, payload, annotation_session_id="s", annotator_id="a"
+        )
+        result = normalized["nodes"][0]
+        self.assertEqual(result["mentionSpan"]["exactText"], "hydroGOF")
+        self.assertEqual(result["label"], "hydroGOF")
+        support = normalized["evidenceSpans"][int(result["evidenceSpanIDs"][0][-4:]) - 1]
+        self.assertEqual(support["evidenceText"], "we used the R package hydroGOF")
+
+    def test_node_mention_is_required_and_not_inferred_from_evidence(self) -> None:
+        """Supporting prose cannot stand in for an explicit exact RMSE identity span."""
+
+        payload = self.payload(); node = self.node("node-0001", "PUB-N-A-DOM11-EVALUATIONMETRIC", "RMSE")
+        node["evidence"] = [self.span("produced")]; node.pop("mentionSpan"); payload["nodes"] = [node]
+        with self.assertRaisesRegex(AnnotationContractError, "ANNOTATION_NODE_MENTION_REQUIRED"):
+            validate_annotation(self.contracts, self.unit_id, payload, annotation_session_id="s", annotator_id="a")
+
+    def test_invalid_node_mentions_fail_closed(self) -> None:
+        """Mention hashes, code-point slices, literal text, and context authorization are independent checks."""
+
+        base = self.node("node-0001", "PUB-N-A-DOM11-EVALUATIONMETRIC", "RMSE")
+        mutations = []
+        wrong_hash = dict(base["mentionSpan"]); wrong_hash["sourceUnitTextHash"] = "0" * 64
+        mutations.append((wrong_hash, "ANNOTATION_NODE_MENTION_SOURCE_UNIT_HASH_MISMATCH"))
+        wrong_offset = dict(base["mentionSpan"]); wrong_offset["endOffset"] = len(self.text) + 1
+        mutations.append((wrong_offset, "ANNOTATION_NODE_MENTION_CODEPOINT_RANGE_INVALID"))
+        wrong_text = dict(base["mentionSpan"]); wrong_text["exactText"] = "RMSX"
+        mutations.append((wrong_text, "ANNOTATION_NODE_MENTION_EXACT_TEXT_MISMATCH"))
+        unauthorized = self.span("rainfall data", self.contracts.unit_order[1])
+        mutations.append((unauthorized, "ANNOTATION_NODE_MENTION_CONTEXT_NOT_AUTHORIZED"))
+        for mention, code in mutations:
+            payload = self.payload(); node = dict(base); node["mentionSpan"] = mention; payload["nodes"] = [node]
+            with self.subTest(code=code), self.assertRaisesRegex(AnnotationContractError, code):
+                validate_annotation(self.contracts, self.unit_id, payload, annotation_session_id="s", annotator_id="a")
+
+    def test_context_node_mention_sets_effective_discovery_scope(self) -> None:
+        """An actually cited exposed mention, not exposure alone, raises the node scope."""
+
+        context_id = "synthetic:publication:context:0001"
+        payload = self.payload(); node = self.node("node-0001", "PUB-N-A-DOM11-EVALUATIONMETRIC", "RMSE")
+        node["mentionSpan"] = self.span("reported value", context_id)
+        node["evidence"] = [self.span("0.82", context_id)]
+        node["discoveryScope"] = "section_context"; payload["nodes"] = [node]
+        result = validate_annotation(
+            self.contracts, self.unit_id, payload, annotation_session_id="s", annotator_id="a",
+            context_exposures=self.exposures(context_id),
+        )
+        self.assertEqual(result["nodes"][0]["discoveryScope"], "section_context")
+
+    def test_ui_uses_mentions_neutral_controls_and_mode_aware_copy(self) -> None:
+        """Static UI wiring closes positive defaults and shows anchored local endpoints."""
+
+        app = (ROOT / "src/annotation/publication_pilot1/calibration/static/app.js").read_text()
+        page = (ROOT / "src/annotation/publication_pilot1/calibration/static/index.html").read_text()
+        for placeholder in (
+            "Select node type...", "Select identity action...", "Select relation...",
+            "Select uncertainty target...", "Select uncertainty category...",
+        ):
+            self.assertIn(placeholder, app)
+        self.assertIn("node.mentionSpan.exactText", app)
+        self.assertIn("Select a calibration unit to begin.", app)
+        self.assertIn("Set node mention from highlight", page)
+        self.assertIn('id="add-node" disabled', page)
+        self.assertNotIn("code points</small>", app)
+        self.assertNotIn("activeContext.sourceUnitTextHash}`", app)
+
     def test_authorized_context_scopes_and_distributed_evidence(self) -> None:
         """Narrowest scope is derived from exact authorized unit bindings."""
 
@@ -243,6 +319,7 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         payload = self.payload()
         section_node = self.node("node-0001", "PUB-N-A-DOM11-EVALUATIONMETRIC", "RMSE")
         section_node["evidence"] = [self.span("reported value", section_id)]
+        section_node["distributedEvidenceReason"] = "The named metric and reported value occur in separate units."
         section_node["discoveryScope"] = "section_context"
         payload["nodes"] = [section_node]
         result = validate_annotation(
@@ -253,6 +330,7 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
 
         document_node = self.node("node-0001", "PUB-N-A-DOM12-PARAMETER", "flow")
         document_node["evidence"] = [self.span("default parameter", document_id)]
+        document_node["distributedEvidenceReason"] = "The node mention and support occur in separate units."
         document_node["discoveryScope"] = "document_reconciliation"
         payload["nodes"] = [document_node]
         result = validate_annotation(
@@ -359,6 +437,7 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         payload = self.payload()
         node = self.node("node-0001", "PUB-N-A-P13-METHOD", "method")
         node["evidence"] = [self.span("supplies context", context_only_id)]
+        node["distributedEvidenceReason"] = "The mention and classification context occur in separate units."
         payload["nodes"] = [node]
         saved = service.save(self.unit_id, payload)
         self.assertEqual(saved["nodes"][0]["discoveryScope"], "section_context")
@@ -431,6 +510,7 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         local = self.payload(); local["nodes"] = [self.node("node-0001", "PUB-N-A-P13-METHOD", "method")]
         self.assertEqual(service.save(self.unit_id, local)["nodes"][0]["discoveryScope"], "local_unit")
         local["nodes"][0]["evidence"] = [self.span("default parameter", selected)]
+        local["nodes"][0]["distributedEvidenceReason"] = "The mention and support occur in separate units."
         self.assertEqual(service.save(self.unit_id, local)["nodes"][0]["discoveryScope"], "document_reconciliation")
         local["nodes"][0]["evidence"] = [self.span("later discussion", still_hidden)]
         with self.assertRaisesRegex(AnnotationContractError, "ANNOTATION_CONTEXT_UNIT_NOT_AUTHORIZED"):
@@ -561,6 +641,11 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
             "action": "propose_new",
             "existingNodeID": None,
             "deferredRecordID": None,
+            "mentionSpan": {
+                "sourceUnitID": unit_id,
+                "sourceUnitTextHash": self.contracts.units_by_id[unit_id]["textHash"],
+                "startOffset": start, "endOffset": start + len(literal), "exactText": literal,
+            },
             "evidence": [{
                 "sourceUnitID": unit_id,
                 "sourceUnitTextHash": self.contracts.units_by_id[unit_id]["textHash"],
@@ -669,6 +754,7 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         section_id = "synthetic:publication:context:0001"
         metric = self.node("node-0001", "PUB-N-A-DOM11-EVALUATIONMETRIC", "RMSE")
         metric["evidence"] = [self.span("reported value", section_id)]
+        metric["distributedEvidenceReason"] = "The metric mention and value occur in separate units."
         metric["attributes"] = [{"attributeName": "value", "value": "0.82", "evidence": [self.span("0.82", section_id)]}]
         parameter = self.node("node-0002", "PUB-N-A-DOM12-PARAMETER", "flow")
         parameter["evidence"] = [self.span("parameter range", section_id)]
@@ -818,6 +904,7 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         payload = self.payload(); payload["nodes"] = [{
             "localID": "node-0001", "operationalTargetID": "PUB-N-A-P13-METHOD", "action": "propose_new",
             "existingNodeID": None, "deferredRecordID": None,
+            "mentionSpan": self.span("method"),
             "evidence": [{
                 "sourceUnitID": self.unit_id,
                 "sourceUnitTextHash": self.contracts.units_by_id[self.unit_id]["textHash"],
@@ -953,8 +1040,8 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
 
         schema = json.loads((ROOT / "schemas/publication_pilot1_annotation_record.schema.json").read_text())
         handbook = (ROOT / "docs/publication_pilot1_annotation_calibration_handbook.md").read_text()
-        self.assertEqual(schema["properties"]["annotationSchemaVersion"]["const"], "0.1.0")
-        self.assertIn("**Handbook version:** 0.1.0", handbook); self.assertIn("No supported evidence span", handbook)
+        self.assertEqual(schema["properties"]["annotationSchemaVersion"]["const"], "0.1.1")
+        self.assertIn("**Handbook version:** 0.1.1", handbook); self.assertIn("No supported evidence span", handbook)
 
     def test_hardened_annotation_schema_validates_normalized_nested_records(self) -> None:
         """Draft 2020-12 schema is valid, accepts output, and closes nested records."""
@@ -969,6 +1056,10 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         malformed = json.loads(json.dumps(normalized)); malformed["nodes"][0]["arbitraryProperty"] = True
         self.assertTrue(list(validator.iter_errors(malformed)))
         malformed = json.loads(json.dumps(normalized)); malformed["evidenceSpans"][0].pop("sourceUnitTextHash")
+        self.assertTrue(list(validator.iter_errors(malformed)))
+        malformed = json.loads(json.dumps(normalized)); malformed["nodes"][0].pop("mentionSpan")
+        self.assertTrue(list(validator.iter_errors(malformed)))
+        malformed = json.loads(json.dumps(normalized)); malformed["nodes"][0]["mentionSpan"]["arbitrary"] = True
         self.assertTrue(list(validator.iter_errors(malformed)))
 
 

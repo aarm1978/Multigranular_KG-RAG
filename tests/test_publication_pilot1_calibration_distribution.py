@@ -25,9 +25,11 @@ from src.annotation.publication_pilot1.calibration.distribution import (
     _authorized_private_package_files,
     _copy_package_path,
     _git_build_checkpoint,
+    _export_launcher_text,
     _launcher_text,
     _package_source_paths,
     _selected_package_files,
+    _python_discovery_shell,
     _tracked_files_at_checkpoint,
     build_distribution_package,
     build_export_bundle,
@@ -95,7 +97,9 @@ class CalibrationDistributionTests(unittest.TestCase):
             "targetStates": states, "uncertainties": [],
         }
 
-    def completed_service(self, annotator_id: str, session_id: str) -> AnnotationService:
+    def completed_service(
+        self, annotator_id: str, session_id: str, *, include_anchored_node: bool = False,
+    ) -> AnnotationService:
         """Create and complete one discarded independent annotation store."""
 
         store = AnnotationStore(
@@ -120,7 +124,29 @@ class CalibrationDistributionTests(unittest.TestCase):
                 "node_pass_completed", "relation_pass_started", "relation_pass_completed", "review_started",
             ):
                 service.timing(source_unit_id, event_type)
-            service.submit(source_unit_id, self.complete_payload(source_unit_id))
+            payload = self.complete_payload(source_unit_id)
+            if include_anchored_node and index == 0:
+                text = self.contracts.source_text(source_unit_id)
+                mention_text, evidence_text = "hydroGOF", "we used the R package hydroGOF"
+
+                def span(literal: str) -> dict[str, object]:
+                    """Return one exact discarded source span."""
+
+                    start = text.index(literal)
+                    return {
+                        "sourceUnitID": source_unit_id,
+                        "sourceUnitTextHash": self.contracts.units_by_id[source_unit_id]["textHash"],
+                        "startOffset": start, "endOffset": start + len(literal), "exactText": literal,
+                    }
+
+                target_id = "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE"
+                payload["nodes"] = [{
+                    "localID": "node-0001", "operationalTargetID": target_id, "action": "propose_new",
+                    "existingNodeID": None, "deferredRecordID": None, "mentionSpan": span(mention_text),
+                    "attributes": [], "evidence": [span(evidence_text)],
+                }]
+                next(row for row in payload["targetStates"] if row["operationalTargetID"] == target_id)["state"] = "reviewed_positive"
+            service.submit(source_unit_id, payload)
         return service
 
     def rewrite_bundle(self, source: Path, destination: Path, mutate) -> None:
@@ -322,6 +348,42 @@ class CalibrationDistributionTests(unittest.TestCase):
         finally:
             connection.close()
 
+    def test_node_mention_survives_bundle_validation_and_master_import(self) -> None:
+        """The exact human node identity is never inferred from support during exchange."""
+
+        service_a = self.completed_service(
+            "discarded-anchor-a", "discarded-anchor-session-a", include_anchored_node=True,
+        )
+        service_b = self.completed_service("discarded-anchor-b", "discarded-anchor-session-b")
+        bundle_a = build_export_bundle(
+            service_a, synthetic_activation_payload(self.contracts, "discarded-anchor-a", "discarded-anchor-session-a"),
+            self.runtime / "anchor-a.zip", gate0_ready=True,
+        )
+        bundle_b = build_export_bundle(
+            service_b, synthetic_activation_payload(self.contracts, "discarded-anchor-b", "discarded-anchor-session-b"),
+            self.runtime / "anchor-b.zip", gate0_ready=True,
+        )
+        validated = validate_export_bundle(bundle_a, self.contracts, require_gate0_ready=True)
+        node = validated["annotations"][0]["annotation"]["nodes"][0]
+        self.assertEqual(node["mentionSpan"]["exactText"], "hydroGOF")
+        self.assertEqual(
+            validated["annotations"][0]["annotation"]["evidenceSpans"][0]["evidenceText"],
+            "we used the R package hydroGOF",
+        )
+        master = import_validated_bundles(
+            [bundle_a, bundle_b], self.contracts, self.runtime / "anchor-master.sqlite3",
+        )
+        connection = sqlite3.connect(master)
+        try:
+            rows = connection.execute("SELECT annotation_json FROM annotations").fetchall()
+            mentions = [
+                node["mentionSpan"]["exactText"]
+                for (encoded,) in rows for node in json.loads(encoded)["annotation"]["nodes"]
+            ]
+            self.assertEqual(mentions, ["hydroGOF"])
+        finally:
+            connection.close()
+
     def test_import_rejects_same_annotator_as_two_independent_bundles(self) -> None:
         """Two session files cannot turn one annotator identity into independence."""
 
@@ -348,6 +410,36 @@ class CalibrationDistributionTests(unittest.TestCase):
         self.assertIn("Python 3.10+", launcher)
         self.assertNotIn("pip install", launcher)
         self.assertNotIn("conda install", launcher)
+
+    def test_mac_python_discovery_skips_incompatible_candidates(self) -> None:
+        """A Python 3.9-first PATH selects the later 3.10-plus dependency-complete candidate."""
+
+        old = self.runtime / "old"; valid = self.runtime / "valid"; old.mkdir(); valid.mkdir()
+        for directory, exit_code in ((old, 1), (valid, 0)):
+            candidate = directory / "python3"
+            candidate.write_text(f"#!/bin/bash\nexit {exit_code}\n", encoding="utf-8")
+            candidate.chmod(0o755)
+        script = "set -euo pipefail\n" + _python_discovery_shell(()) + '\nprintf "%s\\n" "$PYTHON_EXECUTABLE"\n'
+        result = subprocess.run(
+            ["/bin/bash", "-c", script], check=True, capture_output=True, text=True,
+            env={"PATH": f"{old}:{valid}"},
+        )
+        self.assertEqual(result.stdout.strip(), str(valid / "python3"))
+
+    def test_mac_python_discovery_rejects_missing_dependencies_and_no_candidate(self) -> None:
+        """New-but-incomplete and absent interpreter sets fail closed without installing."""
+
+        incomplete = self.runtime / "incomplete"; incomplete.mkdir()
+        candidate = incomplete / "python3"
+        candidate.write_text("#!/bin/bash\nexit 1\n", encoding="utf-8"); candidate.chmod(0o755)
+        script = "set -euo pipefail\n" + _python_discovery_shell(())
+        result = subprocess.run(
+            ["/bin/bash", "-c", script], capture_output=True, text=True, env={"PATH": str(incomplete)},
+        )
+        self.assertEqual(result.returncode, 2); self.assertIn("Python 3.10+", result.stderr)
+        self.assertIn("$PYTHON_EXECUTABLE", _launcher_text("discarded-a", "discarded-session-a"))
+        self.assertIn("$PYTHON_EXECUTABLE", _export_launcher_text("discarded-a", "discarded-session-a", final=False))
+        self.assertIn("$PYTHON_EXECUTABLE", _export_launcher_text("discarded-a", "discarded-session-a", final=True))
 
     def test_real_package_source_paths_exist_in_namespace_package_layout(self) -> None:
         """Every declared package input exists without requiring a src package marker."""
@@ -506,8 +598,8 @@ class CalibrationDistributionTests(unittest.TestCase):
             "packageSchemaVersion": "0.1.0", "annotationMVPBaseCheckpoint": ANNOTATION_MVP_BASE_CHECKPOINT,
             "packageBuildCheckpoint": checkpoint, "annotatorID": "discarded-a",
             "annotationSessionID": "discarded-session-a",
-            "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.0",
-            "annotationSchemaVersion": "0.1.0", "routingVersion": "0.1.2",
+            "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.1",
+            "annotationSchemaVersion": "0.1.1", "routingVersion": "0.1.2",
             "calibrationIdentityOrderHash": "182710041594edb979dcfd8e39041cf98523e383c9f3498ac1d74293d0378b98",
             "gate0PolicyHash": "f" * 64,
             "files": {"activation/calibration_activation.json": hashlib.sha256(activation_path.read_bytes()).hexdigest()},

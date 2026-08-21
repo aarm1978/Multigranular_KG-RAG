@@ -281,6 +281,7 @@ def _validate_annotation_records(
             authorized_ids.add(context_id)
         if unit_id not in authorized_ids or set(annotation["contextSourceUnitIDs"]) != authorized_ids - {unit_id}:
             raise AnnotationContractError(f"CALIBRATION_BUNDLE_CONTEXT_BINDING_SET_MISMATCH:{unit_id}")
+        evidence_by_id = {span["evidenceSpanID"]: span for span in annotation["evidenceSpans"]}
         for span in annotation["evidenceSpans"]:
             context_id = str(span["sourceUnitID"])
             if context_id not in authorized_ids:
@@ -302,6 +303,43 @@ def _validate_annotation_records(
             document = contracts.canonical_document_text(context_id)
             if document[expected_span["startOffsetInDocument"]:expected_span["endOffsetInDocument"]] != exact:
                 raise AnnotationContractError(f"CALIBRATION_BUNDLE_EVIDENCE_DOCUMENT_SLICE_MISMATCH:{context_id}")
+        for node in annotation["nodes"]:
+            mention = node["mentionSpan"]
+            context_id = str(mention["sourceUnitID"])
+            if context_id not in authorized_ids:
+                raise AnnotationContractError(f"CALIBRATION_BUNDLE_MENTION_CONTEXT_UNAUTHORIZED:{context_id}")
+            context = contracts.units_by_id[context_id]; text = contracts.source_text(context_id)
+            start, end = int(mention["startOffsetInUnit"]), int(mention["endOffsetInUnit"])
+            exact = mention["exactText"]
+            expected_mention = {
+                "sourceArtifactID": context["canonicalArtifactID"], "sourceUnitTextHash": context["textHash"],
+                "canonicalDocumentHash": contracts.canonical_document_hash(context_id), "sectionID": context["sectionID"],
+                "sectionTitle": context.get("sectionTitleRaw"),
+                "startOffsetInDocument": int(context["startOffsetInDocument"]) + start,
+                "endOffsetInDocument": int(context["startOffsetInDocument"]) + end,
+                "spanHash": hashlib.sha256(exact.encode("utf-8")).hexdigest(),
+            }
+            if start < 0 or end <= start or end > len(text) or text[start:end] != exact:
+                raise AnnotationContractError(f"CALIBRATION_BUNDLE_MENTION_SLICE_MISMATCH:{context_id}")
+            if any(mention.get(key) != value for key, value in expected_mention.items()):
+                raise AnnotationContractError(f"CALIBRATION_BUNDLE_MENTION_BINDING_DRIFT:{context_id}")
+            if node["label"] != exact or node["labelMode"] != "verbatim":
+                raise AnnotationContractError(f"CALIBRATION_BUNDLE_MENTION_LABEL_DRIFT:{node['candidateID']}")
+            document = contracts.canonical_document_text(context_id)
+            if document[expected_mention["startOffsetInDocument"]:expected_mention["endOffsetInDocument"]] != exact:
+                raise AnnotationContractError(f"CALIBRATION_BUNDLE_MENTION_DOCUMENT_SLICE_MISMATCH:{context_id}")
+            cited_ids = list(node["evidenceSpanIDs"])
+            for attribute in node["attributes"]:
+                cited_ids.extend(attribute["evidenceSpanIDs"])
+            if any(span_id not in evidence_by_id for span_id in cited_ids):
+                raise AnnotationContractError(f"CALIBRATION_BUNDLE_EVIDENCE_REFERENCE_UNKNOWN:{node['candidateID']}")
+            cited_units = [context_id] + [str(evidence_by_id[span_id]["sourceUnitID"]) for span_id in cited_ids]
+            expected_scope = contracts.discovery_scope(unit_id, cited_units, annotation["contextSourceUnitIDs"])
+            if node["discoveryScope"] != expected_scope:
+                raise AnnotationContractError(f"CALIBRATION_BUNDLE_MENTION_DISCOVERY_SCOPE_DRIFT:{node['candidateID']}")
+            distributed = len(set(cited_units)) > 1
+            if distributed != bool(node["distributedEvidenceReason"]):
+                raise AnnotationContractError(f"CALIBRATION_BUNDLE_MENTION_DISTRIBUTED_REASON_DRIFT:{node['candidateID']}")
         if require_submitted and (row.get("status") != "submitted" or annotation["workflowState"] != "submitted"):
             raise AnnotationContractError(f"CALIBRATION_BUNDLE_ANNOTATION_NOT_SUBMITTED:{unit_id}")
         seen.add(unit_id)
@@ -761,6 +799,39 @@ def _copy_package_path(source: Path, root: Path, destination: Path) -> None:
         raise AnnotationContractError(f"CALIBRATION_PACKAGE_REQUIRED_FILE_MISSING:{relative}")
 
 
+def _python_discovery_shell(common_paths: Sequence[str] | None = None) -> str:
+    """Return bounded macOS shell logic selecting one compatible local interpreter."""
+
+    paths = common_paths if common_paths is not None else (
+        "/opt/homebrew/bin/python3", "/usr/local/bin/python3", "/usr/bin/python3",
+        "/Library/Frameworks/Python.framework/Versions/Current/bin/python3",
+    )
+    quoted_paths = " ".join(shlex.quote(path) for path in paths)
+    return f'''select_compatible_python() {{
+  if [ -n "${{PUBLICATION_PILOT1_PYTHON:-}}" ]; then
+    if [ -x "$PUBLICATION_PILOT1_PYTHON" ] && "$PUBLICATION_PILOT1_PYTHON" -c 'import sys; assert sys.version_info >= (3,10); import yaml, jsonschema' >/dev/null 2>&1; then
+      printf '%s\\n' "$PUBLICATION_PILOT1_PYTHON"; return 0
+    fi
+  fi
+  for python_name in python3 python; do
+    while IFS= read -r python_candidate; do
+      if [ -n "$python_candidate" ] && [ -x "$python_candidate" ] && "$python_candidate" -c 'import sys; assert sys.version_info >= (3,10); import yaml, jsonschema' >/dev/null 2>&1; then
+        printf '%s\\n' "$python_candidate"; return 0
+      fi
+    done < <(type -a -p "$python_name" 2>/dev/null || true)
+  done
+  for python_candidate in {quoted_paths}; do
+    if [ -x "$python_candidate" ] && "$python_candidate" -c 'import sys; assert sys.version_info >= (3,10); import yaml, jsonschema' >/dev/null 2>&1; then
+      printf '%s\\n' "$python_candidate"; return 0
+    fi
+  done
+  echo "No compatible local Python found. Python 3.10+ with PyYAML and jsonschema is required; contact the researcher. Nothing was installed." >&2
+  return 2
+}}
+PYTHON_EXECUTABLE="$(select_compatible_python)" || exit 2
+'''
+
+
 def _launcher_text(annotator_id: str, session_id: str) -> str:
     """Return a double-clickable local-only macOS launcher."""
 
@@ -768,20 +839,15 @@ def _launcher_text(annotator_id: str, session_id: str) -> str:
     return f'''#!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")"
-if ! command -v python3 >/dev/null 2>&1; then
-  echo "Python 3 is required. Contact the researcher; nothing was installed." >&2; exit 2
-fi
-python3 -c 'import sys; assert sys.version_info >= (3,10); import yaml, jsonschema' || {{
-  echo "Python 3.10+, PyYAML, and jsonschema are required. Contact the researcher; nothing was installed." >&2; exit 2;
-}}
-python3 -m src.annotation.publication_pilot1.calibration.distribution verify-package --package-root .
-python3 -m src.annotation.publication_pilot1.calibration.app --mode calibration \\
+{_python_discovery_shell()}
+"$PYTHON_EXECUTABLE" -m src.annotation.publication_pilot1.calibration.distribution verify-package --package-root .
+"$PYTHON_EXECUTABLE" -m src.annotation.publication_pilot1.calibration.app --mode calibration \\
   --activation-file activation/calibration_activation.json --annotator-id {annotator} \\
   --annotation-session-id {session} --host 127.0.0.1 --port 8766 &
 server_pid=$!
 trap 'kill "$server_pid" 2>/dev/null || true' EXIT INT TERM
 for attempt in {{1..20}}; do
-  if python3 -c 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8766/api/bootstrap", timeout=0.2)' >/dev/null 2>&1; then break; fi
+  if "$PYTHON_EXECUTABLE" -c 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8766/api/bootstrap", timeout=0.2)' >/dev/null 2>&1; then break; fi
   if ! kill -0 "$server_pid" 2>/dev/null; then echo "Local annotation server failed to start." >&2; wait "$server_pid"; fi
   sleep 0.25
 done
@@ -799,7 +865,8 @@ def _export_launcher_text(annotator_id: str, session_id: str, *, final: bool) ->
 set -euo pipefail
 cd "$(dirname "$0")"
 mkdir -p exports
-python3 -m src.annotation.publication_pilot1.calibration.distribution export-bundle \\
+{_python_discovery_shell()}
+"$PYTHON_EXECUTABLE" -m src.annotation.publication_pilot1.calibration.distribution export-bundle \\
   --activation activation/calibration_activation.json --annotator-id {shlex.quote(annotator_id)} \\
   --annotation-session-id {shlex.quote(session_id)} {flag} \\
   --output exports/publication_pilot1_calibration_{suffix}.zip

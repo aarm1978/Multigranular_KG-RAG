@@ -10,8 +10,11 @@ for semantic and evidence decisions; this document only covers local operation.
 Keep this package and its exports private. Do not inspect, exchange, or compare annotations,
 timing, positive counts, or answers with the second annotator before calibration completion.
 
-The launcher requires macOS, Python 3.10 or newer, PyYAML, and `jsonschema`. It never installs
-or changes Python, Conda, or global packages. If its prerequisite check fails, stop and send
+The launcher requires macOS, Python 3.10 or newer, PyYAML, and `jsonschema`. It checks an
+explicit `PUBLICATION_PILOT1_PYTHON` override first, then every `python3`/`python` on PATH,
+then a bounded set of common macOS locations, and uses the first fully compatible candidate
+for package verification, the app, readiness checks, and exports. It never installs or
+changes Python, Conda, or global packages. If its prerequisite check fails, stop and send
 the displayed message to the researcher. Do not substitute a different package or activation.
 
 ## Start or restart
@@ -51,4 +54,3 @@ Both commands write a ZIP under `exports/`. Return the resulting final ZIP fileâ
 database, unpacked JSON files, or package folderâ€”to the researcher through the agreed private
 transfer method. Keep your package until the researcher confirms that its checksum and content
 were validated and imported.
-

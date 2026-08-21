@@ -1,7 +1,7 @@
 # Publication Pilot 1 Annotation / Calibration Handbook
 
 > **Status:** operational MVP for independent review; not a semantic authority  
-> **Handbook version:** 0.1.0  
+> **Handbook version:** 0.1.1
 > **Binding guideline:** Publication Annotation and Adjudication Guidelines 0.1.1
 
 ## Purpose and authority
@@ -17,8 +17,9 @@ or model knowledge.
 ## Workflow
 
 1. Read the complete unit, then select **Reading complete**.
-2. In the node pass, select the primary unit or an authorized context unit, highlight
-   literal text, and choose one available node category. Add further spans when the same
+2. In the node pass, select the primary unit or an authorized context unit. First highlight
+   the exact node mention and choose **Set node mention from highlight**. Then highlight
+   independently supporting text and choose one available node category. Add further spans when the same
    atomic assertion requires distributed support and briefly record why the units must
    be combined.
 3. In the relation pass, choose the displayed directional relation and compatible
@@ -55,6 +56,16 @@ change discovery scope—only evidence actually cited from that unit does.
 Create one node per atomic semantic unit and use the most specific available concrete
 class. Do not merge by similar names. Link an existing entity only when the interface
 offers an exact deterministic identity.
+
+Every positive node has one exact `mentionSpan`: the literal text that identifies the
+node or atomic proposition. It is not a normalized name and must not be paraphrased. A
+named entity mention is usually its name; a Finding, Claim, or Limitation may use the
+atomic clause it represents. The mention and supporting evidence are separate roles.
+For example, `hydroGOF` can be the Tool mention while `we used the R package hydroGOF`
+supports its Tool classification. They may overlap or be identical when the mention
+alone is sufficient, but neither is inferred from the other. Both must be selected and
+retained explicitly. A mention from bounded context contributes to discovery scope in
+the same way as a cited evidence span.
 
 Only the displayed class-specific structured fields may be recorded:
 `EvaluationMetric.value`; `Parameter.value`, `Parameter.range`, and

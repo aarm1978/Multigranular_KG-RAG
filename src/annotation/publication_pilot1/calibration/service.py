@@ -184,6 +184,13 @@ class AnnotationService:
                 "deferredRecordID": node.get("deferredRecordID"),
                 "discoveryScope": node.get("discoveryScope"),
                 "distributedEvidenceReason": node.get("distributedEvidenceReason"),
+                "mentionSpan": {
+                    "sourceUnitID": node["mentionSpan"]["sourceUnitID"],
+                    "sourceUnitTextHash": node["mentionSpan"]["sourceUnitTextHash"],
+                    "startOffset": node["mentionSpan"]["startOffsetInUnit"],
+                    "endOffset": node["mentionSpan"]["endOffsetInUnit"],
+                    "exactText": node["mentionSpan"]["exactText"],
+                },
                 "attributes": [{
                     "attributeName": attribute["attributeName"], "value": attribute["value"],
                     "evidence": spans(attribute["evidenceSpanIDs"]),

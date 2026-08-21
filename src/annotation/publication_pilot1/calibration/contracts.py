@@ -366,7 +366,7 @@ def _synthetic_contracts(root: Path, hashes: Mapping[str, str]) -> AnnotationCon
     }
     primary_text = (
         "Café flow 😀 was evaluated with RMSE. The method produced a clear finding. "
-        "Repository fork commit abc123."
+        "Repository fork commit abc123; we used the R package hydroGOF."
     )
     section_text = "The reported value was 0.82 and the parameter range was 2–5."
     context_only_text = "A section heading supplies context but is not an open annotation unit."
@@ -385,7 +385,7 @@ def _synthetic_contracts(root: Path, hashes: Mapping[str, str]) -> AnnotationCon
     )
     ids = ("synthetic:publication:unit:0001", "synthetic:publication:unit:0002")
     node_routes = (
-        ["PUB-N-A-P13-METHOD", "PUB-N-A-P16-FINDING", "PUB-N-A-DOM11-EVALUATIONMETRIC", "PUB-N-A-DOM12-PARAMETER", "PUB-N-A-C01-REPOSITORY-NAMED-WITHOUT-EXACT-IDENTITY", "PUB-N-A-P05-BACKGROUND"],
+        ["PUB-N-A-P13-METHOD", "PUB-N-A-P16-FINDING", "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE", "PUB-N-A-DOM11-EVALUATIONMETRIC", "PUB-N-A-DOM12-PARAMETER", "PUB-N-A-C01-REPOSITORY-NAMED-WITHOUT-EXACT-IDENTITY", "PUB-N-A-P05-BACKGROUND"],
         ["PUB-N-A-DOM03C-STATISTICALMODEL", "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE", "PUB-N-A-DOM08-NAMEDPLACE"],
     )
     relation_routes = (

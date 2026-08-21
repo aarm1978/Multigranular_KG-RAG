@@ -107,6 +107,49 @@ def _evidence(
     }
 
 
+def _mention_span(
+    raw: object, *, contracts: AnnotationContracts, primary_source_unit_id: str,
+    exposed_context_ids: Sequence[str],
+) -> dict[str, Any]:
+    """Validate the singular exact textual identity of a human-created node."""
+
+    if not isinstance(raw, Mapping):
+        raise AnnotationContractError("ANNOTATION_NODE_MENTION_OBJECT_REQUIRED")
+    fields = {"sourceUnitID", "sourceUnitTextHash", "startOffset", "endOffset", "exactText"}
+    if set(raw) != fields:
+        raise AnnotationContractError("ANNOTATION_NODE_MENTION_FIELDS_INVALID")
+    source_unit_id = raw["sourceUnitID"]
+    if not isinstance(source_unit_id, str) or source_unit_id not in contracts.authorized_context_ids(
+        primary_source_unit_id, exposed_context_ids
+    ):
+        raise AnnotationContractError("ANNOTATION_NODE_MENTION_CONTEXT_NOT_AUTHORIZED")
+    unit = contracts.units_by_id[source_unit_id]
+    if raw["sourceUnitTextHash"] != unit["textHash"]:
+        raise AnnotationContractError("ANNOTATION_NODE_MENTION_SOURCE_UNIT_HASH_MISMATCH")
+    source_text = contracts.source_text(source_unit_id)
+    start, end, exact = raw["startOffset"], raw["endOffset"], raw["exactText"]
+    if isinstance(start, bool) or isinstance(end, bool) or not isinstance(start, int) or not isinstance(end, int):
+        raise AnnotationContractError("ANNOTATION_NODE_MENTION_OFFSET_TYPE_INVALID")
+    if start < 0 or end <= start or end > len(source_text):
+        raise AnnotationContractError("ANNOTATION_NODE_MENTION_CODEPOINT_RANGE_INVALID")
+    if not isinstance(exact, str) or not exact:
+        raise AnnotationContractError("ANNOTATION_NODE_MENTION_TEXT_REQUIRED")
+    if source_text[start:end] != exact:
+        raise AnnotationContractError("ANNOTATION_NODE_MENTION_EXACT_TEXT_MISMATCH")
+    document_start = int(unit["startOffsetInDocument"]) + start
+    document_end = int(unit["startOffsetInDocument"]) + end
+    if contracts.canonical_document_text(source_unit_id)[document_start:document_end] != exact:
+        raise AnnotationContractError("ANNOTATION_NODE_MENTION_DOCUMENT_SLICE_MISMATCH")
+    return {
+        "sourceArtifactID": unit["canonicalArtifactID"], "sourceUnitID": source_unit_id,
+        "sourceUnitTextHash": unit["textHash"], "canonicalDocumentHash": contracts.canonical_document_hash(source_unit_id),
+        "sectionID": unit["sectionID"], "sectionTitle": unit.get("sectionTitleRaw"),
+        "exactText": exact, "startOffsetInUnit": start, "endOffsetInUnit": end,
+        "startOffsetInDocument": document_start, "endOffsetInDocument": document_end,
+        "spanHash": hashlib.sha256(exact.encode("utf-8")).hexdigest(),
+    }
+
+
 def _class_name(target: Mapping[str, Any]) -> str:
     """Return the one concrete formal class for a node target."""
 
@@ -347,7 +390,7 @@ def validate_annotation(
             raise AnnotationContractError("ANNOTATION_NODE_OBJECT_REQUIRED")
         allowed_fields = {
             "localID", "operationalTargetID", "action", "existingNodeID", "deferredRecordID", "evidence",
-            "attributes", "discoveryScope", "distributedEvidenceReason",
+            "mentionSpan", "attributes", "discoveryScope", "distributedEvidenceReason",
         }
         if set(raw) - allowed_fields:
             raise AnnotationContractError("ANNOTATION_NODE_FIELDS_INVALID")
@@ -379,6 +422,12 @@ def validate_annotation(
             if deferred_id not in (None, ""):
                 raise AnnotationContractError("ANNOTATION_DEFERRED_RECORD_NOT_ROUTED")
             deferred_id, origin = None, "open_discovery"
+        if "mentionSpan" not in raw:
+            raise AnnotationContractError(f"ANNOTATION_NODE_MENTION_REQUIRED:{local_id}")
+        mention_span = _mention_span(
+            raw["mentionSpan"], contracts=contracts, primary_source_unit_id=source_unit_id,
+            exposed_context_ids=exposed_context_ids,
+        )
         raw_evidence = _require_list(raw.get("evidence", []), "ANNOTATION_NODE_EVIDENCE_ARRAY_REQUIRED")
         if not raw_evidence:
             raise AnnotationContractError(f"ANNOTATION_NODE_EVIDENCE_REQUIRED:{local_id}")
@@ -387,7 +436,7 @@ def validate_annotation(
             span_id, evidence = register(item); span_ids.append(span_id); assertion_evidence.append(evidence)
         attributes, attribute_evidence = _attributes(raw.get("attributes", []), class_name, register)
         scope, distributed_reason = _discovery(
-            contracts, source_unit_id, assertion_evidence + attribute_evidence,
+            contracts, source_unit_id, [mention_span] + assertion_evidence + attribute_evidence,
             raw.get("discoveryScope"), raw.get("distributedEvidenceReason"), exposed_context_ids,
         )
         artifact_scope = "external_artifact" if class_name in EXTERNAL_ARTIFACT_CLASSES else "source_artifact"
@@ -396,13 +445,13 @@ def validate_annotation(
         cleaned_nodes.append({
             "candidateID": local_id, "action": action, "origin": origin,
             "operationalTargetID": target_id, "ontologyClassID": target["ontology_ids"][0],
-            "className": class_name, "label": assertion_evidence[0]["evidenceText"], "labelMode": "verbatim",
+            "className": class_name, "label": mention_span["exactText"], "labelMode": "verbatim",
             "normalizedLabelProposal": None,
             "identityScope": "exact_existing_endpoint" if action == "link_existing" else ("resolver_pending" if deferred_id else "source_local"),
             "artifactScope": artifact_scope, "provisionalIdentity": action == "propose_new",
             "existingNodeID": existing_node_id or None, "deferredRecordID": deferred_id,
             "discoveryScope": scope, "distributedEvidenceReason": distributed_reason,
-            "attributes": attributes, "evidenceSpanIDs": span_ids,
+            "mentionSpan": mention_span, "attributes": attributes, "evidenceSpanIDs": span_ids,
         })
         node_ids.add(local_id); node_classes[local_id] = class_name; node_artifact_scopes[local_id] = artifact_scope
         positive_targets.add(str(target_id))
