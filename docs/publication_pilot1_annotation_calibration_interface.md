@@ -7,10 +7,10 @@ This synthetic/dry-run MVP is isolated under
 Screening Mode. It uses Python stdlib HTTP, vanilla JavaScript/CSS, SQLite, and the
 existing PyYAML dependency, with no network service, LLM, web search, or telemetry.
 
-- interface: `publication-pilot1-annotation-calibration/0.1.1`
+- interface: `publication-pilot1-annotation-calibration/0.1.2`
 - annotation output schema: `0.1.1`
 - annotation guideline: `0.1.1`
-- operational annotation handbook: `0.1.1`
+- operational annotation handbook: `0.1.2`
 - effective routing: `0.1.2`
 
 The new handbook is required because the existing handbook governs screening, not
@@ -45,9 +45,9 @@ exact activation document:
 ```json
 {
   "activation": "ACTIVATE_PUBLICATION_PILOT1_CALIBRATION_V1",
-  "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.1",
+  "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.2",
   "guidelineVersion": "0.1.1",
-  "handbookVersion": "0.1.1",
+  "handbookVersion": "0.1.2",
   "routingVersion": "0.1.2",
   "calibrationIdentityOrderHash": "182710041594edb979dcfd8e39041cf98523e383c9f3498ac1d74293d0378b98"
 }

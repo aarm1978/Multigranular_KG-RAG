@@ -1,7 +1,7 @@
 # Publication Pilot 1 Annotation / Calibration Handbook
 
 > **Status:** operational MVP for independent review; not a semantic authority  
-> **Handbook version:** 0.1.1
+> **Handbook version:** 0.1.2
 > **Binding guideline:** Publication Annotation and Adjudication Guidelines 0.1.1
 
 ## Purpose and authority
@@ -52,6 +52,14 @@ completeness task. To inspect another section, choose one primary-unit routed ta
 the narrowest displayed reconciliation reason. Each request loads only the selected
 canonical unit and is retained in the context-exposure audit. Exposure alone does not
 change discovery scope—only evidence actually cited from that unit does.
+
+The controlled **Context-request reason** explains why a particular other-section unit
+must be opened for document reconciliation. It is exposure-audit metadata, not an
+assertion-level evidence rationale. The free-text **Distributed-evidence reason** belongs
+to one node or relation and explains why that assertion actually needs cited spans from
+multiple source units. Opening context alone neither requires a distributed-evidence
+reason nor changes `discoveryScope`; the reason becomes required only when the resulting
+node or relation cites spans from more than one source unit.
 
 Create one node per atomic semantic unit and use the most specific available concrete
 class. Do not merge by similar names. Link an existing entity only when the interface

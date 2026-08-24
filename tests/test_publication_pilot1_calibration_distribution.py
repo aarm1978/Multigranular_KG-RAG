@@ -598,7 +598,7 @@ class CalibrationDistributionTests(unittest.TestCase):
             "packageSchemaVersion": "0.1.0", "annotationMVPBaseCheckpoint": ANNOTATION_MVP_BASE_CHECKPOINT,
             "packageBuildCheckpoint": checkpoint, "annotatorID": "discarded-a",
             "annotationSessionID": "discarded-session-a",
-            "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.1",
+            "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.2",
             "annotationSchemaVersion": "0.1.1", "routingVersion": "0.1.2",
             "calibrationIdentityOrderHash": "182710041594edb979dcfd8e39041cf98523e383c9f3498ac1d74293d0378b98",
             "gate0PolicyHash": "f" * 64,

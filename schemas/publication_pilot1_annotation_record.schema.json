@@ -30,9 +30,9 @@
     "sectionID": {"$ref": "#/$defs/nonEmptyString"},
     "sectionTitle": {"$ref": "#/$defs/stringOrNull"},
     "authorizedContextUnits": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/contextBinding"}},
-    "interfaceVersion": {"const": "publication-pilot1-annotation-calibration/0.1.1"},
+    "interfaceVersion": {"const": "publication-pilot1-annotation-calibration/0.1.2"},
     "guidelineVersion": {"const": "0.1.1"},
-    "handbookVersion": {"const": "0.1.1"},
+    "handbookVersion": {"const": "0.1.2"},
     "routingVersion": {"const": "0.1.2"},
     "workflowState": {"enum": ["reading", "node_pass", "relation_pass", "review", "submitted", "reopened"]},
     "completenessTreatmentByTarget": {

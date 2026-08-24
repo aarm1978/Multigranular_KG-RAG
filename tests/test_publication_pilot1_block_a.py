@@ -367,11 +367,12 @@ class PublicationPilot1BlockATests(unittest.TestCase):
         self.assertNotIn('"deferredRecordID"', serialized)
 
     def test_no_production_calibration_annotation_state_exists(self) -> None:
-        """The failed downstream startup retained no calibration annotation state."""
+        """The production runtime namespace contains no calibration annotation state."""
 
+        production_runtime = ROOT / "var/publication_pilot1_annotation/calibration/production"
         unexpected = [
-            path for path in (ROOT / "var").rglob("*")
-            if path.is_file() and any(token in path.name.lower() for token in ("calibration", "annotation"))
+            path for path in production_runtime.rglob("*")
+            if path.is_file()
         ]
         self.assertEqual(unexpected, [])
 

@@ -295,7 +295,7 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         self.assertEqual(result["nodes"][0]["discoveryScope"], "section_context")
 
     def test_ui_uses_mentions_neutral_controls_and_mode_aware_copy(self) -> None:
-        """Static UI wiring closes positive defaults and shows anchored local endpoints."""
+        """Static UI wiring covers neutral, conditional, rollback, and readable-card contracts."""
 
         app = (ROOT / "src/annotation/publication_pilot1/calibration/static/app.js").read_text()
         page = (ROOT / "src/annotation/publication_pilot1/calibration/static/index.html").read_text()
@@ -308,6 +308,32 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         self.assertIn("Select a calibration unit to begin.", app)
         self.assertIn("Set node mention from highlight", page)
         self.assertIn('id="add-node" disabled', page)
+        self.assertIn('[hidden]{display:none!important}', page)
+        self.assertIn("updateExistingEndpointVisibility", app)
+        self.assertIn('if(!linkExisting)$("node-existing").value=""', app)
+        self.assertIn('$("attribute-choice-label").hidden=!choices.length', app)
+        self.assertIn("Select reconciliation reason...", app)
+        self.assertIn("Select primary-unit target/task...", app)
+        self.assertIn('documentScope&&(!$("context-reason").value||!$("context-target").value)', app)
+        self.assertIn("rollbackToPersisted", app)
+        self.assertIn("state.annotation=clone(state.persistedAnnotation)", app)
+        self.assertIn("restoreAssertionControls", app)
+        self.assertIn("node.distributedEvidenceReason", app)
+        self.assertIn("edge.distributedEvidenceReason", app)
+        self.assertIn("endpointDisplay(edge.sourceEndpointID)", app)
+        self.assertIn("endpointDisplay(edge.targetEndpointID)", app)
+        self.assertIn("item.evidence.forEach", app)
+        for button in ("add-node-evidence", "add-relation-evidence", "add-attribute", "add-uncertainty"):
+            self.assertIn(f'id="{button}" disabled', page)
+        self.assertIn('$("add-node-evidence").disabled=!', app)
+        self.assertIn('$("add-relation-evidence").disabled=!', app)
+        self.assertIn('$("add-attribute").disabled=!', app)
+        self.assertIn('$("add-uncertainty").disabled=!', app)
+        for accepted_review_label in (
+            "Reviewed — positive(s) recorded", "Exhaustively reviewed — no positive",
+            "Monitored review complete", "Abstention / uncertainty",
+        ):
+            self.assertIn(accepted_review_label, app)
         self.assertNotIn("code points</small>", app)
         self.assertNotIn("activeContext.sourceUnitTextHash}`", app)
 
@@ -1041,7 +1067,11 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         schema = json.loads((ROOT / "schemas/publication_pilot1_annotation_record.schema.json").read_text())
         handbook = (ROOT / "docs/publication_pilot1_annotation_calibration_handbook.md").read_text()
         self.assertEqual(schema["properties"]["annotationSchemaVersion"]["const"], "0.1.1")
-        self.assertIn("**Handbook version:** 0.1.1", handbook); self.assertIn("No supported evidence span", handbook)
+        self.assertIn("**Handbook version:** 0.1.2", handbook); self.assertIn("No supported evidence span", handbook)
+        self.assertEqual(
+            schema["properties"]["interfaceVersion"]["const"],
+            "publication-pilot1-annotation-calibration/0.1.2",
+        )
 
     def test_hardened_annotation_schema_validates_normalized_nested_records(self) -> None:
         """Draft 2020-12 schema is valid, accepts output, and closes nested records."""
