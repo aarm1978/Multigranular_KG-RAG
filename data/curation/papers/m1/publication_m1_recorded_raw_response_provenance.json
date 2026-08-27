@@ -1,0 +1,12 @@
+{
+  "artifactRole": "recorded_provider_neutral_raw_response_fixture",
+  "developmentOnly": true,
+  "manuallyConstructedForDeterministicPipelineExecution": true,
+  "notAnnotation": true,
+  "notEvaluation": true,
+  "notGold": true,
+  "notLlmExperimentalResult": true,
+  "providerCallPerformed": false,
+  "sourceDevelopmentId": "DEV-04",
+  "sourceUnitID": "pub:36:sec:0026:unit:0001"
+}
