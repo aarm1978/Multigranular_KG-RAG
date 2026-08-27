@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from collections import Counter
 from copy import deepcopy
-import re
 from typing import Any, Mapping, MutableMapping, Sequence
 
 import jsonschema
@@ -29,7 +28,7 @@ from src.extraction.llm.publications.request_builder import (
 from src.extraction.llm.publications.source_units import normalize_canonical_text
 
 
-VALIDATOR_VERSION = "0.1.0"
+VALIDATOR_VERSION = "0.1.1"
 RULE_VERSION = "publication-evidence-validation-0.1.0"
 VALIDATION_CONTRACT_VERSION = "0.1.0"
 PROCESSING_CODES = {
@@ -129,6 +128,22 @@ HARD_FINDING_CODES = {
     "DEFERRED_CANDIDATE_MISMATCH",
 }
 
+# These frozen vocabulary members describe forbidden operations for which the M1
+# candidate schema exposes no authorable operation or rule-selection field. They remain
+# declared for later compatible stages but are deliberately not manufactured from a
+# proxy in this validator.
+DECLARED_BUT_NOT_CURRENTLY_EMITTED_CODES = frozenset(
+    {
+        "DETERMINISTIC_MUTATION_ATTEMPT",
+        "SUMMARY_RELATION_NOT_AUTHORIZED",
+        "THEORY_GROUNDING_RELATION_NOT_AUTHORIZED",
+        "CONFLICTING_RELATION_ROLES",
+        "UNVALIDATED_NORMALIZATION_USED_FOR_IDENTITY",
+        "NORMALIZATION_RULE_NOT_APPROVED",
+        "NORMALIZATION_RULE_OUTPUT_MISMATCH",
+    }
+)
+
 
 def _finding(
     stage: str,
@@ -198,11 +213,16 @@ def _metadata_binding_findings(
     metadata = envelope.get("metadata", {})
     expected = expected_candidate_metadata(request, raw_hash)
     codes = {
+        "outputID": "REQUEST_ID_MISMATCH",
         "requestID": "REQUEST_ID_MISMATCH",
         "runID": "RUN_ID_MISMATCH",
         "sourceArtifactID": "SOURCE_ARTIFACT_MISMATCH",
         "primarySourceUnitID": "PRIMARY_SOURCE_UNIT_MISMATCH",
         "contextSourceUnitIDs": "CONTEXT_SOURCE_UNIT_MISMATCH",
+        "requestScope": "REQUEST_INPUT_HASH_MISMATCH",
+        "includedCompleteSection": "REQUEST_INPUT_HASH_MISMATCH",
+        "extractionChannel": "REQUEST_INPUT_HASH_MISMATCH",
+        "targetInventoryProfileID": "TARGET_PROFILE_VERSION_MISMATCH",
         "targetInventorySchemaVersion": "TARGET_PROFILE_VERSION_MISMATCH",
         "targetInventorySha256": "TARGET_PROFILE_HASH_MISMATCH",
         "sourceUnitContractVersion": "SOURCE_UNIT_CONTRACT_VERSION_MISMATCH",
@@ -211,9 +231,18 @@ def _metadata_binding_findings(
         "candidateSchemaSha256": "CANDIDATE_SCHEMA_HASH_MISMATCH",
         "ontologyVersion": "ONTOLOGY_VERSION_MISMATCH",
         "ontologySha256": "ONTOLOGY_HASH_MISMATCH",
+        "promptVersion": "PROMPT_HASH_MISMATCH",
         "promptSha256": "PROMPT_HASH_MISMATCH",
         "requestInputSha256": "REQUEST_INPUT_HASH_MISMATCH",
         "rawResponseSha256": "RAW_RESPONSE_HASH_MISMATCH",
+        "provider": "REQUEST_INPUT_HASH_MISMATCH",
+        "modelName": "REQUEST_INPUT_HASH_MISMATCH",
+        "modelVersion": "REQUEST_INPUT_HASH_MISMATCH",
+        "generationParameters": "REQUEST_INPUT_HASH_MISMATCH",
+        "tokenUsage": "REQUEST_INPUT_HASH_MISMATCH",
+        "costUSD": "REQUEST_INPUT_HASH_MISMATCH",
+        "retryCount": "REQUEST_INPUT_HASH_MISMATCH",
+        "responseCreatedAt": "REQUEST_INPUT_HASH_MISMATCH",
     }
     findings: list[dict[str, Any]] = []
     for field, code in codes.items():
@@ -242,6 +271,21 @@ def _metadata_binding_findings(
             )
         )
     return findings
+
+
+def _parser_binding_findings(parser_result: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Reject raw attempts to author fields owned by the trusted pipeline."""
+
+    return [
+        _finding(
+            "V2",
+            "FORBIDDEN_FIELD",
+            f"/{field}",
+            "pipeline-owned field omitted from provider payload",
+            "model-authored value was ignored and preserved only in parsedDocument",
+        )
+        for field in parser_result.get("pipelineOwnedFieldInjectionAttempts", [])
+    ]
 
 
 def _validate_evidence(
@@ -377,6 +421,32 @@ def _authorized_attributes(target: Mapping[str, Any] | None) -> set[str]:
     }
 
 
+def _source_exact_attribute_names(target: Mapping[str, Any] | None) -> set[str]:
+    """Return attributes governed by the frozen metric/parameter exact-string policy."""
+
+    if target is None:
+        return set()
+    contextual_classes = {"EvaluationMetric", "Parameter"}
+    return {
+        attribute["name"]
+        for formal in target.get("formal_classes", [])
+        if formal.get("name") in contextual_classes
+        for attribute in formal.get("attributes", [])
+    }
+
+
+def _is_contextual_occurrence_target(target: Mapping[str, Any] | None) -> bool:
+    """Identify target-profile classes whose identity includes local context."""
+
+    return bool(
+        target
+        and any(
+            formal.get("name") in {"EvaluationMetric", "Parameter"}
+            for formal in target.get("formal_classes", [])
+        )
+    )
+
+
 def _node_findings(
     node: Mapping[str, Any],
     pointer: str,
@@ -424,11 +494,30 @@ def _node_findings(
     if bool(node.get("provisionalIdentity")) != expected_provisional:
         findings.append(_finding("V6", "INVALID_PROVISIONAL_IDENTITY", pointer + "/provisionalIdentity", expected_provisional, node.get("provisionalIdentity")))
     allowed_attributes = _authorized_attributes(target)
+    source_exact_attributes = _source_exact_attribute_names(target)
     for index, attribute in enumerate(node.get("attributes", [])):
         attribute_pointer = f"{pointer}/attributes/{index}"
         if attribute.get("attributeName") not in allowed_attributes:
             findings.append(_finding("V6", "ATTRIBUTE_NOT_ALLOWED_FOR_TARGET", attribute_pointer + "/attributeName", sorted(allowed_attributes), attribute.get("attributeName")))
         findings.extend(_referenced_evidence_findings(attribute.get("evidenceSpanIDs", []), attribute_pointer + "/evidenceSpanIDs", evidence_validity, "ATTRIBUTE_EVIDENCE_MISSING", "ATTRIBUTE_EVIDENCE_MISSING", "V6"))
+        attribute_name = attribute.get("attributeName")
+        attribute_value = attribute.get("value")
+        if attribute_name in source_exact_attributes and isinstance(attribute_value, str):
+            cited_text = [
+                str(evidence_by_id.get(reference, {}).get("evidenceText", ""))
+                for reference in attribute.get("evidenceSpanIDs", [])
+                if evidence_validity.get(reference, False)
+            ]
+            if not any(attribute_value in text for text in cited_text):
+                findings.append(
+                    _finding(
+                        "V6",
+                        "ATTRIBUTE_EVIDENCE_MISSING",
+                        attribute_pointer + "/value",
+                        "source-exact value present in cited attribute evidence",
+                        attribute_value,
+                    )
+                )
     if isinstance(label, str) and label.count(". ") > 1:
         findings.append(_finding("V6", "ATOMICITY_VIOLATION", pointer + "/label", "one atomic semantic unit", label, severity="review"))
     normalized = node.get("normalizedLabelProposal")
@@ -448,14 +537,14 @@ def _resolve_endpoint(
     request: Mapping[str, Any],
     node_by_id: Mapping[str, Mapping[str, Any]],
     node_status: Mapping[str, str],
-) -> tuple[str | None, str | None, list[dict[str, Any]]]:
+) -> tuple[str | None, str | None, str | None, list[dict[str, Any]]]:
     """Resolve one V7 endpoint only through an explicitly authorized reference route."""
 
     reference_type = endpoint.get("referenceType")
     reference_id = endpoint.get("referenceID")
     findings: list[dict[str, Any]] = []
     if not reference_id:
-        return None, None, [_finding("V7", "ENDPOINT_REFERENCE_MISSING", pointer, "explicit endpoint reference", reference_id)]
+        return None, None, None, [_finding("V7", "ENDPOINT_REFERENCE_MISSING", pointer, "explicit endpoint reference", reference_id)]
     resolved: Mapping[str, Any] | None = None
     if reference_type == "candidate_node":
         resolved = node_by_id.get(str(reference_id))
@@ -478,7 +567,28 @@ def _resolve_endpoint(
     class_name = resolved.get("className") if resolved else None
     if resolved is not None and not class_name:
         findings.append(_finding("V7", "ENDPOINT_CLASS_UNRESOLVED", pointer, "endpoint className", class_name))
-    return str(reference_id), str(class_name) if class_name else None, findings
+    artifact_id: str | None = None
+    if resolved is not None:
+        trusted_artifact = resolved.get("artifactID")
+        if reference_type == "candidate_node":
+            if resolved.get("artifactScope") == "source_artifact":
+                trusted_artifact = request["sourceArtifactID"]
+            elif resolved.get("artifactScope") == "external_artifact":
+                trusted_artifact = f"external-candidate:{reference_id}"
+        if trusted_artifact is not None:
+            artifact_id = str(trusted_artifact)
+        authored_artifact = endpoint.get("artifactID")
+        if authored_artifact is not None and authored_artifact != artifact_id:
+            findings.append(
+                _finding(
+                    "V7",
+                    "RELATION_SCOPE_MISMATCH",
+                    pointer + "/artifactID",
+                    artifact_id,
+                    authored_artifact,
+                )
+            )
+    return str(reference_id), str(class_name) if class_name else None, artifact_id, findings
 
 
 def _signature_allows(class_name: str | None, constraint: Mapping[str, Any]) -> bool:
@@ -504,8 +614,8 @@ def _edge_findings(
         deferred_id = edge.get("deferredRecordID")
         if deferred_id not in request.get("deferredRecordIDs", []):
             findings.append(_finding("V11", "DEFERRED_RECORD_NOT_IN_REQUEST", pointer + "/deferredRecordID", request.get("deferredRecordIDs", []), deferred_id))
-    source_id, source_class, source_findings = _resolve_endpoint(edge.get("source", {}), pointer + "/source", request, node_by_id, node_status)
-    target_id, target_class, target_findings = _resolve_endpoint(edge.get("target", {}), pointer + "/target", request, node_by_id, node_status)
+    source_id, source_class, source_artifact, source_findings = _resolve_endpoint(edge.get("source", {}), pointer + "/source", request, node_by_id, node_status)
+    target_id, target_class, target_artifact, target_findings = _resolve_endpoint(edge.get("target", {}), pointer + "/target", request, node_by_id, node_status)
     findings.extend(source_findings)
     findings.extend(target_findings)
     if target is not None and source_class and target_class:
@@ -519,11 +629,10 @@ def _edge_findings(
             findings.append(_finding("V8", "INVALID_RANGE", pointer + "/target", [item["range"]["classes"] for item in signatures], target_class))
         if domain_match and range_match and not pair_match:
             findings.append(_finding("V8", "UNAUTHORIZED_RELATION_BRANCH", pointer, "one exact operational signature", [source_class, target_class]))
-    source_artifact = edge.get("source", {}).get("artifactID") or request["sourceArtifactID"]
-    target_artifact = edge.get("target", {}).get("artifactID") or request["sourceArtifactID"]
-    expected_scope = "intra_source" if source_artifact == target_artifact else "inter_source"
-    if edge.get("relationScope") != expected_scope:
-        findings.append(_finding("V8", "RELATION_SCOPE_MISMATCH", pointer + "/relationScope", expected_scope, edge.get("relationScope")))
+    if source_artifact is not None and target_artifact is not None:
+        expected_scope = "intra_source" if source_artifact == target_artifact else "inter_source"
+        if edge.get("relationScope") != expected_scope:
+            findings.append(_finding("V8", "RELATION_SCOPE_MISMATCH", pointer + "/relationScope", expected_scope, edge.get("relationScope")))
     evidence_text = " ".join(str(evidence_by_id.get(ref, {}).get("evidenceText", "")) for ref in edge.get("evidenceSpanIDs", []))
     lowered = evidence_text.casefold()
     endpoint_labels = []
@@ -532,14 +641,26 @@ def _edge_findings(
             endpoint_labels.append(str(node_by_id[endpoint_id].get("label", "")))
     if endpoint_labels and not all(label and label in evidence_text for label in endpoint_labels):
         findings.append(_finding("V8", "RELATION_EVIDENCE_INSUFFICIENT", pointer + "/evidenceSpanIDs", "edge-specific evidence expressing endpoint relation", edge.get("evidenceSpanIDs")))
-    relation_name = str(edge.get("relationName", ""))
-    relation_tokens = re.findall(r"[A-Z]?[a-z]+|[A-Z]+(?![a-z])", relation_name)
-    relation_token = next((token for token in relation_tokens if len(token) >= 4), "")
-    if relation_token and relation_token.casefold()[:4] not in lowered:
-        findings.append(_finding("V8", "RELATION_EVIDENCE_INSUFFICIENT", pointer + "/evidenceSpanIDs", f"positive lexical support for {relation_name}", evidence_text))
     if edge.get("relationName") == "supports" and any(token in lowered for token in ("does not support", "not support", "refutes")):
         findings.append(_finding("V8", "NEGATIVE_SUPPORT_NOT_AUTHORIZED", pointer, "positive support", evidence_text))
     return findings, source_id, target_id
+
+
+def _precedence_map(profile: Mapping[str, Any]) -> dict[str, str]:
+    """Derive weaker-to-stronger relation roles from frozen profile global rules."""
+
+    rules = profile["global_rules"]["use_mention_reference_precedence"]
+    derived: dict[str, str] = {}
+    for stronger, description in rules.items():
+        if "_and_" in stronger or description == "may coexist":
+            continue
+        marker = "supersedes "
+        if marker in description:
+            weaker = description.split(marker, 1)[1].split(" ", 1)[0]
+            derived[weaker] = stronger
+        elif stronger == "hasCodeRepository" and "referencesRepository" in description:
+            derived["referencesRepository"] = stronger
+    return derived
 
 
 def _duplicate_key(
@@ -616,7 +737,7 @@ def validate_candidate_envelope(
 ) -> dict[str, Any]:
     """Execute frozen V1-V12 validation and return deterministic result records."""
 
-    if parser_result.get("parseStatus") != "parsed" or not isinstance(parser_result.get("parsedEnvelope"), dict):
+    if parser_result.get("parseStatus") != "parsed":
         code = str(parser_result.get("processingCode") or "INVALID_JSON")
         if code not in PROCESSING_CODES:
             code = "INVALID_JSON"
@@ -642,21 +763,25 @@ def validate_candidate_envelope(
             "validationResultsHash": sha256_bytes(canonical_json([_finish_result(processing)]))
         }
 
-    envelope = parser_result["parsedEnvelope"]
+    parsed_document = parser_result["parsedEnvelope"]
+    envelope: Mapping[str, Any] = (
+        parsed_document if isinstance(parsed_document, Mapping) else {}
+    )
     schema = load_json_object(CANDIDATE_SCHEMA_PATH)
     profile = load_yaml_object(TARGET_INVENTORY_PATH)
     ontology = load_yaml_object(ONTOLOGY_SPEC_PATH)
     if not ontology.get("classes") or not ontology.get("relations"):
         raise ValueError("frozen ontology specification is incomplete")
     schema_validator = jsonschema.Draft202012Validator(schema, format_checker=jsonschema.FormatChecker())
-    schema_errors = sorted(schema_validator.iter_errors(envelope), key=lambda error: list(error.absolute_path))
-    global_findings: list[dict[str, Any]] = []
+    schema_errors = sorted(schema_validator.iter_errors(parsed_document), key=lambda error: list(error.absolute_path))
+    global_findings: list[dict[str, Any]] = _parser_binding_findings(parser_result)
     for error in schema_errors:
         pointer = "".join(f"/{part}" for part in error.absolute_path)
         code = "FORBIDDEN_FIELD" if error.validator == "additionalProperties" else "SCHEMA_VALIDATION_FAILED"
         global_findings.append(_finding("V2", code, pointer, error.validator_value, error.message))
     raw_hash = str(parser_result["rawResponseSha256"])
-    global_findings.extend(_metadata_binding_findings(envelope, request, raw_hash))
+    if isinstance(parsed_document, Mapping):
+        global_findings.extend(_metadata_binding_findings(envelope, request, raw_hash))
 
     canonical_document = _canonical_document(request)
     if sha256_bytes(canonical_document.encode("utf-8")) != request["sourceUnit"]["canonicalTextSha256"]:
@@ -812,6 +937,9 @@ def validate_candidate_envelope(
             )
             if not same_core:
                 continue
+            target = node_targets.get(str(later_record.get("operationalTargetID")))
+            if _is_contextual_occurrence_target(target):
+                continue
             if later_record.get("label") == earlier_record.get("label"):
                 later_result["candidateValidationStatus"] = "superseded"
                 later_result["supersededByRecordID"] = earlier_result["recordID"]
@@ -822,7 +950,7 @@ def validate_candidate_envelope(
             if later_result["candidateValidationStatus"] != "validated":
                 break
 
-    precedence = {"mentionsModel": "usesModel", "mentionsTool": "usesTool", "mentionsDataset": "usesDataset", "referencesRepository": "hasCodeRepository"}
+    precedence = _precedence_map(profile)
     edge_records = list(envelope.get("candidateEdges", []))
     edge_results = [result for result in candidate_results if result["recordType"] == "candidate_edge"]
     for weak_record, weak_result in zip(edge_records, edge_results):
@@ -916,6 +1044,33 @@ def validate_candidate_envelope(
                 ):
                     candidate_result["candidateValidationStatus"] = "deferred"
 
+    active_node_ids = {
+        result["recordID"]
+        for result in candidate_results
+        if result["recordType"] == "candidate_node"
+        and result["candidateValidationStatus"] == "validated"
+    }
+    for edge_record, edge_result in zip(edge_records, edge_results):
+        if edge_result["candidateValidationStatus"] != "validated":
+            continue
+        inactive_endpoints = sorted(
+            str(endpoint.get("referenceID"))
+            for endpoint in (edge_record.get("source", {}), edge_record.get("target", {}))
+            if endpoint.get("referenceType") == "candidate_node"
+            and str(endpoint.get("referenceID")) not in active_node_ids
+        )
+        if inactive_endpoints:
+            edge_result["candidateValidationStatus"] = "rejected"
+            edge_result["findings"].append(
+                _finding(
+                    "V12",
+                    "ENDPOINT_LIFECYCLE_INVALID",
+                    "",
+                    "validated active candidate endpoints",
+                    inactive_endpoints,
+                )
+            )
+
     for index, result in enumerate(record_results):
         record_results[index] = _finish_result(result)
     candidate_statuses = [result["candidateValidationStatus"] for result in record_results if "candidateValidationStatus" in result]
@@ -939,7 +1094,7 @@ def validate_candidate_envelope(
         "requestID": request["requestID"],
         "requestSha256": request["requestInputSha256"],
         "outputID": envelope.get("metadata", {}).get("outputID"),
-        "parsedOutputSha256": sha256_bytes(canonical_json(envelope)),
+        "parsedOutputSha256": sha256_bytes(canonical_json(parsed_document)),
         "envelopeStatus": envelope_status,
         "globalFindings": global_findings,
         "evidenceResults": [
@@ -967,13 +1122,33 @@ def materialize_usable_pipeline_output(
         for result in validation.get("recordResults", [])
         if result.get("recordType") in {"candidate_node", "candidate_edge"}
     }
+    active_node_ids = {
+        row.get("candidateID")
+        for row in envelope.get("candidateNodes", [])
+        if statuses.get(row.get("candidateID")) == "validated"
+    }
+
+    def edge_dependencies_are_active(edge: Mapping[str, Any]) -> bool:
+        """Return whether every candidate-node endpoint remains V12 active."""
+
+        return all(
+            endpoint.get("referenceType") != "candidate_node"
+            or endpoint.get("referenceID") in active_node_ids
+            for endpoint in (edge.get("source", {}), edge.get("target", {}))
+        )
+
     usable = {
         "outputStage": "usable_pipeline_output",
         "requestID": validation.get("requestID"),
         "outputID": validation.get("outputID"),
         "validationResultsHash": validation.get("validationResultsHash"),
         "candidateNodes": [deepcopy(row) for row in envelope.get("candidateNodes", []) if statuses.get(row.get("candidateID")) == "validated"],
-        "candidateEdges": [deepcopy(row) for row in envelope.get("candidateEdges", []) if statuses.get(row.get("candidateID")) == "validated"],
+        "candidateEdges": [
+            deepcopy(row)
+            for row in envelope.get("candidateEdges", [])
+            if statuses.get(row.get("candidateID")) == "validated"
+            and edge_dependencies_are_active(row)
+        ],
     }
     usable["usablePipelineOutputHash"] = sha256_bytes(canonical_json(usable))
     return usable

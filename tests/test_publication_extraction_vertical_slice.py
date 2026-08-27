@@ -5,6 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 import json
 from pathlib import Path
+import re
 import tempfile
 import unittest
 from typing import Any, Sequence
@@ -15,6 +16,9 @@ if str(PROJECT_ROOT) not in __import__("sys").path:
     __import__("sys").path.insert(0, str(PROJECT_ROOT))
 
 from src.extraction.llm.publications.candidate_validation import (  # noqa: E402
+    DECLARED_BUT_NOT_CURRENTLY_EMITTED_CODES,
+    _authorization_findings,
+    _edge_findings,
     materialize_usable_pipeline_output,
     validate_candidate_envelope,
 )
@@ -22,7 +26,9 @@ from src.extraction.llm.publications.request_builder import (  # noqa: E402
     RequestBuildError,
     build_development_request,
     canonical_json,
+    load_yaml_object,
     sha256_bytes,
+    TARGET_INVENTORY_PATH,
 )
 from src.extraction.llm.publications.response_parser import (  # noqa: E402
     parse_recorded_response,
@@ -253,6 +259,54 @@ class PublicationRequestAndParserTests(unittest.TestCase):
         self.assertEqual(validation["envelopeStatus"], "invalid")
         self.assertIn("SCHEMA_VALIDATION_FAILED", codes(validation))
 
+    def test_json_array_passes_v1_and_fails_v2(self) -> None:
+        """A valid JSON value with the wrong top-level shape is a V2 failure."""
+
+        request = synthetic_request("A finding.")
+        parsed = parse_recorded_response(b"[]", request)
+        validation = validate_candidate_envelope(parsed, request)
+        self.assertEqual(parsed["parseStatus"], "parsed")
+        self.assertEqual(validation["envelopeStatus"], "invalid")
+        self.assertIn("SCHEMA_VALIDATION_FAILED", codes(validation))
+        self.assertNotIn("INVALID_JSON", codes(validation))
+
+    def test_raw_payload_cannot_overwrite_pipeline_owned_fields(self) -> None:
+        """Pipeline metadata survives raw injection and the attempt fails V2."""
+
+        request = synthetic_request("A finding.")
+        response = payload([], []) | {
+            "metadata": {"requestID": "attacker-authored"},
+            "schemaVersion": "attacker-authored",
+            "outputStage": "usable_pipeline_output",
+        }
+        parsed = parse_recorded_response(canonical_json(response), request)
+        self.assertEqual(parsed["parsedEnvelope"]["metadata"]["requestID"], request["requestID"])
+        self.assertEqual(parsed["parsedEnvelope"]["schemaVersion"], "0.1.0")
+        self.assertEqual(parsed["parsedEnvelope"]["outputStage"], "parsed_candidate")
+        self.assertEqual(parsed["pipelineOwnedFieldInjectionAttempts"], ["metadata", "outputStage", "schemaVersion"])
+        validation = validate_candidate_envelope(parsed, request)
+        self.assertEqual(validation["envelopeStatus"], "invalid")
+        self.assertIn("FORBIDDEN_FIELD", codes(validation))
+
+    def test_complete_trusted_metadata_binding_mismatches_fail_v3(self) -> None:
+        """Every newly enforced frozen request/run metadata field is trusted."""
+
+        request = synthetic_request("A finding.")
+        fields = (
+            "outputID", "requestScope", "includedCompleteSection", "extractionChannel",
+            "targetInventoryProfileID", "targetInventorySchemaVersion",
+            "targetInventorySha256", "promptVersion", "promptSha256", "provider", "modelName",
+            "modelVersion", "generationParameters", "tokenUsage", "costUSD",
+            "retryCount", "responseCreatedAt",
+        )
+        for field in fields:
+            parsed = parse_recorded_response(canonical_json(payload([], [])), request)
+            parsed["parsedEnvelope"]["metadata"][field] = "mismatch"
+            validation = validate_candidate_envelope(parsed, request)
+            with self.subTest(field=field):
+                self.assertEqual(validation["envelopeStatus"], "invalid")
+                self.assertTrue(any(item["jsonPointer"] == f"/metadata/{field}" for item in validation["globalFindings"]))
+
 
 class PublicationEvidenceAndAuthorizationTests(unittest.TestCase):
     """Exercise exact Unicode evidence and frozen target authorization failures."""
@@ -353,6 +407,33 @@ class PublicationNodeRelationLifecycleTests(unittest.TestCase):
         _, linked_validation, _ = validate(link_request, payload([linked], [evidence(link_request, "ToolX")]))
         self.assertIn("LINK_EXISTING_ENDPOINT_NOT_AUTHORIZED", codes(linked_validation))
 
+    def test_source_exact_attributes_are_grounded_without_universal_normalization_rule(self) -> None:
+        """Metric strings are literal while an authorized boolean may normalize."""
+
+        metric_target = "PUB-N-A-DOM11-EVALUATIONMETRIC"
+        request = synthetic_request("RMSE was 4.", [metric_target])
+        span = evidence(request, "RMSE was 4.")
+        metric = node("node-0001", "RMSE", target=metric_target, ontology_id="A-DOM11", class_name="EvaluationMetric")
+        metric["attributes"] = [{"attributeName": "value", "value": "4", "evidenceSpanIDs": ["evidence-0001"]}]
+        _, valid_result, _ = validate(request, payload([metric], [span]))
+        self.assertEqual(valid_result["recordResults"][0]["candidateValidationStatus"], "validated")
+
+        unsupported = deepcopy(metric)
+        unsupported["attributes"][0]["value"] = "5"
+        _, unsupported_result, _ = validate(request, payload([unsupported], [span]))
+        self.assertIn("ATTRIBUTE_EVIDENCE_MISSING", codes(unsupported_result))
+
+        repository_target = "PUB-N-A-C01-REPOSITORY-EXISTING-EXACT-ENDPOINT"
+        repository_request = synthetic_request("The repository is a fork.", [repository_target])
+        repository_request["deterministicEndpoints"] = [{"nodeID": "repo:1", "className": "Repository", "artifactID": "repo:1"}]
+        repository_request.pop("requestInputSha256")
+        repository_request["requestInputSha256"] = sha256_bytes(canonical_json(repository_request))
+        repository = node("node-0001", "repository", target=repository_target, ontology_id="A-C01", class_name="Repository")
+        repository.update(action="link_existing", existingNodeID="repo:1", identityScope="exact_existing_endpoint", artifactScope="external_artifact")
+        repository["attributes"] = [{"attributeName": "fork", "value": True, "evidenceSpanIDs": ["evidence-0001"]}]
+        _, repository_result, _ = validate(repository_request, payload([repository], [evidence(repository_request, "The repository is a fork.")]))
+        self.assertNotIn("ATTRIBUTE_EVIDENCE_MISSING", codes(repository_result))
+
     def test_atomicity_review_is_not_usable_output(self) -> None:
         """A clearly multi-proposition discourse label is review-only, not usable."""
 
@@ -364,8 +445,8 @@ class PublicationNodeRelationLifecycleTests(unittest.TestCase):
         self.assertIn("ATOMICITY_VIOLATION", codes(validation))
         self.assertEqual(usable["candidateNodes"], [])
 
-    def test_valid_relation_and_edge_specific_support(self) -> None:
-        """Method-to-Finding produces validates only with positive edge-specific text."""
+    def test_valid_relation_and_synonym_evidence_without_lexical_proxy(self) -> None:
+        """A valid relation is not rejected because evidence uses a synonym."""
 
         request = synthetic_request("method produced finding", [METHOD_TARGET, FINDING_TARGET, PRODUCES_TARGET])
         span = evidence(request, "method produced finding")
@@ -377,10 +458,20 @@ class PublicationNodeRelationLifecycleTests(unittest.TestCase):
         self.assertEqual(validation["envelopeStatus"], "valid")
         self.assertEqual(len(usable["candidateEdges"]), 1)
 
-        coexist_request = synthetic_request("method and finding", [METHOD_TARGET, FINDING_TARGET, PRODUCES_TARGET])
-        coexist_span = evidence(coexist_request, "method and finding")
-        _, coexist_validation, _ = validate(coexist_request, payload(nodes, [coexist_span], edges=[edge()]))
-        self.assertIn("RELATION_EVIDENCE_INSUFFICIENT", codes(coexist_validation))
+        model_target = "PUB-N-A-DOM03D-MLMODEL"
+        uses_target = "PUB-R-C-P13-USESMODEL-METHOD-BRANCH"
+        synonym_request = synthetic_request("method employed model", [METHOD_TARGET, model_target, uses_target])
+        synonym_nodes = [
+            node("node-0001", "method", target=METHOD_TARGET, ontology_id="A-P13", class_name="Method"),
+            node("node-0002", "model", target=model_target, ontology_id="A-DOM03d", class_name="MLModel"),
+        ]
+        synonym_edge = edge(uses_target, "C-P13", "usesModel")
+        _, synonym_validation, synonym_usable = validate(
+            synonym_request,
+            payload(synonym_nodes, [evidence(synonym_request, "method employed model")], edges=[synonym_edge]),
+        )
+        self.assertNotIn("RELATION_EVIDENCE_INSUFFICIENT", codes(synonym_validation))
+        self.assertEqual(len(synonym_usable["candidateEdges"]), 1)
 
     def test_invalid_domain_range_direction_and_endpoint(self) -> None:
         """V7-V8 reject unresolved endpoints and reversed operational signatures."""
@@ -396,6 +487,24 @@ class PublicationNodeRelationLifecycleTests(unittest.TestCase):
         missing_edge["source"] = {"referenceType": "deterministic_node", "referenceID": "det:missing", "artifactID": "paper:synthetic"}
         _, missing_validation, _ = validate(request, payload(reversed_nodes, [span], edges=[missing_edge]))
         self.assertIn("ENDPOINT_REFERENCE_MISSING", codes(missing_validation))
+
+    def test_relation_scope_uses_trusted_endpoint_artifact_ownership(self) -> None:
+        """Model-authored artifact IDs cannot override trusted endpoint ownership."""
+
+        request = synthetic_request("method yielded finding", [PRODUCES_TARGET])
+        request["deterministicEndpoints"] = [
+            {"nodeID": "method:1", "className": "Method", "artifactID": "paper:synthetic"},
+            {"nodeID": "finding:1", "className": "Finding", "artifactID": "paper:synthetic"},
+        ]
+        request.pop("requestInputSha256")
+        request["requestInputSha256"] = sha256_bytes(canonical_json(request))
+        relation = edge()
+        relation["relationScope"] = "inter_source"
+        relation["source"] = {"referenceType": "deterministic_node", "referenceID": "method:1", "artifactID": "attacker:artifact"}
+        relation["target"] = {"referenceType": "deterministic_node", "referenceID": "finding:1", "artifactID": "paper:synthetic"}
+        _, validation, usable = validate(request, payload([], [evidence(request, "method yielded finding")], edges=[relation]))
+        self.assertIn("RELATION_SCOPE_MISMATCH", codes(validation))
+        self.assertEqual(usable["candidateEdges"], [])
 
     def test_negative_support_is_prohibited(self) -> None:
         """The positive-only supports branch rejects explicit negative evidence."""
@@ -439,6 +548,80 @@ class PublicationNodeRelationLifecycleTests(unittest.TestCase):
         _, possible_validation, possible_usable = validate(possible_request, payload(possible_nodes, possible_spans))
         self.assertIn("POSSIBLE_LOCAL_DUPLICATE", codes(possible_validation))
         self.assertEqual(len(possible_usable["candidateNodes"]), 1)
+
+    def test_contextual_occurrences_with_same_label_remain_distinct(self) -> None:
+        """Metric occurrences in distinct coordinates are not silently reconciled."""
+
+        metric_target = "PUB-N-A-DOM11-EVALUATIONMETRIC"
+        request = synthetic_request("RMSE for Model A; RMSE for Model B", [metric_target])
+        spans = [
+            evidence(request, "RMSE for Model A"),
+            evidence(request, "RMSE for Model B", evidence_id="evidence-0002"),
+        ]
+        metrics = [
+            node("node-0001", "RMSE", target=metric_target, ontology_id="A-DOM11", class_name="EvaluationMetric"),
+            node("node-0002", "RMSE", target=metric_target, ontology_id="A-DOM11", class_name="EvaluationMetric", evidence_ids=("evidence-0002",)),
+        ]
+        _, validation, usable = validate(request, payload(metrics, spans))
+        self.assertNotIn("REPEATED_LOCAL_CANDIDATE_EVIDENCE_MERGED", codes(validation))
+        self.assertEqual(len(usable["candidateNodes"]), 2)
+
+    def test_edges_close_over_superseded_needs_review_and_deferred_endpoints(self) -> None:
+        """V12 excludes edges whose candidate endpoint later becomes inactive."""
+
+        duplicate_request = synthetic_request("method produced finding", [METHOD_TARGET, FINDING_TARGET, PRODUCES_TARGET])
+        duplicate_span = evidence(duplicate_request, "method produced finding")
+        duplicate_nodes = [
+            node("node-0001", "finding"),
+            node("node-0002", "finding"),
+            node("node-0003", "method", target=METHOD_TARGET, ontology_id="A-P13", class_name="Method"),
+        ]
+        duplicate_edge = edge()
+        duplicate_edge["source"]["referenceID"] = "node-0003"
+        _, duplicate_validation, duplicate_usable = validate(
+            duplicate_request, payload(duplicate_nodes, [duplicate_span], edges=[duplicate_edge])
+        )
+        edge_result = next(item for item in duplicate_validation["recordResults"] if item["recordID"] == "edge-0001")
+        self.assertEqual(edge_result["candidateValidationStatus"], "rejected")
+        self.assertIn("ENDPOINT_LIFECYCLE_INVALID", codes(duplicate_validation))
+        self.assertEqual(duplicate_usable["candidateEdges"], [])
+
+        review_label = "Finding one. Finding two. Finding three."
+        review_request = synthetic_request(f"method produced {review_label}", [METHOD_TARGET, FINDING_TARGET, PRODUCES_TARGET])
+        review_nodes = [
+            node("node-0001", "method", target=METHOD_TARGET, ontology_id="A-P13", class_name="Method"),
+            node("node-0002", review_label),
+        ]
+        _, review_validation, review_usable = validate(
+            review_request,
+            payload(review_nodes, [evidence(review_request, review_request["sourceUnit"]["text"])], edges=[edge()]),
+        )
+        review_edge_result = next(item for item in review_validation["recordResults"] if item["recordID"] == "edge-0001")
+        self.assertEqual(review_edge_result["candidateValidationStatus"], "rejected")
+        self.assertEqual(review_usable["candidateEdges"], [])
+
+        dataset_target = "PUB-N-A-D01-DATASETRESOURCE-EXACT-IDENTIFIER-OMITTED-BY-PHASE-B"
+        references_target = "PUB-R-C-P29-REFERENCESDATASET-EXACT-OMITTED-IDENTIFIER"
+        deferred_request = synthetic_request("Paper references dataset", [dataset_target, references_target])
+        deferred_request["deterministicEndpoints"] = [{"nodeID": "paper:synthetic", "className": "Paper", "artifactID": "paper:synthetic"}]
+        deferred_request["deferredRecordIDs"] = ["deferred:1"]
+        deferred_request["deferredRecords"] = [{"deferredRecordID": "deferred:1", "reason": "identifier omitted"}]
+        deferred_request.pop("requestInputSha256")
+        deferred_request["requestInputSha256"] = sha256_bytes(canonical_json(deferred_request))
+        dataset = node("node-0001", "dataset", target=dataset_target, ontology_id="A-D01", class_name="DatasetResource")
+        dataset.update(origin="deferred_resolution", identityScope="resolver_pending", artifactScope="external_artifact", deferredRecordID="deferred:1")
+        reference = edge(references_target, "C-P29", "referencesDataset")
+        reference.update(action="resolve_deferred", origin="deferred_resolution", relationScope="inter_source", deferredRecordID="deferred:1")
+        reference["source"] = {"referenceType": "deterministic_node", "referenceID": "paper:synthetic", "artifactID": "paper:synthetic"}
+        reference["target"] = {"referenceType": "candidate_node", "referenceID": "node-0001", "artifactID": None}
+        deferred_record = {"deferredRecordID": "deferred:1", "proposedDisposition": "remain_deferred", "proposedOperationalTargetID": None, "relatedCandidateIDs": ["node-0001"], "evidenceSpanIDs": [], "rationale": "Identity remains unresolved."}
+        _, deferred_validation, deferred_usable = validate(
+            deferred_request,
+            payload([dataset], [evidence(deferred_request, "Paper references dataset")], edges=[reference], deferred=[deferred_record]),
+        )
+        deferred_edge_result = next(item for item in deferred_validation["recordResults"] if item["recordID"] == "edge-0001")
+        self.assertEqual(deferred_edge_result["candidateValidationStatus"], "rejected")
+        self.assertEqual(deferred_usable["candidateEdges"], [])
 
     def test_stronger_role_precedence_abstention_and_deferred(self) -> None:
         """V9/V11 apply stronger-role suppression and controlled non-candidate states."""
@@ -513,6 +696,95 @@ class PublicationNodeRelationLifecycleTests(unittest.TestCase):
         for result in first[1]["recordResults"]:
             projection = {key: value for key, value in result.items() if key != "validationResultHash"}
             self.assertEqual(result["validationResultHash"], sha256_bytes(canonical_json(projection)))
+
+
+class PublicationRelationSignatureCoverageTests(unittest.TestCase):
+    """Generate structural relation-signature checks from the frozen profile."""
+
+    def test_every_active_relation_signature_accepts_exact_and_rejects_invalid_domain(self) -> None:
+        """Each candidate relation signature receives positive and negative coverage."""
+
+        profile = load_yaml_object(TARGET_INVENTORY_PATH)
+        active_rows = [
+            row
+            for row in profile["relation_targets"]
+            if row.get("emission_mode") in {"llm_candidate", "resolver_mediated_candidate"}
+            and row.get("pilot_treatment") not in {"out_of_scope", "separate_follow_on_protocol"}
+        ]
+        signature_count = 0
+        for row in active_rows:
+            for signature in row["operational_signatures"]:
+                signature_count += 1
+                source_class = signature["domain"]["classes"][0]
+                target_class = signature["range"]["classes"][0]
+                relation = {
+                    "operationalRelationID": row["operational_id"],
+                    "ontologyRelationID": row["formal_relations"][0]["id"],
+                    "relationName": row["formal_relations"][0]["name"],
+                    "action": row["allowed_actions"][0],
+                    "origin": "deferred_resolution" if row["allowed_actions"][0] == "resolve_deferred" else "open_discovery",
+                    "deferredRecordID": "deferred:1" if row["allowed_actions"][0] == "resolve_deferred" else None,
+                    "relationScope": "intra_source",
+                    "source": {"referenceType": "deterministic_node", "referenceID": "source:1", "artifactID": "paper:synthetic"},
+                    "target": {"referenceType": "deterministic_node", "referenceID": "target:1", "artifactID": "paper:synthetic"},
+                    "evidenceSpanIDs": ["evidence-0001"],
+                }
+                request = {
+                    "sourceArtifactID": "paper:synthetic",
+                    "eligibleOperationalTargetIDs": [row["operational_id"]],
+                    "deferredRecordIDs": ["deferred:1"] if relation["deferredRecordID"] else [],
+                    "deterministicEndpoints": [
+                        {"nodeID": "source:1", "className": source_class, "artifactID": "paper:synthetic"},
+                        {"nodeID": "target:1", "className": target_class, "artifactID": "paper:synthetic"},
+                    ],
+                    "acceptedLocalCandidateEndpoints": [],
+                }
+                authorization = _authorization_findings(relation, "/candidateEdges/0", row, request, edge=True)
+                valid_findings, _, _ = _edge_findings(
+                    relation,
+                    "/candidateEdges/0",
+                    row,
+                    request,
+                    {"evidence-0001": {"evidenceText": "positive relation evidence"}},
+                    {"evidence-0001": True},
+                    {},
+                    {},
+                )
+                with self.subTest(target=row["operational_id"], case="valid"):
+                    self.assertEqual(authorization, [])
+                    self.assertNotIn("INVALID_DOMAIN", {item["code"] for item in valid_findings})
+                    self.assertNotIn("INVALID_RANGE", {item["code"] for item in valid_findings})
+
+                invalid_request = deepcopy(request)
+                invalid_request["deterministicEndpoints"][0]["className"] = "NotAnAuthorizedDomain"
+                invalid_findings, _, _ = _edge_findings(
+                    relation,
+                    "/candidateEdges/0",
+                    row,
+                    invalid_request,
+                    {"evidence-0001": {"evidenceText": "positive relation evidence"}},
+                    {"evidence-0001": True},
+                    {},
+                    {},
+                )
+                with self.subTest(target=row["operational_id"], case="invalid-domain"):
+                    self.assertIn("INVALID_DOMAIN", {item["code"] for item in invalid_findings})
+        self.assertEqual((len(active_rows), signature_count), (27, 27))
+
+    def test_stable_code_vocabulary_distinguishes_executable_conditions(self) -> None:
+        """Account explicitly for frozen codes unavailable in the M1 input language."""
+
+        contract = (PROJECT_ROOT / "docs/publication_evidence_validation_contract.md").read_text(encoding="utf-8")
+        section = contract.split("## 18. Stable validation codes", 1)[1].split("## 19. Validation-result record", 1)[0]
+        declared = {
+            line
+            for block in re.findall(r"```text\n(.*?)```", section, flags=re.DOTALL)
+            for line in block.splitlines()
+            if re.fullmatch(r"[A-Z][A-Z0-9_]+", line)
+        }
+        self.assertEqual(len(declared), 102)
+        self.assertTrue(DECLARED_BUT_NOT_CURRENTLY_EMITTED_CODES <= declared)
+        self.assertEqual(len(declared - DECLARED_BUT_NOT_CURRENTLY_EMITTED_CODES), 95)
 
 
 class PublicationRealVerticalSliceTests(unittest.TestCase):

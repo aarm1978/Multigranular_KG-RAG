@@ -12,7 +12,8 @@ from src.extraction.llm.publications.request_builder import (
 )
 
 
-PARSER_VERSION = "0.1.0"
+PARSER_VERSION = "0.1.1"
+PIPELINE_OWNED_ENVELOPE_KEYS = {"schemaVersion", "outputStage", "metadata"}
 SEMANTIC_RESPONSE_KEYS = {
     "candidateNodes",
     "candidateEdges",
@@ -50,16 +51,22 @@ def parse_recorded_response(
             "parseStatus": "parsed",
             "rawResponseSha256": raw_hash,
             "parsedDocument": payload,
-            "parsedEnvelope": None,
+            "parsedEnvelope": payload,
             "bindingOperations": [],
+            "pipelineOwnedFieldInjectionAttempts": [],
         }
 
+    injection_attempts = sorted(set(payload) & PIPELINE_OWNED_ENVELOPE_KEYS)
     envelope = {
         "schemaVersion": "0.1.0",
         "outputStage": "parsed_candidate",
         "metadata": expected_candidate_metadata(request, raw_hash),
-        **payload,
     }
+    envelope.update(
+        (key, value)
+        for key, value in payload.items()
+        if key not in PIPELINE_OWNED_ENVELOPE_KEYS
+    )
     unexpected = sorted(set(payload) - SEMANTIC_RESPONSE_KEYS)
     return {
         "parserVersion": PARSER_VERSION,
@@ -75,14 +82,13 @@ def parse_recorded_response(
             }
         ],
         "unexpectedSemanticKeys": unexpected,
+        "pipelineOwnedFieldInjectionAttempts": injection_attempts,
     }
 
 
 def canonical_parsed_envelope(parser_result: Mapping[str, Any]) -> bytes:
     """Serialize a successfully parsed envelope deterministically."""
 
-    if parser_result.get("parseStatus") != "parsed" or not isinstance(
-        parser_result.get("parsedEnvelope"), dict
-    ):
+    if parser_result.get("parseStatus") != "parsed":
         raise ValueError("no canonical parsed envelope exists")
     return canonical_json(parser_result["parsedEnvelope"]) + b"\n"
