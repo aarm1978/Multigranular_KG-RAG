@@ -28,7 +28,7 @@ from src.extraction.llm.publications.request_builder import (
 from src.extraction.llm.publications.source_units import normalize_canonical_text
 
 
-VALIDATOR_VERSION = "0.1.1"
+VALIDATOR_VERSION = "0.1.2"
 RULE_VERSION = "publication-evidence-validation-0.1.0"
 VALIDATION_CONTRACT_VERSION = "0.1.0"
 PROCESSING_CODES = {
@@ -128,20 +128,26 @@ HARD_FINDING_CODES = {
     "DEFERRED_CANDIDATE_MISMATCH",
 }
 
-# These frozen vocabulary members describe forbidden operations for which the M1
-# candidate schema exposes no authorable operation or rule-selection field. They remain
-# declared for later compatible stages but are deliberately not manufactured from a
-# proxy in this validator.
-DECLARED_BUT_NOT_CURRENTLY_EMITTED_CODES = frozenset(
+# These frozen vocabulary members have no deterministic emission rule in M1. Some are
+# structurally expressible, while the others require operations or rule-selection fields
+# absent from the closed M1 candidate schema. The validator deliberately does not invent
+# semantic proxies for either category.
+STRUCTURALLY_EXPRESSIBLE_NOT_DETERMINISTICALLY_EMITTED_CODES = frozenset(
+    {"CONFLICTING_RELATION_ROLES", "RELATION_EVIDENCE_INSUFFICIENT"}
+)
+NOT_AUTHORABLE_IN_M1_VALIDATOR_CODES = frozenset(
     {
         "DETERMINISTIC_MUTATION_ATTEMPT",
         "SUMMARY_RELATION_NOT_AUTHORIZED",
         "THEORY_GROUNDING_RELATION_NOT_AUTHORIZED",
-        "CONFLICTING_RELATION_ROLES",
         "UNVALIDATED_NORMALIZATION_USED_FOR_IDENTITY",
         "NORMALIZATION_RULE_NOT_APPROVED",
         "NORMALIZATION_RULE_OUTPUT_MISMATCH",
     }
+)
+DECLARED_BUT_NOT_CURRENTLY_EMITTED_CODES = frozenset(
+    STRUCTURALLY_EXPRESSIBLE_NOT_DETERMINISTICALLY_EMITTED_CODES
+    | NOT_AUTHORABLE_IN_M1_VALIDATOR_CODES
 )
 
 
@@ -422,17 +428,15 @@ def _authorized_attributes(target: Mapping[str, Any] | None) -> set[str]:
 
 
 def _source_exact_attribute_names(target: Mapping[str, Any] | None) -> set[str]:
-    """Return attributes governed by the frozen metric/parameter exact-string policy."""
+    """Return attributes named by the target's frozen exact-string identity policy."""
 
     if target is None:
         return set()
-    contextual_classes = {"EvaluationMetric", "Parameter"}
-    return {
-        attribute["name"]
-        for formal in target.get("formal_classes", [])
-        if formal.get("name") in contextual_classes
-        for attribute in formal.get("attributes", [])
-    }
+    authorized = _authorized_attributes(target)
+    preserved = set(
+        target.get("identity_policy", {}).get("preserve_exact_source_strings", [])
+    )
+    return authorized & preserved
 
 
 def _is_contextual_occurrence_target(target: Mapping[str, Any] | None) -> bool:
@@ -635,12 +639,6 @@ def _edge_findings(
             findings.append(_finding("V8", "RELATION_SCOPE_MISMATCH", pointer + "/relationScope", expected_scope, edge.get("relationScope")))
     evidence_text = " ".join(str(evidence_by_id.get(ref, {}).get("evidenceText", "")) for ref in edge.get("evidenceSpanIDs", []))
     lowered = evidence_text.casefold()
-    endpoint_labels = []
-    for endpoint_id in (source_id, target_id):
-        if endpoint_id in node_by_id:
-            endpoint_labels.append(str(node_by_id[endpoint_id].get("label", "")))
-    if endpoint_labels and not all(label and label in evidence_text for label in endpoint_labels):
-        findings.append(_finding("V8", "RELATION_EVIDENCE_INSUFFICIENT", pointer + "/evidenceSpanIDs", "edge-specific evidence expressing endpoint relation", edge.get("evidenceSpanIDs")))
     if edge.get("relationName") == "supports" and any(token in lowered for token in ("does not support", "not support", "refutes")):
         findings.append(_finding("V8", "NEGATIVE_SUPPORT_NOT_AUTHORIZED", pointer, "positive support", evidence_text))
     return findings, source_id, target_id

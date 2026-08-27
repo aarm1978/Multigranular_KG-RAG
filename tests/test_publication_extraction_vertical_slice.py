@@ -17,6 +17,8 @@ if str(PROJECT_ROOT) not in __import__("sys").path:
 
 from src.extraction.llm.publications.candidate_validation import (  # noqa: E402
     DECLARED_BUT_NOT_CURRENTLY_EMITTED_CODES,
+    NOT_AUTHORABLE_IN_M1_VALIDATOR_CODES,
+    STRUCTURALLY_EXPRESSIBLE_NOT_DETERMINISTICALLY_EMITTED_CODES,
     _authorization_findings,
     _edge_findings,
     materialize_usable_pipeline_output,
@@ -434,6 +436,34 @@ class PublicationNodeRelationLifecycleTests(unittest.TestCase):
         _, repository_result, _ = validate(repository_request, payload([repository], [evidence(repository_request, "The repository is a fork.")]))
         self.assertNotIn("ATTRIBUTE_EVIDENCE_MISSING", codes(repository_result))
 
+    def test_parameter_exact_values_and_evidence_supported_calibration_status(self) -> None:
+        """Only identity-policy fields require literal Parameter attribute values."""
+
+        parameter_target = "PUB-N-A-DOM12-PARAMETER"
+        text = "The coefficient value was 0.25 and was fitted during calibration."
+        request = synthetic_request(text, [parameter_target])
+        span = evidence(request, text)
+        parameter = node(
+            "node-0001",
+            "coefficient",
+            target=parameter_target,
+            ontology_id="A-DOM12",
+            class_name="Parameter",
+        )
+        parameter["attributes"] = [
+            {"attributeName": "value", "value": "0.25", "evidenceSpanIDs": ["evidence-0001"]},
+            {"attributeName": "calibrationStatus", "value": "calibrated", "evidenceSpanIDs": ["evidence-0001"]},
+        ]
+        _, valid_result, valid_usable = validate(request, payload([parameter], [span]))
+        self.assertNotIn("ATTRIBUTE_EVIDENCE_MISSING", codes(valid_result))
+        self.assertEqual(len(valid_usable["candidateNodes"]), 1)
+
+        unsupported = deepcopy(parameter)
+        unsupported["attributes"][0]["value"] = "0.50"
+        _, unsupported_result, unsupported_usable = validate(request, payload([unsupported], [span]))
+        self.assertIn("ATTRIBUTE_EVIDENCE_MISSING", codes(unsupported_result))
+        self.assertEqual(unsupported_usable["candidateNodes"], [])
+
     def test_atomicity_review_is_not_usable_output(self) -> None:
         """A clearly multi-proposition discourse label is review-only, not usable."""
 
@@ -472,6 +502,64 @@ class PublicationNodeRelationLifecycleTests(unittest.TestCase):
         )
         self.assertNotIn("RELATION_EVIDENCE_INSUFFICIENT", codes(synonym_validation))
         self.assertEqual(len(synonym_usable["candidateEdges"]), 1)
+
+    def test_edge_evidence_need_not_repeat_candidate_endpoint_labels(self) -> None:
+        """Acronym-only edge evidence does not trigger an endpoint-label proxy."""
+
+        model_target = "PUB-N-A-DOM03D-MLMODEL"
+        uses_target = "PUB-R-C-P13-USESMODEL-METHOD-BRANCH"
+        text = (
+            "The routing method used the National Water Model. "
+            "NWM was employed to generate forecasts."
+        )
+        request = synthetic_request(text, [METHOD_TARGET, model_target, uses_target])
+        spans = [
+            evidence(request, "The routing method used the National Water Model."),
+            evidence(
+                request,
+                "NWM was employed to generate forecasts.",
+                evidence_id="evidence-0002",
+            ),
+        ]
+        nodes = [
+            node("node-0001", "routing method", target=METHOD_TARGET, ontology_id="A-P13", class_name="Method"),
+            node("node-0002", "National Water Model", target=model_target, ontology_id="A-DOM03d", class_name="MLModel"),
+        ]
+        relation = edge(uses_target, "C-P13", "usesModel")
+        relation["evidenceSpanIDs"] = ["evidence-0002"]
+        _, validation, usable = validate(request, payload(nodes, spans, edges=[relation]))
+        self.assertNotIn("RELATION_EVIDENCE_INSUFFICIENT", codes(validation))
+        self.assertEqual(len(usable["candidateEdges"]), 1)
+
+    def test_expressible_relation_roles_have_no_unfrozen_conflict_heuristic(self) -> None:
+        """Role coexistence remains valid absent a frozen deterministic conflict rule."""
+
+        model_target = "PUB-N-A-DOM03D-MLMODEL"
+        uses_target = "PUB-R-C-P13-USESMODEL-METHOD-BRANCH"
+        applies_target = "PUB-R-C-P14-APPLIESTO"
+        text = "method used model. method calibrated model."
+        request = synthetic_request(
+            text,
+            [METHOD_TARGET, model_target, uses_target, applies_target],
+        )
+        spans = [
+            evidence(request, "method used model."),
+            evidence(request, "method calibrated model.", evidence_id="evidence-0002"),
+        ]
+        nodes = [
+            node("node-0001", "method", target=METHOD_TARGET, ontology_id="A-P13", class_name="Method"),
+            node("node-0002", "model", target=model_target, ontology_id="A-DOM03d", class_name="MLModel"),
+        ]
+        uses = edge(uses_target, "C-P13", "usesModel")
+        applies = edge(applies_target, "C-P14", "appliesTo")
+        applies["candidateID"] = "edge-0002"
+        applies["evidenceSpanIDs"] = ["evidence-0002"]
+        _, validation, usable = validate(
+            request,
+            payload(nodes, spans, edges=[uses, applies]),
+        )
+        self.assertNotIn("CONFLICTING_RELATION_ROLES", codes(validation))
+        self.assertEqual(len(usable["candidateEdges"]), 2)
 
     def test_invalid_domain_range_direction_and_endpoint(self) -> None:
         """V7-V8 reject unresolved endpoints and reversed operational signatures."""
@@ -772,7 +860,7 @@ class PublicationRelationSignatureCoverageTests(unittest.TestCase):
         self.assertEqual((len(active_rows), signature_count), (27, 27))
 
     def test_stable_code_vocabulary_distinguishes_executable_conditions(self) -> None:
-        """Account explicitly for frozen codes unavailable in the M1 input language."""
+        """Separate executable, expressible-only, and unavailable stable codes."""
 
         contract = (PROJECT_ROOT / "docs/publication_evidence_validation_contract.md").read_text(encoding="utf-8")
         section = contract.split("## 18. Stable validation codes", 1)[1].split("## 19. Validation-result record", 1)[0]
@@ -784,7 +872,12 @@ class PublicationRelationSignatureCoverageTests(unittest.TestCase):
         }
         self.assertEqual(len(declared), 102)
         self.assertTrue(DECLARED_BUT_NOT_CURRENTLY_EMITTED_CODES <= declared)
-        self.assertEqual(len(declared - DECLARED_BUT_NOT_CURRENTLY_EMITTED_CODES), 95)
+        self.assertEqual(
+            STRUCTURALLY_EXPRESSIBLE_NOT_DETERMINISTICALLY_EMITTED_CODES,
+            {"CONFLICTING_RELATION_ROLES", "RELATION_EVIDENCE_INSUFFICIENT"},
+        )
+        self.assertEqual(len(NOT_AUTHORABLE_IN_M1_VALIDATOR_CODES), 6)
+        self.assertEqual(len(declared - DECLARED_BUT_NOT_CURRENTLY_EMITTED_CODES), 94)
 
 
 class PublicationRealVerticalSliceTests(unittest.TestCase):
