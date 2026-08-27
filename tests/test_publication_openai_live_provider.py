@@ -48,7 +48,7 @@ def synthetic_api_response(output_text: str) -> dict[str, Any]:
         "object": "response",
         "created_at": 1787832000,
         "status": "completed",
-        "model": "gpt-5.6-sol-2026-08-01",
+        "model": "gpt-5.6-sol",
         "output": [
             {
                 "type": "message",

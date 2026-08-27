@@ -7,12 +7,13 @@ is returned as exact UTF-8 bytes separately from provider response metadata.
 
 from __future__ import annotations
 
+import base64
 from copy import deepcopy
 from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
-from typing import Any, Callable, Mapping, MutableMapping
+from typing import Any, Callable, Mapping
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -29,12 +30,41 @@ REQUESTED_MODEL = "gpt-5.6-sol"
 REASONING_EFFORT = "medium"
 MAX_OUTPUT_TOKENS = 4096
 STORE = False
-PROVIDER_ADAPTER_VERSION = "0.1.0"
+PROVIDER_ADAPTER_VERSION = "0.2.0"
 RESPONSE_FORMAT = "textual_json"
+STRICT_RESPONSE_FORMAT = "json_schema_strict"
+STRUCTURED_OUTPUT_NAME = "publication_model_authorable_payload"
 
 
 class OpenAIProviderError(RuntimeError):
     """Report a safe provider configuration, transport, or response failure."""
+
+
+class OpenAIHTTPError(OpenAIProviderError):
+    """Carry credential-free diagnostics for one failed HTTP provider call."""
+
+    def __init__(self, diagnostic: Mapping[str, Any]) -> None:
+        """Initialize a concise exception while retaining its safe audit record."""
+
+        super().__init__(f"OpenAI API HTTP error ({diagnostic['httpStatus']})")
+        self.diagnostic = deepcopy(dict(diagnostic))
+
+
+class OpenAIProviderResponseError(OpenAIProviderError):
+    """Carry an auditable provider response that must not enter semantic processing."""
+
+    def __init__(
+        self,
+        failure_code: str,
+        response: Mapping[str, Any],
+        response_record: Mapping[str, Any],
+    ) -> None:
+        """Initialize a safe failure without exposing response content in its message."""
+
+        super().__init__(f"OpenAI provider response rejected: {failure_code}")
+        self.failure_code = failure_code
+        self.response = deepcopy(dict(response))
+        self.response_record = deepcopy(dict(response_record))
 
 
 def load_openai_api_key(
@@ -103,24 +133,39 @@ def build_provider_input(request: Mapping[str, Any]) -> bytes:
     )
 
 
-def build_responses_api_request(input_bytes: bytes) -> dict[str, Any]:
+def build_responses_api_request(
+    input_bytes: bytes,
+    *,
+    model_authorable_schema: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     """Build the one-model, no-tools, stateless Responses API request body."""
 
-    return {
+    body: dict[str, Any] = {
         "model": REQUESTED_MODEL,
         "reasoning": {"effort": REASONING_EFFORT},
         "input": input_bytes.decode("utf-8"),
         "max_output_tokens": MAX_OUTPUT_TOKENS,
         "store": STORE,
     }
+    if model_authorable_schema is not None:
+        body["text"] = {
+            "format": {
+                "type": "json_schema",
+                "name": STRUCTURED_OUTPUT_NAME,
+                "strict": True,
+                "schema": deepcopy(dict(model_authorable_schema)),
+            }
+        }
+    return body
 
 
 def _http_post_json(api_key: str, body: Mapping[str, Any]) -> dict[str, Any]:
     """POST one JSON request to OpenAI and return the decoded response object."""
 
+    request_body = canonical_json(body)
     request = Request(
         OPENAI_RESPONSES_URL,
-        data=canonical_json(body),
+        data=request_body,
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
@@ -131,7 +176,51 @@ def _http_post_json(api_key: str, body: Mapping[str, Any]) -> dict[str, Any]:
         with urlopen(request, timeout=180) as response:
             decoded = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
-        raise OpenAIProviderError(f"OpenAI API HTTP error ({exc.code})") from None
+        response_body = exc.read()
+        api_key_bytes = api_key.encode("utf-8")
+        credential_redacted = bool(api_key_bytes and api_key_bytes in response_body)
+        safe_response_body = (
+            response_body.replace(api_key_bytes, b"[REDACTED]")
+            if api_key_bytes
+            else response_body
+        )
+        decoded_error: Any = None
+        response_text: str | None = None
+        try:
+            response_text = safe_response_body.decode("utf-8")
+            candidate = json.loads(response_text)
+            if isinstance(candidate, (dict, list)):
+                decoded_error = candidate
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            pass
+        text_format = body.get("text", {}).get("format", {})
+        structured_schema = (
+            text_format.get("schema") if isinstance(text_format, Mapping) else None
+        )
+        headers = exc.headers
+        diagnostic = {
+            "diagnosticSchemaVersion": "0.1.0",
+            "artifactRole": "provider_http_error_diagnostic",
+            "provider": PROVIDER_NAME,
+            "providerEndpoint": OPENAI_RESPONSES_URL,
+            "httpStatus": exc.code,
+            "xRequestID": headers.get("x-request-id") if headers is not None else None,
+            "contentType": headers.get("content-type") if headers is not None else None,
+            "requestBodySha256": sha256_bytes(request_body),
+            "structuredSchemaSha256": (
+                sha256_bytes(canonical_json(structured_schema))
+                if structured_schema is not None
+                else None
+            ),
+            "responseBodyByteCount": len(response_body),
+            "responseBodySha256": sha256_bytes(response_body),
+            "responseBodyBase64": base64.b64encode(safe_response_body).decode("ascii"),
+            "responseBodyText": response_text,
+            "decodedJSONError": decoded_error,
+            "credentialRedactionApplied": credential_redacted,
+            "requestHeadersPreserved": False,
+        }
+        raise OpenAIHTTPError(diagnostic) from None
     except (URLError, TimeoutError):
         raise OpenAIProviderError("OpenAI API transport error") from None
     except (UnicodeDecodeError, json.JSONDecodeError):
@@ -183,11 +272,15 @@ def normalized_token_usage(response: Mapping[str, Any]) -> dict[str, int | None]
 
 
 def provider_response_record(
-    response: Mapping[str, Any], request_body: Mapping[str, Any], raw_output: bytes
+    response: Mapping[str, Any],
+    request_body: Mapping[str, Any],
+    raw_output: bytes | None,
 ) -> dict[str, Any]:
     """Create a credential-free API response audit record separate from model output."""
 
     usage = response.get("usage") if isinstance(response.get("usage"), Mapping) else {}
+    text_format = request_body.get("text", {}).get("format", {})
+    structured_schema = text_format.get("schema")
     return {
         "recordSchemaVersion": "0.1.0",
         "artifactRole": "provider_api_response_metadata",
@@ -223,12 +316,36 @@ def provider_response_record(
             "codeInterpreter": False,
             "externalRetrieval": False,
             "conversationState": False,
-            "responseFormat": RESPONSE_FORMAT,
+            "responseFormat": (
+                STRICT_RESPONSE_FORMAT if structured_schema is not None else RESPONSE_FORMAT
+            ),
+            "structuredOutputName": text_format.get("name"),
+            "structuredOutputStrict": text_format.get("strict"),
+            "modelAuthorableSchemaSha256": (
+                sha256_bytes(canonical_json(structured_schema))
+                if structured_schema is not None
+                else None
+            ),
         },
         "retryCount": 0,
-        "rawModelOutputSha256": sha256_bytes(raw_output),
+        "rawModelOutputSha256": (
+            sha256_bytes(raw_output) if raw_output is not None else None
+        ),
         "rawProviderResponseSha256": sha256_bytes(canonical_json(response)),
     }
+
+
+def validate_provider_response(response: Mapping[str, Any]) -> None:
+    """Require a completed, error-free, exact-model semantic provider response."""
+
+    if response.get("status") != "completed":
+        raise ValueError("STATUS_NOT_COMPLETED")
+    if response.get("error") is not None:
+        raise ValueError("PROVIDER_ERROR_PRESENT")
+    if response.get("incomplete_details") is not None:
+        raise ValueError("INCOMPLETE_DETAILS_PRESENT")
+    if response.get("model") != REQUESTED_MODEL:
+        raise ValueError("RETURNED_MODEL_MISMATCH")
 
 
 def bind_live_response_metadata(
@@ -269,14 +386,45 @@ def call_openai_responses(
     api_key: str,
     input_bytes: bytes,
     *,
+    model_authorable_schema: Mapping[str, Any] | None = None,
     transport: Transport = _http_post_json,
 ) -> tuple[bytes, dict[str, Any]]:
     """Perform one Responses API call and return output bytes plus safe metadata."""
 
+    raw_output, record, _response = call_openai_responses_detailed(
+        api_key,
+        input_bytes,
+        model_authorable_schema=model_authorable_schema,
+        transport=transport,
+    )
+    return raw_output, record
+
+
+def call_openai_responses_detailed(
+    api_key: str,
+    input_bytes: bytes,
+    *,
+    model_authorable_schema: Mapping[str, Any] | None = None,
+    transport: Transport = _http_post_json,
+) -> tuple[bytes, dict[str, Any], dict[str, Any]]:
+    """Perform one guarded call and also return the exact decoded API response."""
+
     if not api_key:
         raise OpenAIProviderError("OPENAI_API_KEY is unavailable")
-    body = build_responses_api_request(input_bytes)
+    body = build_responses_api_request(
+        input_bytes, model_authorable_schema=model_authorable_schema
+    )
     response = transport(api_key, body)
-    raw_output = extract_model_output(response)
+    record = provider_response_record(response, body, None)
+    try:
+        validate_provider_response(response)
+    except ValueError as exc:
+        raise OpenAIProviderResponseError(str(exc), response, record) from None
+    try:
+        raw_output = extract_model_output(response)
+    except OpenAIProviderError:
+        raise OpenAIProviderResponseError(
+            "MODEL_OUTPUT_UNAVAILABLE", response, record
+        ) from None
     record = provider_response_record(response, body, raw_output)
-    return raw_output, record
+    return raw_output, record, deepcopy(dict(response))
