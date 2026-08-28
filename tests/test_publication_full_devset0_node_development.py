@@ -1,0 +1,272 @@
+"""Focused no-network tests for M2-C1B full DEV-SET-0 node development."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import patch
+
+from src.extraction.llm.publications.evidence_coordinate_guide import (
+    build_coordinate_guided_provider_input,
+    build_evidence_coordinate_guide,
+)
+from src.extraction.llm.publications.openai_provider import MAX_OUTPUT_TOKENS
+from src.extraction.llm.publications.request_builder import canonical_json
+from src.extraction.llm.publications.run_publication_coordinate_guided_development_smoke import (
+    build_m2b3_request,
+)
+from src.extraction.llm.publications.run_publication_full_devset0_node_development import (
+    BASE_PROMPT_PATH,
+    C1B_MAX_OUTPUT_TOKENS,
+    DEV_IDS,
+    NEW_SENTENCE,
+    OLD_SENTENCE,
+    PROMPT_PATH,
+    build_c1b_request,
+    build_prompt_semantic_diff,
+    load_c0_bindings,
+    prepare_all,
+    run_live_unit,
+    _validation_finding_code_counts,
+)
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+class FullDevset0NodeDevelopmentTests(unittest.TestCase):
+    """Prove all C1B units share one C0-bound, node-only, no-network configuration."""
+
+    def test_all_requests_come_from_exact_accepted_c0_plan(self) -> None:
+        """All ten requests consume plan IDs and source-unit bindings mechanically."""
+
+        plan = json.loads(
+            (
+                PROJECT_ROOT
+                / "data/curation/papers/m2/c0/publication_devset0_node_request_plan_v0.1.0.json"
+            ).read_text(encoding="utf-8")
+        )
+        plan_rows = {row["developmentID"]: row for row in plan["units"]}
+        bindings = load_c0_bindings()
+        self.assertEqual(tuple(row["developmentID"] for row in bindings), DEV_IDS)
+        for binding in bindings:
+            development_id = binding["developmentID"]
+            request = build_c1b_request(binding)
+            with self.subTest(developmentID=development_id):
+                self.assertEqual(request["primarySourceUnitID"], plan_rows[development_id]["sourceUnitID"])
+                self.assertEqual(
+                    request["eligibleOperationalTargetIDs"],
+                    plan_rows[development_id]["eligibleNodeOperationalTargetIDs"],
+                )
+                self.assertEqual(len(request["eligibleOperationalTargetIDs"]), 40)
+
+    def test_no_context_deferred_or_relation_target_leaks(self) -> None:
+        """Each open-discovery request contains only the 40 direct node targets."""
+
+        for binding in load_c0_bindings():
+            request = build_c1b_request(binding)
+            excluded = set(binding["excludedDeterministicContextTargetIDs"]) | set(
+                binding["excludedDeferredOnlyTargetIDs"]
+            )
+            with self.subTest(developmentID=binding["developmentID"]):
+                self.assertEqual(len(binding["excludedDeterministicContextTargetIDs"]), 4)
+                self.assertEqual(len(binding["excludedDeferredOnlyTargetIDs"]), 2)
+                self.assertTrue(set(request["eligibleOperationalTargetIDs"]).isdisjoint(excluded))
+                self.assertEqual(binding["unresolvedApplicabilityTargetIDs"], [])
+                self.assertTrue(all(row["emission_mode"] == "llm_candidate" for row in request["targetDefinitions"]))
+                self.assertTrue(all(row["operational_id"].startswith("PUB-N-") for row in request["targetDefinitions"]))
+
+    def test_full_offline_preflight_is_deterministic_and_compatible(self) -> None:
+        """All ten schemas, guides, and provider inputs pass one deterministic gate."""
+
+        with tempfile.TemporaryDirectory() as first_dir, tempfile.TemporaryDirectory() as second_dir:
+            first = prepare_all(Path(first_dir))["preflight"]
+            second = prepare_all(Path(second_dir))["preflight"]
+        self.assertEqual(canonical_json(first), canonical_json(second))
+        self.assertEqual(first["unitCount"], 10)
+        self.assertTrue(first["allProviderCompatibilityGatesPass"])
+        self.assertTrue(first["allUnitsExposeFortyNodesAndZeroRelations"])
+        self.assertGreater(first["aggregateProviderInputBytes"], 0)
+        for row in first["units"]:
+            with self.subTest(developmentID=row["developmentID"]):
+                self.assertEqual(row["exposedNodeTargetCount"], 40)
+                self.assertEqual(row["exposedRelationTargetCount"], 0)
+                self.assertEqual(row["schemaRefSiblingCount"], 0)
+                self.assertEqual(row["schemaUnresolvedReferenceCount"], 0)
+                self.assertEqual(row["schemaMissingExplicitTypeCount"], 0)
+                self.assertEqual(row["schemaInvalidAnyOfBranchCount"], 0)
+                self.assertGreater(row["coordinateGuideEntryCount"], 0)
+                self.assertEqual(row["providerCompatibilityGate"], "PASS")
+
+    def test_prompt_v014_has_only_the_reviewed_sentence_correction(self) -> None:
+        """The historical prompt is fixed and all other semantic categories are unchanged."""
+
+        record = build_prompt_semantic_diff()
+        self.assertEqual(
+            hashlib.sha256(BASE_PROMPT_PATH.read_bytes()).hexdigest(),
+            "ca68cbb6ab4b326f10993e2fdc200ad518f34a3c8020b3ac43226e0adf186a87",
+        )
+        self.assertEqual(record["oldSentence"], OLD_SENTENCE)
+        self.assertEqual(record["newSentence"], NEW_SENTENCE)
+        self.assertEqual(record["semanticSentenceChangeCount"], 1)
+        self.assertTrue(record["basePromptOtherwiseByteIdentical"])
+        for key in (
+            "coordinateGuidanceChanged",
+            "evidenceRulesChanged",
+            "authorizedTargetRulesChanged",
+            "extractionCompletenessInstructionsChanged",
+            "abstentionRulesChanged",
+            "targetDefinitionContentChanged",
+            "unrelatedSemanticInstructionsChanged",
+        ):
+            self.assertFalse(record[key])
+        self.assertEqual(record["newPromptSha256"], hashlib.sha256(PROMPT_PATH.read_bytes()).hexdigest())
+
+    def test_output_budget_is_prospective_and_historical_inputs_are_unchanged(self) -> None:
+        """C1B uses accepted C1A capacity without changing older 4096-token behavior."""
+
+        self.assertEqual(C1B_MAX_OUTPUT_TOKENS, 32768)
+        self.assertEqual(MAX_OUTPUT_TOKENS, 4096)
+        request = build_m2b3_request()
+        guide = build_evidence_coordinate_guide(request["sourceUnit"])
+        historical_input = build_coordinate_guided_provider_input(request, guide)
+        self.assertEqual(
+            hashlib.sha256(historical_input).hexdigest(),
+            "030996ad9653ef16d628d2bf24b2e33ea8745bcfdcd570be43bd68fe9e91a802",
+        )
+
+    def test_mocked_unit_run_calls_provider_once_and_replays(self) -> None:
+        """One synthetic C1B unit uses no tools and traverses deterministic downstream stages."""
+
+        payload = {
+            "candidateNodes": [],
+            "candidateEdges": [],
+            "evidenceSpans": [],
+            "abstentions": [],
+            "deferredRecords": [],
+        }
+        calls = []
+
+        def transport(_api_key: str, body: dict[str, object]) -> dict[str, object]:
+            """Return one completed exact-model response after checking uniform controls."""
+
+            calls.append(body)
+            self.assertEqual(body["model"], "gpt-5.6-sol")
+            self.assertEqual(body["reasoning"], {"effort": "medium"})
+            self.assertEqual(body["max_output_tokens"], 32768)
+            self.assertFalse(body["store"])
+            self.assertNotIn("tools", body)
+            return {
+                "id": "resp_m2c1b_synthetic",
+                "object": "response",
+                "created_at": 1788000000,
+                "status": "completed",
+                "model": "gpt-5.6-sol",
+                "error": None,
+                "incomplete_details": None,
+                "output": [
+                    {
+                        "type": "message",
+                        "id": "msg_m2c1b_synthetic",
+                        "status": "completed",
+                        "role": "assistant",
+                        "content": [
+                            {
+                                "type": "output_text",
+                                "text": canonical_json(payload).decode("utf-8"),
+                            }
+                        ],
+                    }
+                ],
+                "usage": {
+                    "input_tokens": 100,
+                    "output_tokens": 50,
+                    "total_tokens": 150,
+                    "output_tokens_details": {"reasoning_tokens": 10},
+                },
+            }
+
+        with tempfile.TemporaryDirectory() as directory:
+            with patch(
+                "src.extraction.llm.publications.openai_provider.urlopen",
+                side_effect=AssertionError("ordinary tests must not use network"),
+            ):
+                result = run_live_unit(
+                    "DEV-10",
+                    "synthetic-secret",
+                    output_dir=Path(directory),
+                    transport=transport,
+                )
+        self.assertEqual(len(calls), 1)
+        self.assertTrue(result["replayByteIdentical"])
+        self.assertEqual(result["diagnostics"]["candidateTotals"]["candidateNodes"], 0)
+
+    def test_aggregate_finding_frequencies_count_occurrences_not_units(self) -> None:
+        """Repeated authoritative findings retain their actual occurrence frequency."""
+
+        validation = {
+            "globalFindings": [{"code": "GLOBAL"}],
+            "evidenceResults": [
+                {"findings": [{"code": "OFFSET"}, {"code": "OFFSET"}]},
+                {"findings": [{"code": "OFFSET"}]},
+            ],
+            "recordResults": [
+                {"findings": [{"code": "NODE"}]},
+                {"findings": [{"code": "NODE"}, {"code": "NODE"}]},
+            ],
+        }
+        self.assertEqual(
+            dict(_validation_finding_code_counts(validation)),
+            {"GLOBAL": 1, "OFFSET": 3, "NODE": 3},
+        )
+
+    def test_accepted_historical_artifacts_remain_byte_identical(self) -> None:
+        """Representative accepted artifacts and complete C0/C1A directories are unchanged."""
+
+        accepted = {
+            "schemas/publication_candidate_output.schema.json": "affd13215dc8023723e7e497f6fce9696cbf8af9bb7c01a85e8aa560033a776d",
+            "src/extraction/llm/publications/publication_target_inventory.yaml": "3d8a80c4ff8794588e2551e63a61e72c60a9afcb89d8b7a7058ff23e25ee4760",
+            "src/extraction/llm/publications/prompts/publication_development_v0.1.3.txt": "ca68cbb6ab4b326f10993e2fdc200ad518f34a3c8020b3ac43226e0adf186a87",
+            "data/curation/papers/m2/c1a/publication_m2c1a_exact_structured_model_output.json": "db63a5f9cbb4e9f10d537f56d17ce54fac2c20266f067e10bd94d4f3ed696a0b",
+            "data/curation/papers/m2/b3/publication_m2b3_exact_structured_model_output.json": "f6ca56b303e9fd61b5011f5d5d35edc097e828cda5d3637b72c44f2f119a89be",
+        }
+        for relative, expected in accepted.items():
+            with self.subTest(path=relative):
+                self.assertEqual(
+                    hashlib.sha256((PROJECT_ROOT / relative).read_bytes()).hexdigest(),
+                    expected,
+                )
+        directories = {
+            "c0": (
+                PROJECT_ROOT / "data/curation/papers/m2/c0",
+                4,
+                "9b240739c4a4469746313a327c2474ddfcd97ece41d008a079612d3b47c377ec",
+            ),
+            "c1a": (
+                PROJECT_ROOT / "data/curation/papers/m2/c1a",
+                18,
+                "b799a35caa86108eaa2e94bd4ce1f7f14fdca22e0386fcbfe8bd3de8b765fad1",
+            ),
+        }
+        for label, (directory, count, expected) in directories.items():
+            rows = [
+                (
+                    str(path.relative_to(PROJECT_ROOT)),
+                    hashlib.sha256(path.read_bytes()).hexdigest(),
+                )
+                for path in sorted(directory.rglob("*"))
+                if path.is_file()
+            ]
+            aggregate = hashlib.sha256(
+                json.dumps(rows, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+            with self.subTest(directory=label):
+                self.assertEqual(len(rows), count)
+                self.assertEqual(aggregate, expected)
+
+
+if __name__ == "__main__":
+    unittest.main()
