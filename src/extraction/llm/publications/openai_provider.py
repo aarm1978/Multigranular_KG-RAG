@@ -137,6 +137,7 @@ def build_responses_api_request(
     input_bytes: bytes,
     *,
     model_authorable_schema: Mapping[str, Any] | None = None,
+    max_output_tokens: int = MAX_OUTPUT_TOKENS,
 ) -> dict[str, Any]:
     """Build the one-model, no-tools, stateless Responses API request body."""
 
@@ -144,7 +145,7 @@ def build_responses_api_request(
         "model": REQUESTED_MODEL,
         "reasoning": {"effort": REASONING_EFFORT},
         "input": input_bytes.decode("utf-8"),
-        "max_output_tokens": MAX_OUTPUT_TOKENS,
+        "max_output_tokens": max_output_tokens,
         "store": STORE,
     }
     if model_authorable_schema is not None:
@@ -349,7 +350,10 @@ def validate_provider_response(response: Mapping[str, Any]) -> None:
 
 
 def bind_live_response_metadata(
-    request: Mapping[str, Any], response_record: Mapping[str, Any]
+    request: Mapping[str, Any],
+    response_record: Mapping[str, Any],
+    *,
+    max_output_tokens: int = MAX_OUTPUT_TOKENS,
 ) -> dict[str, Any]:
     """Bind actual live provider metadata into a copy of the trusted M1 request."""
 
@@ -362,7 +366,7 @@ def bind_live_response_metadata(
             "temperature": None,
             "topP": None,
             "seed": None,
-            "maxOutputTokens": MAX_OUTPUT_TOKENS,
+            "maxOutputTokens": max_output_tokens,
             "responseFormat": "structured_json",
         },
         "tokenUsage": {
@@ -387,6 +391,7 @@ def call_openai_responses(
     input_bytes: bytes,
     *,
     model_authorable_schema: Mapping[str, Any] | None = None,
+    max_output_tokens: int = MAX_OUTPUT_TOKENS,
     transport: Transport = _http_post_json,
 ) -> tuple[bytes, dict[str, Any]]:
     """Perform one Responses API call and return output bytes plus safe metadata."""
@@ -395,6 +400,7 @@ def call_openai_responses(
         api_key,
         input_bytes,
         model_authorable_schema=model_authorable_schema,
+        max_output_tokens=max_output_tokens,
         transport=transport,
     )
     return raw_output, record
@@ -405,6 +411,7 @@ def call_openai_responses_detailed(
     input_bytes: bytes,
     *,
     model_authorable_schema: Mapping[str, Any] | None = None,
+    max_output_tokens: int = MAX_OUTPUT_TOKENS,
     transport: Transport = _http_post_json,
 ) -> tuple[bytes, dict[str, Any], dict[str, Any]]:
     """Perform one guarded call and also return the exact decoded API response."""
@@ -412,7 +419,9 @@ def call_openai_responses_detailed(
     if not api_key:
         raise OpenAIProviderError("OPENAI_API_KEY is unavailable")
     body = build_responses_api_request(
-        input_bytes, model_authorable_schema=model_authorable_schema
+        input_bytes,
+        model_authorable_schema=model_authorable_schema,
+        max_output_tokens=max_output_tokens,
     )
     response = transport(api_key, body)
     record = provider_response_record(response, body, None)
