@@ -53,11 +53,10 @@ point of the internal trajectory and the operand of the external comparison.
 **Scope boundary (important for honest claims).** Density and richness measure *how much
 structure*, not *how correct* it is. A denser graph is not automatically a better one.
 Correctness is established separately by the gold-standard component (Precision/Recall/F1)
-and logical soundness through the authoritative HermiT validation gate. ELK is retained
-only as a profile-limited technical cross-check. The schema-agnostic comparison
-supports a claim of *structural richness*, which—combined with correctness and consistency
-evidence—supports the overall claim of a faithful, rich representation. It is one leg of
-the argument, not the whole.
+and logical soundness through the formal HermiT validation gate. The schema-agnostic
+comparison supports a claim of *structural richness*, which—combined with correctness
+and consistency evidence—supports the overall claim of a faithful, rich representation.
+It is one leg of the argument, not the whole.
 
 ---
 
@@ -158,9 +157,11 @@ measure, e.g. the specific agreement coefficient chosen.]`
 ### 2.4 Ontology validation — partially done
 
 Competency questions as Cypher/SPARQL queries (pending instances), logical consistency via
-the authoritative HermiT gate (DONE for ontology 0.1.3 — consistent, zero unsatisfiable
-named classes, no execution errors), and constraint validation during assembly. Recorded
-for completeness; the formalization phase already established consistency.
+the formal HermiT gate (PASS for ontology 0.1.4 — classification completed, consistent,
+zero named unsatisfiable classes, and no execution errors), and constraint validation
+during assembly. Recorded for completeness; the formalization phase already established
+consistency. The validated ontology 0.1.4 artifact SHA-256 is
+`7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635`.
 
 ---
 

@@ -1,6 +1,6 @@
 # Multigranular KG-RAG for Operational Hydrology
 
-> **Project status:** Active doctoral dissertation research. Ontology v0.1.3, the deterministic extraction layer, and the Publication Pilot 1 target profile, source-unit contract, candidate-output JSON Schema, evidence-validation contract, annotation and adjudication guidelines, and evaluation matching contract are complete and frozen. The Publication Pilot 1 source-unit builder component and its fifth twelve-artifact materialization are independently accepted at version 0.1.4. The annotator handbook has not yet been created. The pilot sample/input record and model/reproducibility policy are not yet frozen; screening and exact source-unit selection have not started. The request builder, candidate parser, evidence validator, LLM extractor, annotation interface, and annotation storage are not yet implemented. Annotation execution and gold construction have not occurred. LLM extraction and pilot evaluation have not occurred. Cross-source alignment, final graph assembly, retrieval, and comparative question-answering evaluation are also not yet completed.
+> **Project status:** Active doctoral dissertation research. Ontology v0.1.4 is formally frozen after automated structural validation and the formal HermiT reasoner gate. The deterministic extraction layer and the Publication Pilot 1 target profile, source-unit contract, candidate-output JSON Schema, evidence-validation contract, annotation and adjudication guidelines, and evaluation matching contract are complete and frozen. The Publication Pilot 1 source-unit builder component and its fifth twelve-artifact materialization are independently accepted at version 0.1.4. The annotator handbook has not yet been created. The pilot sample/input record and model/reproducibility policy are not yet frozen; screening and exact source-unit selection have not started. The request builder, candidate parser, evidence validator, LLM extractor, annotation interface, and annotation storage are not yet implemented. Annotation execution and gold construction have not occurred. LLM extraction and pilot evaluation have not occurred. Cross-source alignment, final graph assembly, retrieval, and comparative question-answering evaluation are also not yet completed.
 
 This repository supports the construction and evaluation of an ontology-guided, multigranular knowledge graph and KG-RAG system for **scientific cross-artifact question answering in operational hydrology**.
 
@@ -25,9 +25,8 @@ The intended final system will be evaluated against non-retrieval, web-search, v
 | Component | Status |
 |---|---|
 | Conceptual ontology design | Complete |
-| OWL/RDF formalization | Complete — v0.1.3 frozen |
-| HermiT validation | Complete |
-| ELK cross-check | Complete — profile-limited technical cross-check |
+| OWL/RDF formalization | Complete — v0.1.4 formally frozen |
+| HermiT formal reasoner gate | PASS for v0.1.4 |
 | HydroShare deterministic extraction | Complete |
 | GitHub deterministic extraction | Complete |
 | CIROH Hub deterministic extraction | Complete |
@@ -71,26 +70,30 @@ flowchart TD
 
 Phase A parses and normalizes source-specific records without creating graph entities. Phase B applies frozen mappings to create ontology-aligned nodes, edges, attributes, and provenance records. The current cumulative snapshots concatenate deterministic modules without semantic deduplication; alignment and consolidation are later stages.
 
-## Frozen ontology
+## Current ontology
 
-The current ontology release is **v0.1.3**, formally frozen.
+The current ontology release is **v0.1.4**, formally frozen. Automated structural
+validation and the formal HermiT reasoner gate are complete. Downstream Publication LLM
+authority contracts remain bound to ontology 0.1.3 until their later coordinated
+migration to ontology 0.1.4; that migration does not reopen or invalidate ontology 0.1.4.
 
 - Generated artifact: [`src/ontology/ciroh_ontology.owl`](src/ontology/ciroh_ontology.owl)
 - Machine-readable specification: [`src/ontology/ontology_spec.yaml`](src/ontology/ontology_spec.yaml)
 - Generator: [`src/ontology/build_ontology.py`](src/ontology/build_ontology.py)
-- SHA-256: `ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57`
+- SHA-256: `7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635`
 - Source class declarations: 75
-- Source relation declarations: 125
+- Source relation declarations: 126
 - Minted CIROH classes: 51
 - Referenced external classes: 22
-- Object properties: 90
+- Object properties: 91
 - Datatype properties: 18
 - Direct OWL imports: 6
 
-Ontology v0.1.3 passed the authoritative manual HermiT gate in Protégé: HermiT
-completed successfully, found the ontology consistent, inferred no named classes under
-`owl:Nothing`, and reported no execution errors. The technical ELK cross-check and its
-profile limitations are recorded in the formalization document.
+Ontology v0.1.4 passed the formal manual HermiT gate in Protégé on the artifact hash
+above: classification completed successfully, no ontology inconsistency was reported,
+zero named unsatisfiable classes were found under `owl:Nothing`, and no execution errors
+or warnings were observed. HermiT is the formal OWL reasoner used for logical consistency
+and named-class satisfiability validation.
 
 See [`docs/ontology_formalization.md`](docs/ontology_formalization.md) for the complete formalization and validation record.
 
@@ -233,6 +236,8 @@ External source materials remain subject to their original terms of use and lice
 ## Roadmap
 
 - [x] Freeze ontology v0.1.3
+- [x] Freeze ontology v0.1.4
+- [ ] Migrate downstream Publication LLM authority contracts from ontology v0.1.3 to v0.1.4
 - [x] Complete deterministic extraction for the four artifact families
 - [x] Record the cumulative deterministic structural trajectory
 - [x] Freeze the Publication Pilot 1 machine-readable target profile
