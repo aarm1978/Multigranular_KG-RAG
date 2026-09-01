@@ -167,6 +167,32 @@ class RequestSpecializedSchemaTests(unittest.TestCase):
             wrong = "invalid_action"
             self.assertFalse(specialized_validator.is_valid(_payload(edge=_edge(row, wrong, request["extractionChannel"]))), row["operational_id"])
 
+    def test_relation_scope_remains_endpoint_derived_for_every_relation_target(self) -> None:
+        """Ontology relation type never fixes assertion-level artifact scope."""
+
+        frozen_ids = set(
+            self.frozen["$defs"]["candidateEdge"]["properties"][
+                "operationalRelationID"
+            ]["enum"]
+        )
+        for row in self.profile["relation_targets"]:
+            if row["operational_id"] not in frozen_ids:
+                continue
+            request = _request_for(row)
+            validator = jsonschema.Draft202012Validator(
+                derive_request_specialized_schema(request)
+            )
+            candidate = _edge(
+                row, row["allowed_actions"][0], request["extractionChannel"]
+            )
+            for scope in ("intra_source", "inter_source"):
+                candidate["relationScope"] = scope
+                with self.subTest(target=row["operational_id"], scope=scope):
+                    self.assertTrue(
+                        validator.is_valid(_payload(edge=candidate)),
+                        list(validator.iter_errors(_payload(edge=candidate))),
+                    )
+
     def test_known_fixture_still_validates_and_m2a_shape_still_fails(self) -> None:
         """A Finding fixture remains representable while authentic M2-A remains malformed."""
 

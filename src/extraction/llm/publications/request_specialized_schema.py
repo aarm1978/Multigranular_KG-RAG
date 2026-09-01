@@ -31,7 +31,7 @@ from src.extraction.llm.publications.request_builder import (
 )
 
 
-REQUEST_SPECIALIZED_SCHEMA_VERSION = "publication-request-specialized-0.1.0"
+REQUEST_SPECIALIZED_SCHEMA_VERSION = "publication-request-specialized-0.1.1"
 
 
 def _const_schema(value: Any) -> dict[str, Any]:
@@ -210,17 +210,6 @@ def _node_branch(
     return branch, {"compiledConditionalRuleIndexes": sorted(compiled_all), "uncompiledConditionalRuleIndexes": sorted(deferred_all)}
 
 
-def _relation_scope(row: Mapping[str, Any]) -> dict[str, Any] | None:
-    """Return a frozen-authority relation scope only when one value is deterministic."""
-
-    types = {str(value) for formal in row.get("formal_relations", []) for value in ([formal.get("type")] if isinstance(formal.get("type"), str) else formal.get("type", []))}
-    if types == {"intra"}:
-        return _const_schema("intra_source")
-    if types == {"cross"}:
-        return _const_schema("inter_source")
-    return None
-
-
 def _edge_branch(
     row: Mapping[str, Any], request: Mapping[str, Any], generic: Mapping[str, Any], frozen: Mapping[str, Any]
 ) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -235,9 +224,6 @@ def _edge_branch(
     properties["relationName"] = _enum_schema([item["name"] for item in formal])
     properties["action"] = _enum_schema(actions)
     properties["origin"] = _const_schema(request["extractionChannel"])
-    scope = _relation_scope(row)
-    if scope is not None:
-        properties["relationScope"] = scope
     compiled_all: set[int] = set()
     deferred_all: set[int] = set()
     action_branches: list[dict[str, Any]] = []
@@ -258,11 +244,20 @@ def _edge_branch(
         action_properties["relationName"] = _enum_schema([item["name"] for item in formal])
         action_properties["action"] = _const_schema(action)
         action_properties["origin"] = _const_schema(request["extractionChannel"])
-        if scope is not None:
-            action_properties["relationScope"] = scope
         action_branches.append(action_base)
     branch = action_branches[0] if len(action_branches) == 1 else {"anyOf": action_branches}
-    return branch, {"compiledConditionalRuleIndexes": sorted(compiled_all), "uncompiledConditionalRuleIndexes": sorted(deferred_all), "endpointSignatureTransportConstraint": "not compiled; V7-V8 resolve trusted endpoint classes and frozen signatures downstream"}
+    return branch, {
+        "compiledConditionalRuleIndexes": sorted(compiled_all),
+        "uncompiledConditionalRuleIndexes": sorted(deferred_all),
+        "endpointSignatureTransportConstraint": (
+            "not compiled; V7-V8 resolve trusted endpoint classes and frozen "
+            "signatures downstream"
+        ),
+        "relationScopeTransportConstraint": (
+            "frozen intra_source|inter_source enum retained; V8 derives the exact "
+            "assertion scope from resolved endpoint artifact ownership"
+        ),
+    }
 
 
 def _empty_candidate_array() -> dict[str, Any]:
@@ -350,7 +345,7 @@ def request_specialized_schema_record(request: Mapping[str, Any]) -> dict[str, A
         "eligibleOperationalTargetIDs": list(request.get("eligibleOperationalTargetIDs", [])),
         "conditionalCompilationCoverage": coverage,
         "uncompiledAuthorities": [
-            {"constraint": "edge endpoint operational signatures and resolved relation scope where not statically deterministic", "downstreamAuthority": "unchanged M1 V7-V8 validator"},
+            {"constraint": "edge endpoint operational signatures and assertion-level relation scope", "downstreamAuthority": "unchanged M1 V7-V8 validator using resolved endpoint artifact ownership"},
             {"constraint": "literal evidence, offsets, hashes, authorization, lifecycle, and usable output", "downstreamAuthority": "unchanged M1 V1-V12 validator"},
         ],
         "genericSchemaSha256": sha256_bytes(canonical_json(generic)),

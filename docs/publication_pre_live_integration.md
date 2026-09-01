@@ -1,10 +1,10 @@
 # Publication pre-live deterministic integration
 
-**Version:** 0.1.0
+**Version:** 0.1.1
 
 **Ontology authority:** 0.1.4
 
-**Status:** deterministic implementation complete; relation development gate required
+**Status:** deterministic implementation and relation development gate complete; fresh full-semantic DEV run ready
 
 This record covers the deterministic work completed after the ontology-authority
 migration and before any fresh DEV-SET-0 provider call. It does not change the ontology,
@@ -116,15 +116,29 @@ ACCEPTED NODE WITHOUT STRONGER CONNECTIVITY = possible generic fallback connecti
 ```
 
 The frozen target profile contains 26 model-authorable Publication relation targets.
-Recorded provider development through C1B exposed nodes only and provides no authentic
-end-to-end provider/parse/validation observation for those relation targets. Unit and
-schema tests are not a substitute for that coverage. Therefore the readiness outcome is
-`RELATION_DEVELOPMENT_GATE_REQUIRED_FIRST`.
+Recorded provider development through C1B exposed nodes only and still provides no
+authentic end-to-end provider observation for those relations. The deterministic relation
+gate now provides 26/26 structural request/parser/V1–V12 fixture coverage and confirms all
+26 are endpoint-bindable for DEV-01 through DEV-10.
 
-The minimum pre-call gate is bounded: construct a deterministic DEV-SET-0 applicability
-plan from the existing frozen relation routing/signatures, expose only eligible routed
-relations beside the already-authorized nodes, audit each request-specialized schema and
-endpoint binding offline, and add no-call fixtures proving those request projections pass
-parser/validator contracts. The subsequent fresh ten-unit gate should exercise nodes plus
-all relations eligible under that frozen plan, not nodes only and not indiscriminately all
-relations.
+Candidate `relationScope` is assertion-level endpoint provenance. V8 derives
+`intra_source` when resolved endpoints share the same trusted artifact ID and
+`inter_source` when their artifact IDs differ. Ontology relation metadata such as
+`intra`, `cross`, and `same` does not universally fix this candidate field. Consequently,
+a source-local DatasetMention or provisional Repository candidate can validly receive an
+`intra_source` Paper edge, while an exact or resolver-bound external DatasetResource or
+Repository receives `inter_source`. The provider compiler retains the frozen two-value
+scope enum and does not infer identity or repair generated scope.
+
+The next prospective run is frozen by
+`data/curation/papers/m2/relation_development_gate/publication_relation_development_gate_plan.json`.
+It uses one combined request per DEV unit with the existing 40 open-discovery nodes and
+all 26 eligible model-authorable relations, trusted section-title binding, explicit
+endpoint references, unchanged prompt/parser/V1–V12 validation, complete raw-response
+provenance, and no post-generation correction. D-26 remains post-acceptance only. The
+pre-committed review categories separately cover processing/structure, evidence, node
+extraction, relation extraction, expected abstention, and derived generic connectivity.
+
+The core accepted-semantic projection remains neutral between human-adjudicated gold and
+a future automated production acceptance policy. The latter must be frozen separately
+after the extraction evaluation gate and is not designed here.

@@ -4,6 +4,10 @@ The batch consumes all ten accepted M2-C0 plan rows under one prospective v0.1.4
 configuration. Each unit has isolated preflight, provider, downstream, and replay
 artifacts. Provider calls are available only through an explicit ``--live-unit`` action;
 ordinary preparation, aggregation, and replay modes are network-free.
+
+The historical default remains C1B node-only.  The prospective ``--full-semantic`` mode
+uses the same request/provider/parser/validator path with the 40 current open-discovery
+nodes, all 26 model-authorable relations, and one trusted source-Paper endpoint.
 """
 
 from __future__ import annotations
@@ -84,6 +88,7 @@ from src.extraction.llm.publications.run_publication_structured_development_smok
 
 DEV_IDS = tuple(f"DEV-{index:02d}" for index in range(1, 11))
 RUN_ID = "publication-full-devset0-multitarget-node-development/0.1.0"
+FULL_SEMANTIC_RUN_ID = "publication-full-devset0-semantic-development/0.1.0"
 PROMPT_VERSION = "publication-development-0.1.4"
 PROMPT_PATH = (
     PROJECT_ROOT
@@ -94,7 +99,11 @@ BASE_PROMPT_PATH = (
     / "src/extraction/llm/publications/prompts/publication_development_v0.1.3.txt"
 )
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "data/curation/papers/m2/c1b"
+FULL_SEMANTIC_OUTPUT_DIR = (
+    PROJECT_ROOT / "data/curation/papers/m2/future_full_semantic_devset0"
+)
 C1B_MAX_OUTPUT_TOKENS = C1A_MAX_OUTPUT_TOKENS
+EXPECTED_MODEL_AUTHORABLE_RELATION_TARGET_COUNT = 26
 OLD_SENTENCE = (
     "No emitted candidate for a target is not an explicit negative "
     "presence-or-absence assessment."
@@ -119,11 +128,16 @@ def _write_exact(path: Path, value: bytes) -> None:
     path.write_bytes(value)
 
 
-def _unit_paths(output_dir: Path, development_id: str) -> dict[str, Path]:
+def _unit_paths(
+    output_dir: Path,
+    development_id: str,
+    *,
+    artifact_prefix: str = "publication_m2c1b",
+) -> dict[str, Path]:
     """Return isolated artifact paths for one DEV unit."""
 
     unit_dir = output_dir / development_id
-    prefix = f"publication_m2c1b_{development_id.lower().replace('-', '')}"
+    prefix = f"{artifact_prefix}_{development_id.lower().replace('-', '')}"
     return {
         "unitDir": unit_dir,
         "request": unit_dir / f"{prefix}_live_request.json",
@@ -149,14 +163,21 @@ def _unit_paths(output_dir: Path, development_id: str) -> dict[str, Path]:
     }
 
 
-def _root_paths(output_dir: Path) -> dict[str, Path]:
+def _root_paths(
+    output_dir: Path, *, full_semantic: bool = False
+) -> dict[str, Path]:
     """Return C1B aggregate and prompt-provenance paths."""
 
+    prefix = (
+        "publication_full_semantic"
+        if full_semantic
+        else "publication_m2c1b"
+    )
     return {
-        "promptDiff": output_dir / "publication_m2c1b_prompt_v0.1.4_semantic_diff.json",
-        "preflight": output_dir / "publication_m2c1b_full_offline_preflight.json",
-        "aggregate": output_dir / "publication_m2c1b_aggregate_development_diagnostics.json",
-        "replay": output_dir / "publication_m2c1b_replay_summary.json",
+        "promptDiff": output_dir / f"{prefix}_prompt_v0.1.4_semantic_diff.json",
+        "preflight": output_dir / f"{prefix}_full_offline_preflight.json",
+        "aggregate": output_dir / f"{prefix}_aggregate_development_diagnostics.json",
+        "replay": output_dir / f"{prefix}_replay_summary.json",
     }
 
 
@@ -297,6 +318,79 @@ def build_c1b_request(binding: Mapping[str, Any]) -> dict[str, Any]:
     return bound
 
 
+def model_authorable_relation_target_ids() -> list[str]:
+    """Derive the exact current relation universe from the frozen target profile."""
+
+    profile = load_yaml_object(TARGET_INVENTORY_PATH)
+    relation_ids = [
+        str(row["operational_id"])
+        for row in profile["relation_targets"]
+        if row.get("production_responsibility") == "llm"
+        and row.get("emission_mode") == "llm_candidate"
+        and row.get("pilot_treatment")
+        in {"extract_and_evaluate", "extract_and_monitor"}
+    ]
+    if len(relation_ids) != EXPECTED_MODEL_AUTHORABLE_RELATION_TARGET_COUNT:
+        raise ValueError("frozen model-authorable relation universe is not exactly 26")
+    return relation_ids
+
+
+def build_full_semantic_request(binding: Mapping[str, Any]) -> dict[str, Any]:
+    """Build one prospective combined node-and-relation DEV request."""
+
+    development_id = str(binding["developmentID"])
+    relation_ids = model_authorable_relation_target_ids()
+    target_ids = list(binding["eligibleNodeOperationalTargetIDs"]) + relation_ids
+    request = build_development_request(
+        str(binding["sourceUnitID"]),
+        target_ids,
+        run_id=f"{FULL_SEMANTIC_RUN_ID}/{development_id.lower()}",
+        prompt_path=PROMPT_PATH,
+    )
+    bound = deepcopy(request)
+    bound["developmentID"] = development_id
+    bound["prompt"]["version"] = PROMPT_VERSION
+    bound["deterministicEndpoints"] = [
+        {
+            "nodeID": bound["sourceArtifactID"],
+            "className": "Paper",
+            "artifactID": bound["sourceArtifactID"],
+        }
+    ]
+    definitions = list(bound["targetDefinitions"])
+    if any(row.get("emission_mode") != "llm_candidate" for row in definitions):
+        raise ValueError(f"{development_id} request contains non-direct targets")
+    relation_definitions = [
+        row
+        for row in definitions
+        if str(row.get("operational_id", "")).startswith("PUB-R-")
+    ]
+    if [row["operational_id"] for row in relation_definitions] != relation_ids:
+        raise ValueError(f"{development_id} relation universe drifted")
+    bound["applicabilityPolicyBinding"] = {
+        key: value
+        for key, value in binding.items()
+        if key not in {"artifactRole", "developmentOnly"}
+    }
+    bound["applicabilityPolicyBinding"].update(
+        {
+            "eligibleRelationOperationalTargetIDs": relation_ids,
+            "eligibleRelationOperationalTargetIDCount": len(relation_ids),
+            "eligibleRelationOperationalTargetIDsSha256": sha256_bytes(
+                canonical_json(relation_ids)
+            ),
+            "relationApplicabilityBasis": (
+                "frozen model-authorable relation universe; routing asserts "
+                "eligibility, not semantic presence"
+            ),
+            "targetDefinitionsSha256": sha256_bytes(canonical_json(definitions)),
+        }
+    )
+    bound.pop("requestInputSha256", None)
+    bound["requestInputSha256"] = sha256_bytes(canonical_json(bound))
+    return bound
+
+
 def _preflight_record(
     binding: Mapping[str, Any],
     request: Mapping[str, Any],
@@ -314,8 +408,14 @@ def _preflight_record(
     relations = _exposed_targets(schema, "operationalRelationID")
     if nodes != sorted(binding["eligibleNodeOperationalTargetIDs"]):
         raise ValueError(f"{binding['developmentID']} schema target exposure mismatch")
-    if relations:
-        raise ValueError(f"{binding['developmentID']} schema exposes relations")
+    expected_relations = sorted(
+        binding.get("eligibleRelationOperationalTargetIDs", [])
+    )
+    full_semantic = bool(expected_relations)
+    if relations != expected_relations:
+        raise ValueError(
+            f"{binding['developmentID']} schema relation exposure mismatch"
+        )
     if not schema_audit["compatible"]:
         raise ValueError(f"{binding['developmentID']} provider schema is incompatible")
     explicit = schema_audit["explicitTypeAudit"]
@@ -333,7 +433,11 @@ def _preflight_record(
     )
     return {
         "recordSchemaVersion": "0.1.0",
-        "artifactRole": "c1b_unit_offline_preflight",
+        "artifactRole": (
+            "prospective_full_semantic_unit_offline_preflight"
+            if full_semantic
+            else "c1b_unit_offline_preflight"
+        ),
         "developmentOnly": True,
         "networkCalls": 0,
         "developmentID": binding["developmentID"],
@@ -358,7 +462,11 @@ def _preflight_record(
         "promptSha256": request["prompt"]["sha256"],
         "maxOutputTokens": C1B_MAX_OUTPUT_TOKENS,
         "historicalProviderDefaultMaxOutputTokens": MAX_OUTPUT_TOKENS,
-        "outputBudgetOverrideScope": "M2-C1B_only_prospective",
+        "outputBudgetOverrideScope": (
+            "future_full_semantic_DEVSET0_only"
+            if full_semantic
+            else "M2-C1B_only_prospective"
+        ),
         "schemaSha256": sha256_bytes(schema_bytes),
         "exposedNodeOperationalTargetIDs": nodes,
         "exposedNodeTargetCount": len(nodes),
@@ -390,13 +498,37 @@ def _preflight_record(
 
 
 def prepare_unit(
-    binding: Mapping[str, Any], *, output_dir: Path = DEFAULT_OUTPUT_DIR
+    binding: Mapping[str, Any],
+    *,
+    output_dir: Path = DEFAULT_OUTPUT_DIR,
+    full_semantic: bool = False,
 ) -> dict[str, Any]:
     """Construct and persist one unit's deterministic no-network artifacts."""
 
     development_id = str(binding["developmentID"])
-    paths = _unit_paths(output_dir, development_id)
-    request = build_c1b_request(binding)
+    artifact_prefix = (
+        "publication_full_semantic"
+        if full_semantic
+        else "publication_m2c1b"
+    )
+    paths = _unit_paths(
+        output_dir, development_id, artifact_prefix=artifact_prefix
+    )
+    request = (
+        build_full_semantic_request(binding)
+        if full_semantic
+        else build_c1b_request(binding)
+    )
+    effective_binding = deepcopy(dict(binding))
+    if full_semantic:
+        relation_ids = model_authorable_relation_target_ids()
+        effective_binding["eligibleRelationOperationalTargetIDs"] = relation_ids
+        effective_binding["eligibleRelationOperationalTargetIDCount"] = len(
+            relation_ids
+        )
+        effective_binding["eligibleRelationOperationalTargetIDsSha256"] = (
+            sha256_bytes(canonical_json(relation_ids))
+        )
     guide = build_evidence_coordinate_guide(request["sourceUnit"])
     guide_record = coordinate_guide_record(request["sourceUnit"], guide)
     provider_input = build_coordinate_guided_provider_input(request, guide)
@@ -404,11 +536,16 @@ def prepare_unit(
     schema_record = trusted_evidence_metadata_schema_record(request)
     schema_audit = audit_openai_structured_outputs_schema(schema)
     preflight = _preflight_record(
-        binding, request, provider_input, guide_record, schema, schema_audit
+        effective_binding,
+        request,
+        provider_input,
+        guide_record,
+        schema,
+        schema_audit,
     )
     _write_canonical(paths["request"], request)
     _write_exact(paths["providerInput"], provider_input)
-    _write_canonical(paths["c0Binding"], binding)
+    _write_canonical(paths["c0Binding"], effective_binding)
     _write_canonical(paths["coordinateGuide"], guide)
     _write_canonical(paths["coordinateGuideRecord"], guide_record)
     _write_canonical(paths["modelSchema"], schema)
@@ -416,7 +553,7 @@ def prepare_unit(
     _write_canonical(paths["preflight"], preflight)
     return {
         "paths": paths,
-        "binding": binding,
+        "binding": effective_binding,
         "request": request,
         "guide": guide,
         "guideRecord": guide_record,
@@ -428,15 +565,26 @@ def prepare_unit(
     }
 
 
-def prepare_all(output_dir: Path = DEFAULT_OUTPUT_DIR) -> dict[str, Any]:
+def prepare_all(
+    output_dir: Path = DEFAULT_OUTPUT_DIR, *, full_semantic: bool = False
+) -> dict[str, Any]:
     """Construct all ten exact provider inputs and aggregate their offline sizes."""
 
     prompt_diff = build_prompt_semantic_diff()
-    states = [prepare_unit(binding, output_dir=output_dir) for binding in load_c0_bindings()]
+    states = [
+        prepare_unit(
+            binding, output_dir=output_dir, full_semantic=full_semantic
+        )
+        for binding in load_c0_bindings()
+    ]
     rows = [state["preflight"] for state in states]
     aggregate = {
         "recordSchemaVersion": "0.1.0",
-        "artifactRole": "c1b_full_devset0_offline_preflight",
+        "artifactRole": (
+            "prospective_full_semantic_devset0_offline_preflight"
+            if full_semantic
+            else "c1b_full_devset0_offline_preflight"
+        ),
         "developmentOnly": True,
         "networkCalls": 0,
         "promptSemanticDiff": prompt_diff,
@@ -447,6 +595,12 @@ def prepare_all(output_dir: Path = DEFAULT_OUTPUT_DIR) -> dict[str, Any]:
         "allUnitsExposeFortyNodesAndZeroRelations": all(
             row["exposedNodeTargetCount"] == 40
             and row["exposedRelationTargetCount"] == 0
+            for row in rows
+        ),
+        "allUnitsExposeExpectedTargets": all(
+            row["exposedNodeTargetCount"] == 40
+            and row["exposedRelationTargetCount"]
+            == (EXPECTED_MODEL_AUTHORABLE_RELATION_TARGET_COUNT if full_semantic else 0)
             for row in rows
         ),
         "aggregateBoundedRequestCanonicalBytes": sum(
@@ -464,7 +618,7 @@ def prepare_all(output_dir: Path = DEFAULT_OUTPUT_DIR) -> dict[str, Any]:
         "aggregateProviderInputBytes": sum(row["providerInputBytes"] for row in rows),
         "units": rows,
     }
-    root_paths = _root_paths(output_dir)
+    root_paths = _root_paths(output_dir, full_semantic=full_semantic)
     _write_canonical(root_paths["promptDiff"], prompt_diff)
     _write_canonical(root_paths["preflight"], aggregate)
     return {"promptDiff": prompt_diff, "states": states, "preflight": aggregate}
@@ -487,7 +641,11 @@ def _reproducibility_record(
     binding = state["binding"]
     record: dict[str, Any] = {
         "reproducibilitySchemaVersion": "0.1.0",
-        "purpose": "publication_full_devset0_multitarget_node_development",
+        "purpose": (
+            "publication_full_devset0_semantic_development"
+            if state["preflight"]["exposedRelationTargetCount"]
+            else "publication_full_devset0_multitarget_node_development"
+        ),
         "developmentOnly": True,
         "liveOpenAIOutput": True,
         "notAnnotation": True,
@@ -509,6 +667,9 @@ def _reproducibility_record(
         "eligibleNodeOperationalTargetIDsSha256": binding[
             "eligibleNodeOperationalTargetIDsSha256"
         ],
+        "eligibleRelationOperationalTargetIDsSha256": binding.get(
+            "eligibleRelationOperationalTargetIDsSha256"
+        ),
         "targetDefinitionsSha256": request["applicabilityPolicyBinding"][
             "targetDefinitionsSha256"
         ],
@@ -556,19 +717,31 @@ def run_live_unit(
     *,
     output_dir: Path = DEFAULT_OUTPUT_DIR,
     transport: Transport | None = None,
+    full_semantic: bool = False,
 ) -> dict[str, Any]:
     """Make exactly one guarded provider attempt for one selected DEV unit."""
 
     bindings = {row["developmentID"]: row for row in load_c0_bindings()}
     if development_id not in bindings:
         raise ValueError(f"unsupported development ID: {development_id}")
-    paths = _unit_paths(output_dir, development_id)
+    artifact_prefix = (
+        "publication_full_semantic"
+        if full_semantic
+        else "publication_m2c1b"
+    )
+    paths = _unit_paths(
+        output_dir, development_id, artifact_prefix=artifact_prefix
+    )
     attempt_markers = (
         paths["attempt"], paths["providerResponse"], paths["providerFailureMetadata"]
     )
     if any(path.exists() for path in attempt_markers):
         raise ValueError(f"{development_id} already has a provider-attempt artifact")
-    state = prepare_unit(bindings[development_id], output_dir=output_dir)
+    state = prepare_unit(
+        bindings[development_id],
+        output_dir=output_dir,
+        full_semantic=full_semantic,
+    )
     kwargs = {} if transport is None else {"transport": transport}
     try:
         raw_output, response, raw_response = call_openai_responses_detailed(
@@ -1092,11 +1265,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Prepare, run one explicit unit, aggregate, or replay without hidden calls."""
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--prepare-only", action="store_true")
     parser.add_argument("--live-unit", choices=DEV_IDS)
     parser.add_argument("--aggregate-only", action="store_true")
     parser.add_argument("--replay-all", action="store_true")
+    parser.add_argument(
+        "--full-semantic",
+        action="store_true",
+        help="prospectively expose 40 nodes plus the frozen 26 relations",
+    )
     args = parser.parse_args(argv)
     actions = sum(
         bool(value)
@@ -1106,12 +1284,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     if actions != 1:
         parser.error("select exactly one action")
+    if args.full_semantic and (args.aggregate_only or args.replay_all):
+        parser.error("full-semantic aggregate/replay requires completed future outputs")
+    output_dir = args.output_dir or (
+        FULL_SEMANTIC_OUTPUT_DIR if args.full_semantic else DEFAULT_OUTPUT_DIR
+    )
     try:
         if args.prepare_only:
-            result = prepare_all(args.output_dir)["preflight"]
+            result = prepare_all(
+                output_dir, full_semantic=args.full_semantic
+            )["preflight"]
         elif args.live_unit:
             live = run_live_unit(
-                args.live_unit, load_openai_api_key(), output_dir=args.output_dir
+                args.live_unit,
+                load_openai_api_key(),
+                output_dir=output_dir,
+                full_semantic=args.full_semantic,
             )
             result = {
                 "developmentID": args.live_unit,
@@ -1122,9 +1310,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "rawModelOutputSha256": live["reproducibility"]["rawModelOutputSha256"],
             }
         elif args.aggregate_only:
-            result = build_aggregate_diagnostics(args.output_dir)
+            result = build_aggregate_diagnostics(output_dir)
         else:
-            result = replay_all(args.output_dir)
+            result = replay_all(output_dir)
     except (OSError, KeyError, TypeError, ValueError, OpenAIProviderError) as exc:
         print(f"publication M2-C1B operation failed: {exc}", file=sys.stderr)
         return 1

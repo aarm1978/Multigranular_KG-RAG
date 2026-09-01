@@ -172,7 +172,7 @@ def build_development_request(
         },
         "evidenceValidationContract": {
             "path": str(EVIDENCE_VALIDATION_CONTRACT_PATH.relative_to(PROJECT_ROOT)),
-            "version": "0.1.1",
+            "version": "0.1.2",
             "sha256": sha256_bytes(EVIDENCE_VALIDATION_CONTRACT_PATH.read_bytes()),
         },
         "evaluationMatchingContract": {

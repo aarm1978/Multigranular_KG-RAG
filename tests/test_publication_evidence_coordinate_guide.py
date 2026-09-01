@@ -190,7 +190,7 @@ class EvidenceCoordinateGuideTests(unittest.TestCase):
         accepted_hashes = {
             "schemas/publication_candidate_output.schema.json": "50132ce01a16a21736f65e4b5d4b0354b3d1c53f07878352159d6ff36e94fce2",
             "src/extraction/llm/publications/publication_target_inventory.yaml": "6401c15b861c2362b67e03d56acd4a7304964f595d706311fd4f149eb69b3a5e",
-            "src/extraction/llm/publications/request_builder.py": "9f45a128b09e05d174868eef072d84727844cecb72e473818fca9f08da405a21",
+            "src/extraction/llm/publications/request_builder.py": "8ee7082442a8d7ee3f0d2a6b75fcd9a06514bb9339713278af338249a54f4259",
             "src/extraction/llm/publications/response_parser.py": "8f5ee5c455868240f8de8451611999c82354873cd4422a2d311de0566146eec2",
             "src/extraction/llm/publications/candidate_validation.py": "8c6074aa5708f519b73612ff7f1574de8311180d7b4a0e36551f6529415611d9",
             "data/curation/papers/m2/publication_m2a_exact_raw_model_output.json": "6c16dfe0c46806f7918a5e911a9c7aa5e4324fdb7baa57a92603f07d998f08ec",

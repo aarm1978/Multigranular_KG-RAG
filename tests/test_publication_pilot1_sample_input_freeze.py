@@ -27,9 +27,9 @@ FROZEN_HASHES = {
     "src/extraction/llm/publications/publication_target_inventory.yaml": "6401c15b861c2362b67e03d56acd4a7304964f595d706311fd4f149eb69b3a5e",
     "docs/publication_source_unit_contract.md": "8132be14b06153957697310ec8df16a07e72462ce7a98ae46b8d4f26aa188172",
     "schemas/publication_candidate_output.schema.json": "50132ce01a16a21736f65e4b5d4b0354b3d1c53f07878352159d6ff36e94fce2",
-    "docs/publication_evidence_validation_contract.md": "dab9904da2ba45122c44941d8c20828a85174f43336e8198e6e4daafc952043b",
+    "docs/publication_evidence_validation_contract.md": "61b2606e08849f9b04d04e20b20ac04e6d972e3cd04df81d29dfdd3df16c32b5",
     "docs/publication_annotation_adjudication_guidelines.md": "1553e633022de2579cfa1866c33b1cfda8b4972103141b19cbc0c7241b6d9f27",
-    "docs/publication_evaluation_matching_contract.md": "e6e76251af7481280423190aa4083850007ed1d2a6df126e0dc29204f7b07c34",
+    "docs/publication_evaluation_matching_contract.md": "47fff44da3d3c2643b5e8c86930b0e0f09410c160869ac1f1d4f6d3a4a7ad177",
 }
 
 
@@ -57,13 +57,13 @@ class PublicationPilot1SampleInputFreezeTests(unittest.TestCase):
         self.assertTrue(SAMPLE_PATH.is_file())
         self.assertTrue(self.raw)
         self.assertIn("**Status:** candidate; not yet frozen", self.text)
-        self.assertIn("**Document version:** 0.2.7", self.text)
+        self.assertIn("**Document version:** 0.2.8", self.text)
         self.assertNotIn("**Status:** final and binding", self.text)
 
     def test_matching_contract_is_final_binding_predecessor(self) -> None:
         """The predecessor gate remains satisfied at the exact frozen version."""
         self.assertIn("**Status:** final and binding", self.matching)
-        self.assertIn("**Contract version:** 0.1.1", self.matching)
+        self.assertIn("**Contract version:** 0.1.2", self.matching)
         self.assertIn("**Date frozen:** 2026-07-31", self.matching)
         self.assertIn("The preceding matching contract is final and binding", self.text)
 

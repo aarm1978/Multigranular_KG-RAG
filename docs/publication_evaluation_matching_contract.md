@@ -1,7 +1,7 @@
 # Publication Pilot 1 Evaluation Matching Contract
 
 > **Status:** final and binding for Publication Pilot 1 evaluation matching and decision thresholds
-> **Contract version:** 0.1.1
+> **Contract version:** 0.1.2
 > **Date frozen:** 2026-07-31
 > **Artifact family:** scientific publications
 > **Dissertation scope:** Study 2 — ontology-guided multigranular KG construction and intrinsic evaluation
@@ -107,7 +107,7 @@ Publication candidate-output schema SHA-256:
 50132ce01a16a21736f65e4b5d4b0354b3d1c53f07878352159d6ff36e94fce2
 
 Publication evidence-validation contract SHA-256:
-dab9904da2ba45122c44941d8c20828a85174f43336e8198e6e4daafc952043b
+61b2606e08849f9b04d04e20b20ac04e6d972e3cd04df81d29dfdd3df16c32b5
 
 Publication annotation/adjudication guideline SHA-256:
 1553e633022de2579cfa1866c33b1cfda8b4972103141b19cbc0c7241b6d9f27

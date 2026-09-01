@@ -47,10 +47,19 @@ endpoint pair suppresses the redundant explicit generic edge.
 The zero-call pre-live C1B replay is a `DEVELOPMENT_DIAGNOSTIC_REPLAY` and
 `COUNTERFACTUAL_TRANSPORT_EMULATION`. It is not authentic new model output, gold,
 formal evaluation, or formal acceptance. Its V12-usable-node projection validates only
-deterministic D-26 mechanics. Because C1B exposed zero relation targets, a separate
-routed-relation development gate is required before the final fresh ten-unit semantic
-run; the frozen profile currently contains 26 model-authorable Publication relation
-targets and no recorded provider run has exposed them end to end.
+deterministic D-26 mechanics. Because C1B exposed zero relation targets, the no-call
+routed-relation development gate was completed before authorizing a fresh ten-unit
+semantic run. It provides structural coverage for all 26 model-authorable Publication
+relations and confirms one combined nodes-plus-eligible-relations request per DEV unit is
+mechanically ready. No recorded provider run has yet exposed those relations end to end.
+
+Candidate `relationScope` is derived from resolved endpoint artifact ownership, not fixed
+from ontology relation `type`. Same-artifact endpoints require `intra_source`; distinct-
+artifact endpoints require `inter_source`. Thus source-local DatasetMention and
+provisional Repository candidates remain local without invented identity, while exact or
+resolver-bound external endpoints retain the external path. V8 remains authoritative;
+the provider schema preserves the frozen scope enum and performs no post-generation
+repair.
 
 ---
 

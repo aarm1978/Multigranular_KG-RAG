@@ -798,7 +798,7 @@ class PublicationValidationContractTests(unittest.TestCase):
             "**Status:** final and binding for Publication Pilot 1 implementation",
             self.text,
         )
-        self.assertIn("**Contract version:** 0.1.1", self.text)
+        self.assertIn("**Contract version:** 0.1.2", self.text)
         self.assertIn("**Date frozen:** 2026-07-30", self.text)
 
     def test_freeze_and_implementation_gates_have_exact_final_counts(self) -> None:

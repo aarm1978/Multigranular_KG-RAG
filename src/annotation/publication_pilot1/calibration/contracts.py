@@ -62,11 +62,17 @@ CURRENT_ONTOLOGY_0_1_4_PROTECTED_HASHES = {
     "docs/publication_annotation_adjudication_guidelines.md": "1553e633022de2579cfa1866c33b1cfda8b4972103141b19cbc0c7241b6d9f27",
     "docs/publication_evaluation_matching_contract.md": "e6e76251af7481280423190aa4083850007ed1d2a6df126e0dc29204f7b07c34",
 }
+CURRENT_RELATION_SCOPE_0_1_2_PROTECTED_HASHES = {
+    **CURRENT_ONTOLOGY_0_1_4_PROTECTED_HASHES,
+    "docs/publication_evidence_validation_contract.md": "61b2606e08849f9b04d04e20b20ac04e6d972e3cd04df81d29dfdd3df16c32b5",
+    "docs/publication_evaluation_matching_contract.md": "47fff44da3d3c2643b5e8c86930b0e0f09410c160869ac1f1d4f6d3a4a7ad177",
+}
 # Backward-compatible public name for distributed 0.1.3 calibration packages and tests.
 PROTECTED_HASHES = LEGACY_ONTOLOGY_0_1_3_PROTECTED_HASHES
 PROTECTED_HASH_FAMILIES = (
     LEGACY_ONTOLOGY_0_1_3_PROTECTED_HASHES,
     CURRENT_ONTOLOGY_0_1_4_PROTECTED_HASHES,
+    CURRENT_RELATION_SCOPE_0_1_2_PROTECTED_HASHES,
 )
 PRIVATE_SCREENING_RELATIVE = "var/publication_pilot1_screening/exports/publication_pilot1_screening_worklist_reviewed.csv"
 PRIVATE_SCREENING_HASH = "2cba7bdb025f063b0cfbc0b05c375feee341231b34926abe43e7cd9790ce2c01"

@@ -1,7 +1,7 @@
 # Publication Pilot 1 Sample and Input Freeze Record
 
 > **Status:** candidate; not yet frozen
-> **Document version:** 0.2.7
+> **Document version:** 0.2.8
 > **Artifact family:** scientific publications
 > **Dissertation scope:** Study 2 — ontology-guided multigranular KG construction and intrinsic evaluation
 > **Pilot:** Publication Pilot 1
@@ -93,7 +93,7 @@ Publication candidate-output schema SHA-256:
 50132ce01a16a21736f65e4b5d4b0354b3d1c53f07878352159d6ff36e94fce2
 
 Publication evidence-validation contract SHA-256:
-dab9904da2ba45122c44941d8c20828a85174f43336e8198e6e4daafc952043b
+61b2606e08849f9b04d04e20b20ac04e6d972e3cd04df81d29dfdd3df16c32b5
 
 Publication annotation/adjudication guideline SHA-256:
 1553e633022de2579cfa1866c33b1cfda8b4972103141b19cbc0c7241b6d9f27
@@ -102,10 +102,10 @@ Publication deterministic Phase B SHA-256:
 675049dae5c3dfed6f492ad0aa79e27fc1a9b37d0ecbc13ab3cf1a69cdb8efaf
 
 Publication evaluation matching contract version:
-0.1.1
+0.1.2
 
 Publication evaluation matching contract SHA-256:
-e6e76251af7481280423190aa4083850007ed1d2a6df126e0dc29204f7b07c34
+47fff44da3d3c2643b5e8c86930b0e0f09410c160869ac1f1d4f6d3a4a7ad177
 ```
 
 The final matching-contract version and hash above are binding upstream anchors for this

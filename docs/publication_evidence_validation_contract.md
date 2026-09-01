@@ -1,7 +1,7 @@
 # Publication Evidence-Validation Contract — Publication Pilot 1
 
 > **Status:** final and binding for Publication Pilot 1 implementation
-> **Contract version:** 0.1.1
+> **Contract version:** 0.1.2
 > **Artifact family:** scientific publications
 > **Source scope:** curated publication corpus
 > **Stage scope:** automatic validation of parsed LLM candidates before adjudication
@@ -12,6 +12,7 @@
 > **Candidate-output schema:** `schemas/publication_candidate_output.schema.json`
 > **Date drafted:** 2026-07-30
 > **Date frozen:** 2026-07-30
+> **Scope-interpretation clarification:** 2026-09-01
 
 ## 1. Purpose
 
@@ -619,11 +620,17 @@ intra_source
     Both endpoints belong to the current source representation.
 
 inter_source
-    The relation connects the current Paper to a distinct artifact or source-local
-    representation of a distinct artifact.
+    The resolved source and target endpoints belong to different source artifacts.
 ```
 
-Same artifact family does not imply intra-source. `Paper A → Paper B` is inter-source.
+`relationScope` is assertion-level provenance derived from resolved endpoint artifact
+ownership. Ontology relation metadata such as `intra`, `cross`, and `same` describes the
+formal relation's semantic or granularity character; it does not fix the ownership scope
+of every concrete candidate edge. A source-local occurrence or provisional node belongs
+to the current source artifact and therefore produces `intra_source` when paired with the
+current Paper. An exact or resolver-bound endpoint owned by another artifact produces
+`inter_source`. Same artifact family does not imply intra-source: `Paper A → Paper B` is
+inter-source when the Papers have distinct artifact identities.
 
 ## 13. Use, mention, reference, and repository precedence
 

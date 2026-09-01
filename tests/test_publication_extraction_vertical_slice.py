@@ -24,6 +24,9 @@ from src.extraction.llm.publications.candidate_validation import (  # noqa: E402
     materialize_usable_pipeline_output,
     validate_candidate_envelope,
 )
+from src.extraction.llm.publications.model_authorable_schema import (  # noqa: E402
+    validate_model_authorable_payload,
+)
 from src.extraction.llm.publications.request_builder import (  # noqa: E402
     RequestBuildError,
     build_development_request,
@@ -34,6 +37,9 @@ from src.extraction.llm.publications.request_builder import (  # noqa: E402
 )
 from src.extraction.llm.publications.response_parser import (  # noqa: E402
     parse_recorded_response,
+)
+from src.extraction.llm.publications.trusted_evidence_metadata_schema import (  # noqa: E402
+    derive_trusted_evidence_metadata_schema,
 )
 from src.extraction.llm.publications.run_publication_extraction_vertical_slice import (  # noqa: E402
     DEFAULT_PROVENANCE,
@@ -784,6 +790,230 @@ class PublicationNodeRelationLifecycleTests(unittest.TestCase):
         for result in first[1]["recordResults"]:
             projection = {key: value for key, value in result.items() if key != "validationResultHash"}
             self.assertEqual(result["validationResultHash"], sha256_bytes(canonical_json(projection)))
+
+
+class PublicationEndpointDerivedRelationScopeTests(unittest.TestCase):
+    """Prove Dataset and Repository scope follows resolved artifact ownership."""
+
+    CASES = (
+        (
+            "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
+            "C-P20",
+            "usesDataset",
+            "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
+            "A-P25",
+            "DatasetMention",
+            False,
+        ),
+        (
+            "PUB-R-C-P24-MENTIONSDATASET",
+            "C-P24",
+            "mentionsDataset",
+            "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
+            "A-P25",
+            "DatasetMention",
+            False,
+        ),
+        (
+            "PUB-R-C-P32-REFERENCESREPOSITORY",
+            "C-P32",
+            "referencesRepository",
+            "PUB-N-A-C01-REPOSITORY-NAMED-WITHOUT-EXACT-IDENTITY",
+            "A-C01",
+            "Repository",
+            True,
+        ),
+        (
+            "PUB-R-C-P33-HASCODEREPOSITORY",
+            "C-P33",
+            "hasCodeRepository",
+            "PUB-N-A-C01-REPOSITORY-NAMED-WITHOUT-EXACT-IDENTITY",
+            "A-C01",
+            "Repository",
+            True,
+        ),
+    )
+
+    @staticmethod
+    def _bind_target_definitions(
+        request: dict[str, Any], target_ids: Sequence[str]
+    ) -> None:
+        """Bind exact profile rows for provider-schema specialization."""
+
+        profile = load_yaml_object(TARGET_INVENTORY_PATH)
+        rows = profile["node_targets"] + profile["relation_targets"]
+        indexed = {row["operational_id"]: row for row in rows}
+        request["eligibleOperationalTargetIDs"] = list(target_ids)
+        request["targetDefinitions"] = [deepcopy(indexed[value]) for value in target_ids]
+        request.pop("requestInputSha256", None)
+        request["requestInputSha256"] = sha256_bytes(canonical_json(request))
+
+    @staticmethod
+    def _paper_endpoint(request: dict[str, Any]) -> dict[str, str]:
+        """Return the exact trusted source-Paper endpoint."""
+
+        return {
+            "nodeID": request["sourceArtifactID"],
+            "className": "Paper",
+            "artifactID": request["sourceArtifactID"],
+        }
+
+    def _local_case(
+        self, case: tuple[str, str, str, str, str, str, bool]
+    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+        """Build and validate one source-local occurrence/provisional assertion."""
+
+        relation_target, relation_id, relation_name, node_target, node_id, class_name, provisional = case
+        request = synthetic_request("Paper evidence names local entity.")
+        self._bind_target_definitions(request, [node_target, relation_target])
+        request["deterministicEndpoints"] = [self._paper_endpoint(request)]
+        request.pop("requestInputSha256", None)
+        request["requestInputSha256"] = sha256_bytes(canonical_json(request))
+        local = node(
+            "node-0001",
+            "local entity",
+            target=node_target,
+            ontology_id=node_id,
+            class_name=class_name,
+        )
+        local["provisionalIdentity"] = provisional
+        relation = edge(relation_target, relation_id, relation_name)
+        relation["source"] = {
+            "referenceType": "deterministic_node",
+            "referenceID": request["sourceArtifactID"],
+            "artifactID": request["sourceArtifactID"],
+        }
+        relation["target"] = {
+            "referenceType": "candidate_node",
+            "referenceID": "node-0001",
+            "artifactID": None,
+        }
+        response = payload(
+            [local],
+            [evidence(request, "Paper evidence names local entity.")],
+            edges=[relation],
+        )
+        schema = derive_trusted_evidence_metadata_schema(request)
+        self.assertEqual(validate_model_authorable_payload(response, schema), [])
+        _, validation, usable = validate(request, response)
+        return response, validation, usable
+
+    def _external_case(
+        self, case: tuple[str, str, str, str, str, str, bool]
+    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+        """Build and validate one exact external Dataset/Repository assertion."""
+
+        relation_target, relation_id, relation_name, _, _, local_class, _ = case
+        external_class = "DatasetResource" if local_class == "DatasetMention" else "Repository"
+        request = synthetic_request("Paper evidence names exact external entity.")
+        self._bind_target_definitions(request, [relation_target])
+        request["deterministicEndpoints"] = [
+            self._paper_endpoint(request),
+            {
+                "nodeID": "external:exact:1",
+                "className": external_class,
+                "artifactID": "external:artifact:1",
+            },
+        ]
+        request.pop("requestInputSha256", None)
+        request["requestInputSha256"] = sha256_bytes(canonical_json(request))
+        relation = edge(relation_target, relation_id, relation_name)
+        relation["relationScope"] = "inter_source"
+        relation["source"] = {
+            "referenceType": "deterministic_node",
+            "referenceID": request["sourceArtifactID"],
+            "artifactID": request["sourceArtifactID"],
+        }
+        relation["target"] = {
+            "referenceType": "deterministic_node",
+            "referenceID": "external:exact:1",
+            "artifactID": "external:artifact:1",
+        }
+        response = payload(
+            [],
+            [evidence(request, "Paper evidence names exact external entity.")],
+            edges=[relation],
+        )
+        schema = derive_trusted_evidence_metadata_schema(request)
+        self.assertEqual(validate_model_authorable_payload(response, schema), [])
+        _, validation, usable = validate(request, response)
+        return response, validation, usable
+
+    def test_four_cross_relations_accept_local_and_exact_external_paths(self) -> None:
+        """All four clarified relations pass with endpoint-derived scope."""
+
+        for case in self.CASES:
+            with self.subTest(target=case[0], ownership="source-local"):
+                response, validation, usable = self._local_case(case)
+                self.assertEqual(response["candidateEdges"][0]["relationScope"], "intra_source")
+                self.assertNotIn("RELATION_SCOPE_MISMATCH", codes(validation))
+                self.assertEqual(len(usable["candidateEdges"]), 1)
+            with self.subTest(target=case[0], ownership="exact-external"):
+                response, validation, usable = self._external_case(case)
+                self.assertEqual(response["candidateEdges"][0]["relationScope"], "inter_source")
+                self.assertNotIn("RELATION_SCOPE_MISMATCH", codes(validation))
+                self.assertEqual(len(usable["candidateEdges"]), 1)
+
+    def test_contradictory_authored_scope_is_rejected_by_v8(self) -> None:
+        """V8 rejects both directions of assertion-level scope mismatch."""
+
+        case = self.CASES[0]
+        local_response, _, _ = self._local_case(case)
+        local_request = synthetic_request("Paper evidence names local entity.")
+        self._bind_target_definitions(local_request, [case[3], case[0]])
+        local_request["deterministicEndpoints"] = [self._paper_endpoint(local_request)]
+        local_response["candidateEdges"][0]["relationScope"] = "inter_source"
+        _, local_validation, local_usable = validate(local_request, local_response)
+        self.assertIn("RELATION_SCOPE_MISMATCH", codes(local_validation))
+        self.assertEqual(local_usable["candidateEdges"], [])
+
+        external_response, _, _ = self._external_case(case)
+        external_request = synthetic_request("Paper evidence names exact external entity.")
+        self._bind_target_definitions(external_request, [case[0]])
+        external_request["deterministicEndpoints"] = [
+            self._paper_endpoint(external_request),
+            {
+                "nodeID": "external:exact:1",
+                "className": "DatasetResource",
+                "artifactID": "external:artifact:1",
+            },
+        ]
+        external_response["candidateEdges"][0]["relationScope"] = "intra_source"
+        _, external_validation, external_usable = validate(
+            external_request, external_response
+        )
+        self.assertIn("RELATION_SCOPE_MISMATCH", codes(external_validation))
+        self.assertEqual(external_usable["candidateEdges"], [])
+
+    def test_invented_external_identity_and_raw_label_endpoint_fail_closed(self) -> None:
+        """Neither candidate artifact invention nor label-only resolution is allowed."""
+
+        case = self.CASES[2]
+        response, _, _ = self._local_case(case)
+        request = synthetic_request("Paper evidence names local entity.")
+        self._bind_target_definitions(request, [case[3], case[0]])
+        request["deterministicEndpoints"] = [self._paper_endpoint(request)]
+        response["candidateNodes"][0]["artifactScope"] = "external_artifact"
+        _, validation, usable = validate(request, response)
+        self.assertIn("INVALID_IDENTITY_SCOPE", codes(validation))
+        self.assertEqual(usable["candidateEdges"], [])
+
+        response, _, _ = self._external_case(case)
+        external_request = synthetic_request(
+            "Paper evidence names exact external entity."
+        )
+        self._bind_target_definitions(external_request, [case[0]])
+        external_request["deterministicEndpoints"] = [
+            self._paper_endpoint(external_request)
+        ]
+        response["candidateEdges"][0]["target"] = {
+            "referenceType": "deterministic_node",
+            "referenceID": "raw repository label",
+            "artifactID": None,
+        }
+        _, validation, usable = validate(external_request, response)
+        self.assertIn("ENDPOINT_REFERENCE_MISSING", codes(validation))
+        self.assertEqual(usable["candidateEdges"], [])
 
 
 class PublicationRelationSignatureCoverageTests(unittest.TestCase):

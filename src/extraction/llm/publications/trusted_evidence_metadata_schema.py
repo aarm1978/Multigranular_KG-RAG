@@ -1,6 +1,6 @@
 """Bind trusted Publication evidence metadata in current provider schemas.
 
-Version 0.2.0 builds on the request-specialized 0.1.0 transport
+Version 0.2.1 builds on the request-specialized 0.1.1 transport
 projection.  It narrows only ``evidenceSpan.sectionTitle`` to the exact trusted
 ``sourceUnit.sectionTitleRaw`` value.  The frozen candidate schema and the
 unchanged M1 validator remain the semantic authorities.
@@ -30,7 +30,7 @@ from src.extraction.llm.publications.request_specialized_schema import (
 )
 
 
-TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION = "publication-request-specialized-0.2.0"
+TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION = "publication-request-specialized-0.2.1"
 SECTION_TITLE_AUTHORITY_POINTER = "/sourceUnit/sectionTitleRaw"
 SECTION_TITLE_SCHEMA_POINTER = "/$defs/evidenceSpan/properties/sectionTitle"
 HISTORICAL_SECTION_TITLE_SCHEMA = {"$ref": "#/$defs/stringOrNull"}

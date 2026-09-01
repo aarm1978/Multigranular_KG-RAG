@@ -38,7 +38,7 @@ PHASE_B_EXPECTED_SHA256 = (
     "675049dae5c3dfed6f492ad0aa79e27fc1a9b37d0ecbc13ab3cf1a69cdb8efaf"
 )
 MATCHING_CONTRACT_EXPECTED_SHA256 = (
-    "e6e76251af7481280423190aa4083850007ed1d2a6df126e0dc29204f7b07c34"
+    "47fff44da3d3c2643b5e8c86930b0e0f09410c160869ac1f1d4f6d3a4a7ad177"
 )
 
 FROZEN_HASHES = {
@@ -55,7 +55,7 @@ FROZEN_HASHES = {
         "50132ce01a16a21736f65e4b5d4b0354b3d1c53f07878352159d6ff36e94fce2"
     ),
     "docs/publication_evidence_validation_contract.md": (
-        "dab9904da2ba45122c44941d8c20828a85174f43336e8198e6e4daafc952043b"
+        "61b2606e08849f9b04d04e20b20ac04e6d972e3cd04df81d29dfdd3df16c32b5"
     ),
     "docs/publication_annotation_adjudication_guidelines.md": (
         "1553e633022de2579cfa1866c33b1cfda8b4972103141b19cbc0c7241b6d9f27"
@@ -108,7 +108,7 @@ class PublicationEvaluationMatchingContractTests(unittest.TestCase):
             "and decision thresholds",
             self.text,
         )
-        self.assertIn("**Contract version:** 0.1.1", self.text)
+        self.assertIn("**Contract version:** 0.1.2", self.text)
         self.assertIn("**Date frozen:** 2026-07-31", self.text)
         self.assertEqual(
             hashlib.sha256(self.raw).hexdigest(), MATCHING_CONTRACT_EXPECTED_SHA256
@@ -402,9 +402,9 @@ class PublicationEvaluationMatchingContractTests(unittest.TestCase):
     def test_sample_remains_unfrozen_without_exact_unit_ids(self) -> None:
         """The sample is a support-aware scaffold and contains no materialized unit IDs."""
         self.assertIn("**Status:** candidate; not yet frozen", self.sample)
-        self.assertIn("**Document version:** 0.2.7", self.sample)
+        self.assertIn("**Document version:** 0.2.8", self.sample)
         self.assertIn(
-            "Publication evaluation matching contract version:\n0.1.1", self.sample
+            "Publication evaluation matching contract version:\n0.1.2", self.sample
         )
         self.assertIn(MATCHING_CONTRACT_EXPECTED_SHA256, self.sample)
         self.assertIn("Exact selected sample unit IDs\nremain pending Gate 0 and final sample selection", self.sample)
