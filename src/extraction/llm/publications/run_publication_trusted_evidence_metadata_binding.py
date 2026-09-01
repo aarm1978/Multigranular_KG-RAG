@@ -113,7 +113,7 @@ def _tree_snapshot(directory: Path) -> dict[str, Any]:
             "sha256": sha256_bytes(path.read_bytes()),
         }
         for path in sorted(directory.rglob("*"))
-        if path.is_file()
+        if path.is_file() and path.name != ".DS_Store"
     ]
     return {
         "fileCount": len(rows),

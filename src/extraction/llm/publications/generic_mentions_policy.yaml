@@ -1,0 +1,59 @@
+policy_id: publication-generic-mentions-materialization
+policy_version: 0.1.0
+status: approved_operational
+ontology:
+  version: 0.1.4
+  specification_sha256: 363cb4f92a2fc82f993baf808da56bc7d38bbb355669dd01ca03686c3551982d
+  owl_sha256: 7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635
+relation:
+  id: D-26
+  name: mentions
+derivation_method: publication-post-acceptance-generic-mentions/0.1.0
+containment_rule:
+  name: EXACT_COORDINATE_CONTAINMENT
+  boundary_equality_permitted: true
+  required_coordinate_systems: [unit, document]
+specialized_subproperties:
+  - mentionsConcept
+  - mentionsDataset
+  - mentionsModel
+  - mentionsParameter
+  - mentionsTool
+  - mentionsVariable
+stronger_role_relations:
+  - appliesTo
+  - catalogs
+  - containsVariable
+  - describesAlgorithm
+  - describesDataset
+  - describesModel
+  - describesTool
+  - documents
+  - evaluates
+  - hasCodeRepository
+  - hasParameter
+  - hasSubject
+  - implementedBy
+  - implementsMethod
+  - referencesDataset
+  - referencesFeature
+  - referencesRepository
+  - relatesTo
+  - reportsMetric
+  - studiesFeature
+  - studiesPlace
+  - usesAlgorithm
+  - usesDataset
+  - usesModel
+  - usesParameter
+  - usesTool
+rules:
+  accepted_projection_required: true
+  paper_provenance_resolution: exactly_one
+  discourse_same_paper_required: true
+  discourse_same_source_unit_required: true
+  evidence_must_be_valid: true
+  endpoint_coexistence_is_insufficient: true
+  fallback_only: true
+  no_model_authored_target: true
+  no_annotation_decision: true

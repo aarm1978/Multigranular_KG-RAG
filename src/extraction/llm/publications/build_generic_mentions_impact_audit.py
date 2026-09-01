@@ -317,7 +317,8 @@ def build_current_ontology_audit(
     mention_relations = [
         relation
         for relation in all_relations
-        if "mention" in str(relation["name"]).lower()
+        if str(relation["name"]).startswith("mentions")
+        and str(relation["name"]) != "mentions"
     ]
     relevant = [
         relation

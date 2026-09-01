@@ -62,10 +62,10 @@ from src.extraction.llm.publications.request_builder import (  # noqa: E402
     load_yaml_object,
     sha256_bytes,
 )
-from src.extraction.llm.publications.request_specialized_schema import (  # noqa: E402
-    REQUEST_SPECIALIZED_SCHEMA_VERSION,
-    derive_request_specialized_schema,
-    request_specialized_schema_record,
+from src.extraction.llm.publications.trusted_evidence_metadata_schema import (  # noqa: E402
+    TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION,
+    derive_trusted_evidence_metadata_schema,
+    trusted_evidence_metadata_schema_record,
 )
 from src.extraction.llm.publications.response_parser import PARSER_VERSION  # noqa: E402
 from src.extraction.llm.publications.run_publication_multitarget_node_development import (  # noqa: E402
@@ -400,8 +400,8 @@ def prepare_unit(
     guide = build_evidence_coordinate_guide(request["sourceUnit"])
     guide_record = coordinate_guide_record(request["sourceUnit"], guide)
     provider_input = build_coordinate_guided_provider_input(request, guide)
-    schema = derive_request_specialized_schema(request)
-    schema_record = request_specialized_schema_record(request)
+    schema = derive_trusted_evidence_metadata_schema(request)
+    schema_record = trusted_evidence_metadata_schema_record(request)
     schema_audit = audit_openai_structured_outputs_schema(schema)
     preflight = _preflight_record(
         binding, request, provider_input, guide_record, schema, schema_audit
@@ -515,7 +515,7 @@ def _reproducibility_record(
         "coordinateGuideVersion": COORDINATE_GUIDE_VERSION,
         "coordinateGuideSha256": state["guideRecord"]["coordinateGuideSha256"],
         "coordinateGuideEntryCount": state["guideRecord"]["entryCount"],
-        "requestSpecializedSchemaVersion": REQUEST_SPECIALIZED_SCHEMA_VERSION,
+        "requestSpecializedSchemaVersion": TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION,
         "modelAuthorableSchemaSha256": sha256_bytes(canonical_json(state["schema"])),
         "modelAuthorableSchemaRecordHash": state["schemaRecord"]["recordSha256"],
         "requestBuilderVersion": REQUEST_BUILDER_VERSION,

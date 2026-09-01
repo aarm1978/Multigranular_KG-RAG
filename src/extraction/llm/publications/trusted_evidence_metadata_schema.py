@@ -1,6 +1,6 @@
-"""Prospectively bind trusted Publication evidence metadata in provider schemas.
+"""Bind trusted Publication evidence metadata in current provider schemas.
 
-Version 0.2.0 builds on the immutable request-specialized 0.1.0 transport
+Version 0.2.0 builds on the request-specialized 0.1.0 transport
 projection.  It narrows only ``evidenceSpan.sectionTitle`` to the exact trusted
 ``sourceUnit.sectionTitleRaw`` value.  The frozen candidate schema and the
 unchanged M1 validator remain the semantic authorities.
@@ -70,7 +70,7 @@ def derive_trusted_evidence_metadata_schema(
     schema_path: Path = CANDIDATE_SCHEMA_PATH,
     inventory_path: Path = TARGET_INVENTORY_PATH,
 ) -> dict[str, Any]:
-    """Derive the prospective schema and bind exactly one trusted evidence field."""
+    """Derive the current provider schema and bind exactly one trusted field."""
 
     schema = deepcopy(
         derive_request_specialized_schema(
@@ -105,14 +105,14 @@ def derive_trusted_evidence_metadata_schema(
 def trusted_evidence_metadata_schema_record(
     request: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Return deterministic provenance for the prospective title binding."""
+    """Return deterministic provenance for the current provider title binding."""
 
     historical = derive_request_specialized_schema(request)
     prospective = derive_trusted_evidence_metadata_schema(request)
     title = authoritative_section_title(request)
     record: dict[str, Any] = {
         "recordSchemaVersion": "0.1.0",
-        "artifactRole": "trusted_evidence_metadata_transport_specialization",
+        "artifactRole": "current_trusted_evidence_metadata_transport_specialization",
         "developmentOnly": True,
         "providerCalls": 0,
         "historicalRequestSpecializedSchemaVersion": REQUEST_SPECIALIZED_SCHEMA_VERSION,

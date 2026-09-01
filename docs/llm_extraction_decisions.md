@@ -29,6 +29,29 @@ The current additive generic-mentions authority is represented by formally froze
 0.1.4. Its authoritative HermiT gate completed successfully with consistency, zero
 unsatisfiable named classes, and no execution errors.
 
+For current and future Publication provider requests, `evidenceSpan.sectionTitle` is a
+request-bound transport specialization: the provider-facing schema constrains it to the
+exact typed `const` value of trusted `sourceUnit.sectionTitleRaw` before generation. This
+does not normalize the raw title, repair provider output, weaken V4 exact validation, or
+bind any other evidence field. The frozen candidate-output schema remains the semantic
+envelope authority.
+
+Ontology D-26 `ciroh:mentions` is not model-authored or independently annotated. It is
+materialized deterministically only after semantic acceptance. Paper-to-entity fallback
+requires valid entity evidence and unambiguous trusted Paper provenance. A discourse-to-
+entity fallback additionally requires the same Paper, the same source unit, and **EXACT
+COORDINATE CONTAINMENT** in both unit and document coordinates; boundary equality is
+permitted. An accepted stronger-role or specialized `mentionsX` edge for the exact same
+endpoint pair suppresses the redundant explicit generic edge.
+
+The zero-call pre-live C1B replay is a `DEVELOPMENT_DIAGNOSTIC_REPLAY` and
+`COUNTERFACTUAL_TRANSPORT_EMULATION`. It is not authentic new model output, gold,
+formal evaluation, or formal acceptance. Its V12-usable-node projection validates only
+deterministic D-26 mechanics. Because C1B exposed zero relation targets, a separate
+routed-relation development gate is required before the final fresh ten-unit semantic
+run; the frozen profile currently contains 26 model-authorable Publication relation
+targets and no recorded provider run has exposed them end to end.
+
 ---
 
 ## 2. Decision-record format
