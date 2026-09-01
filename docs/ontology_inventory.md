@@ -1,6 +1,6 @@
 # Ontology Inventory — Study 2 (Phase 1 closure)
 
-**Current semantic version:** 0.1.3, formally frozen — 75 class declarations and 125 source relation declarations. HermiT completed successfully against the validated OWL, found the ontology consistent with zero unsatisfiable named classes, and reported no execution errors. The frozen ontology-0.1.1 deterministic graphs remain unchanged.
+**Current semantic version:** 0.1.4, formally frozen — 75 class declarations and 126 source relation declarations. The formal HermiT gate passed: classification completed, the ontology is consistent, zero named unsatisfiable classes were found under `owl:Nothing`, and no execution errors were observed. The frozen deterministic graphs remain unchanged.
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 **Companion to `Study2_Ontology_v0.1.md` (concepts + namespaces §3.1). Vocabulary reuse verified (validation 1); schema fit-checked on 6 real artifacts (validation 2, Etapa A) — GO, with the schema-change log below applied.**
@@ -420,11 +420,16 @@ reverse from a repository; no duplicate `implementsModel` inverse is declared.
 | D-18 | `studiesFeature`/`referencesFeature` | `Paper`/`Dataset`/`Doc` → `HydrologicFeature` | cross+same | `ciroh:` | geoconnex URI (det) + prose | yes | S/E |
 | D-19 | `announces`/`references` | `DocumentationPage`(release-note/blog) → PR(`Repository`)/page/`Tool` | cross | `ciroh:` | dated entry + PR/page links (det) | — | S |
 | D-20 | `archivedAs`/`sameSoftwareAs` | `Repository` ↔ archived DOI snapshot (Zenodo) | same | `datacite:relatedIdentifier` (IsVersionOf/IsDerivedFrom) | repo DOI ↔ paper-cited DOI (det **where the cross-identifier matches**) | links stub↔curated | **E** |
-| D-21 | `mentionsModel`/`mentionsDataset` | model: `Paper`/`DocumentationPage`/`Repository`/`DatasetResource` → `ComputationalModel`; dataset: `Paper`/`DocumentationPage` → `DatasetMention`/`DatasetResource` | cross+same | `ciroh:` (distinct from use) | related-work / prose (quote) | yes | S |
+| D-21 | `mentionsModel`/`mentionsDataset` | model: `Paper`/`DocumentationPage`/`Repository`/`DatasetResource` → `ComputationalModel`; dataset: `Paper`/`DocumentationPage` → `DatasetMention`/`DatasetResource` | cross+same | `ciroh:` (distinct from use; typed subproperties of D-26 `mentions`) | related-work / prose (quote) | yes | S |
 | D-22 | `implementedBy` | product/component `Tool`/`ComputationalModel` → `Repository` | cross | `ciroh:` (backs D-06) | explicit product-card/DocCardList evidence, or quoted README/CITATION/repository prose stating implementation or source-code provision | yes | S; use ≠ implementation |
 | D-23 | `describedInPaper` | `Tool`/`ComputationalModel` → `Paper` | cross | `ciroh:` (backs D-06) | product card links (det) | yes | S |
 | D-24 | `describes` | `DocumentationPage` → `Tool`/`ComputationalModel`/`DatasetResource`/`Method` | cross | `ciroh:` | documentation body prose | yes | S |
 | D-25 | `documentedBy` | `Tool`/`ComputationalModel`/`DatasetResource`/`Method` → `DocumentationPage` | cross | `ciroh:` | inverse of `describes` | yes | S |
+| D-26 | `mentions` | `Paper`/`DatasetResource`/`Repository`/`DocumentationPage`/Publication discourse unit → `ComputationalModel`/`Tool`/`DatasetMention`/`DatasetResource`/`Variable`/`Concept`/`HydrologicFeature`/`NamedPlace`/`EvaluationMetric`/`Parameter`/`Algorithm`/`Repository` | intra+cross+same | `mito:mentions` (MiTO; reference-only reuse anchor) | pipeline-derived from accepted evidence-backed entity occurrence; discourse→entity requires strict evidence containment | yes | S |
+
+**D-26 generic mention semantics.** `mentions` is the weak fallback relation for an explicit, evidence-supported semantic mention when no stronger role-specific relation represents the same source→target occurrence. It does **not** imply use, study role, evaluation, reporting, description, implementation, citation, or other stronger semantics. The Publication discourse-unit branch comprises the 21 accepted discourse classes (`Background`, `Theme`, `ResearchProblem`, `ResearchQuestion`, `ResearchGoal`, `ResearchSignificance`, `Definition`, `TheoreticalBasis`, `Method`, `Experiment`, `Examples`, `Finding`, `Discussion`, `RelatedResearch`, `Limitation`, `Conclusion`, `Contribution`, `FutureWork`, `Hypothesis`, `Claim`, `DataDescription`). The bounded target range uses shared superclasses where available (`ComputationalModel`, `HydrologicFeature`) rather than enumerating their concrete subtypes.
+
+Existing specialized weak mention properties are retained and become typed subproperties of D-26: `mentionsModel`, `mentionsDataset`, `mentionsTool`, `mentionsVariable`, `mentionsConcept`, and `mentionsParameter`. D-26 reuses the SPAR Mention Typing Ontology through the reference-only anchor `mito:mentions`; MiTO is not imported. Generic `mentions` is intended to be pipeline-derived, not a new LLM-authored relation target. Artifact-level mention edges follow accepted entity evidence and trusted artifact provenance; discourse-unit→entity mention edges additionally require same-paper provenance plus strict evidence containment. Endpoint coexistence alone is insufficient. Stronger evidence-supported relations take precedence operationally, and a redundant generic parent edge is not materialized solely because a specialized `mentionsX` subproperty exists.
 
 `D-05` is realized through module-specific relations: `C-DC15` for `DocumentationPage` → `DatasetResource`, `C-P29` for `Paper` → `DatasetResource`, and `C-C19` for `Repository` → `DatasetResource`. `C-D19` retains its separate DatasetResource-origin generic-reference semantics.
 
@@ -444,6 +449,7 @@ its broadened inverse.
 
 > **D-06 backing edges:** the aggregation has explicit, traversable relations — `catalogs` (C-DC17), `hasComponent` (C-DC19), **`implementedBy`** (D-22), **`describedInPaper`** (D-23), and **`documentedBy`** (D-25). `describesTool`, `describesModel`, `describesDataset`, and `describesMethod` are subproperties of `describes` (D-24), and `documentedBy` is its inverse. Ontology 0.1.3 retains the deferred product-catalog design left unchanged in 0.1.2.
 > **Declared inverse pairs:** `hasMember` ⇄ `isMemberOf` for dataset collection membership; `isExecutedBy` ⇄ `executes` for dataset/tool execution; `hasSubPage` ⇄ `isPartOf` for documentation page hierarchy; `documentedBy` ⇄ `describes`, with `describesTool`/`describesModel` as subproperties of `describes`.
+> **No generic-mention inverse is minted.** MiTO defines `mito:isMentionedBy` as the inverse of `mito:mentions`, but CIROH does not add `ciroh:isMentionedBy`. This follows the existing lightweight inverse policy: SPARQL and the property-graph layer can traverse `mentions` in reverse, and no current competency question or reasoning requirement needs a separately named/materialized reverse property.
 > **D-20 resolution rule:** an externally-referenced stub (e.g. a Zenodo DOI) whose `relatedIdentifier` metadata points to a curated corpus repository is **linked to that repository**, so paper mentions reach the curated entity. Where the cross-identifier does **not** match (the `deep_bucket_lab` case: paper DOI `10.5281/zenodo.14538196` ≠ repo README sandbox DOI), the link is low-confidence/omitted — **never inferred by name**.
 > **Cited-DOI typing rule** (citation extractor): classify a reference by identifier type — a **software/dataset DOI** (e.g. a Zenodo software DOI) in the reference list is typed as a stub `Tool`/`Repository`/`DatasetResource`, **not** a `Paper`-stub; a **paper DOI** is a `Paper`-stub. Required so `archivedAs` (domain `Repository`, D-20) can attach to a software stub (E-26).
 > **Promoted cross-cutting relations** (live in module Table C, consolidate via D-16): `reportsMetric`/`evaluates` (`EvaluationMetric`), `hasParameter` (`Parameter`), `usesAlgorithm` (`Algorithm`).
@@ -487,7 +493,7 @@ its broadened inverse.
 
 **1. Category↔entity orphan check.** Every LLM/hybrid entity reachable from ≥1 category; deterministic entities skip Table B. New shared classes reached: `EvaluationMetric` (B-P10/B-D-results), `Parameter` (B-P09/B-C06/B-DC05), `Algorithm` (B-P07/B-C05). ✔ *Watch:* `Measurement` (A-D12) coverage ≈ 0.
 
-**2. Cross-artifact coverage check.** All four characterizations' candidates present, plus the validation-2 additions: `mentionsModel`/`mentionsDataset` (D-21), `archivedAs` (D-20), hierarchical product hub (D-06 + `hasComponent`), `forkedFrom` parent (E). Nothing dropped.
+**2. Cross-artifact coverage check.** All four characterizations' candidates remain present. The proposed 0.1.4 amendment adds D-26 `mentions` as a weak, pipeline-derived parent/fallback over the existing specialized mention relations, closing observed relation-coverage gaps for explicitly mentioned entities that do not satisfy a stronger role relation. Existing D-21 `mentionsModel`/`mentionsDataset`, D-20 `archivedAs`, the D-06 hierarchical product hub, and the E-class `forkedFrom` parent remain unchanged.
 
 **3. Competency-question coverage (validation 3 dry-run).** E-01..E-26 trace cleanly as query patterns: **23/26 unchanged**; the other 3 (E-05/E-10/E-14 on the product hub) drove the additive fixes below. Newly exercised: mention-vs-use (E-02), composite-product hierarchy (E-14), metrics (E-24), parameters (E-25), archived-snapshot resolution (E-26), Model/Method/Algorithm (E-23).
 
@@ -495,19 +501,20 @@ its broadened inverse.
 - **Reformulated (val 1):** CodeMeta = profile; CFF = evidence; schema.org-primary agents; geographic split (`gn:Feature` vs `geo:Feature`/`Geometry`); `Gauge`→`hyf:HY_HydrometricFeature`; CiTO typed citations; DEO adoptions (`Data`/`Evaluation`/`Motivation`); `deo:Materials` **not adopted**, `deo:Model` discarded.
 - **Promoted to shared domain (val 2):** `EvaluationMetric` (`ciroh:`), `Parameter` (`schema:PropertyValue`), `Algorithm` (`ciroh:`). `StatisticalModel` demoted to **E**; `Measurement` E coverage ≈ 0 (demote-candidate). New relations: `mentionsModel`/`mentionsDataset`, `reportsMetric`/`evaluates`, `hasParameter`, `usesAlgorithm`, `archivedAs`/`sameSoftwareAs` (`datacite:relatedIdentifier`, E), `forkedFrom` parent (E), `hasComponent` (hierarchical hub). Confirmed: `implementsMethod` (Repository/Tool→Method) + `cito:usesMethodIn`; doc→repo mirror deterministic (S).
 - **Added (val 3, all additive):** product-hub backing edges `implementedBy` (D-22) + `describedInPaper` (D-23), `documentedBy` confirmed as inverse of C-DC07/C-DC16; agent-layer `affiliatedWith` (A-AG-R1) + `fundedBy` (A-AG-R2); `hasProcedure` (C-DC20); cited-DOI typing rule (software/dataset DOI → software stub, not `Paper`-stub); E-21/E-22 relation-ID corrections.
+- **Frozen 0.1.4 mention-coverage amendment:** add global D-26 `ciroh:mentions` with `mito:mentions` (SPAR MiTO) as its reference-only reuse anchor; retain the six existing specialized `mentionsX` properties as CIROH properties and declare them subproperties of `mentions`. No `isMentionedBy` inverse is added. The amendment is additive at the TBox level and is motivated by Publication development evidence showing relation-coverage gaps for mention-only geographic entities, metrics, parameters, algorithms, and other shared entities. It does not retrospectively change screening, calibration, or node eligibility.
 - **`ciroh:` short list (the contribution):** `ComputationalModel` hierarchy + Model/Method/Algorithm discriminant; `EvaluationMetric`; `Algorithm`; `Aquifer`/`VPU`; controlled classifications (`ResourceType`, `RepositoryPurpose`, `productCategory`); `Variable`/`Measurement` semantics; `ToolConfiguration`; `dependsOnRepository`; mention-vs-use + `archivedAs` resolution + product-hub backing edges; the PEO-aligned discourse classes not in DEO + PEO relation vocabulary; the cross-artifact (R2O) relation semantics. `Parameter` reuses `schema:PropertyValue`.
 
-**Current outcome.** The deterministic ABox backbone and ontology 0.1.3 are complete
-and formally frozen. HermiT is authoritative for the freeze decision: it completed
-successfully, found the validated ontology consistent with zero named classes under
-`owl:Nothing`, and reported no execution errors. The patch narrows `testedBy` to
-Hypothesis, removes the unsupported `C-P12` summary documentation, and clarifies
-positive-only `supports` semantics without adding classes or relation families. The
-frozen deterministic graphs remain byte-identical and no deterministic extractor has
-been rerun.
+**Current outcome.** Ontology 0.1.4 is complete and formally frozen. It adds only the
+D-26 generic weak-mention hierarchy described above: one new global `ciroh:mentions`
+property anchored to `mito:mentions`, with the existing specialized `mentionsX`
+properties as subproperties. The amendment does not add an inverse property and does not
+alter historical screening, calibration, node eligibility, or frozen deterministic
+graphs. The formal HermiT gate passed with ontology consistency, zero named
+unsatisfiable classes under `owl:Nothing`, and no execution errors.
 
 ## Protégé import notes (from validation 1)
 - DEO: prefix `deo:` expands with slash `http://purl.org/spar/deo/`; **import canonical** `http://purl.org/spar/deo`.
 - FaBiO (`http://purl.org/spar/fabio`) and HY_Features (`https://www.opengis.net/def/schema/hy_features/hyf/`): **reference class IRIs**, don't `owl:imports`; CIROH classes `rdfs:subClassOf` the reused class.
+- MiTO: prefix `mito:` = `http://purl.org/spar/mito/`; **reference only**, do not `owl:imports`. D-26 `ciroh:mentions` uses `mito:mentions` as its reuse anchor. MiTO's inverse `mito:isMentionedBy` is documented but not adopted as a CIROH inverse.
 - CodeMeta: profile (context `https://doi.org/10.5063/schema/codemeta-2.0`); reuse properties, not classes.
 - Dublin Core `dcterms:` only; GeoNames ≥ 2.2.1. SPDX `http://spdx.org/rdf/terms#`; DOAP `http://usefulinc.com/ns/doap#`; PROV-O `http://www.w3.org/ns/prov#`; SKOS `http://www.w3.org/2004/02/skos/core#`; CiTO `http://purl.org/spar/cito`; DataCite `http://purl.org/spar/datacite` (+ `relatedIdentifier`); GeoSPARQL `http://www.opengis.net/ont/geosparql#`; `ciroh:` = `https://w3id.org/ciroh/ontology#`.

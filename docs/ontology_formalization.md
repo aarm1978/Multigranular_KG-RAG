@@ -2,11 +2,14 @@
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 
-**Current semantic version:** 0.1.3, formally frozen. The generated and structurally
-validated OWL passed the authoritative manual HermiT gate: classification completed
-successfully, the ontology was consistent, no named classes were inferred under
-`owl:Nothing`, and no execution errors occurred. Frozen deterministic Phase B graphs
-remain ontology-0.1.1 products accepted unchanged.
+**Current semantic version:** 0.1.4, formally frozen. The generated and structurally
+validated OWL passed the formal manual HermiT gate: classification completed
+successfully, no inconsistency was reported, zero named unsatisfiable classes were found
+under `owl:Nothing`, and no execution errors or warnings were observed. Frozen
+deterministic Phase B graphs remain ontology-0.1.1 products accepted unchanged.
+Downstream Publication LLM authority contracts remain bound to ontology 0.1.3 until
+their later coordinated migration; that migration does not reopen or invalidate
+ontology 0.1.4.
 
 **Purpose.** This document records the *formalization* phase: how the validated
 conceptual schema was translated into a machine-readable OWL/RDF ontology, the
@@ -46,9 +49,9 @@ ontology_spec.yaml      (machine-readable master specification — source of tru
         │  build_ontology.py  (owlready2)
         ▼
 ciroh_ontology.owl      (OWL/RDF TBox — the generated artifact)
-        │  HermiT validation (ELK technical cross-check)
+        │  HermiT validation in Protégé
         ▼
-consistency + satisfiability validation
+logical consistency + named-class satisfiability validation
 ```
 
 Every class and relation carries its inventory ID (`A-*`, `C-*`, `D-*`) as an OWL
@@ -73,7 +76,7 @@ import-versus-reference decision that keeps the ontology lightweight:
 | `use` value | Meaning | Vocabularies |
 |---|---|---|
 | `import` | `owl:imports` — the vocabulary's axioms are loaded | DEO, CiTO, DataCite, PROV-O, SKOS, P-Plan |
-| `reference` | class IRIs are used but the vocabulary is **not** imported (avoids dragging large dependency closures, e.g. FaBiO→FRBR, full HY_Features) | FaBiO, HY_Features, schema.org, GeoSPARQL, GeoNames, dcterms, DoCO, FOAF, SPDX, DOAP |
+| `reference` | class and property IRIs are used but the vocabulary is **not** imported (avoids dragging large dependency closures, e.g. FaBiO→FRBR, full HY_Features) | MiTO, FaBiO, HY_Features, schema.org, GeoSPARQL, GeoNames, dcterms, DoCO, FOAF, SPDX, DOAP |
 | `profile` | properties only, treated as a profile, not imported | CodeMeta |
 | `mint` | the `ciroh:` contribution namespace itself | ciroh |
 
@@ -124,7 +127,7 @@ inventory IDs as annotations. One conceptual relation maps to one property; the 
 domain expresses "any of these subject types," avoiding the design smell of encoding
 the domain in suffixed property names.
 
-Ontology 0.1.3 retains the merged-property mechanism introduced in 0.1.2 for the
+Ontology 0.1.4 retains the merged-property mechanism introduced in 0.1.2 for the
 approved LLM-facing families. The merged
 signatures are: `mentionsConcept` (`Paper`/`DatasetResource`/`Repository`/
 `DocumentationPage` → `Concept`); `usesTool` (`Paper`/`DatasetResource`/`Repository`
@@ -188,11 +191,14 @@ questions and the lightweight principle:
   sub-properties of a parent `describes` — this realizes the `documentedBy` inverse
   named in the competency-question validation and completes the product-hub aggregation
   (`catalogs` + `hasComponent` + `implementedBy` + `describedInPaper` + `documentedBy`).
+- `mentionsConcept`, `mentionsDataset`, `mentionsModel`, `mentionsParameter`,
+  `mentionsTool`, and `mentionsVariable` are sub-properties of the weak generic
+  `mentions` property added in ontology 0.1.4. `mentions` has no named CIROH inverse.
 
 The historical product-hub decision here is hierarchical aggregation. The separate
 ontology-modeling decision of whether product cards directly represent domain entities
 or use a `CatalogEntry`/`ResearchProduct` intermediate class remains deferred and is
-retained in ontology 0.1.3 after being left unchanged by ontology 0.1.2.
+retained in ontology 0.1.4 after being left unchanged by ontology 0.1.2.
 
 Most other reverse traversals were **deliberately not** given inverse properties,
 because both SPARQL and the property-graph query layer (Cypher) traverse relations in
@@ -214,15 +220,15 @@ workflow invocation. **Use is not implementation**, so no duplicate
 ## 4. The generated ontology
 
 `build_ontology.py` (owlready2) reads the specification and emits `ciroh_ontology.owl`
-in RDF/XML. Ontology 0.1.3 retains the declaration counts introduced in 0.1.2:
+in RDF/XML. The current ontology 0.1.4 artifact has these counts:
 
 | Element | Count |
 |---|---|
 | Minted CIROH classes | 51 |
 | Referenced external classes | 22 |
 | Source class declarations | 75 |
-| Source relation declarations | 125 |
-| Object properties | 90 |
+| Source relation declarations | 126 |
+| Object properties | 91 |
 | Datatype properties | 18 |
 | `owl:imports` | 6 |
 
@@ -270,10 +276,8 @@ resolved) and checked with the **HermiT 1.4.3.456** reasoner. The result:
   schema is defined in a self-contradictory way; when the ABox is populated, every
   designed node type can exist with real data.
 
-The authoritative validation used HermiT. Its result was additionally cross-checked
-with **ELK 0.6.0**, which reported no unsatisfiable classes. ELK covers a smaller OWL
-profile, so this is a profile-limited technical cross-check rather than independent
-full consistency or satisfiability validation.
+HermiT is the formal OWL reasoner used in Protégé to validate logical consistency and
+named-class satisfiability.
 
 A clean reasoner result was the expected — not accidental — outcome of validating the
 design before formalizing: the schema reached the reasoner already sound, so it passed
@@ -285,19 +289,19 @@ after the planned refinements rather than requiring redesign.
 
 **Established for ontology 0.1.** The Study 2 conceptual schema became a formal
 OWL/RDF TBox, generated reproducibly from a single specification, traceable to the
-inventory and empirical validations, and was validated authoritatively with HermiT and
-additionally cross-checked with ELK. Ontology 0.1 was frozen at that validation point.
+inventory and empirical validations, and was validated with HermiT. Ontology 0.1 was
+frozen at that validation point.
 
 **Historical 0.1.1 status.** The formalization patch passed structural and
-deterministic-build validation and was manually validated with HermiT and cross-checked with ELK in Protégé on 2026-07-23. Ontology 0.1.1 is formally frozen for deterministic KG extraction; the complete validation record appears in Section 7.1.
+deterministic-build validation and was manually validated with HermiT in Protégé on
+2026-07-23. Ontology 0.1.1 is formally frozen for deterministic KG extraction; the
+complete validation record appears in Section 7.1.
 
 **Historical 0.1.2 status.** Local generation, RDF/XML structural checks, merged-property
 regressions, inventory reconciliation, frozen-output compatibility checks, and
 three-build byte determinism are complete. Manual Protégé validation is also complete:
-HermiT passed with ontology consistency and zero unsatisfiable named classes; ELK
-completed with profile-incompleteness warnings and is retained only as a profile-limited
-classification cross-check. Ontology 0.1.2 is formally frozen. The 0.1.1 reasoner
-record below remains historical.
+HermiT passed with ontology consistency and zero unsatisfiable named classes. Ontology
+0.1.2 is formally frozen. The 0.1.1 reasoner record below remains historical.
 
 **Stated as out-of-TBox (for the manuscript).** Two design commitments are enforced
 outside OWL and must be described as such: (i) evidence completeness for
@@ -305,12 +309,18 @@ externally-typed nodes is guaranteed by the extraction rule and validated in the
 not by an OWL restriction; (ii) edge-level evidence is materialized as relationship
 properties in the property graph, not as OWL axioms.
 
-**Current 0.1.3 status.** The approved minimal pre-pilot patch has been generated,
+**Historical 0.1.3 status.** The approved minimal pre-pilot patch was generated,
 structurally validated, and manually validated with HermiT. HermiT completed
 successfully, found the ontology consistent with zero unsatisfiable named classes, and
-reported no execution errors. HermiT is authoritative for the formal validation and
-freeze decision, and ontology 0.1.3 is formally frozen. The deterministic ABox backbone
-remains unchanged, and no deterministic extractor has been rerun.
+reported no execution errors. Ontology 0.1.3 is formally frozen. The deterministic ABox
+backbone remained unchanged, and no deterministic extractor was rerun.
+
+**Current 0.1.4 status.** The researcher-approved generic `mentions` amendment was
+generated and structurally validated, and its exact OWL artifact passed the formal HermiT
+gate. Ontology 0.1.4 is formally frozen. Downstream Publication LLM authority contracts
+remain bound to ontology 0.1.3 until their later coordinated migration to ontology 0.1.4;
+that migration belongs to the Publication LLM workstream and does not reopen or
+invalidate the frozen ontology.
 
 ---
 
@@ -433,18 +443,9 @@ generated non-blocking redeclaration warnings for `prov:wasRevisionOf` and
 These results apply to ontology 0.1.1 and its complete locally resolved import
 closure.
 
-ELK 0.6.0 was also run in Protégé on 2026-07-23 against the same ontology 0.1.1
-artifact (`dc873cad75979ae4599ef48051a5cb11ee2d7425299d6dbfdb3f9ad1d759209b`)
-and complete locally resolved import closure used for the HermiT validation. ELK
-completed classification without reporting an inconsistency, and zero named classes
-were inferred under `owl:Nothing`. Because ELK supports a smaller OWL profile than
-HermiT, this agreement is expected and is treated as a cross-check rather than fully
-independent confirmation across the ontology's complete expressivity.
-
 The historical ontology 0.1 reasoner record in Section 5 remains separate. With
-structural validation and authoritative manual HermiT classification complete, and
-with ELK retained as an additional profile-limited technical cross-check, ontology
-0.1.1 is formally frozen for deterministic KG extraction.
+structural validation and manual HermiT classification complete, ontology 0.1.1 is
+formally frozen for deterministic KG extraction.
 
 ---
 
@@ -482,22 +483,18 @@ external classes, 90 object properties, 18 datatype properties, six imports, and
 source relation declarations. Its SHA-256 is
 `2857dc9f8e578367f6d2608da7e05d2ff5b2113fd41ff6c34047b90574b53ee7`.
 
-### 8.1 Authoritative HermiT validation and ELK technical cross-check
+### 8.1 Manual HermiT validation
 
 Ontology 0.1.2 was manually validated in Protégé against the generated OWL artifact with SHA-256 `2857dc9f8e578367f6d2608da7e05d2ff5b2113fd41ff6c34047b90574b53ee7`.
 
 HermiT completed classification of the ontology and its resolved import closure without reporting an inconsistency or an execution error. No named classes were inferred under `owl:Nothing`. Ontology 0.1.2 was therefore found to be logically consistent, with zero unsatisfiable named classes under HermiT.
 
-ELK also completed class, object-property, data-property, and instance taxonomy computation without an execution error, and no named classes were observed under `owl:Nothing`. ELK reported potential incompleteness because the loaded ontology closure contains constructs outside the OWL 2 EL profile, including data-cardinality axioms and other unsupported OWL constructs. Consequently, the ELK run is recorded as a profile-limited classification cross-check rather than an independent full-consistency validation.
-
 The reasoner-validation outcome for ontology 0.1.2 is therefore:
 
 * HermiT: PASS — ontology consistent; zero unsatisfiable named classes.
-* ELK: COMPLETED WITH PROFILE-INCOMPLETENESS WARNINGS — no execution error and zero observed unsatisfiable named classes, but full satisfiability checking was not available for the complete ontology closure.
 
-With structural validation and authoritative HermiT validation complete, and with the
-profile-limited ELK technical cross-check recorded separately, ontology 0.1.2 is
-formally frozen at the validated SHA-256 recorded above.
+With structural validation and HermiT validation complete, ontology 0.1.2 is formally
+frozen at the validated SHA-256 recorded above.
 
 ---
 
@@ -547,12 +544,44 @@ reasoner for the formal ontology validation and freeze decision.
 errors.** With structural validation and the authoritative manual HermiT gate complete,
 ontology 0.1.3 is formally frozen at the validated SHA-256 above.
 
-### 9.2 Technical ELK cross-check
+---
 
-ELK completed against the same validated OWL and produced no named classes under
-`owl:Nothing`. It reported profile-related potential incompleteness because the
-ontology contains constructs outside the OWL 2 EL profile. The ELK execution is retained
-only as a technical, profile-limited cross-check: it is not an independent full
-satisfiability validation and is not part of the formal PASS criterion. Detailed ELK
-warnings belong in this technical record or a repository log rather than the
-manuscript-facing ontology validation summary.
+## 10. Generic semantic mention amendment 0.1.4
+
+Ontology 0.1.4 adds the researcher-approved weak generic `ciroh:mentions` property as
+D-26, anchored by annotation to `mito:mentions`. MiTO remains reference-only and is not
+an OWL import. No `ciroh:isMentionedBy` property or other inverse was added. The existing
+`mentionsConcept`, `mentionsDataset`, `mentionsModel`, `mentionsParameter`,
+`mentionsTool`, and `mentionsVariable` properties are direct sub-properties of
+`ciroh:mentions`; their existing merged domains and ranges remain unchanged.
+
+The generated ontology contains 75 source class declarations, 126 source relation
+declarations, 51 minted CIROH classes, 22 referenced external classes, 91 object
+properties, 18 datatype properties, and six direct imports. The exact generated RDF/XML
+artifact has SHA-256
+`7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635`.
+
+Thirty-five focused ontology regression tests passed. The inventory/specification/OWL
+reconciliation, frozen Phase B byte-integrity checks, and three-process deterministic
+regeneration also passed.
+
+### 10.1 Formal HermiT reasoner gate
+
+The researcher manually classified the exact ontology 0.1.4 artifact above in Protégé
+with the project's complete locally resolved ontology/import configuration available.
+HermiT completed classification successfully in approximately 27.6 seconds. Protégé
+reported no reasoner execution error or ontology inconsistency. Researcher inspection
+found zero named unsatisfiable classes under `owl:Nothing`, and no HermiT warnings or
+errors were observed in the run log.
+
+**HERMIT FORMAL REASONER GATE: PASS**
+
+- Classification completed: PASS
+- Logical consistency: PASS
+- Named unsatisfiable classes under `owl:Nothing`: 0
+- Execution errors: none observed
+
+HermiT is the formal OWL reasoner used in Protégé to validate ontology logical
+consistency and named-class satisfiability. Ontology 0.1.4 is formally frozen. Downstream
+Publication LLM authority contracts remain bound to ontology 0.1.3 pending their later
+coordinated migration, which does not reopen or invalidate ontology 0.1.4.

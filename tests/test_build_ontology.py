@@ -55,7 +55,15 @@ NS = {
 }
 RDF_ABOUT = f"{{{NS['rdf']}}}about"
 RDF_RESOURCE = f"{{{NS['rdf']}}}resource"
-GENERATED_CLASS_LOCAL_ALIASES = {"Methods": "Method", "Data": "DataDescription"}
+GENERATED_CLASS_LOCAL_ALIASES = {
+    "Data": "DataDescription",
+    "Methods": "Method",
+    "Motivation": "ResearchGoal",
+    "ProblemStatement": "ResearchProblem",
+    "RelatedWork": "RelatedResearch",
+    "Results": "Finding",
+    "Scenario": "Examples",
+}
 
 # Narrative module IDs that consolidate into shared or canonical machine-readable
 # ontology IDs. This is an explicit traceability registry, not a fuzzy matcher.
@@ -76,6 +84,71 @@ APPROVED_INVENTORY_ALIASES = {
 # These technical IDs formalize shared relations described without numbered rows
 # in the narrative inventory. Each is documented next to that prose declaration.
 SPEC_ONLY_TECHNICAL_IDS = {"PROV-R1", "PROV-R2", "ID-R1"}
+
+D26_DOMAIN = {
+    "Paper",
+    "DatasetResource",
+    "Repository",
+    "DocumentationPage",
+    "Background",
+    "Theme",
+    "ResearchProblem",
+    "ResearchQuestion",
+    "ResearchGoal",
+    "ResearchSignificance",
+    "Definition",
+    "TheoreticalBasis",
+    "Method",
+    "Experiment",
+    "Examples",
+    "Finding",
+    "Discussion",
+    "RelatedResearch",
+    "Limitation",
+    "Conclusion",
+    "Contribution",
+    "FutureWork",
+    "Hypothesis",
+    "Claim",
+    "DataDescription",
+}
+D26_RANGE = {
+    "ComputationalModel",
+    "Tool",
+    "DatasetMention",
+    "DatasetResource",
+    "Variable",
+    "Concept",
+    "HydrologicFeature",
+    "NamedPlace",
+    "EvaluationMetric",
+    "Parameter",
+    "Algorithm",
+    "Repository",
+}
+D26_EVIDENCE = (
+    "pipeline-derived from accepted evidence-backed entity occurrence; "
+    "discourse-to-entity derivation additionally requires same canonical Paper, "
+    "valid endpoint evidence, and strict evidence containment; endpoint coexistence "
+    "alone is insufficient"
+)
+D26_NOTE = (
+    "Weak generic semantic mention and parent of specialized mentionsX properties. "
+    "It does not imply use, study, evaluation, reporting, description, implementation, "
+    "citation, or another stronger role. Stronger evidence-supported relations take "
+    "precedence operationally; redundant generic parent edges are not materialized "
+    "solely because a specialized mentionsX edge exists. MiTO defines "
+    "mito:isMentionedBy as the inverse of mito:mentions, but CIROH deliberately does "
+    "not mint a generic inverse under its lightweight inverse policy."
+)
+MENTIONS_CHILD_PROPERTIES = {
+    "mentionsConcept",
+    "mentionsDataset",
+    "mentionsModel",
+    "mentionsParameter",
+    "mentionsTool",
+    "mentionsVariable",
+}
 
 # Every global relation is represented by explicit module relations, a named global
 # property, or a documented multi-property mechanism. Expected domains/ranges are
@@ -112,6 +185,7 @@ GLOBAL_RELATION_BRANCHES = [
     ("D-23", {"Tool", "ComputationalModel"}, {"Paper"}, {"D-23"}, "global", "Product publication backing edge"),
     ("D-24", {"DocumentationPage"}, {"Tool", "ComputationalModel", "DatasetResource", "Method"}, {"D-24", "C-DC07", "C-DC16", "C-DC27", "C-DC28"}, "mechanism", "Parent property plus four typed description subproperties"),
     ("D-25", {"Tool", "ComputationalModel", "DatasetResource", "Method"}, {"DocumentationPage"}, {"D-25"}, "global", "Inverse documentation relation"),
+    ("D-26", D26_DOMAIN, D26_RANGE, {"D-26"}, "global", "Researcher-approved weak generic semantic mention relation"),
 ]
 
 
@@ -208,11 +282,29 @@ def inventory_table_ids() -> set[str]:
 
 
 class OntologyFormalizationPatchTests(unittest.TestCase):
-    """Verify the complete ontology 0.1.3 pre-pilot patch."""
+    """Verify the complete ontology 0.1.4 regression suite."""
 
-    def test_spec_version_is_0_1_3(self) -> None:
-        """The authoritative specification records candidate version 0.1.3."""
-        self.assertEqual(load_spec()["ontology"]["version"], "0.1.3")
+    def test_spec_version_is_0_1_4(self) -> None:
+        """The authoritative specification records candidate version 0.1.4."""
+        self.assertEqual(load_spec()["ontology"]["version"], "0.1.4")
+
+    def test_d26_source_declaration(self) -> None:
+        """D-26 preserves the complete researcher-approved source declaration."""
+        relation = relation_by_id("D-26")
+        self.assertEqual(relation["id"], "D-26")
+        self.assertEqual(relation["name"], "mentions")
+        self.assertEqual(relation["anchor"], "mito:mentions")
+        self.assertEqual(as_set(relation["domain"]), D26_DOMAIN)
+        self.assertEqual(as_set(relation["range"]), D26_RANGE)
+        self.assertNotIn("inverse_of", relation)
+        self.assertFalse(
+            any(item["name"] == "isMentionedBy" for item in load_spec()["relations"])
+        )
+        self.assertEqual(relation["evidence"], D26_EVIDENCE)
+        self.assertEqual(relation["status"], "S")
+        self.assertEqual(relation["type"], ["intra", "cross", "same"])
+        self.assertTrue(relation["consol"])
+        self.assertEqual(relation["note"], D26_NOTE)
 
     def test_c_p29_declaration(self) -> None:
         """C-P29 realizes the Paper-domain branch of global D-05."""
@@ -225,11 +317,57 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
         self.assertEqual(relation["alt_anchor"], "dcterms:references")
         self.assertTrue(relation["consol"])
 
-    def test_generated_version_is_0_1_3(self) -> None:
+    def test_generated_version_is_0_1_4(self) -> None:
         """The generated ontology records the patched semantic version."""
         version = parse_owl().find("owl:Ontology/owl:versionInfo", NS)
         self.assertIsNotNone(version)
-        self.assertEqual(version.text, "0.1.3")
+        self.assertEqual(version.text, "0.1.4")
+
+    def test_generated_d26_mentions_property(self) -> None:
+        """The generated generic mention property exactly realizes D-26."""
+        root = parse_owl()
+        properties = object_properties(root, "mentions")
+        self.assertEqual(len(properties), 1)
+        prop = properties[0]
+        self.assertEqual(property_inventory_ids(prop), {"D-26"})
+        self.assertEqual(property_expression_members(prop, "domain"), D26_DOMAIN)
+        self.assertEqual(property_expression_members(prop, "range"), D26_RANGE)
+        reuse_anchors = {
+            item.text
+            for item in prop.findall("ciroh:reuseAnchor", NS)
+            if item.text is not None
+        }
+        self.assertEqual(reuse_anchors, {"mito:mentions"})
+        self.assertIsNone(prop.find("owl:inverseOf", NS))
+        generated_inverse = [
+            entity
+            for entity in root
+            if entity.get(RDF_ABOUT)
+            in {"#isMentionedBy", f"{NS['ciroh']}isMentionedBy"}
+        ]
+        self.assertEqual(generated_inverse, [])
+
+    def test_mito_is_reference_only(self) -> None:
+        """MiTO remains an annotation-only reuse source and is not imported."""
+        spec = load_spec()
+        mito_entries = [item for item in spec["prefixes"] if item["prefix"] == "mito"]
+        self.assertEqual(len(mito_entries), 1)
+        self.assertEqual(mito_entries[0]["use"], "reference")
+        self.assertNotEqual(mito_entries[0]["use"], "import")
+        imports = {
+            item.get(RDF_RESOURCE)
+            for item in parse_owl().findall("owl:Ontology/owl:imports", NS)
+        }
+        self.assertFalse(any(str(item).startswith(mito_entries[0]["iri"]) for item in imports))
+        prop = object_properties(parse_owl(), "mentions")[0]
+        self.assertEqual(
+            {
+                item.text
+                for item in prop.findall("ciroh:reuseAnchor", NS)
+                if item.text is not None
+            },
+            {"mito:mentions"},
+        )
 
     def test_c_p08_is_hypothesis_testing_only(self) -> None:
         """C-P08 excludes theoretical grounding while retaining its testedBy range."""
@@ -361,9 +499,9 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
         }
         self.assertEqual(reuse_anchors, {"dcterms:references"})
 
-    def test_generated_object_property_count_is_90(self) -> None:
-        """Twenty declarations add exactly seven distinct object properties."""
-        self.assertEqual(len(parse_owl().findall("owl:ObjectProperty", NS)), 90)
+    def test_generated_object_property_count_is_91(self) -> None:
+        """The approved declarations generate 91 distinct object properties."""
+        self.assertEqual(len(parse_owl().findall("owl:ObjectProperty", NS)), 91)
 
     def test_has_sub_page_machine_id_and_narrative_alias(self) -> None:
         """C-DC02i remains formal while C-DC21 is comment-only traceability."""
@@ -451,11 +589,11 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
                 self.assertEqual(property_expression_members(properties[0], "range"), ranges)
                 self.assertEqual(property_inventory_ids(properties[0]), inventory_ids)
 
-    def test_source_relation_declaration_count_is_125(self) -> None:
-        """The patch adds twenty declarations without changing classes."""
+    def test_source_relation_declaration_count_is_126(self) -> None:
+        """The approved specification has 126 relations and retains 75 classes."""
         spec = load_spec()
         self.assertEqual(len(spec["classes"]), 75)
-        self.assertEqual(len(spec["relations"]), 125)
+        self.assertEqual(len(spec["relations"]), 126)
         all_ids = [entry["id"] for section in ("classes", "relations") for entry in spec[section]]
         self.assertEqual(len(all_ids), len(set(all_ids)))
 
@@ -526,8 +664,42 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
         self.assertIsNotNone(inverse)
         self.assertEqual(inverse.get(RDF_RESOURCE), "#describes")
 
+    def test_all_specialized_mentions_are_subproperties(self) -> None:
+        """Every approved mentionsX specialization retains its exact signature."""
+        spec = load_spec()
+        derived_children = {
+            relation["name"]
+            for relation in spec["relations"]
+            if relation.get("subproperty_of") == "mentions"
+        }
+        self.assertEqual(derived_children, MENTIONS_CHILD_PROPERTIES)
+        root = parse_owl()
+        for child in sorted(derived_children):
+            with self.subTest(child=child):
+                declarations = [
+                    relation for relation in spec["relations"] if relation["name"] == child
+                ]
+                expected_domains = set().union(
+                    *(as_set(relation["domain"]) for relation in declarations)
+                )
+                expected_ranges = set().union(
+                    *(as_set(relation["range"]) for relation in declarations)
+                )
+                properties = object_properties(root, child)
+                self.assertEqual(len(properties), 1)
+                prop = properties[0]
+                self.assertEqual(
+                    {
+                        item.get(RDF_RESOURCE)
+                        for item in prop.findall("rdfs:subPropertyOf", NS)
+                    },
+                    {"#mentions"},
+                )
+                self.assertEqual(property_expression_members(prop, "domain"), expected_domains)
+                self.assertEqual(property_expression_members(prop, "range"), expected_ranges)
+
     def test_frozen_phase_b_outputs_are_unchanged_and_resolve(self) -> None:
-        """Frozen 0.1.1 graphs remain byte-identical and compatible with 0.1.3."""
+        """Frozen 0.1.1 graphs remain byte-identical and compatible with 0.1.4."""
         spec = load_spec()
         classes = {item["id"]: item["name"] for item in spec["classes"]}
         relations = {item["id"]: item["name"] for item in spec["relations"]}
@@ -609,10 +781,10 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
             self.assertIn(technical_id, inventory_text)
 
     def test_global_relation_branches_have_no_unexplained_gap(self) -> None:
-        """Every D-01 through D-25 branch has a checked formal realization."""
+        """Every D-01 through D-26 branch has a checked formal realization."""
         relations = {relation["id"]: relation for relation in load_spec()["relations"]}
         audited_globals = {entry[0] for entry in GLOBAL_RELATION_BRANCHES}
-        self.assertEqual(audited_globals, {f"D-{index:02d}" for index in range(1, 26)})
+        self.assertEqual(audited_globals, {f"D-{index:02d}" for index in range(1, 27)})
 
         for global_id, domains, ranges, relation_ids, mode, rationale in GLOBAL_RELATION_BRANCHES:
             with self.subTest(global_id=global_id, domains=sorted(domains), mode=mode):
