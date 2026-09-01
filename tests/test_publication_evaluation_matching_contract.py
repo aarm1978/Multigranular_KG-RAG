@@ -38,27 +38,27 @@ PHASE_B_EXPECTED_SHA256 = (
     "675049dae5c3dfed6f492ad0aa79e27fc1a9b37d0ecbc13ab3cf1a69cdb8efaf"
 )
 MATCHING_CONTRACT_EXPECTED_SHA256 = (
-    "10f8dca24bf41acfb21f8d20c5cda7b022392040446a2e2e4bac137365c076d0"
+    "e6e76251af7481280423190aa4083850007ed1d2a6df126e0dc29204f7b07c34"
 )
 
 FROZEN_HASHES = {
     "src/ontology/ciroh_ontology.owl": (
-        "ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57"
+        "7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635"
     ),
     "src/extraction/llm/publications/publication_target_inventory.yaml": (
-        "3d8a80c4ff8794588e2551e63a61e72c60a9afcb89d8b7a7058ff23e25ee4760"
+        "6401c15b861c2362b67e03d56acd4a7304964f595d706311fd4f149eb69b3a5e"
     ),
     "docs/publication_source_unit_contract.md": (
-        "31fbd6c76e0efbccdde3e6945191e2a174f19565711b11aedc27d4d63e8e1c3a"
+        "8132be14b06153957697310ec8df16a07e72462ce7a98ae46b8d4f26aa188172"
     ),
     "schemas/publication_candidate_output.schema.json": (
-        "affd13215dc8023723e7e497f6fce9696cbf8af9bb7c01a85e8aa560033a776d"
+        "50132ce01a16a21736f65e4b5d4b0354b3d1c53f07878352159d6ff36e94fce2"
     ),
     "docs/publication_evidence_validation_contract.md": (
-        "3529484f74f9c482bd38c68c9bafbc08723e6dfd960e3c8d5faa70e1b6d28ce2"
+        "dab9904da2ba45122c44941d8c20828a85174f43336e8198e6e4daafc952043b"
     ),
     "docs/publication_annotation_adjudication_guidelines.md": (
-        "67d693edf8e42318a763aac58190675c90b944440dc12fce164212cf9552bd60"
+        "1553e633022de2579cfa1866c33b1cfda8b4972103141b19cbc0c7241b6d9f27"
     ),
 }
 
@@ -100,7 +100,7 @@ class PublicationEvaluationMatchingContractTests(unittest.TestCase):
                 self.assertIn(fragment, self.text)
 
     def test_exists_utf8_final_binding_version_and_date(self) -> None:
-        """The document is readable and frozen as final version 0.1.0."""
+        """The document is readable and frozen as final version 0.1.1."""
         self.assertTrue(CONTRACT_PATH.is_file())
         self.assertTrue(self.raw)
         self.assertIn(
@@ -108,7 +108,7 @@ class PublicationEvaluationMatchingContractTests(unittest.TestCase):
             "and decision thresholds",
             self.text,
         )
-        self.assertIn("**Contract version:** 0.1.0", self.text)
+        self.assertIn("**Contract version:** 0.1.1", self.text)
         self.assertIn("**Date frozen:** 2026-07-31", self.text)
         self.assertEqual(
             hashlib.sha256(self.raw).hexdigest(), MATCHING_CONTRACT_EXPECTED_SHA256
@@ -402,12 +402,12 @@ class PublicationEvaluationMatchingContractTests(unittest.TestCase):
     def test_sample_remains_unfrozen_without_exact_unit_ids(self) -> None:
         """The sample is a support-aware scaffold and contains no materialized unit IDs."""
         self.assertIn("**Status:** candidate; not yet frozen", self.sample)
-        self.assertIn("**Document version:** 0.2.6", self.sample)
+        self.assertIn("**Document version:** 0.2.7", self.sample)
         self.assertIn(
-            "Publication evaluation matching contract version:\n0.1.0", self.sample
+            "Publication evaluation matching contract version:\n0.1.1", self.sample
         )
         self.assertIn(MATCHING_CONTRACT_EXPECTED_SHA256, self.sample)
-        self.assertIn("Exact selected sample unit IDs\nremain pending blinded screening and sample selection", self.sample)
+        self.assertIn("Exact selected sample unit IDs\nremain pending Gate 0 and final sample selection", self.sample)
         self.assertIn("INSUFFICIENT_SUPPORT", self.sample)
         self.assertNotRegex(self.sample, r"pub:[^\s`]+:sec:\d{4}:unit:\d{4}")
 
@@ -444,7 +444,7 @@ class PublicationEvaluationMatchingContractTests(unittest.TestCase):
             "create gold data",
         )
         self.assertIn("source-unit builder must complete successfully before", self.sample)
-        self.assertIn("Exact selected sample unit IDs\nremain pending blinded screening and sample selection", self.sample)
+        self.assertIn("Exact selected sample unit IDs\nremain pending Gate 0 and final sample selection", self.sample)
         self.assertIn("Exact sample sizes are intentionally not frozen", self.sample)
         self.assertIn("Before model execution", self.sample)
 

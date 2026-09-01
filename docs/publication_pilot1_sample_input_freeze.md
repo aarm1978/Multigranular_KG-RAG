@@ -1,14 +1,14 @@
 # Publication Pilot 1 Sample and Input Freeze Record
 
 > **Status:** candidate; not yet frozen
-> **Document version:** 0.2.6
+> **Document version:** 0.2.7
 > **Artifact family:** scientific publications
 > **Dissertation scope:** Study 2 — ontology-guided multigranular KG construction and intrinsic evaluation
 > **Pilot:** Publication Pilot 1
 > **Date drafted:** 2026-07-31
-> **Date revised:** 2026-08-10
+> **Date revised:** 2026-09-01
 > **Required predecessor:** `docs/publication_evaluation_matching_contract.md`
-> **Binding ontology:** CIROH ontology 0.1.3
+> **Binding ontology:** CIROH ontology 0.1.4
 > **Binding target profile:** `src/extraction/llm/publications/publication_target_inventory.yaml`
 > **Binding source-unit contract:** `docs/publication_source_unit_contract.md`
 > **Binding candidate-output schema:** `schemas/publication_candidate_output.schema.json`
@@ -61,7 +61,7 @@ record remains a candidate until exact selected units, partitions, routing, and 
 
 Conflicts are resolved in this order:
 
-1. frozen ontology 0.1.3;
+1. frozen ontology 0.1.4;
 2. frozen deterministic Publication Phase B outputs and tests;
 3. frozen Publication Pilot 1 target inventory and observations register;
 4. frozen machine-readable Publication target profile;
@@ -81,31 +81,31 @@ The following values must be recomputed and verified at the final freeze pass.
 
 ```text
 Ontology OWL SHA-256:
-ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57
+7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635
 
 Publication target profile SHA-256:
-3d8a80c4ff8794588e2551e63a61e72c60a9afcb89d8b7a7058ff23e25ee4760
+6401c15b861c2362b67e03d56acd4a7304964f595d706311fd4f149eb69b3a5e
 
 Publication source-unit contract SHA-256:
-31fbd6c76e0efbccdde3e6945191e2a174f19565711b11aedc27d4d63e8e1c3a
+8132be14b06153957697310ec8df16a07e72462ce7a98ae46b8d4f26aa188172
 
 Publication candidate-output schema SHA-256:
-affd13215dc8023723e7e497f6fce9696cbf8af9bb7c01a85e8aa560033a776d
+50132ce01a16a21736f65e4b5d4b0354b3d1c53f07878352159d6ff36e94fce2
 
 Publication evidence-validation contract SHA-256:
-3529484f74f9c482bd38c68c9bafbc08723e6dfd960e3c8d5faa70e1b6d28ce2
+dab9904da2ba45122c44941d8c20828a85174f43336e8198e6e4daafc952043b
 
 Publication annotation/adjudication guideline SHA-256:
-67d693edf8e42318a763aac58190675c90b944440dc12fce164212cf9552bd60
+1553e633022de2579cfa1866c33b1cfda8b4972103141b19cbc0c7241b6d9f27
 
 Publication deterministic Phase B SHA-256:
 675049dae5c3dfed6f492ad0aa79e27fc1a9b37d0ecbc13ab3cf1a69cdb8efaf
 
 Publication evaluation matching contract version:
-0.1.0
+0.1.1
 
 Publication evaluation matching contract SHA-256:
-10f8dca24bf41acfb21f8d20c5cda7b022392040446a2e2e4bac137365c076d0
+e6e76251af7481280423190aa4083850007ed1d2a6df126e0dc29204f7b07c34
 ```
 
 The final matching-contract version and hash above are binding upstream anchors for this
@@ -305,7 +305,7 @@ No unit may be manually rewritten after materialization.
 ### 8.1 Fifth population materialization for acceptance review
 
 The complete population source-unit IDs are materialized. Exact selected sample unit IDs
-remain pending blinded screening and sample selection.
+remain pending Gate 0 and final sample selection.
 
 The fifth acceptance-review materialization is bound as follows:
 
@@ -711,7 +711,7 @@ exposureRecordingPolicy
 ```
 
 The complete population source-unit IDs are materialized. Exact selected sample unit IDs
-remain pending blinded screening and sample selection.
+remain pending Gate 0 and final sample selection.
 
 ## 15. Reliability subset
 

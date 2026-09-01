@@ -172,7 +172,7 @@ def build_development_request(
         },
         "evidenceValidationContract": {
             "path": str(EVIDENCE_VALIDATION_CONTRACT_PATH.relative_to(PROJECT_ROOT)),
-            "version": "0.1.0",
+            "version": "0.1.1",
             "sha256": sha256_bytes(EVIDENCE_VALIDATION_CONTRACT_PATH.read_bytes()),
         },
         "evaluationMatchingContract": {
@@ -187,7 +187,7 @@ def build_development_request(
         },
         "sourceUnitContract": {
             "path": str(SOURCE_UNIT_CONTRACT_PATH.relative_to(PROJECT_ROOT)),
-            "version": str(source_unit["contractVersion"]),
+            "version": str(schema["x-ciroh-contract"]["sourceUnitContractVersion"]),
             "sha256": sha256_bytes(SOURCE_UNIT_CONTRACT_PATH.read_bytes()),
         },
         "targetInventory": {

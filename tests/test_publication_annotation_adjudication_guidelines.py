@@ -60,7 +60,7 @@ class PublicationAnnotationGuidelineTests(unittest.TestCase):
             "and adjudication",
             self.text,
         )
-        self.assertIn("**Guideline version:** 0.1.1", self.text)
+        self.assertIn("**Guideline version:** 0.1.2", self.text)
         self.assertIn("**Date frozen:** 2026-07-31", self.text)
 
     def test_study_boundaries_are_explicit(self) -> None:
@@ -264,9 +264,9 @@ class PublicationAnnotationGuidelineTests(unittest.TestCase):
             "Complete and frozen |",
             self.readme,
         )
-        self.assertIn("annotator handbook has not yet been created", self.readme)
-        self.assertIn("model/reproducibility policy are not yet frozen", self.readme)
-        self.assertIn("Annotation execution and gold construction have not occurred", self.readme)
+        self.assertIn("Create the concise annotator handbook and calibration materials", self.readme)
+        self.assertIn("Complete the model and reproducibility policy", self.readme)
+        self.assertIn("Production annotation and gold construction", self.readme)
         self.assertIn(
             "- [ ] Execute human annotation, adjudication, and gold construction",
             self.readme,

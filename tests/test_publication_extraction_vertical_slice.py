@@ -61,7 +61,7 @@ def synthetic_request(
     prefix = "Synthetic header\n"
     document = prefix + text + "\nSynthetic footer\n"
     unit = {
-        "contractVersion": "0.1.1",
+        "contractVersion": "0.1.2",
         "paperID": "synthetic",
         "canonicalArtifactID": "paper:synthetic",
         "sourceUnitID": "pub:synthetic:sec:0001:unit:0001",

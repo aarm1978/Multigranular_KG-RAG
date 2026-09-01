@@ -261,9 +261,9 @@ class MultiTargetNodeDevelopmentTests(unittest.TestCase):
         """Representative accepted authorities and historical artifacts retain reviewed hashes."""
 
         accepted = {
-            "schemas/publication_candidate_output.schema.json": "affd13215dc8023723e7e497f6fce9696cbf8af9bb7c01a85e8aa560033a776d",
-            "src/extraction/llm/publications/publication_target_inventory.yaml": "3d8a80c4ff8794588e2551e63a61e72c60a9afcb89d8b7a7058ff23e25ee4760",
-            "src/extraction/llm/publications/request_builder.py": "3b903d3626b2defca08e6a3663bc126e8f3e5b7744743dacbab7a7a4dac161f3",
+            "schemas/publication_candidate_output.schema.json": "50132ce01a16a21736f65e4b5d4b0354b3d1c53f07878352159d6ff36e94fce2",
+            "src/extraction/llm/publications/publication_target_inventory.yaml": "6401c15b861c2362b67e03d56acd4a7304964f595d706311fd4f149eb69b3a5e",
+            "src/extraction/llm/publications/request_builder.py": "9f45a128b09e05d174868eef072d84727844cecb72e473818fca9f08da405a21",
             "src/extraction/llm/publications/response_parser.py": "8f5ee5c455868240f8de8451611999c82354873cd4422a2d311de0566146eec2",
             "src/extraction/llm/publications/candidate_validation.py": "8c6074aa5708f519b73612ff7f1574de8311180d7b4a0e36551f6529415611d9",
             "src/extraction/llm/publications/evidence_coordinate_guide.py": "d677a5b01d05357d14b404942f6024d6dc195ce6275a5cb771e5fbfa7624af29",

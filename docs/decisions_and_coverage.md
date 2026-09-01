@@ -2,13 +2,12 @@
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 
-**Current formalization status.** Ontology 0.1.3 is formally frozen. HermiT completed
+**Current formalization status.** Ontology 0.1.4 is formally frozen. HermiT completed
 successfully, found the validated ontology consistent with zero unsatisfiable named
 classes, and reported no execution errors; it is authoritative for the formal
-validation and freeze decision. The 0.1.3 patch narrows `C-P08 testedBy` to Hypothesis,
-removes the unsupported `C-P12` summary documentation, and clarifies positive-only
-`C-P09 supports` semantics without adding a class or relation family. Frozen
-deterministic outputs are unchanged.
+validation and freeze decision. The 0.1.4 patch adds the generic pipeline-derived
+`ciroh:mentions` relation above the six unchanged specialized `mentionsX` properties.
+Frozen deterministic outputs are unchanged.
 
 **Purpose.** Validate *what the ontology covers* and *which decisions we took*, including where decisions **changed or refined** the four characterizations. Updated through **validation 2 (Etapa A) — GO**, schema-change log applied. Working documents:
 - `Study2_Ontology_v0.1.md` — conceptual model + namespaces/import notes (§3.1).
@@ -139,7 +138,7 @@ The 26 competency questions were traced as query patterns over the schema. **23 
 
 ## 9. Next step
 
-Use the formally frozen ontology 0.1.3 baseline for the remaining Publication Pilot 1
+Use the formally frozen ontology 0.1.4 baseline for the remaining Publication Pilot 1
 protocol, annotation, validator, and reproducibility preparation. The historical Etapa B
 planning sequence is superseded by the current versioned formalization record in
 `ontology_formalization.md`.

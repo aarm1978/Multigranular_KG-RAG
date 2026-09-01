@@ -37,14 +37,14 @@ The intended final system will be evaluated against non-retrieval, web-search, v
 | Publication Pilot 1 candidate-output JSON Schema | Complete and frozen |
 | Publication Pilot 1 evidence-validation contract | Complete and frozen |
 | Publication Pilot 1 annotation and adjudication guidelines | Complete and frozen |
-| Publication Pilot 1 evaluation matching contract | Complete and frozen — version 0.1.0 |
+| Publication Pilot 1 evaluation matching contract | Complete and frozen — version 0.1.1 |
 | Publication Pilot 1 source-unit builder | Accepted — version 0.1.4 |
-| Publication Pilot 1 source-unit inventory | Fifth twelve-artifact population materialization available for review |
-| Publication Pilot 1 Block A | Screening/routing infrastructure prepared; human screening pending |
-| Publication Pilot 1 screening interface | Version 0.1.1 frozen and ready for production human screening; production screening has not begun |
-| Publication Pilot 1 sample and input freeze record | Candidate; not frozen — population materialized, screening and selection not started |
-| Publication Pilot 1 LLM extractor | Not yet implemented |
-| Request builder, candidate parser, and evidence validator | Not yet implemented |
+| Publication Pilot 1 source-unit inventory | Fifth twelve-artifact population materialization independently accepted |
+| Publication Pilot 1 Block A | Production screening complete; routing and calibration-selection artifacts compiled; Gate 0 not executed |
+| Publication Pilot 1 screening interface | Version 0.1.1 frozen and used for completed production human screening |
+| Publication Pilot 1 sample and input freeze record | Candidate; not frozen — population, screening, routing, and calibration selection complete; Gate 0 and final freeze pending |
+| Publication Pilot 1 LLM extractor | Development implementation complete through M2-C2C; production extraction not executed |
+| Request builder, candidate parser, and evidence validator | Implemented and covered by the accepted M1 vertical slice and later development runs |
 | LLM-assisted semantic extraction execution | Not yet completed |
 | Cross-source entity alignment and consolidation | Planned |
 | Final graph assembly and graph-database loading | Planned |
@@ -75,9 +75,9 @@ Phase A parses and normalizes source-specific records without creating graph ent
 ## Current ontology
 
 The current ontology release is **v0.1.4**, formally frozen. Automated structural
-validation and the formal HermiT reasoner gate are complete. Downstream Publication LLM
-authority contracts remain bound to ontology 0.1.3 until their later coordinated
-migration to ontology 0.1.4; that migration does not reopen or invalidate ontology 0.1.4.
+validation and the formal HermiT reasoner gate are complete. Current Publication LLM
+authority contracts are bound to ontology 0.1.4; the authority-only migration did not
+reopen historical decisions or implement pipeline-derived generic `mentions` edges.
 
 - Generated artifact: [`src/ontology/ciroh_ontology.owl`](src/ontology/ciroh_ontology.owl)
 - Machine-readable specification: [`src/ontology/ontology_spec.yaml`](src/ontology/ontology_spec.yaml)
@@ -177,11 +177,11 @@ tests/                           Unit, regression, contract, and frozen-snapshot
 - [Publication Pilot 1 candidate-output JSON Schema](schemas/publication_candidate_output.schema.json)
 - [Publication Pilot 1 evidence-validation contract](docs/publication_evidence_validation_contract.md)
 - [Publication Pilot 1 annotation and adjudication guidelines](docs/publication_annotation_adjudication_guidelines.md)
-- [Publication Pilot 1 evaluation matching contract — complete and frozen, version 0.1.0](docs/publication_evaluation_matching_contract.md)
+- [Publication Pilot 1 evaluation matching contract — complete and frozen, version 0.1.1](docs/publication_evaluation_matching_contract.md)
 - [Publication Pilot 1 Block A screening, routing, selection, and Gate-0 record](docs/publication_pilot1_block_a_screening_routing_selection.md)
 - [Publication Pilot 1 local screening interface MVP](docs/publication_pilot1_screening_interface.md)
 - [Publication Pilot 1 screening handbook — version 0.1.1 frozen; SHA-256 `c8a8099286871e22616022b5964ef42b10e251601131732968977fcfc3711bc2`](docs/publication_pilot1_screening_handbook.md)
-- [Publication Pilot 1 sample and input freeze record — candidate; not frozen; population materialized, screening and selection not started](docs/publication_pilot1_sample_input_freeze.md)
+- [Publication Pilot 1 sample and input freeze record — candidate; not frozen; population, screening, routing, and calibration selection complete; Gate 0 pending](docs/publication_pilot1_sample_input_freeze.md)
 - [Final publication ontology observations register](docs/publication_ontology_observations_register.md)
 
 ### Evaluation
@@ -242,7 +242,7 @@ External source materials remain subject to their original terms of use and lice
 
 - [x] Freeze ontology v0.1.3
 - [x] Freeze ontology v0.1.4
-- [ ] Migrate downstream Publication LLM authority contracts from ontology v0.1.3 to v0.1.4
+- [x] Migrate downstream Publication LLM authority contracts from ontology v0.1.3 to v0.1.4
 - [x] Complete deterministic extraction for the four artifact families
 - [x] Record the cumulative deterministic structural trajectory
 - [x] Freeze the Publication Pilot 1 machine-readable target profile
@@ -253,12 +253,12 @@ External source materials remain subject to their original terms of use and lice
 - [x] Complete and freeze evaluation matching rules and GO/REVISE/NO-GO thresholds
 - [ ] Complete the pilot sample and input freeze record
 - [ ] Complete the model and reproducibility policy
-- [ ] Create the concise annotator handbook and calibration materials
-- [ ] Implement the annotation interface and storage
+- [x] Create the concise annotator handbook and calibration materials
+- [x] Implement the Annotation/Calibration MVP interface and local storage
 - [x] Implement and rematerialize the Publication Pilot 1 source-unit builder for implementation review
 - [x] Materialize the corrected fixed twelve-artifact source-unit inventory for review
-- [ ] Implement the Publication Pilot 1 LLM extractor
-- [ ] Implement the request builder, candidate parser, and evidence validator
+- [x] Implement the Publication Pilot 1 development extractor through M2-C2C
+- [x] Implement the request builder, candidate parser, and evidence validator
 - [ ] Execute human annotation, adjudication, and gold construction
 - [ ] Execute ontology-guided LLM-assisted semantic extraction
 - [ ] Align and consolidate entities across artifact families

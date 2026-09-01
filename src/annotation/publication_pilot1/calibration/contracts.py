@@ -34,7 +34,7 @@ REGRESSION_SOURCE_UNIT_ID = "pub:34:sec:0028:unit:0001"
 ANNOTATION_MVP_BASE_CHECKPOINT = "a67c5f3d70a3f4a71f79561646572781eeae89b4"
 ACTIVATION_SCHEMA_VERSION = "0.1.0"
 
-PROTECTED_HASHES = {
+LEGACY_ONTOLOGY_0_1_3_PROTECTED_HASHES = {
     "data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl": "7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e",
     "data/curation/papers/pilot1/publication_pilot1_source_unit_manifest.json": "42684d340af99440d5f72129a5c5299edcb237d77ce2b3d36456b049bee83823",
     "src/extraction/llm/publications/publication_target_inventory.yaml": "3d8a80c4ff8794588e2551e63a61e72c60a9afcb89d8b7a7058ff23e25ee4760",
@@ -54,6 +54,20 @@ PROTECTED_HASHES = {
     "docs/publication_evaluation_matching_contract.md": "10f8dca24bf41acfb21f8d20c5cda7b022392040446a2e2e4bac137365c076d0",
     "data/interim/papers/publication_nodes_edges.json": "675049dae5c3dfed6f492ad0aa79e27fc1a9b37d0ecbc13ab3cf1a69cdb8efaf",
 }
+CURRENT_ONTOLOGY_0_1_4_PROTECTED_HASHES = {
+    **LEGACY_ONTOLOGY_0_1_3_PROTECTED_HASHES,
+    "src/extraction/llm/publications/publication_target_inventory.yaml": "6401c15b861c2362b67e03d56acd4a7304964f595d706311fd4f149eb69b3a5e",
+    "schemas/publication_candidate_output.schema.json": "50132ce01a16a21736f65e4b5d4b0354b3d1c53f07878352159d6ff36e94fce2",
+    "docs/publication_evidence_validation_contract.md": "dab9904da2ba45122c44941d8c20828a85174f43336e8198e6e4daafc952043b",
+    "docs/publication_annotation_adjudication_guidelines.md": "1553e633022de2579cfa1866c33b1cfda8b4972103141b19cbc0c7241b6d9f27",
+    "docs/publication_evaluation_matching_contract.md": "e6e76251af7481280423190aa4083850007ed1d2a6df126e0dc29204f7b07c34",
+}
+# Backward-compatible public name for distributed 0.1.3 calibration packages and tests.
+PROTECTED_HASHES = LEGACY_ONTOLOGY_0_1_3_PROTECTED_HASHES
+PROTECTED_HASH_FAMILIES = (
+    LEGACY_ONTOLOGY_0_1_3_PROTECTED_HASHES,
+    CURRENT_ONTOLOGY_0_1_4_PROTECTED_HASHES,
+)
 PRIVATE_SCREENING_RELATIVE = "var/publication_pilot1_screening/exports/publication_pilot1_screening_worklist_reviewed.csv"
 PRIVATE_SCREENING_HASH = "2cba7bdb025f063b0cfbc0b05c375feee341231b34926abe43e7cd9790ce2c01"
 
@@ -70,16 +84,22 @@ def canonical_json_hash(value: object) -> str:
 
 
 def verify_protected_hashes(root: Path) -> dict[str, str]:
-    """Fail closed when an accepted public or private authority drifts."""
+    """Accept one complete legacy/current authority family and reject drift or mixing."""
 
     observed: dict[str, str] = {}
-    for relative, expected in PROTECTED_HASHES.items():
+    for relative in PROTECTED_HASHES:
         path = root / relative
         if not path.is_file():
             raise AnnotationContractError(f"ANNOTATION_UPSTREAM_FILE_MISSING:{relative}")
         observed[relative] = sha256_file(path)
-        if observed[relative] != expected:
-            raise AnnotationContractError(f"ANNOTATION_UPSTREAM_HASH_MISMATCH:{relative}")
+    if not any(
+        all(observed[relative] == expected for relative, expected in family.items())
+        for family in PROTECTED_HASH_FAMILIES
+    ):
+        for relative, digest in observed.items():
+            if all(digest != family[relative] for family in PROTECTED_HASH_FAMILIES):
+                raise AnnotationContractError(f"ANNOTATION_UPSTREAM_HASH_MISMATCH:{relative}")
+        raise AnnotationContractError("ANNOTATION_UPSTREAM_AUTHORITY_FAMILY_MISMATCH")
     private = root / PRIVATE_SCREENING_RELATIVE
     if not private.is_file() or sha256_file(private) != PRIVATE_SCREENING_HASH:
         raise AnnotationContractError("ANNOTATION_PRIVATE_SCREENING_HASH_MISMATCH")

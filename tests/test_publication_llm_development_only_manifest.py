@@ -14,6 +14,9 @@ CURATION_ROOT = PROJECT_ROOT / "data/curation/papers"
 DEVELOPMENT_MANIFEST = CURATION_ROOT / "publication_llm_development_only_manifest.json"
 SOURCE_UNIT_INVENTORY = CURATION_ROOT / "publication_llm_development_only_source_unit_inventory.jsonl"
 MATERIALIZATION_MANIFEST = CURATION_ROOT / "publication_llm_development_only_materialization_manifest.json"
+PUBLICATION_REQUIREMENTS = (
+    PROJECT_ROOT / "src/extraction/llm/publications/requirements.txt"
+)
 PILOT1_ARTIFACT_IDS = {
     "10", "15", "16", "18", "34", "37", "46", "54", "79", "276", "87",
     "87-corrigendum",
@@ -80,6 +83,14 @@ class PublicationDevelopmentOnlyManifestTests(unittest.TestCase):
                 source = self.inventory_by_id[proposed["sourceUnitID"]]
                 self.assertEqual(proposed["sourcePublicationID"], source["paperID"])
                 self.assertEqual(source["validationResults"], {"valid": True, "errorCodes": []})
+
+    def test_publication_runtime_dependencies_are_explicit_and_minimal(self) -> None:
+        """The Publication LLM component owns its direct YAML and Schema dependencies."""
+
+        self.assertEqual(
+            PUBLICATION_REQUIREMENTS.read_text(encoding="utf-8").splitlines(),
+            ["PyYAML==6.0", "jsonschema>=4.18,<5"],
+        )
 
 
 if __name__ == "__main__":

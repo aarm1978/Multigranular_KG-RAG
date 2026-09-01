@@ -3,7 +3,7 @@
 **Project:** Multigranular KG-RAG for Operational Hydrology
 **Study:** Dissertation Study 2
 **Document purpose:** Methodological decision record for ontology-guided LLM extraction
-**Current ontology baseline:** 0.1.3, formally frozen
+**Current ontology baseline:** 0.1.4, formally frozen
 **Initial decision date:** 2026-07-28
 **Status vocabulary:** `decided`, `deferred`, `pilot-dependent`
 
@@ -17,7 +17,7 @@ The ontology defines the permitted classes, relations, domains, ranges, and extr
 
 When this document conflicts with the frozen ontology or deterministic extraction artifacts, the following authority order applies:
 
-1. frozen ontology 0.1.3 specification and generated OWL;
+1. frozen ontology 0.1.4 specification and generated OWL;
 2. frozen deterministic Phase B outputs and tests;
 3. current ontology inventory and formalization records;
 4. this LLM extraction decision record;
@@ -25,8 +25,8 @@ When this document conflicts with the frozen ontology or deterministic extractio
 
 Any change to a frozen ontology decision requires explicit evidence, impact analysis, versioning, updated tests, regeneration of the OWL artifact, and reasoner validation.
 
-The approved minimal pre-pilot correction is represented by formally frozen ontology
-0.1.3. Its authoritative HermiT gate completed successfully with consistency, zero
+The current additive generic-mentions authority is represented by formally frozen ontology
+0.1.4. Its authoritative HermiT gate completed successfully with consistency, zero
 unsatisfiable named classes, and no execution errors.
 
 ---
@@ -638,7 +638,7 @@ Pilot comparisons showing that another granularity materially improves extractio
 
 **Options considered.**
 
-1. Extract every publication class, relation, and attribute in ontology 0.1.3.
+1. Extract every publication class, relation, and attribute in ontology 0.1.4.
 2. Begin with a focused target subset.
 3. Extract only domain entities.
 4. Extract only discourse entities.
@@ -647,9 +647,9 @@ Pilot comparisons showing that another granularity materially improves extractio
 
 A focused Publication Pilot 1 target inventory has been completed and is final and
 binding. It is stored at
-`docs/publication_llm_extraction_target_inventory.md`, is governed by ontology 0.1.3,
+`docs/publication_llm_extraction_target_inventory.md`, is governed by ontology 0.1.4,
 and uses the validated OWL SHA-256
-`ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57`.
+`7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635`.
 
 The binding target groups include:
 
@@ -1557,7 +1557,7 @@ Production extraction code must not be written before the target inventory and e
 
 | Decision area | Current state |
 |---|---|
-| Ontology baseline | 0.1.3 formally frozen |
+| Ontology baseline | 0.1.4 formally frozen |
 | Deterministic Phase B | Frozen and immutable |
 | First pilot | Scientific publications |
 | Intermediate representation | Source-preserving evidence units |

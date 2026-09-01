@@ -227,8 +227,8 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         """Representative accepted artifacts and complete C0/C1A directories are unchanged."""
 
         accepted = {
-            "schemas/publication_candidate_output.schema.json": "affd13215dc8023723e7e497f6fce9696cbf8af9bb7c01a85e8aa560033a776d",
-            "src/extraction/llm/publications/publication_target_inventory.yaml": "3d8a80c4ff8794588e2551e63a61e72c60a9afcb89d8b7a7058ff23e25ee4760",
+            "schemas/publication_candidate_output.schema.json": "50132ce01a16a21736f65e4b5d4b0354b3d1c53f07878352159d6ff36e94fce2",
+            "src/extraction/llm/publications/publication_target_inventory.yaml": "6401c15b861c2362b67e03d56acd4a7304964f595d706311fd4f149eb69b3a5e",
             "src/extraction/llm/publications/prompts/publication_development_v0.1.3.txt": "ca68cbb6ab4b326f10993e2fdc200ad518f34a3c8020b3ac43226e0adf186a87",
             "data/curation/papers/m2/c1a/publication_m2c1a_exact_structured_model_output.json": "db63a5f9cbb4e9f10d537f56d17ce54fac2c20266f067e10bd94d4f3ed696a0b",
             "data/curation/papers/m2/b3/publication_m2b3_exact_structured_model_output.json": "f6ca56b303e9fd61b5011f5d5d35edc097e828cda5d3637b72c44f2f119a89be",

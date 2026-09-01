@@ -23,13 +23,13 @@ ARTIFACT_IDS = [
 ]
 
 FROZEN_HASHES = {
-    "src/ontology/ciroh_ontology.owl": "ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57",
-    "src/extraction/llm/publications/publication_target_inventory.yaml": "3d8a80c4ff8794588e2551e63a61e72c60a9afcb89d8b7a7058ff23e25ee4760",
-    "docs/publication_source_unit_contract.md": "31fbd6c76e0efbccdde3e6945191e2a174f19565711b11aedc27d4d63e8e1c3a",
-    "schemas/publication_candidate_output.schema.json": "affd13215dc8023723e7e497f6fce9696cbf8af9bb7c01a85e8aa560033a776d",
-    "docs/publication_evidence_validation_contract.md": "3529484f74f9c482bd38c68c9bafbc08723e6dfd960e3c8d5faa70e1b6d28ce2",
-    "docs/publication_annotation_adjudication_guidelines.md": "67d693edf8e42318a763aac58190675c90b944440dc12fce164212cf9552bd60",
-    "docs/publication_evaluation_matching_contract.md": "10f8dca24bf41acfb21f8d20c5cda7b022392040446a2e2e4bac137365c076d0",
+    "src/ontology/ciroh_ontology.owl": "7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635",
+    "src/extraction/llm/publications/publication_target_inventory.yaml": "6401c15b861c2362b67e03d56acd4a7304964f595d706311fd4f149eb69b3a5e",
+    "docs/publication_source_unit_contract.md": "8132be14b06153957697310ec8df16a07e72462ce7a98ae46b8d4f26aa188172",
+    "schemas/publication_candidate_output.schema.json": "50132ce01a16a21736f65e4b5d4b0354b3d1c53f07878352159d6ff36e94fce2",
+    "docs/publication_evidence_validation_contract.md": "dab9904da2ba45122c44941d8c20828a85174f43336e8198e6e4daafc952043b",
+    "docs/publication_annotation_adjudication_guidelines.md": "1553e633022de2579cfa1866c33b1cfda8b4972103141b19cbc0c7241b6d9f27",
+    "docs/publication_evaluation_matching_contract.md": "e6e76251af7481280423190aa4083850007ed1d2a6df126e0dc29204f7b07c34",
 }
 
 
@@ -57,13 +57,13 @@ class PublicationPilot1SampleInputFreezeTests(unittest.TestCase):
         self.assertTrue(SAMPLE_PATH.is_file())
         self.assertTrue(self.raw)
         self.assertIn("**Status:** candidate; not yet frozen", self.text)
-        self.assertIn("**Document version:** 0.2.6", self.text)
+        self.assertIn("**Document version:** 0.2.7", self.text)
         self.assertNotIn("**Status:** final and binding", self.text)
 
     def test_matching_contract_is_final_binding_predecessor(self) -> None:
         """The predecessor gate remains satisfied at the exact frozen version."""
         self.assertIn("**Status:** final and binding", self.matching)
-        self.assertIn("**Contract version:** 0.1.0", self.matching)
+        self.assertIn("**Contract version:** 0.1.1", self.matching)
         self.assertIn("**Date frozen:** 2026-07-31", self.matching)
         self.assertIn("The preceding matching contract is final and binding", self.text)
 
@@ -97,7 +97,7 @@ class PublicationPilot1SampleInputFreezeTests(unittest.TestCase):
         self.assertIsNone(re.search(r"pub:[^\s:]+:sec:\d{4}:unit:\d{4}", self.text))
         self.assertIn("Exact sample sizes are intentionally not frozen", self.text)
         self.assertIn("The complete population source-unit IDs are materialized", self.text)
-        self.assertIn("Exact selected sample unit IDs\nremain pending blinded screening and sample selection", self.text)
+        self.assertIn("Exact selected sample unit IDs\nremain pending Gate 0 and final sample selection", self.text)
         self.assertNotRegex(self.text, r"(?mi)^exactSampleSize\s*:")
 
     def test_support_is_prospective_and_insufficient_support_is_preserved(self) -> None:
@@ -372,7 +372,10 @@ class PublicationPilot1SampleInputFreezeTests(unittest.TestCase):
             "Publication Pilot 1 sample and input freeze record | Candidate; not frozen",
             self.readme,
         )
-        self.assertIn("population materialized, screening and selection not started", self.readme)
+        self.assertIn(
+            "population, screening, routing, and calibration selection complete; Gate 0 and final freeze pending",
+            self.readme,
+        )
 
 
 if __name__ == "__main__":

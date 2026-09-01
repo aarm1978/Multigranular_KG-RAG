@@ -532,7 +532,7 @@ class PublicationPilot1BlockATests(unittest.TestCase):
 
         scaffold = (ROOT / "docs/publication_pilot1_sample_input_freeze.md").read_text(encoding="utf-8")
         self.assertIn("**Status:** candidate; not yet frozen", scaffold)
-        self.assertIn("**Document version:** 0.2.6", scaffold)
+        self.assertIn("**Document version:** 0.2.7", scaffold)
         self.assertEqual(hashlib.sha256(INVENTORY.read_bytes()).hexdigest(), block_a.INVENTORY_HASH)
         self.assertEqual(hashlib.sha256(PROFILE.read_bytes()).hexdigest(), block_a.TARGET_PROFILE_HASH)
 

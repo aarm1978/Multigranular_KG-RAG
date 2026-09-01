@@ -1,12 +1,12 @@
 # Publication Evidence-Validation Contract — Publication Pilot 1
 
 > **Status:** final and binding for Publication Pilot 1 implementation
-> **Contract version:** 0.1.0
+> **Contract version:** 0.1.1
 > **Artifact family:** scientific publications
 > **Source scope:** curated publication corpus
 > **Stage scope:** automatic validation of parsed LLM candidates before adjudication
-> **Frozen ontology:** CIROH ontology 0.1.3
-> **Validated OWL SHA-256:** `ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57`
+> **Frozen ontology:** CIROH ontology 0.1.4
+> **Validated OWL SHA-256:** `7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635`
 > **Binding target profile:** `src/extraction/llm/publications/publication_target_inventory.yaml`
 > **Binding source-unit contract:** `docs/publication_source_unit_contract.md`
 > **Candidate-output schema:** `schemas/publication_candidate_output.schema.json`
@@ -43,7 +43,7 @@ or equivalent to the adjudicated gold standard.
 The first seven authorities retain the order frozen by the target-profile and source-unit
 contracts. The two new contract artifacts are appended after them:
 
-1. frozen ontology 0.1.3 specification and generated OWL;
+1. frozen ontology 0.1.4 specification and generated OWL;
 2. frozen deterministic Phase B outputs and tests;
 3. final Publication Pilot 1 human-readable target inventory;
 4. publication ontology observations register;
@@ -57,13 +57,13 @@ Reviewed inputs:
 
 | Artifact | Reviewed SHA-256 | Role |
 | --- | --- | --- |
-| `src/ontology/ontology_spec.yaml` | `a940dd79ac0c8b10980b3a17739d2f03ac5b0c23ce80dffb0bb90009cf19db54` | Formal ontology authority |
-| `docs/publication_llm_extraction_target_inventory.md` | `b2055e9735c64c5dc5d712fa96bdc95cb4137c75390261902fbc3055fc3d9ffa` | Binding human-readable Pilot 1 scope |
+| `src/ontology/ontology_spec.yaml` | `363cb4f92a2fc82f993baf808da56bc7d38bbb355669dd01ca03686c3551982d` | Formal ontology authority |
+| `docs/publication_llm_extraction_target_inventory.md` | `fcf5619006def7839f910881099f1534341b3b36fc64ad23e920311b9d07cba9` | Binding human-readable Pilot 1 scope |
 | `docs/publication_ontology_observations_register.md` | `d06dbdf64fa7bd2ac81c7c1e97d16eebb8ded3d432396414c03a3e0ebca79d5e` | Binding contract and validator dispositions |
-| `docs/llm_extraction_decisions.md` | `239730fc889f6cdf792894dc4bd7e8e247059b576b6e9ba6748e9bc7567ed42f` | LLM extraction lifecycle and evidence decisions |
-| `src/extraction/llm/publications/publication_target_inventory.yaml` | `3d8a80c4ff8794588e2551e63a61e72c60a9afcb89d8b7a7058ff23e25ee4760` | Final executable target profile |
-| `docs/publication_source_unit_contract.md` | `31fbd6c76e0efbccdde3e6945191e2a174f19565711b11aedc27d4d63e8e1c3a` | Final source-unit and request-context contract |
-| `schemas/publication_candidate_output.schema.json` | `affd13215dc8023723e7e497f6fce9696cbf8af9bb7c01a85e8aa560033a776d` | Final frozen parsed-candidate envelope structure |
+| `docs/llm_extraction_decisions.md` | `6691e849a3c8745d7f6627c53333a1c073b78f8c72904118cac7812753ddec20` | LLM extraction lifecycle and evidence decisions |
+| `src/extraction/llm/publications/publication_target_inventory.yaml` | `6401c15b861c2362b67e03d56acd4a7304964f595d706311fd4f149eb69b3a5e` | Final executable target profile |
+| `docs/publication_source_unit_contract.md` | `8132be14b06153957697310ec8df16a07e72462ce7a98ae46b8d4f26aa188172` | Final source-unit and request-context contract |
+| `schemas/publication_candidate_output.schema.json` | `50132ce01a16a21736f65e4b5d4b0354b3d1c53f07878352159d6ff36e94fce2` | Final frozen parsed-candidate envelope structure |
 
 The hashes above identify the artifacts reviewed for the initial contract freeze. Any
 later approved content change requires the applicable version increment and hash update.

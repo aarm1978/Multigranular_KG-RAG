@@ -31,10 +31,10 @@ TARGET_PROFILE_PATH = (
 SOURCE_UNIT_CONTRACT_PATH = PROJECT_ROOT / "docs/publication_source_unit_contract.md"
 
 TARGET_PROFILE_SHA256 = (
-    "3d8a80c4ff8794588e2551e63a61e72c60a9afcb89d8b7a7058ff23e25ee4760"
+    "6401c15b861c2362b67e03d56acd4a7304964f595d706311fd4f149eb69b3a5e"
 )
 SOURCE_UNIT_CONTRACT_SHA256 = (
-    "31fbd6c76e0efbccdde3e6945191e2a174f19565711b11aedc27d4d63e8e1c3a"
+    "8132be14b06153957697310ec8df16a07e72462ce7a98ae46b8d4f26aa188172"
 )
 SHA256_ZERO = "0" * 64
 
@@ -69,14 +69,14 @@ def metadata() -> dict[str, Any]:
         "extractionChannel": "open_discovery",
         "eligibleOperationalTargetIDs": [],
         "deferredRecordIDs": [],
-        "ontologyVersion": "0.1.3",
+        "ontologyVersion": "0.1.4",
         "ontologySha256": (
-            "ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57"
+            "7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635"
         ),
         "targetInventoryProfileID": "publication-pilot1-target-inventory",
         "targetInventorySchemaVersion": "0.1.0",
         "targetInventorySha256": TARGET_PROFILE_SHA256,
-        "sourceUnitContractVersion": "0.1.1",
+        "sourceUnitContractVersion": "0.1.2",
         "sourceUnitContractSha256": SOURCE_UNIT_CONTRACT_SHA256,
         "candidateSchemaVersion": "0.1.0",
         "candidateSchemaSha256": SHA256_ZERO,
@@ -798,7 +798,7 @@ class PublicationValidationContractTests(unittest.TestCase):
             "**Status:** final and binding for Publication Pilot 1 implementation",
             self.text,
         )
-        self.assertIn("**Contract version:** 0.1.0", self.text)
+        self.assertIn("**Contract version:** 0.1.1", self.text)
         self.assertIn("**Date frozen:** 2026-07-30", self.text)
 
     def test_freeze_and_implementation_gates_have_exact_final_counts(self) -> None:

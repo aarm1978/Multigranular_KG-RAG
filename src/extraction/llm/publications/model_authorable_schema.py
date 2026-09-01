@@ -33,7 +33,7 @@ MODEL_AUTHORABLE_KEYS = (
 )
 PIPELINE_OWNED_ENVELOPE_KEYS = frozenset({"schemaVersion", "outputStage", "metadata"})
 FROZEN_CANDIDATE_SCHEMA_SHA256 = (
-    "affd13215dc8023723e7e497f6fce9696cbf8af9bb7c01a85e8aa560033a776d"
+    "50132ce01a16a21736f65e4b5d4b0354b3d1c53f07878352159d6ff36e94fce2"
 )
 UNSUPPORTED_COMPOSITION_KEYS = frozenset(
     {"allOf", "not", "if", "then", "else", "dependentRequired", "dependentSchemas"}
