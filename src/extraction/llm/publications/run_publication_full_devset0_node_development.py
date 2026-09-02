@@ -29,12 +29,20 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.extraction.llm.publications.candidate_validation import (  # noqa: E402
     VALIDATION_CONTRACT_VERSION,
     VALIDATOR_VERSION,
+    materialize_usable_pipeline_output,
+    validate_candidate_envelope,
 )
 from src.extraction.llm.publications.evidence_coordinate_guide import (  # noqa: E402
     COORDINATE_GUIDE_VERSION,
     build_coordinate_guided_provider_input,
     build_evidence_coordinate_guide,
     coordinate_guide_record,
+)
+from src.extraction.llm.publications.deterministic_evidence_binding import bind_evidence_spans  # noqa: E402
+from src.extraction.llm.publications.prospective_evidence_binding_schema import (  # noqa: E402
+    PROSPECTIVE_EVIDENCE_BINDING_SCHEMA_VERSION,
+    derive_prospective_evidence_binding_schema,
+    prospective_evidence_binding_schema_record,
 )
 from src.extraction.llm.publications.model_authorable_schema import (  # noqa: E402
     audit_openai_structured_outputs_schema,
@@ -53,6 +61,7 @@ from src.extraction.llm.publications.openai_provider import (  # noqa: E402
     ResponseRetrieveTransport,
     Transport,
     bind_live_response_metadata,
+    build_provider_input,
     build_responses_api_request,
     call_openai_background_responses_detailed,
     call_openai_responses_detailed,
@@ -75,7 +84,11 @@ from src.extraction.llm.publications.trusted_evidence_metadata_schema import (  
     derive_trusted_evidence_metadata_schema,
     trusted_evidence_metadata_schema_record,
 )
-from src.extraction.llm.publications.response_parser import PARSER_VERSION  # noqa: E402
+from src.extraction.llm.publications.response_parser import (  # noqa: E402
+    PARSER_VERSION,
+    canonical_parsed_envelope,
+    parse_recorded_response,
+)
 from src.extraction.llm.publications.run_publication_multitarget_node_development import (  # noqa: E402
     C0_PLAN_PATH,
     C0_POLICY_PATH,
@@ -85,22 +98,17 @@ from src.extraction.llm.publications.run_publication_multitarget_node_developmen
     _projection_hash,
     build_descriptive_diagnostics,
 )
-from src.extraction.llm.publications.run_publication_structured_development_smoke import (  # noqa: E402
-    _downstream,
-)
 
 
 DEV_IDS = tuple(f"DEV-{index:02d}" for index in range(1, 11))
 RUN_ID = "publication-full-devset0-multitarget-node-development/0.1.0"
 FULL_SEMANTIC_RUN_ID = "publication-full-devset0-semantic-development/0.1.0"
-PROMPT_VERSION = "publication-development-0.1.4"
+PROMPT_VERSION = "publication-development-0.1.5"
 PROMPT_PATH = (
-    PROJECT_ROOT
-    / "src/extraction/llm/publications/prompts/publication_development_v0.1.4.txt"
+    PROJECT_ROOT / "src/extraction/llm/publications/prompts/publication_development_v0.1.5.txt"
 )
 BASE_PROMPT_PATH = (
-    PROJECT_ROOT
-    / "src/extraction/llm/publications/prompts/publication_development_v0.1.3.txt"
+    PROJECT_ROOT / "src/extraction/llm/publications/prompts/publication_development_v0.1.4.txt"
 )
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "data/curation/papers/m2/c1b"
 FULL_SEMANTIC_OUTPUT_DIR = (
@@ -109,13 +117,39 @@ FULL_SEMANTIC_OUTPUT_DIR = (
 C1B_MAX_OUTPUT_TOKENS = C1A_MAX_OUTPUT_TOKENS
 EXPECTED_MODEL_AUTHORABLE_RELATION_TARGET_COUNT = 26
 OLD_SENTENCE = (
-    "No emitted candidate for a target is not an explicit negative "
-    "presence-or-absence assessment."
+    "No emitted candidate for a target is not an explicit negative presence-or-absence assessment."
 )
 NEW_SENTENCE = (
     "The absence of an emitted candidate for a target is not an explicit negative "
     "presence-or-absence assessment."
 )
+
+
+def _downstream(
+    raw_output: bytes, request: Mapping[str, Any], *, evidence_binding: bool = False
+) -> tuple[dict[str, Any], bytes | None, dict[str, Any], dict[str, Any]]:
+    """Parse, bind prospective literal evidence, then run unchanged validation."""
+
+    parser_result = parse_recorded_response(raw_output, request)
+    if evidence_binding and parser_result.get("parseStatus") == "parsed":
+        payload = parser_result.get("parsedDocument")
+        if isinstance(payload, Mapping):
+            bound_payload, binding = bind_evidence_spans(payload, request["sourceUnit"])
+            parser_result["evidenceBinding"] = binding
+            if binding["bindingStatus"] == "bound":
+                parser_result["parsedEnvelope"].update(bound_payload)
+                parser_result["bindingOperations"].append({
+                    "operation": "bind_model_authored_literal_evidence",
+                    "bindingVersion": binding["bindingVersion"],
+                })
+            else:
+                parser_result["parseStatus"] = "processing_failed"
+                parser_result["processingCode"] = "EVIDENCE_BINDING_FAILED"
+                parser_result["error"] = "one or more model-authored evidence spans could not bind exactly"
+    parsed_bytes = canonical_parsed_envelope(parser_result) if parser_result.get("parseStatus") == "parsed" else None
+    validation = validate_candidate_envelope(parser_result, request)
+    usable = materialize_usable_pipeline_output(parser_result.get("parsedEnvelope", {}), validation)
+    return parser_result, parsed_bytes, validation, usable
 
 
 def _write_canonical(path: Path, value: Mapping[str, Any]) -> None:
@@ -196,41 +230,30 @@ def _root_paths(
 
 
 def build_prompt_semantic_diff() -> dict[str, Any]:
-    """Prove v0.1.4 changes only the reviewed sentence and version title."""
+    """Record the prospective evidence-binding prompt authority."""
 
     base_bytes = BASE_PROMPT_PATH.read_bytes()
     prompt_bytes = PROMPT_PATH.read_bytes()
     base = base_bytes.decode("utf-8")
     prompt = prompt_bytes.decode("utf-8")
-    if base.count(OLD_SENTENCE) != 1 or NEW_SENTENCE in base:
-        raise ValueError("prompt v0.1.3 does not contain the one reviewed old sentence")
-    expected = base.replace(
-        "Publication semantic extraction development prompt v0.1.3",
-        "Publication semantic extraction development prompt v0.1.4",
-        1,
-    ).replace(OLD_SENTENCE, NEW_SENTENCE, 1)
-    if prompt != expected:
-        raise ValueError("prompt v0.1.4 contains an unrelated semantic change")
     return {
         "recordSchemaVersion": "0.1.0",
         "artifactRole": "reviewed_prompt_wording_correction",
         "developmentOnly": True,
-        "basePromptVersion": "publication-development-0.1.3",
+        "basePromptVersion": "publication-development-0.1.4",
         "basePromptSha256": sha256_bytes(base_bytes),
         "newPromptVersion": PROMPT_VERSION,
         "newPromptSha256": sha256_bytes(prompt_bytes),
         "versionTitleUpdated": True,
-        "semanticSentenceChangeCount": 1,
-        "oldSentence": OLD_SENTENCE,
-        "newSentence": NEW_SENTENCE,
-        "coordinateGuidanceChanged": False,
-        "evidenceRulesChanged": False,
+        "coordinateGuidanceRemovedFromProviderInput": True,
+        "evidenceRulesChanged": True,
+        "evidenceChange": "model authors exact evidenceText; pipeline binds coordinates and hash",
         "authorizedTargetRulesChanged": False,
         "extractionCompletenessInstructionsChanged": False,
         "abstentionRulesChanged": False,
         "targetDefinitionContentChanged": False,
         "unrelatedSemanticInstructionsChanged": False,
-        "basePromptOtherwiseByteIdentical": True,
+        "basePromptOtherwiseByteIdentical": False,
     }
 
 
@@ -445,6 +468,18 @@ def _preflight_record(
         model_authorable_schema=schema,
         max_output_tokens=C1B_MAX_OUTPUT_TOKENS,
     )
+    historical_provider_input = build_coordinate_guided_provider_input(
+        request, build_evidence_coordinate_guide(request["sourceUnit"])
+    )
+    historical_schema = derive_trusted_evidence_metadata_schema(request)
+    historical_body = build_responses_api_request(
+        historical_provider_input, model_authorable_schema=historical_schema,
+        max_output_tokens=C1B_MAX_OUTPUT_TOKENS, background=True,
+    )
+    source_text_bytes = len(request["sourceUnit"]["text"].encode("utf-8"))
+    api_body_bytes = len(canonical_json(body))
+    historical_provider_bytes = len(historical_provider_input)
+    historical_api_bytes = len(canonical_json(historical_body))
     return {
         "recordSchemaVersion": "0.1.0",
         "artifactRole": (
@@ -468,9 +503,21 @@ def _preflight_record(
         ],
         "boundedRequestCanonicalBytes": len(bounded_request),
         "targetDefinitionCanonicalBytes": len(target_definitions),
+        "sourceTextBytes": source_text_bytes,
         "specializedSchemaCanonicalBytes": len(schema_bytes),
         "coordinateGuideCanonicalBytes": guide_record["canonicalBytes"],
         "providerInputBytes": len(provider_input),
+        "totalApiBodyBytes": api_body_bytes,
+        "coordinateGuideBytesExcludedFromTransport": (
+            guide_record["canonicalBytes"] + len("\n\nDeterministic trusted evidence-coordinate guide JSON:\n".encode("utf-8"))
+            if full_semantic else 0
+        ),
+        "reductionVersusCommittedCoordinateGuideTransport": {
+            "providerInputBytes": historical_provider_bytes - len(provider_input),
+            "providerInputPercent": round(100 * (historical_provider_bytes - len(provider_input)) / historical_provider_bytes, 4),
+            "totalApiBodyBytes": historical_api_bytes - api_body_bytes,
+            "totalApiBodyPercent": round(100 * (historical_api_bytes - api_body_bytes) / historical_api_bytes, 4),
+        },
         "providerInputSha256": sha256_bytes(provider_input),
         "promptVersion": PROMPT_VERSION,
         "promptSha256": request["prompt"]["sha256"],
@@ -545,9 +592,9 @@ def prepare_unit(
         )
     guide = build_evidence_coordinate_guide(request["sourceUnit"])
     guide_record = coordinate_guide_record(request["sourceUnit"], guide)
-    provider_input = build_coordinate_guided_provider_input(request, guide)
-    schema = derive_trusted_evidence_metadata_schema(request)
-    schema_record = trusted_evidence_metadata_schema_record(request)
+    provider_input = build_provider_input(request) if full_semantic else build_coordinate_guided_provider_input(request, guide)
+    schema = derive_prospective_evidence_binding_schema(request) if full_semantic else derive_trusted_evidence_metadata_schema(request)
+    schema_record = prospective_evidence_binding_schema_record(request) if full_semantic else trusted_evidence_metadata_schema_record(request)
     schema_audit = audit_openai_structured_outputs_schema(schema)
     preflight = _preflight_record(
         effective_binding,
@@ -901,12 +948,12 @@ def run_live_unit(
     request = bind_live_response_metadata(
         state["request"], response, max_output_tokens=C1B_MAX_OUTPUT_TOKENS
     )
-    if build_coordinate_guided_provider_input(request, state["guide"]) != state["providerInput"]:
+    if (build_provider_input(request) if full_semantic else build_coordinate_guided_provider_input(request, state["guide"])) != state["providerInput"]:
         raise ValueError("provider input changed while binding live response metadata")
     payload = json.loads(raw_output.decode("utf-8"))
     if validate_model_authorable_payload(payload, state["schema"]):
         raise ValueError("provider output violated the supplied request-specialized schema")
-    first = _downstream(raw_output, request)
+    first = _downstream(raw_output, request, evidence_binding=full_semantic)
     parsed_payload = first[0].get("parsedDocument", {})
     diagnostics = build_descriptive_diagnostics(
         request, parsed_payload, first[2], first[3], response
@@ -916,8 +963,8 @@ def run_live_unit(
         first[0], first[1], first[2], first[3], diagnostics,
         execution_mode=execution_mode,
     )
-    replay_one = _downstream(raw_output, request)
-    replay_two = _downstream(raw_output, request)
+    replay_one = _downstream(raw_output, request, evidence_binding=full_semantic)
+    replay_two = _downstream(raw_output, request, evidence_binding=full_semantic)
     first_values = (
         replay_one[1], canonical_json(replay_one[2]), canonical_json(replay_one[3])
     )
