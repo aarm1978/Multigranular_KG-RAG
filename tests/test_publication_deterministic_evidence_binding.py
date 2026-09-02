@@ -75,12 +75,12 @@ class DeterministicEvidenceBindingTests(unittest.TestCase):
         self.assertNotIn("D-26", request["eligibleOperationalTargetIDs"])
 
     def test_full_semantic_preflight_records_its_actual_prompt_version(self):
-        """Fresh full-semantic preparation remains explicitly bound to v0.1.6."""
+        """Fresh full-semantic preparation is explicitly bound to v0.1.7."""
 
         with tempfile.TemporaryDirectory() as directory:
             state = prepare_unit(load_c0_bindings()[0], output_dir=Path(directory), full_semantic=True)
-        self.assertEqual(state["request"]["prompt"]["version"], "publication-development-0.1.6")
-        self.assertEqual(state["preflight"]["promptVersion"], "publication-development-0.1.6")
+        self.assertEqual(state["request"]["prompt"]["version"], "publication-development-0.1.7")
+        self.assertEqual(state["preflight"]["promptVersion"], "publication-development-0.1.7")
 
     def test_authentic_ambiguous_cases_bind_only_with_their_committed_anchors(self):
         """Exercise DEV-06/07 literals without altering preserved raw outputs."""

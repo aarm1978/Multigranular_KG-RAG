@@ -27,9 +27,11 @@ from src.extraction.llm.publications.run_publication_full_devset0_node_developme
     OLD_SENTENCE,
     HISTORICAL_PROMPT_V013_PATH,
     PROMPT_PATH,
+    PROSPECTIVE_PROMPT_V016_PATH,
     build_c1b_request,
     build_full_semantic_request,
     build_historical_prompt_v014_diff,
+    build_prompt_v016_semantic_diff,
     build_prompt_semantic_diff,
     load_c0_bindings,
     prepare_unit,
@@ -127,7 +129,7 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
     def test_prospective_prompt_v016_is_limited_to_trusted_metadata_binding(self) -> None:
         """v0.1.6 removes only trusted evidence-envelope reproduction."""
 
-        record = build_prompt_semantic_diff()
+        record = build_prompt_v016_semantic_diff()
         self.assertEqual(record["basePromptVersion"], "publication-development-0.1.5")
         self.assertEqual(record["newPromptVersion"], "publication-development-0.1.6")
         self.assertFalse(record["coordinateGuideTransportChanged"])
@@ -139,6 +141,24 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
             "authorizedTargetRulesChanged", "extractionCompletenessInstructionsChanged",
             "abstentionRulesChanged", "targetDefinitionContentChanged",
             "unrelatedSemanticInstructionsChanged",
+        ):
+            self.assertFalse(record[key])
+        self.assertEqual(record["newPromptSha256"], hashlib.sha256(PROSPECTIVE_PROMPT_V016_PATH.read_bytes()).hexdigest())
+
+    def test_prospective_prompt_v017_is_limited_to_endpoint_metadata_authorship(self) -> None:
+        """v0.1.7 changes only ownership of deterministic endpoint metadata."""
+
+        record = build_prompt_semantic_diff()
+        self.assertEqual(record["basePromptVersion"], "publication-development-0.1.6")
+        self.assertEqual(record["newPromptVersion"], "publication-development-0.1.7")
+        self.assertTrue(record["endpointArtifactIDAuthorshipChanged"])
+        for key in (
+            "endpointReferenceTypeReferenceIDSemanticAuthorshipChanged",
+            "evidenceMetadataAuthorshipChanged",
+            "coordinateGuideTransportChanged",
+            "targetSemanticsChanged",
+            "relationSemanticsChanged",
+            "extractionCompletenessInstructionsChanged",
         ):
             self.assertFalse(record[key])
         self.assertEqual(record["newPromptSha256"], hashlib.sha256(PROMPT_PATH.read_bytes()).hexdigest())
@@ -261,7 +281,7 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         self.assertEqual(attempt["requestInputSha256"], build_full_semantic_request(load_c0_bindings()[-1])["requestInputSha256"])
         self.assertEqual(len(attempt["providerInputSha256"]), 64)
         self.assertEqual(len(attempt["modelAuthorableSchemaSha256"]), 64)
-        self.assertEqual(reproducibility["requestSpecializedSchemaVersion"], "publication-request-specialized-0.4.0")
+        self.assertEqual(reproducibility["requestSpecializedSchemaVersion"], "publication-request-specialized-0.5.0")
         self.assertEqual(reproducibility["coordinateGuideTransport"], "excluded_from_prospective_full_semantic_provider_input")
 
     def test_background_creation_persists_response_id_and_polls_to_completion(self) -> None:
@@ -415,7 +435,7 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         self.assertEqual(len(dispatches), 1)
 
     def test_dev02_full_semantic_provider_input_remains_identical_offline(self) -> None:
-        """DEV-02's large request remains deterministic without provider dispatch."""
+        """Fresh v0.1.7 input is deterministic while v0.1.6 remains preserved."""
 
         binding = next(row for row in load_c0_bindings() if row["developmentID"] == "DEV-02")
         with tempfile.TemporaryDirectory() as first_dir, tempfile.TemporaryDirectory() as second_dir:
@@ -424,7 +444,24 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         self.assertEqual(first["providerInput"], second["providerInput"])
         self.assertEqual(
             hashlib.sha256(first["providerInput"]).hexdigest(),
+            "2fdc86e178ea3990da967f40aa9b13532f8af2aae3f5f1c7e63d0b61b12d67bf",
+        )
+        historical_root = (
+            PROJECT_ROOT / "data/curation/papers/m2/future_full_semantic_devset0/DEV-02"
+            / "researcher_authorized_recovery_002/DEV-02"
+        )
+        historical_input = (historical_root / "publication_full_semantic_dev02_exact_provider_input.txt").read_bytes()
+        reproducibility = json.loads((historical_root / "publication_full_semantic_dev02_reproducibility_record.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            hashlib.sha256(historical_input).hexdigest(),
             "ea450a435e747dc3cda0d12120a6424a6af09380d4429576ee173e97f3be3874",
+        )
+        self.assertEqual(hashlib.sha256(historical_input).hexdigest(), reproducibility["providerInputSha256"])
+        old_prompt = PROSPECTIVE_PROMPT_V016_PATH.read_text(encoding="utf-8")
+        new_prompt = PROMPT_PATH.read_text(encoding="utf-8")
+        self.assertEqual(
+            historical_input.decode("utf-8").replace(old_prompt, new_prompt, 1).encode("utf-8"),
+            first["providerInput"],
         )
 
     def test_aggregate_finding_frequencies_count_occurrences_not_units(self) -> None:

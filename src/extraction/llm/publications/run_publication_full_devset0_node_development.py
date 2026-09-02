@@ -40,10 +40,13 @@ from src.extraction.llm.publications.evidence_coordinate_guide import (  # noqa:
     coordinate_guide_record,
 )
 from src.extraction.llm.publications.deterministic_evidence_binding import bind_evidence_spans  # noqa: E402
-from src.extraction.llm.publications.prospective_evidence_binding_schema import (  # noqa: E402
-    PROSPECTIVE_EVIDENCE_BINDING_SCHEMA_VERSION,
-    derive_prospective_evidence_binding_schema,
-    prospective_evidence_binding_schema_record,
+from src.extraction.llm.publications.deterministic_endpoint_binding import (  # noqa: E402
+    bind_edge_endpoint_artifact_ids,
+)
+from src.extraction.llm.publications.prospective_endpoint_binding_schema import (  # noqa: E402
+    PROSPECTIVE_ENDPOINT_BINDING_SCHEMA_VERSION,
+    derive_prospective_endpoint_binding_schema,
+    prospective_endpoint_binding_schema_record,
 )
 from src.extraction.llm.publications.model_authorable_schema import (  # noqa: E402
     audit_openai_structured_outputs_schema,
@@ -104,8 +107,11 @@ from src.extraction.llm.publications.run_publication_multitarget_node_developmen
 DEV_IDS = tuple(f"DEV-{index:02d}" for index in range(1, 11))
 RUN_ID = "publication-full-devset0-multitarget-node-development/0.1.0"
 FULL_SEMANTIC_RUN_ID = "publication-full-devset0-semantic-development/0.1.0"
-PROMPT_VERSION = "publication-development-0.1.6"
+PROMPT_VERSION = "publication-development-0.1.7"
 PROMPT_PATH = (
+    PROJECT_ROOT / "src/extraction/llm/publications/prompts/publication_development_v0.1.7.txt"
+)
+PROSPECTIVE_PROMPT_V016_PATH = (
     PROJECT_ROOT / "src/extraction/llm/publications/prompts/publication_development_v0.1.6.txt"
 )
 PROSPECTIVE_PROMPT_V015_PATH = (
@@ -133,13 +139,32 @@ NEW_SENTENCE = (
 
 
 def _downstream(
-    raw_output: bytes, request: Mapping[str, Any], *, evidence_binding: bool = False
+    raw_output: bytes,
+    request: Mapping[str, Any],
+    *,
+    endpoint_binding: bool = False,
+    evidence_binding: bool = False,
 ) -> tuple[dict[str, Any], bytes | None, dict[str, Any], dict[str, Any]]:
-    """Parse, bind prospective literal evidence, then run unchanged validation."""
+    """Parse, bind trusted endpoint/evidence fields, then run unchanged validation."""
 
     parser_result = parse_recorded_response(raw_output, request)
-    if evidence_binding and parser_result.get("parseStatus") == "parsed":
+    if endpoint_binding and parser_result.get("parseStatus") == "parsed":
         payload = parser_result.get("parsedDocument")
+        if isinstance(payload, Mapping):
+            bound_payload, binding = bind_edge_endpoint_artifact_ids(payload, request)
+            parser_result["endpointBinding"] = binding
+            if binding["bindingStatus"] == "bound":
+                parser_result["parsedEnvelope"].update(bound_payload)
+                parser_result["bindingOperations"].append({
+                    "operation": "bind_trusted_edge_endpoint_artifact_metadata",
+                    "bindingVersion": binding["bindingVersion"],
+                })
+            else:
+                parser_result["parseStatus"] = "processing_failed"
+                parser_result["processingCode"] = "ENDPOINT_BINDING_FAILED"
+                parser_result["error"] = "one or more model-authored edge endpoint references could not bind exactly"
+    if evidence_binding and parser_result.get("parseStatus") == "parsed":
+        payload = parser_result.get("parsedEnvelope")
         if isinstance(payload, Mapping):
             bound_payload, binding = bind_evidence_spans(payload, request["sourceUnit"])
             parser_result["evidenceBinding"] = binding
@@ -230,7 +255,7 @@ def _root_paths(
     )
     return {
         "promptDiff": output_dir / (
-            f"{prefix}_prompt_v0.1.5_to_v0.1.6_trusted_metadata_diff.json"
+            f"{prefix}_prompt_v0.1.6_to_v0.1.7_endpoint_metadata_diff.json"
             if full_semantic else f"{prefix}_prompt_v0.1.3_to_v0.1.4_diff.json"
         ),
         "preflight": output_dir / f"{prefix}_full_offline_preflight.json",
@@ -264,11 +289,11 @@ def build_historical_prompt_v014_diff() -> dict[str, Any]:
     }
 
 
-def build_prompt_semantic_diff() -> dict[str, Any]:
-    """Record and constrain the prospective v0.1.5 to v0.1.6 transition."""
+def build_prompt_v016_semantic_diff() -> dict[str, Any]:
+    """Record and constrain the preserved prospective v0.1.5 to v0.1.6 transition."""
 
     base_bytes = PROSPECTIVE_PROMPT_V015_PATH.read_bytes()
-    prompt_bytes = PROMPT_PATH.read_bytes()
+    prompt_bytes = PROSPECTIVE_PROMPT_V016_PATH.read_bytes()
     base = base_bytes.decode("utf-8")
     prompt = prompt_bytes.decode("utf-8")
     target_block_start = "COMPLETE AUTHORIZED TARGET-SPACE SEARCH\n"
@@ -291,7 +316,7 @@ def build_prompt_semantic_diff() -> dict[str, Any]:
         "developmentOnly": True,
         "basePromptVersion": "publication-development-0.1.5",
         "basePromptSha256": sha256_bytes(base_bytes),
-        "newPromptVersion": PROMPT_VERSION,
+        "newPromptVersion": "publication-development-0.1.6",
         "newPromptSha256": sha256_bytes(prompt_bytes),
         "versionTitleUpdated": True,
         "coordinateGuideTransportChanged": False,
@@ -307,6 +332,56 @@ def build_prompt_semantic_diff() -> dict[str, Any]:
         "basePromptOtherwiseByteIdentical": False,
         "historicalV014Regression": build_historical_prompt_v014_diff(),
     }
+
+
+def build_prompt_semantic_diff() -> dict[str, Any]:
+    """Record and constrain the prospective v0.1.6 to v0.1.7 endpoint transition."""
+
+    base_bytes = PROSPECTIVE_PROMPT_V016_PATH.read_bytes()
+    prompt_bytes = PROMPT_PATH.read_bytes()
+    base = base_bytes.decode("utf-8")
+    prompt = prompt_bytes.decode("utf-8")
+    expected = base.replace(
+        "Publication semantic extraction development prompt v0.1.6",
+        "Publication semantic extraction development prompt v0.1.7",
+        1,
+    ).replace(
+        "The pipeline injects trusted evidence-envelope source metadata separately.",
+        "The model authors edge endpoint referenceType and referenceID only. "
+        "The pipeline injects trusted endpoint artifactID metadata separately.\n\n"
+        "The pipeline injects trusted evidence-envelope source metadata separately.",
+        1,
+    )
+    if prompt != expected:
+        raise ValueError("prospective v0.1.6 to v0.1.7 prompt transition drifted")
+    return {
+        "recordSchemaVersion": "0.1.0",
+        "artifactRole": "prospective_deterministic_endpoint_binding_prompt_transition",
+        "developmentOnly": True,
+        "basePromptVersion": "publication-development-0.1.6",
+        "basePromptSha256": sha256_bytes(base_bytes),
+        "newPromptVersion": PROMPT_VERSION,
+        "newPromptSha256": sha256_bytes(prompt_bytes),
+        "versionTitleUpdated": True,
+        "endpointArtifactIDAuthorshipChanged": True,
+        "endpointReferenceTypeReferenceIDSemanticAuthorshipChanged": False,
+        "evidenceMetadataAuthorshipChanged": False,
+        "coordinateGuideTransportChanged": False,
+        "coordinateGuideTransport": "excluded_before_and_after",
+        "targetSemanticsChanged": False,
+        "relationSemanticsChanged": False,
+        "extractionCompletenessInstructionsChanged": False,
+        "basePromptOtherwiseByteIdentical": False,
+        "historicalV016TransitionPreserved": build_prompt_v016_semantic_diff(),
+    }
+
+
+def write_prospective_endpoint_binding_transition_record(path: Path) -> dict[str, Any]:
+    """Write the standalone no-call v0.1.6-to-v0.1.7 provenance record."""
+
+    record = build_prompt_semantic_diff()
+    _write_canonical(path, record)
+    return record
 
 
 def load_c0_bindings() -> list[dict[str, Any]]:
@@ -645,8 +720,8 @@ def prepare_unit(
     guide = build_evidence_coordinate_guide(request["sourceUnit"])
     guide_record = coordinate_guide_record(request["sourceUnit"], guide)
     provider_input = build_provider_input(request) if full_semantic else build_coordinate_guided_provider_input(request, guide)
-    schema = derive_prospective_evidence_binding_schema(request) if full_semantic else derive_trusted_evidence_metadata_schema(request)
-    schema_record = prospective_evidence_binding_schema_record(request) if full_semantic else trusted_evidence_metadata_schema_record(request)
+    schema = derive_prospective_endpoint_binding_schema(request) if full_semantic else derive_trusted_evidence_metadata_schema(request)
+    schema_record = prospective_endpoint_binding_schema_record(request) if full_semantic else trusted_evidence_metadata_schema_record(request)
     schema_audit = audit_openai_structured_outputs_schema(schema)
     preflight = _preflight_record(
         effective_binding,
@@ -801,7 +876,7 @@ def _reproducibility_record(
         "coordinateGuideSha256": state["guideRecord"]["coordinateGuideSha256"],
         "coordinateGuideEntryCount": state["guideRecord"]["entryCount"],
         "requestSpecializedSchemaVersion": (
-            PROSPECTIVE_EVIDENCE_BINDING_SCHEMA_VERSION
+            PROSPECTIVE_ENDPOINT_BINDING_SCHEMA_VERSION
             if state["preflight"]["exposedRelationTargetCount"]
             else TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION
         ),
@@ -1018,7 +1093,7 @@ def run_live_unit(
     payload = json.loads(raw_output.decode("utf-8"))
     if validate_model_authorable_payload(payload, state["schema"]):
         raise ValueError("provider output violated the supplied request-specialized schema")
-    first = _downstream(raw_output, request, evidence_binding=full_semantic)
+    first = _downstream(raw_output, request, endpoint_binding=full_semantic, evidence_binding=full_semantic)
     parsed_payload = first[0].get("parsedDocument", {})
     diagnostics = build_descriptive_diagnostics(
         request, parsed_payload, first[2], first[3], response
@@ -1028,8 +1103,8 @@ def run_live_unit(
         first[0], first[1], first[2], first[3], diagnostics,
         execution_mode=execution_mode,
     )
-    replay_one = _downstream(raw_output, request, evidence_binding=full_semantic)
-    replay_two = _downstream(raw_output, request, evidence_binding=full_semantic)
+    replay_one = _downstream(raw_output, request, endpoint_binding=full_semantic, evidence_binding=full_semantic)
+    replay_two = _downstream(raw_output, request, endpoint_binding=full_semantic, evidence_binding=full_semantic)
     first_values = (
         replay_one[1], canonical_json(replay_one[2]), canonical_json(replay_one[3])
     )
