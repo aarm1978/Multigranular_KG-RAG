@@ -1,7 +1,7 @@
 """Run M2-C1B full DEV-SET-0 multi-target Publication node development.
 
-The batch consumes all ten accepted M2-C0 plan rows under one prospective v0.1.4
-configuration. Each unit has isolated preflight, provider, downstream, and replay
+The batch preserves historical C1B and supports prospective full-semantic authorities.
+Each unit has isolated preflight, provider, downstream, and replay
 artifacts. Provider calls are available only through an explicit ``--live-unit`` action;
 ordinary preparation, aggregation, and replay modes are network-free.
 
@@ -19,6 +19,7 @@ from difflib import SequenceMatcher
 import json
 import os
 from pathlib import Path
+import re
 import sys
 from typing import Any, Mapping, Sequence
 
@@ -103,8 +104,11 @@ from src.extraction.llm.publications.run_publication_multitarget_node_developmen
 DEV_IDS = tuple(f"DEV-{index:02d}" for index in range(1, 11))
 RUN_ID = "publication-full-devset0-multitarget-node-development/0.1.0"
 FULL_SEMANTIC_RUN_ID = "publication-full-devset0-semantic-development/0.1.0"
-PROMPT_VERSION = "publication-development-0.1.5"
+PROMPT_VERSION = "publication-development-0.1.6"
 PROMPT_PATH = (
+    PROJECT_ROOT / "src/extraction/llm/publications/prompts/publication_development_v0.1.6.txt"
+)
+PROSPECTIVE_PROMPT_V015_PATH = (
     PROJECT_ROOT / "src/extraction/llm/publications/prompts/publication_development_v0.1.5.txt"
 )
 BASE_PROMPT_PATH = (
@@ -225,7 +229,10 @@ def _root_paths(
         else "publication_m2c1b"
     )
     return {
-        "promptDiff": output_dir / f"{prefix}_prompt_v0.1.4_semantic_diff.json",
+        "promptDiff": output_dir / (
+            f"{prefix}_prompt_v0.1.5_to_v0.1.6_trusted_metadata_diff.json"
+            if full_semantic else f"{prefix}_prompt_v0.1.3_to_v0.1.4_diff.json"
+        ),
         "preflight": output_dir / f"{prefix}_full_offline_preflight.json",
         "aggregate": output_dir / f"{prefix}_aggregate_development_diagnostics.json",
         "replay": output_dir / f"{prefix}_replay_summary.json",
@@ -258,9 +265,9 @@ def build_historical_prompt_v014_diff() -> dict[str, Any]:
 
 
 def build_prompt_semantic_diff() -> dict[str, Any]:
-    """Record and constrain the prospective v0.1.4 to v0.1.5 transition."""
+    """Record and constrain the prospective v0.1.5 to v0.1.6 transition."""
 
-    base_bytes = BASE_PROMPT_PATH.read_bytes()
+    base_bytes = PROSPECTIVE_PROMPT_V015_PATH.read_bytes()
     prompt_bytes = PROMPT_PATH.read_bytes()
     base = base_bytes.decode("utf-8")
     prompt = prompt_bytes.decode("utf-8")
@@ -282,14 +289,16 @@ def build_prompt_semantic_diff() -> dict[str, Any]:
         "recordSchemaVersion": "0.1.0",
         "artifactRole": "prospective_deterministic_evidence_binding_prompt_transition",
         "developmentOnly": True,
-        "basePromptVersion": "publication-development-0.1.4",
+        "basePromptVersion": "publication-development-0.1.5",
         "basePromptSha256": sha256_bytes(base_bytes),
         "newPromptVersion": PROMPT_VERSION,
         "newPromptSha256": sha256_bytes(prompt_bytes),
         "versionTitleUpdated": True,
-        "coordinateGuidanceRemovedFromProviderInput": True,
+        "coordinateGuideTransportChanged": False,
+        "coordinateGuideTransport": "excluded_before_and_after",
+        "trustedEvidenceMetadataAuthorshipChanged": True,
         "evidenceRulesChanged": True,
-        "evidenceChange": "model authors exact evidenceText; pipeline binds coordinates and hash",
+        "evidenceChange": "model authors exact evidenceText and locatorAnchor; pipeline binds trusted source metadata, coordinates, and hash",
         "authorizedTargetRulesChanged": not target_block_unchanged,
         "extractionCompletenessInstructionsChanged": not target_block_unchanged,
         "abstentionRulesChanged": not abstention_block_unchanged,
@@ -1074,15 +1083,39 @@ def run_unresolved_attempt_recovery(
 ) -> dict[str, Any]:
     """Create one explicitly requested recovery attempt beside an unresolved record."""
 
+    resolution = resolve_next_recovery_attempt(output_dir, development_id)
+    return run_live_unit(
+        development_id, api_key, output_dir=resolution["recoveryRoot"],
+        transport=transport, retrieval_transport=retrieval_transport,
+        full_semantic=True, recovery_of=resolution["recoveryOf"],
+        attempt_number=resolution["attemptCount"],
+    )
+
+
+def resolve_next_recovery_attempt(
+    output_dir: Path, development_id: str
+) -> dict[str, Any]:
+    """Resolve, without writing, the sole next researcher-authorized recovery path."""
+
     paths = _unit_paths(
         output_dir, development_id, artifact_prefix="publication_full_semantic"
     )
     if not paths["attempt"].exists():
         raise ValueError(f"{development_id} has no unresolved attempt to recover")
-    prior = load_json_object(paths["attempt"])
-    if prior.get("status") not in {"initiated", "submitted"}:
-        raise ValueError(f"{development_id} prior attempt is already terminal")
-    recovery_root = paths["unitDir"] / "researcher_authorized_recovery_001"
+    candidates = [(0, paths["attempt"], paths["unitDir"])]
+    pattern = re.compile(r"researcher_authorized_recovery_(\d{3})$")
+    for child in sorted(paths["unitDir"].iterdir() if paths["unitDir"].exists() else []):
+        match = pattern.match(child.name)
+        attempt = _unit_paths(child, development_id, artifact_prefix="publication_full_semantic")["attempt"]
+        if match and attempt.exists():
+            candidates.append((int(match.group(1)), attempt, child))
+    ordinal, prior_path, prior_root = max(candidates, key=lambda row: row[0])
+    prior = load_json_object(prior_path)
+    if prior.get("status") == "submitted" and prior.get("responseID"):
+        raise ValueError(f"{development_id} submitted attempt requires exact-response resumption")
+    if prior.get("status") not in {"initiated", "incomplete", "provider_failed"}:
+        raise ValueError(f"{development_id} latest attempt is not eligible for a new recovery")
+    recovery_root = paths["unitDir"] / f"researcher_authorized_recovery_{ordinal + 1:03d}"
     recovery_paths = _unit_paths(
         recovery_root, development_id, artifact_prefix="publication_full_semantic"
     )
@@ -1095,21 +1128,12 @@ def run_unresolved_attempt_recovery(
     ):
         raise ValueError(f"{development_id} recovery attempt already exists")
     recovery_of = {
-        "priorAttemptPath": str(paths["attempt"].relative_to(output_dir)),
-        "priorAttemptSha256": sha256_bytes(paths["attempt"].read_bytes()),
+        "priorAttemptPath": str(prior_path.relative_to(output_dir)),
+        "priorAttemptSha256": sha256_bytes(prior_path.read_bytes()),
         "priorAttemptStatus": prior["status"],
         "priorAttemptResponseID": prior.get("responseID"),
     }
-    return run_live_unit(
-        development_id,
-        api_key,
-        output_dir=recovery_root,
-        transport=transport,
-        retrieval_transport=retrieval_transport,
-        full_semantic=True,
-        recovery_of=recovery_of,
-        attempt_number=int(prior.get("attemptCount", 1)) + 1,
-    )
+    return {"recoveryRoot": recovery_root, "attemptCount": int(prior.get("attemptCount", 1)) + 1, "recoveryOf": recovery_of}
 
 
 def replay_unit(

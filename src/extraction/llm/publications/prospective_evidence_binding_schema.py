@@ -10,6 +10,7 @@ import jsonschema
 from src.extraction.llm.publications.deterministic_evidence_binding import (
     COMPUTED_EVIDENCE_FIELDS,
     LOCATOR_ANCHOR_FIELD,
+    TRUSTED_SOURCE_METADATA_FIELDS,
 )
 from src.extraction.llm.publications.model_authorable_schema import (
     ModelAuthorableSchemaError,
@@ -21,7 +22,7 @@ from src.extraction.llm.publications.trusted_evidence_metadata_schema import (
 )
 
 
-PROSPECTIVE_EVIDENCE_BINDING_SCHEMA_VERSION = "publication-request-specialized-0.3.0"
+PROSPECTIVE_EVIDENCE_BINDING_SCHEMA_VERSION = "publication-request-specialized-0.4.0"
 
 
 def derive_prospective_evidence_binding_schema(request: Mapping[str, Any]) -> dict[str, Any]:
@@ -35,7 +36,7 @@ def derive_prospective_evidence_binding_schema(request: Mapping[str, Any]) -> di
     evidence = schema["$defs"]["evidenceSpan"]
     properties = evidence["properties"]
     required = evidence["required"]
-    for name in COMPUTED_EVIDENCE_FIELDS:
+    for name in COMPUTED_EVIDENCE_FIELDS | TRUSTED_SOURCE_METADATA_FIELDS:
         properties.pop(name, None)
         required.remove(name)
     properties[LOCATOR_ANCHOR_FIELD] = {"type": ["string", "null"]}
@@ -60,7 +61,7 @@ def prospective_evidence_binding_schema_record(request: Mapping[str, Any]) -> di
         "schemaVersion": PROSPECTIVE_EVIDENCE_BINDING_SCHEMA_VERSION,
         "baseTrustedMetadataSchemaSha256": sha256_bytes(canonical_json(historical)),
         "prospectiveSchemaSha256": sha256_bytes(canonical_json(prospective)),
-        "removedProviderAuthoredFields": sorted(COMPUTED_EVIDENCE_FIELDS),
+        "removedProviderAuthoredFields": sorted(COMPUTED_EVIDENCE_FIELDS | TRUSTED_SOURCE_METADATA_FIELDS),
         "locatorAnchor": {
             "field": LOCATOR_ANCHOR_FIELD,
             "semanticAuthority": False,

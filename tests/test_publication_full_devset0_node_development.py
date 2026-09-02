@@ -36,6 +36,7 @@ from src.extraction.llm.publications.run_publication_full_devset0_node_developme
     prepare_all,
     run_live_unit,
     run_unresolved_attempt_recovery,
+    resolve_next_recovery_attempt,
     _validation_finding_code_counts,
 )
 
@@ -123,15 +124,17 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         self.assertTrue(record["basePromptOtherwiseByteIdentical"])
         self.assertEqual(record["newPromptSha256"], hashlib.sha256(BASE_PROMPT_PATH.read_bytes()).hexdigest())
 
-    def test_prospective_prompt_v015_is_limited_to_evidence_binding_transition(self) -> None:
-        """v0.1.5 changes evidence ownership without widening semantic extraction."""
+    def test_prospective_prompt_v016_is_limited_to_trusted_metadata_binding(self) -> None:
+        """v0.1.6 removes only trusted evidence-envelope reproduction."""
 
         record = build_prompt_semantic_diff()
-        self.assertEqual(record["basePromptVersion"], "publication-development-0.1.4")
-        self.assertEqual(record["newPromptVersion"], "publication-development-0.1.5")
-        self.assertTrue(record["coordinateGuidanceRemovedFromProviderInput"])
+        self.assertEqual(record["basePromptVersion"], "publication-development-0.1.5")
+        self.assertEqual(record["newPromptVersion"], "publication-development-0.1.6")
+        self.assertFalse(record["coordinateGuideTransportChanged"])
+        self.assertEqual(record["coordinateGuideTransport"], "excluded_before_and_after")
+        self.assertTrue(record["trustedEvidenceMetadataAuthorshipChanged"])
         self.assertTrue(record["evidenceRulesChanged"])
-        self.assertEqual(record["evidenceChange"], "model authors exact evidenceText; pipeline binds coordinates and hash")
+        self.assertEqual(record["evidenceChange"], "model authors exact evidenceText and locatorAnchor; pipeline binds trusted source metadata, coordinates, and hash")
         for key in (
             "authorizedTargetRulesChanged", "extractionCompletenessInstructionsChanged",
             "abstentionRulesChanged", "targetDefinitionContentChanged",
@@ -258,7 +261,7 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         self.assertEqual(attempt["requestInputSha256"], build_full_semantic_request(load_c0_bindings()[-1])["requestInputSha256"])
         self.assertEqual(len(attempt["providerInputSha256"]), 64)
         self.assertEqual(len(attempt["modelAuthorableSchemaSha256"]), 64)
-        self.assertEqual(reproducibility["requestSpecializedSchemaVersion"], "publication-request-specialized-0.3.0")
+        self.assertEqual(reproducibility["requestSpecializedSchemaVersion"], "publication-request-specialized-0.4.0")
         self.assertEqual(reproducibility["coordinateGuideTransport"], "excluded_from_prospective_full_semantic_provider_input")
 
     def test_background_creation_persists_response_id_and_polls_to_completion(self) -> None:
@@ -353,6 +356,39 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         self.assertEqual(recovery["attemptCount"], 2)
         self.assertEqual(recovery["recoveryOf"]["priorAttemptStatus"], "initiated")
 
+    def test_resolve_terminal_incomplete_recovery_advances_without_writing(self) -> None:
+        """A terminal recovery resolves the next chain link without creating it."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            root = output_dir / "DEV-02/publication_full_semantic_dev02_attempt_record.json"
+            second = output_dir / "DEV-02/researcher_authorized_recovery_001/DEV-02/publication_full_semantic_dev02_attempt_record.json"
+            root.parent.mkdir(parents=True); second.parent.mkdir(parents=True)
+            root.write_bytes(b'{"attemptCount":1,"status":"initiated"}\n')
+            second.write_bytes(b'{"attemptCount":2,"responseID":"resp_attempt_2","status":"incomplete"}\n')
+            root_bytes, second_bytes = root.read_bytes(), second.read_bytes()
+            resolved = resolve_next_recovery_attempt(output_dir, "DEV-02")
+            self.assertEqual(resolved["recoveryRoot"], output_dir / "DEV-02/researcher_authorized_recovery_002")
+            self.assertEqual(resolved["attemptCount"], 3)
+            self.assertEqual(resolved["recoveryOf"]["priorAttemptPath"], "DEV-02/researcher_authorized_recovery_001/DEV-02/publication_full_semantic_dev02_attempt_record.json")
+            self.assertEqual(resolved["recoveryOf"]["priorAttemptStatus"], "incomplete")
+            self.assertEqual(resolved["recoveryOf"]["priorAttemptResponseID"], "resp_attempt_2")
+            self.assertEqual(resolved["recoveryOf"]["priorAttemptSha256"], hashlib.sha256(second_bytes).hexdigest())
+            self.assertEqual(root.read_bytes(), root_bytes); self.assertEqual(second.read_bytes(), second_bytes)
+            self.assertFalse(resolved["recoveryRoot"].exists())
+
+    def test_resolve_submitted_response_requires_resumption(self) -> None:
+        """A persisted submitted response can never be redispatched."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            attempt = output_dir / "DEV-02/publication_full_semantic_dev02_attempt_record.json"
+            attempt.parent.mkdir(parents=True)
+            attempt.write_text('{"attemptCount":1,"responseID":"resp_submitted","status":"submitted"}\n')
+            with self.assertRaisesRegex(ValueError, "exact-response resumption"):
+                resolve_next_recovery_attempt(output_dir, "DEV-02")
+            self.assertFalse((output_dir / "DEV-02/researcher_authorized_recovery_001").exists())
+
     def test_interrupted_full_semantic_attempt_remains_auditable_and_blocks_retry(self) -> None:
         """An interruption leaves initiated state and prevents automatic redispatch."""
 
@@ -388,7 +424,7 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         self.assertEqual(first["providerInput"], second["providerInput"])
         self.assertEqual(
             hashlib.sha256(first["providerInput"]).hexdigest(),
-            "2420d77fb53e88e63a5f52d89a77afa15244b353f15a8ab602c5d77dc17707dc",
+            "ea450a435e747dc3cda0d12120a6424a6af09380d4429576ee173e97f3be3874",
         )
 
     def test_aggregate_finding_frequencies_count_occurrences_not_units(self) -> None:

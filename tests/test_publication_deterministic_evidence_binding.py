@@ -27,7 +27,9 @@ from src.extraction.llm.publications.request_builder import load_json_object
 class DeterministicEvidenceBindingTests(unittest.TestCase):
     """Prove all location decisions remain exact and fail closed."""
 
-    source = {"text": "alpha beta alpha gamma", "startOffsetInDocument": 40}
+    source = {"text": "alpha beta alpha gamma", "startOffsetInDocument": 40,
+              "canonicalArtifactID": "paper:test", "sourceUnitID": "unit:test",
+              "textHash": "a" * 64, "sectionID": "section:test", "sectionTitleRaw": "Test"}
 
     def bind(self, text: str, anchor: object = None):
         span = {"evidenceSpanID": "evidence-0001", "evidenceText": text}
@@ -42,6 +44,8 @@ class DeterministicEvidenceBindingTests(unittest.TestCase):
         self.assertEqual((span["startOffsetInUnit"], span["endOffsetInUnit"]), (6, 10))
         self.assertEqual((span["startOffsetInDocument"], span["endOffsetInDocument"]), (46, 50))
         self.assertEqual(span["evidenceHash"], hashlib.sha256(b"beta").hexdigest())
+        self.assertEqual(span["sourceArtifactID"], "paper:test")
+        self.assertEqual(span["sectionTitle"], "Test")
 
     def test_absent_and_ambiguous_literals_fail_closed(self):
         self.assertEqual(self.bind("missing")[1]["bindingStatus"], "failed")
@@ -58,7 +62,7 @@ class DeterministicEvidenceBindingTests(unittest.TestCase):
     def test_invalid_nonunique_and_multi_literal_anchors_fail_closed(self):
         self.assertEqual(self.bind("alpha", "alpha")[1]["bindingStatus"], "failed")
         self.assertEqual(self.bind("alpha", "not source")[1]["bindingStatus"], "failed")
-        source = {"text": "alpha alpha tail", "startOffsetInDocument": 0}
+        source = {**self.source, "text": "alpha alpha tail", "startOffsetInDocument": 0}
         _, result = bind_evidence_spans({"evidenceSpans": [{"evidenceText": "alpha", "locatorAnchor": "alpha alpha tail"}]}, source)
         self.assertEqual(result["bindingStatus"], "failed")
 
@@ -66,19 +70,17 @@ class DeterministicEvidenceBindingTests(unittest.TestCase):
         request = build_full_semantic_request(load_c0_bindings()[0])
         schema = derive_prospective_evidence_binding_schema(request)
         evidence = schema["$defs"]["evidenceSpan"]
-        for key in ("startOffsetInUnit", "endOffsetInUnit", "startOffsetInDocument", "endOffsetInDocument", "evidenceHash"):
-            self.assertNotIn(key, evidence["properties"])
-        self.assertIn("locatorAnchor", evidence["properties"])
+        self.assertEqual(set(evidence["properties"]), {"evidenceSpanID", "evidenceText", "locatorAnchor"})
         self.assertNotIn("evidence-coordinate guide", build_provider_input(request).decode("utf-8"))
         self.assertNotIn("D-26", request["eligibleOperationalTargetIDs"])
 
     def test_full_semantic_preflight_records_its_actual_prompt_version(self):
-        """Fresh full-semantic preparation remains explicitly bound to v0.1.5."""
+        """Fresh full-semantic preparation remains explicitly bound to v0.1.6."""
 
         with tempfile.TemporaryDirectory() as directory:
             state = prepare_unit(load_c0_bindings()[0], output_dir=Path(directory), full_semantic=True)
-        self.assertEqual(state["request"]["prompt"]["version"], "publication-development-0.1.5")
-        self.assertEqual(state["preflight"]["promptVersion"], "publication-development-0.1.5")
+        self.assertEqual(state["request"]["prompt"]["version"], "publication-development-0.1.6")
+        self.assertEqual(state["preflight"]["promptVersion"], "publication-development-0.1.6")
 
     def test_authentic_ambiguous_cases_bind_only_with_their_committed_anchors(self):
         """Exercise DEV-06/07 literals without altering preserved raw outputs."""
@@ -119,6 +121,7 @@ class DeterministicEvidenceBindingTests(unittest.TestCase):
         span = next(row for row in historical["evidenceSpans"] if row["evidenceSpanID"] == "evidence-0003")
         provider_span = {key: value for key, value in span.items() if key not in {
             "startOffsetInUnit", "endOffsetInUnit", "startOffsetInDocument", "endOffsetInDocument", "evidenceHash",
+            "sourceArtifactID", "sourceUnitID", "sourceUnitTextHash", "sectionID", "sectionTitle",
         }}
         provider_span["locatorAnchor"] = None
         raw = json.dumps({"candidateNodes": [], "candidateEdges": [], "evidenceSpans": [provider_span], "abstentions": [], "deferredRecords": []}).encode("utf-8")

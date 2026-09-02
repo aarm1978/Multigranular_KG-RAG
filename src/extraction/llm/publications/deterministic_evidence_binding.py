@@ -14,6 +14,9 @@ COMPUTED_EVIDENCE_FIELDS = frozenset({
     "endOffsetInDocument", "evidenceHash",
 })
 LOCATOR_ANCHOR_FIELD = "locatorAnchor"
+TRUSTED_SOURCE_METADATA_FIELDS = frozenset({
+    "sourceArtifactID", "sourceUnitID", "sourceUnitTextHash", "sectionID", "sectionTitle",
+})
 
 
 def _occurrences(text: str, literal: str) -> list[int]:
@@ -85,6 +88,11 @@ def bind_evidence_spans(
         assert start is not None
         end = start + len(literal)
         span.update({
+            "sourceArtifactID": source_unit["canonicalArtifactID"],
+            "sourceUnitID": source_unit["sourceUnitID"],
+            "sourceUnitTextHash": source_unit["textHash"],
+            "sectionID": source_unit["sectionID"],
+            "sectionTitle": source_unit["sectionTitleRaw"],
             "startOffsetInUnit": start,
             "endOffsetInUnit": end,
             "startOffsetInDocument": document_start + start,
