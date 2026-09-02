@@ -38,8 +38,10 @@ from src.extraction.llm.publications.run_publication_full_devset0_node_developme
     prepare_all,
     run_live_unit,
     run_unresolved_attempt_recovery,
+    run_researcher_authorized_retest,
     resolve_next_recovery_attempt,
     resolve_next_verification_attempt,
+    resolve_next_retest_attempt,
     _validation_finding_code_counts,
 )
 
@@ -449,6 +451,47 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
             attempt.write_text('{"attemptCount":1,"status":"completed"}\n')
             with self.assertRaisesRegex(ValueError, "not eligible for a new recovery"):
                 resolve_next_recovery_attempt(output_dir, "DEV-02")
+
+    def test_completed_attempt4_resolves_one_immutable_test_retest_location(self) -> None:
+        """A retest links only to completed attempt 4 and reserves attempt 5."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            prior = output_dir / "DEV-02/researcher_authorized_verification_001/DEV-02/publication_full_semantic_dev02_attempt_record.json"
+            prior.parent.mkdir(parents=True)
+            prior.write_bytes(b'{"attemptCount":4,"modelAuthorableSchemaSha256":"schema-sha","providerInputSha256":"input-sha","responseID":"resp_attempt_4","status":"completed"}\n')
+            prior_bytes = prior.read_bytes()
+            resolved = resolve_next_retest_attempt(output_dir, "DEV-02")
+            self.assertEqual(resolved["retestRoot"], output_dir / "DEV-02/researcher_authorized_retest_001")
+            self.assertEqual(resolved["attemptCount"], 5)
+            self.assertEqual(resolved["retestOf"]["priorAttemptPath"], "DEV-02/researcher_authorized_verification_001/DEV-02/publication_full_semantic_dev02_attempt_record.json")
+            self.assertEqual(resolved["retestOf"]["priorAttemptSha256"], hashlib.sha256(prior_bytes).hexdigest())
+            self.assertEqual(resolved["retestOf"]["priorAttemptStatus"], "completed")
+            self.assertEqual(resolved["retestOf"]["priorAttemptResponseID"], "resp_attempt_4")
+            self.assertEqual(resolved["retestOf"]["purpose"], "prospective_test_retest_replication")
+            self.assertEqual(resolved["retestOf"]["requiredProviderInputSha256"], "input-sha")
+            self.assertEqual(resolved["retestOf"]["requiredModelAuthorableSchemaSha256"], "schema-sha")
+            self.assertEqual(prior.read_bytes(), prior_bytes)
+            self.assertFalse(resolved["retestRoot"].exists())
+
+    def test_retest_configuration_gate_blocks_creation_before_provider_dispatch(self) -> None:
+        """A mismatched retest authority fails closed before any provider creation call."""
+
+        calls: list[dict[str, object]] = []
+
+        def transport(_key: str, body: dict[str, object]) -> dict[str, object]:
+            calls.append(body)
+            raise AssertionError("configuration-mismatched retest must not dispatch")
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            prior = output_dir / "DEV-02/researcher_authorized_verification_001/DEV-02/publication_full_semantic_dev02_attempt_record.json"
+            prior.parent.mkdir(parents=True)
+            prior.write_text(json.dumps({"attemptCount": 4, "status": "completed", "responseID": "resp_attempt_4", "providerInputSha256": "wrong-input", "modelAuthorableSchemaSha256": "wrong-schema"}) + "\n")
+            with self.assertRaisesRegex(ValueError, "configuration identity gate failed"):
+                run_researcher_authorized_retest("DEV-02", "synthetic-secret", output_dir=output_dir, transport=transport)
+            self.assertFalse((output_dir / "DEV-02/researcher_authorized_retest_001/DEV-02/publication_full_semantic_dev02_attempt_record.json").exists())
+        self.assertEqual(calls, [])
 
     def test_interrupted_full_semantic_attempt_remains_auditable_and_blocks_retry(self) -> None:
         """An interruption leaves initiated state and prevents automatic redispatch."""

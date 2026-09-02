@@ -925,6 +925,7 @@ def run_live_unit(
     full_semantic: bool = False,
     recovery_of: Mapping[str, Any] | None = None,
     verification_of: Mapping[str, Any] | None = None,
+    retest_of: Mapping[str, Any] | None = None,
     attempt_number: int = 1,
     resume: bool = False,
 ) -> dict[str, Any]:
@@ -957,6 +958,13 @@ def run_live_unit(
         output_dir=output_dir,
         full_semantic=full_semantic,
     )
+    if retest_of is not None:
+        expected_input = retest_of["requiredProviderInputSha256"]
+        expected_schema = retest_of["requiredModelAuthorableSchemaSha256"]
+        actual_input = sha256_bytes(state["providerInput"])
+        actual_schema = sha256_bytes(canonical_json(state["schema"]))
+        if actual_input != expected_input or actual_schema != expected_schema:
+            raise ValueError("retest configuration identity gate failed")
     initiated_attempt: dict[str, Any] = {
         "recordSchemaVersion": "0.1.0",
         "artifactRole": "provider_attempt_lifecycle",
@@ -975,12 +983,14 @@ def run_live_unit(
         "maxOutputTokens": C1B_MAX_OUTPUT_TOKENS,
         "store": STORE,
     }
-    if recovery_of is not None and verification_of is not None:
-        raise ValueError("attempt cannot be both recovery and verification")
+    if sum(value is not None for value in (recovery_of, verification_of, retest_of)) > 1:
+        raise ValueError("attempt cannot have multiple lifecycle provenance links")
     if recovery_of is not None:
         initiated_attempt["recoveryOf"] = deepcopy(dict(recovery_of))
     if verification_of is not None:
         initiated_attempt["verificationOf"] = deepcopy(dict(verification_of))
+    if retest_of is not None:
+        initiated_attempt["retestOf"] = deepcopy(dict(retest_of))
     if resume:
         initiated_attempt = load_json_object(existing_attempt)
         if initiated_attempt.get("status") != "submitted":
@@ -1286,6 +1296,66 @@ def resolve_next_verification_attempt(
         "attemptCount": int(prior.get("attemptCount", 1)) + 1,
         "verificationOf": verification_of,
     }
+
+
+def run_researcher_authorized_retest(
+    development_id: str,
+    api_key: str,
+    *,
+    output_dir: Path = FULL_SEMANTIC_OUTPUT_DIR,
+    transport: Transport | None = None,
+    retrieval_transport: ResponseRetrieveTransport | None = None,
+) -> dict[str, Any]:
+    """Run one explicit test-retest replication only after configuration identity passes."""
+
+    resolution = resolve_next_retest_attempt(output_dir, development_id)
+    return run_live_unit(
+        development_id, api_key, output_dir=resolution["retestRoot"],
+        transport=transport, retrieval_transport=retrieval_transport,
+        full_semantic=True, retest_of=resolution["retestOf"],
+        attempt_number=resolution["attemptCount"],
+    )
+
+
+def resolve_next_retest_attempt(
+    output_dir: Path, development_id: str
+) -> dict[str, Any]:
+    """Resolve one immutable attempt-4-anchored retest root without writing."""
+
+    paths = _unit_paths(
+        output_dir, development_id, artifact_prefix="publication_full_semantic"
+    )
+    verification_root = paths["unitDir"] / "researcher_authorized_verification_001"
+    prior_path = _unit_paths(
+        verification_root, development_id, artifact_prefix="publication_full_semantic"
+    )["attempt"]
+    if not prior_path.exists():
+        raise ValueError(f"{development_id} has no completed attempt 4 to retest")
+    prior = load_json_object(prior_path)
+    if prior.get("status") != "completed" or prior.get("attemptCount") != 4:
+        raise ValueError(f"{development_id} retest requires completed attempt 4")
+    retest_root = paths["unitDir"] / "researcher_authorized_retest_001"
+    retest_paths = _unit_paths(
+        retest_root, development_id, artifact_prefix="publication_full_semantic"
+    )
+    if any(
+        path.exists()
+        for path in (
+            retest_paths["attempt"], retest_paths["providerResponse"],
+            retest_paths["providerFailureMetadata"],
+        )
+    ):
+        raise ValueError(f"{development_id} researcher-authorized retest already exists")
+    retest_of = {
+        "priorAttemptPath": str(prior_path.relative_to(output_dir)),
+        "priorAttemptSha256": sha256_bytes(prior_path.read_bytes()),
+        "priorAttemptStatus": prior["status"],
+        "priorAttemptResponseID": prior.get("responseID"),
+        "purpose": "prospective_test_retest_replication",
+        "requiredProviderInputSha256": prior["providerInputSha256"],
+        "requiredModelAuthorableSchemaSha256": prior["modelAuthorableSchemaSha256"],
+    }
+    return {"retestRoot": retest_root, "attemptCount": 5, "retestOf": retest_of}
 
 
 def replay_unit(
@@ -1692,6 +1762,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--live-unit", choices=DEV_IDS)
     parser.add_argument("--recover-unresolved-unit", choices=DEV_IDS)
     parser.add_argument("--researcher-authorized-verification-unit", choices=DEV_IDS)
+    parser.add_argument("--researcher-authorized-retest-unit", choices=DEV_IDS)
     parser.add_argument("--resume-unit", choices=DEV_IDS)
     parser.add_argument("--aggregate-only", action="store_true")
     parser.add_argument("--replay-all", action="store_true")
@@ -1706,6 +1777,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         for value in (
             args.prepare_only, args.live_unit, args.recover_unresolved_unit,
             args.researcher_authorized_verification_unit,
+            args.researcher_authorized_retest_unit,
             args.resume_unit,
             args.aggregate_only, args.replay_all
         )
@@ -1761,6 +1833,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             result = {
                 "developmentID": args.researcher_authorized_verification_unit,
                 "verification": True,
+                "responseID": live["providerResponse"]["responseID"],
+                "status": live["providerResponse"]["status"],
+            }
+        elif args.researcher_authorized_retest_unit:
+            if not args.full_semantic:
+                parser.error("researcher-authorized retest is full-semantic only")
+            live = run_researcher_authorized_retest(
+                args.researcher_authorized_retest_unit,
+                load_openai_api_key(), output_dir=output_dir,
+            )
+            result = {
+                "developmentID": args.researcher_authorized_retest_unit,
+                "retest": True,
                 "responseID": live["providerResponse"]["responseID"],
                 "status": live["providerResponse"]["status"],
             }
