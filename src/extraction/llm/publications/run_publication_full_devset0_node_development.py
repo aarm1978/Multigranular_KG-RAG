@@ -50,12 +50,15 @@ from src.extraction.llm.publications.openai_provider import (  # noqa: E402
     OpenAIHTTPError,
     OpenAIProviderError,
     OpenAIProviderResponseError,
+    ResponseRetrieveTransport,
     Transport,
     bind_live_response_metadata,
     build_responses_api_request,
+    call_openai_background_responses_detailed,
     call_openai_responses_detailed,
     load_openai_api_key,
     provider_input_projection,
+    resume_openai_background_response_detailed,
 )
 from src.extraction.llm.publications.request_builder import (  # noqa: E402
     REQUEST_BUILDER_VERSION,
@@ -646,6 +649,8 @@ def _reproducibility_record(
     validation: Mapping[str, Any],
     usable: Mapping[str, Any],
     diagnostics: Mapping[str, Any],
+    *,
+    execution_mode: str,
 ) -> dict[str, Any]:
     """Bind one stochastic unit call to deterministic inputs and downstream hashes."""
 
@@ -702,6 +707,7 @@ def _reproducibility_record(
         "maxOutputTokens": C1B_MAX_OUTPUT_TOKENS,
         "toolConfiguration": "none",
         "store": STORE,
+        "executionMode": execution_mode,
         "apiResponseID": response["responseID"],
         "apiStatus": response["status"],
         "tokenUsage": response["usage"],
@@ -728,7 +734,11 @@ def run_live_unit(
     *,
     output_dir: Path = DEFAULT_OUTPUT_DIR,
     transport: Transport | None = None,
+    retrieval_transport: ResponseRetrieveTransport | None = None,
     full_semantic: bool = False,
+    recovery_of: Mapping[str, Any] | None = None,
+    attempt_number: int = 1,
+    resume: bool = False,
 ) -> dict[str, Any]:
     """Make exactly one guarded provider attempt for one selected DEV unit."""
 
@@ -746,18 +756,24 @@ def run_live_unit(
     attempt_markers = (
         paths["attempt"], paths["providerResponse"], paths["providerFailureMetadata"]
     )
-    if any(path.exists() for path in attempt_markers):
+    existing_attempt = paths["attempt"] if paths["attempt"].exists() else None
+    if any(path.exists() for path in attempt_markers) and not resume:
         raise ValueError(f"{development_id} already has a provider-attempt artifact")
+    if resume:
+        if not full_semantic or existing_attempt is None:
+            raise ValueError("only a submitted full-semantic attempt can be resumed")
+        if paths["providerResponse"].exists() or paths["providerFailureMetadata"].exists():
+            raise ValueError(f"{development_id} already has a terminal provider artifact")
     state = prepare_unit(
         bindings[development_id],
         output_dir=output_dir,
         full_semantic=full_semantic,
     )
-    initiated_attempt = {
+    initiated_attempt: dict[str, Any] = {
         "recordSchemaVersion": "0.1.0",
         "artifactRole": "provider_attempt_lifecycle",
         "developmentID": development_id,
-        "attemptCount": 1,
+        "attemptCount": attempt_number,
         "status": "initiated",
         "semanticResponseProduced": False,
         "retryCount": 0,
@@ -771,16 +787,67 @@ def run_live_unit(
         "maxOutputTokens": C1B_MAX_OUTPUT_TOKENS,
         "store": STORE,
     }
-    _write_durable_canonical(paths["attempt"], initiated_attempt)
+    if recovery_of is not None:
+        initiated_attempt["recoveryOf"] = deepcopy(dict(recovery_of))
+    if resume:
+        initiated_attempt = load_json_object(existing_attempt)
+        if initiated_attempt.get("status") != "submitted":
+            raise ValueError(f"{development_id} attempt is not submitted for resumption")
+        if not isinstance(initiated_attempt.get("responseID"), str):
+            raise ValueError(f"{development_id} submitted attempt lacks response ID")
+    else:
+        _write_durable_canonical(paths["attempt"], initiated_attempt)
     kwargs = {} if transport is None else {"transport": transport}
+    lifecycle_attempt = initiated_attempt
     try:
-        raw_output, response, raw_response = call_openai_responses_detailed(
-            api_key,
-            state["providerInput"],
-            model_authorable_schema=state["schema"],
-            max_output_tokens=C1B_MAX_OUTPUT_TOKENS,
-            **kwargs,
-        )
+        if full_semantic:
+            background_kwargs: dict[str, Any] = {}
+            if transport is not None and not resume:
+                background_kwargs["creation_transport"] = transport
+            if retrieval_transport is not None:
+                background_kwargs["retrieval_transport"] = retrieval_transport
+
+            def persist_background_response_id(
+                created: Mapping[str, Any], _body: Mapping[str, Any]
+            ) -> None:
+                """Durably bind the provider response ID before polling it."""
+
+                nonlocal lifecycle_attempt
+                lifecycle_attempt = {
+                    **initiated_attempt,
+                    "status": "submitted",
+                    "responseID": created["id"],
+                    "creationStatus": created.get("status"),
+                    "executionMode": "background",
+                }
+                _write_durable_canonical(paths["attempt"], lifecycle_attempt)
+
+            if resume:
+                raw_output, response, raw_response = resume_openai_background_response_detailed(
+                    api_key, initiated_attempt["responseID"], state["providerInput"],
+                    model_authorable_schema=state["schema"],
+                    max_output_tokens=C1B_MAX_OUTPUT_TOKENS,
+                    **background_kwargs,
+                )
+            else:
+                raw_output, response, raw_response = call_openai_background_responses_detailed(
+                    api_key,
+                    state["providerInput"],
+                    model_authorable_schema=state["schema"],
+                    max_output_tokens=C1B_MAX_OUTPUT_TOKENS,
+                    on_response_created=persist_background_response_id,
+                    **background_kwargs,
+                )
+            execution_mode = "background"
+        else:
+            raw_output, response, raw_response = call_openai_responses_detailed(
+                api_key,
+                state["providerInput"],
+                model_authorable_schema=state["schema"],
+                max_output_tokens=C1B_MAX_OUTPUT_TOKENS,
+                **kwargs,
+            )
+            execution_mode = "synchronous"
     except OpenAIHTTPError as exc:
         diagnostic = dict(exc.diagnostic)
         _write_canonical(paths["providerFailureMetadata"], diagnostic)
@@ -794,7 +861,7 @@ def run_live_unit(
             },
         )
         attempt = {
-            **initiated_attempt,
+            **lifecycle_attempt,
             "status": "provider_failed",
             "httpStatus": diagnostic["httpStatus"],
             "xRequestID": diagnostic["xRequestID"],
@@ -812,7 +879,7 @@ def run_live_unit(
             "STATUS_NOT_COMPLETED", "INCOMPLETE_DETAILS_PRESENT"
         } else "provider_failed"
         attempt = {
-            **initiated_attempt,
+            **lifecycle_attempt,
             "status": status,
             "providerFailureCode": exc.failure_code,
             "semanticResponseProduced": False,
@@ -822,7 +889,7 @@ def run_live_unit(
         raise
     except OpenAIProviderError as exc:
         attempt = {
-            **initiated_attempt,
+            **lifecycle_attempt,
             "status": "provider_failed",
             "safeFailureMessage": str(exc),
             "semanticResponseProduced": False,
@@ -847,6 +914,7 @@ def run_live_unit(
     record = _reproducibility_record(
         state, request, response, raw_response, raw_output,
         first[0], first[1], first[2], first[3], diagnostics,
+        execution_mode=execution_mode,
     )
     replay_one = _downstream(raw_output, request)
     replay_two = _downstream(raw_output, request)
@@ -861,11 +929,12 @@ def run_live_unit(
     replay_record = _reproducibility_record(
         state, request, response, raw_response, raw_output,
         replay_one[0], replay_one[1], replay_one[2], replay_one[3], diagnostics,
+        execution_mode=execution_mode,
     )
     if canonical_json(record) != canonical_json(replay_record):
         raise ValueError(f"{development_id} reproducibility replay differs")
     attempt = {
-        **initiated_attempt,
+        **lifecycle_attempt,
         "status": "completed",
         "responseID": response["responseID"],
         "semanticResponseProduced": True,
@@ -890,6 +959,54 @@ def run_live_unit(
         "reproducibility": record,
         "replayByteIdentical": True,
     }
+
+
+def run_unresolved_attempt_recovery(
+    development_id: str,
+    api_key: str,
+    *,
+    output_dir: Path = FULL_SEMANTIC_OUTPUT_DIR,
+    transport: Transport | None = None,
+    retrieval_transport: ResponseRetrieveTransport | None = None,
+) -> dict[str, Any]:
+    """Create one explicitly requested recovery attempt beside an unresolved record."""
+
+    paths = _unit_paths(
+        output_dir, development_id, artifact_prefix="publication_full_semantic"
+    )
+    if not paths["attempt"].exists():
+        raise ValueError(f"{development_id} has no unresolved attempt to recover")
+    prior = load_json_object(paths["attempt"])
+    if prior.get("status") not in {"initiated", "submitted"}:
+        raise ValueError(f"{development_id} prior attempt is already terminal")
+    recovery_root = paths["unitDir"] / "researcher_authorized_recovery_001"
+    recovery_paths = _unit_paths(
+        recovery_root, development_id, artifact_prefix="publication_full_semantic"
+    )
+    if any(
+        path.exists()
+        for path in (
+            recovery_paths["attempt"], recovery_paths["providerResponse"],
+            recovery_paths["providerFailureMetadata"],
+        )
+    ):
+        raise ValueError(f"{development_id} recovery attempt already exists")
+    recovery_of = {
+        "priorAttemptPath": str(paths["attempt"].relative_to(output_dir)),
+        "priorAttemptSha256": sha256_bytes(paths["attempt"].read_bytes()),
+        "priorAttemptStatus": prior["status"],
+        "priorAttemptResponseID": prior.get("responseID"),
+    }
+    return run_live_unit(
+        development_id,
+        api_key,
+        output_dir=recovery_root,
+        transport=transport,
+        retrieval_transport=retrieval_transport,
+        full_semantic=True,
+        recovery_of=recovery_of,
+        attempt_number=int(prior.get("attemptCount", 1)) + 1,
+    )
 
 
 def replay_unit(
@@ -1294,6 +1411,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--prepare-only", action="store_true")
     parser.add_argument("--live-unit", choices=DEV_IDS)
+    parser.add_argument("--recover-unresolved-unit", choices=DEV_IDS)
+    parser.add_argument("--resume-unit", choices=DEV_IDS)
     parser.add_argument("--aggregate-only", action="store_true")
     parser.add_argument("--replay-all", action="store_true")
     parser.add_argument(
@@ -1305,7 +1424,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     actions = sum(
         bool(value)
         for value in (
-            args.prepare_only, args.live_unit, args.aggregate_only, args.replay_all
+            args.prepare_only, args.live_unit, args.recover_unresolved_unit,
+            args.resume_unit,
+            args.aggregate_only, args.replay_all
         )
     )
     if actions != 1:
@@ -1334,6 +1455,36 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "candidateNodes": live["diagnostics"]["candidateTotals"]["candidateNodes"],
                 "usableCandidates": live["diagnostics"]["validation"]["usableCandidateCount"],
                 "rawModelOutputSha256": live["reproducibility"]["rawModelOutputSha256"],
+            }
+        elif args.recover_unresolved_unit:
+            if not args.full_semantic:
+                parser.error("unresolved-attempt recovery is full-semantic only")
+            live = run_unresolved_attempt_recovery(
+                args.recover_unresolved_unit,
+                load_openai_api_key(),
+                output_dir=output_dir,
+            )
+            result = {
+                "developmentID": args.recover_unresolved_unit,
+                "recovery": True,
+                "responseID": live["providerResponse"]["responseID"],
+                "status": live["providerResponse"]["status"],
+            }
+        elif args.resume_unit:
+            if not args.full_semantic:
+                parser.error("background response resumption is full-semantic only")
+            live = run_live_unit(
+                args.resume_unit,
+                load_openai_api_key(),
+                output_dir=output_dir,
+                full_semantic=True,
+                resume=True,
+            )
+            result = {
+                "developmentID": args.resume_unit,
+                "resumed": True,
+                "responseID": live["providerResponse"]["responseID"],
+                "status": live["providerResponse"]["status"],
             }
         elif args.aggregate_only:
             result = build_aggregate_diagnostics(output_dir)

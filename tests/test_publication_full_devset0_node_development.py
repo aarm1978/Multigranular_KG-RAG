@@ -15,6 +15,7 @@ from src.extraction.llm.publications.evidence_coordinate_guide import (
 )
 from src.extraction.llm.publications.openai_provider import MAX_OUTPUT_TOKENS
 from src.extraction.llm.publications.request_builder import canonical_json
+from src.extraction.llm.publications.openai_provider import OpenAIProviderResponseError
 from src.extraction.llm.publications.run_publication_coordinate_guided_development_smoke import (
     build_m2b3_request,
 )
@@ -32,6 +33,7 @@ from src.extraction.llm.publications.run_publication_full_devset0_node_developme
     prepare_unit,
     prepare_all,
     run_live_unit,
+    run_unresolved_attempt_recovery,
     _validation_finding_code_counts,
 )
 
@@ -242,6 +244,98 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         self.assertEqual(attempt["requestInputSha256"], build_full_semantic_request(load_c0_bindings()[-1])["requestInputSha256"])
         self.assertEqual(len(attempt["providerInputSha256"]), 64)
         self.assertEqual(len(attempt["modelAuthorableSchemaSha256"]), 64)
+
+    def test_background_creation_persists_response_id_and_polls_to_completion(self) -> None:
+        """Full-semantic mode persists the background ID before terminal parsing."""
+
+        payload = {"candidateNodes": [], "candidateEdges": [], "evidenceSpans": [], "abstentions": [], "deferredRecords": []}
+        creation_bodies: list[dict[str, object]] = []
+
+        def create(_key: str, body: dict[str, object]) -> dict[str, object]:
+            creation_bodies.append(body)
+            return {"id": "resp_background", "created_at": 1788000000, "status": "in_progress", "model": "gpt-5.6-sol", "error": None, "incomplete_details": None, "output": []}
+
+        def retrieve(_key: str, response_id: str) -> dict[str, object]:
+            self.assertEqual(response_id, "resp_background")
+            return {"id": response_id, "created_at": 1788000000, "status": "completed", "model": "gpt-5.6-sol", "error": None, "incomplete_details": None, "output": [{"type": "message", "id": "msg", "status": "completed", "role": "assistant", "content": [{"type": "output_text", "text": canonical_json(payload).decode("utf-8")}]}], "usage": {"input_tokens": 1, "output_tokens": 1, "total_tokens": 2, "output_tokens_details": {"reasoning_tokens": 0}}}
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            run_live_unit("DEV-10", "synthetic-secret", output_dir=output_dir, transport=create, retrieval_transport=retrieve, full_semantic=True)
+            attempt = json.loads((output_dir / "DEV-10/publication_full_semantic_dev10_attempt_record.json").read_text())
+            metadata = json.loads((output_dir / "DEV-10/publication_full_semantic_dev10_provider_metadata.json").read_text())
+        self.assertTrue(creation_bodies[0]["background"])
+        self.assertFalse(creation_bodies[0]["store"])
+        self.assertEqual(attempt["responseID"], "resp_background")
+        self.assertEqual(attempt["status"], "completed")
+        self.assertEqual(metadata["requestSettings"]["executionMode"], "background")
+
+    def test_background_incomplete_response_is_preserved_without_semantics(self) -> None:
+        """A terminal incomplete background response never reaches parser or validator."""
+
+        def create(_key: str, _body: dict[str, object]) -> dict[str, object]:
+            return {"id": "resp_incomplete", "created_at": 1788000000, "status": "queued", "model": "gpt-5.6-sol", "error": None, "incomplete_details": None, "output": []}
+
+        def retrieve(_key: str, response_id: str) -> dict[str, object]:
+            return {"id": response_id, "created_at": 1788000000, "status": "incomplete", "model": "gpt-5.6-sol", "error": None, "incomplete_details": {"reason": "max_output_tokens"}, "output": [], "usage": {}}
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            with self.assertRaises(OpenAIProviderResponseError):
+                run_live_unit("DEV-10", "synthetic-secret", output_dir=output_dir, transport=create, retrieval_transport=retrieve, full_semantic=True)
+            attempt = json.loads((output_dir / "DEV-10/publication_full_semantic_dev10_attempt_record.json").read_text())
+            self.assertEqual(attempt["status"], "incomplete")
+            self.assertEqual(attempt["responseID"], "resp_incomplete")
+            self.assertTrue((output_dir / "DEV-10/publication_full_semantic_dev10_provider_failure_response.json").exists())
+            self.assertFalse((output_dir / "DEV-10/publication_full_semantic_dev10_parser_result.json").exists())
+
+    def test_submitted_background_attempt_resumes_by_persisted_response_id(self) -> None:
+        """An interrupted poll resumes without making a second creation request."""
+
+        payload = {"candidateNodes": [], "candidateEdges": [], "evidenceSpans": [], "abstentions": [], "deferredRecords": []}
+        creations: list[dict[str, object]] = []
+
+        def create(_key: str, body: dict[str, object]) -> dict[str, object]:
+            creations.append(body)
+            return {"id": "resp_runner_resume", "created_at": 1788000000, "status": "in_progress", "model": "gpt-5.6-sol", "error": None, "incomplete_details": None, "output": []}
+
+        def interrupted_retrieve(_key: str, _response_id: str) -> dict[str, object]:
+            raise KeyboardInterrupt("synthetic poll interruption")
+
+        def completed_retrieve(_key: str, response_id: str) -> dict[str, object]:
+            return {"id": response_id, "created_at": 1788000000, "status": "completed", "model": "gpt-5.6-sol", "error": None, "incomplete_details": None, "output": [{"type": "message", "id": "msg", "status": "completed", "role": "assistant", "content": [{"type": "output_text", "text": canonical_json(payload).decode("utf-8")}]}], "usage": {"input_tokens": 1, "output_tokens": 1, "total_tokens": 2, "output_tokens_details": {"reasoning_tokens": 0}}}
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            with self.assertRaises(KeyboardInterrupt):
+                run_live_unit("DEV-10", "synthetic-secret", output_dir=output_dir, transport=create, retrieval_transport=interrupted_retrieve, full_semantic=True)
+            attempt_path = output_dir / "DEV-10/publication_full_semantic_dev10_attempt_record.json"
+            self.assertEqual(json.loads(attempt_path.read_text())["status"], "submitted")
+            result = run_live_unit("DEV-10", "synthetic-secret", output_dir=output_dir, retrieval_transport=completed_retrieve, full_semantic=True, resume=True)
+        self.assertEqual(len(creations), 1)
+        self.assertEqual(result["providerResponse"]["responseID"], "resp_runner_resume")
+
+    def test_recovery_preserves_prior_unresolved_attempt(self) -> None:
+        """Explicit recovery creates a separate attempt without overwriting prior evidence."""
+
+        payload = {"candidateNodes": [], "candidateEdges": [], "evidenceSpans": [], "abstentions": [], "deferredRecords": []}
+
+        def create(_key: str, _body: dict[str, object]) -> dict[str, object]:
+            return {"id": "resp_recovery", "created_at": 1788000000, "status": "completed", "model": "gpt-5.6-sol", "error": None, "incomplete_details": None, "output": [{"type": "message", "id": "msg", "status": "completed", "role": "assistant", "content": [{"type": "output_text", "text": canonical_json(payload).decode("utf-8")}]}], "usage": {"input_tokens": 1, "output_tokens": 1, "total_tokens": 2, "output_tokens_details": {"reasoning_tokens": 0}}}
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            prior_path = output_dir / "DEV-02/publication_full_semantic_dev02_attempt_record.json"
+            prior_path.parent.mkdir(parents=True)
+            prior_path.write_text(json.dumps({"developmentID": "DEV-02", "attemptCount": 1, "status": "initiated", "providerInputSha256": "prior"}, sort_keys=True) + "\n")
+            prior_bytes = prior_path.read_bytes()
+            result = run_unresolved_attempt_recovery("DEV-02", "synthetic-secret", output_dir=output_dir, transport=create)
+            recovery_attempt = next((output_dir / "DEV-02/researcher_authorized_recovery_001").rglob("*_attempt_record.json"))
+            recovery = json.loads(recovery_attempt.read_text())
+            self.assertEqual(prior_path.read_bytes(), prior_bytes)
+        self.assertEqual(result["providerResponse"]["responseID"], "resp_recovery")
+        self.assertEqual(recovery["attemptCount"], 2)
+        self.assertEqual(recovery["recoveryOf"]["priorAttemptStatus"], "initiated")
 
     def test_interrupted_full_semantic_attempt_remains_auditable_and_blocks_retry(self) -> None:
         """An interruption leaves initiated state and prevents automatic redispatch."""

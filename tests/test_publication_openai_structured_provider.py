@@ -27,7 +27,9 @@ from src.extraction.llm.publications.openai_provider import (  # noqa: E402
     OpenAIProviderResponseError,
     _http_post_json,
     build_responses_api_request,
+    call_openai_background_responses_detailed,
     call_openai_responses_detailed,
+    resume_openai_background_response_detailed,
 )
 from src.extraction.llm.publications.request_builder import sha256_bytes  # noqa: E402
 from src.extraction.llm.publications.run_publication_structured_development_smoke import (  # noqa: E402
@@ -187,6 +189,37 @@ class ProviderSafetyGuardTests(unittest.TestCase):
             self.assertFalse(
                 (output_dir / "publication_m2b1_attempt4_parser_result.json").exists()
             )
+
+    def test_background_interruption_resumes_by_persisted_response_id(self) -> None:
+        """Polling can resume a created response without a second creation request."""
+
+        created = {"id": "resp_resume", "created_at": 1787835600, "status": "in_progress", "model": "gpt-5.6-sol", "error": None, "incomplete_details": None, "output": []}
+        completed = synthetic_response(VALID_FIXTURE.read_text(encoding="utf-8"))
+        completed["id"] = "resp_resume"
+        creations: list[Mapping[str, Any]] = []
+
+        def create(_key: str, body: Mapping[str, Any]) -> dict[str, Any]:
+            creations.append(body)
+            return deepcopy(created)
+
+        def interrupt(_created: Mapping[str, Any], _body: Mapping[str, Any]) -> None:
+            raise KeyboardInterrupt("synthetic interruption after ID persistence")
+
+        with self.assertRaises(KeyboardInterrupt):
+            call_openai_background_responses_detailed(
+                "synthetic-secret", b"input", creation_transport=create,
+                on_response_created=interrupt,
+            )
+        raw, metadata, response = resume_openai_background_response_detailed(
+            "synthetic-secret", "resp_resume", b"input",
+            retrieval_transport=lambda _key, response_id: completed if response_id == "resp_resume" else {},
+            sleep=lambda _seconds: None,
+        )
+        self.assertEqual(len(creations), 1)
+        self.assertTrue(creations[0]["background"])
+        self.assertEqual(response["id"], "resp_resume")
+        self.assertEqual(metadata["requestSettings"]["executionMode"], "background")
+        self.assertTrue(raw)
 
 
 class ProviderHTTPErrorAuditTests(unittest.TestCase):
