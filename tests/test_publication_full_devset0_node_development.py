@@ -39,6 +39,7 @@ from src.extraction.llm.publications.run_publication_full_devset0_node_developme
     run_live_unit,
     run_unresolved_attempt_recovery,
     resolve_next_recovery_attempt,
+    resolve_next_verification_attempt,
     _validation_finding_code_counts,
 )
 
@@ -408,6 +409,46 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "exact-response resumption"):
                 resolve_next_recovery_attempt(output_dir, "DEV-02")
             self.assertFalse((output_dir / "DEV-02/researcher_authorized_recovery_001").exists())
+
+    def test_completed_attempt_resolves_one_immutable_remedy_b_verification(self) -> None:
+        """A completed attempt creates one separate, exactly linked verification location."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            root = output_dir / "DEV-02"
+            attempt1 = root / "publication_full_semantic_dev02_attempt_record.json"
+            attempt2 = root / "researcher_authorized_recovery_001/DEV-02/publication_full_semantic_dev02_attempt_record.json"
+            attempt3 = root / "researcher_authorized_recovery_002/DEV-02/publication_full_semantic_dev02_attempt_record.json"
+            attempt1.parent.mkdir(parents=True)
+            attempt2.parent.mkdir(parents=True)
+            attempt3.parent.mkdir(parents=True)
+            attempt1.write_bytes(b'{"attemptCount":1,"status":"initiated"}\n')
+            attempt2.write_bytes(b'{"attemptCount":2,"responseID":"resp_attempt_2","status":"incomplete"}\n')
+            attempt3.write_bytes(b'{"attemptCount":3,"responseID":"resp_attempt_3","status":"completed"}\n')
+            prior_bytes = attempt3.read_bytes()
+
+            resolved = resolve_next_verification_attempt(output_dir, "DEV-02")
+
+            self.assertEqual(resolved["verificationRoot"], root / "researcher_authorized_verification_001")
+            self.assertEqual(resolved["attemptCount"], 4)
+            self.assertEqual(resolved["verificationOf"]["priorAttemptPath"], "DEV-02/researcher_authorized_recovery_002/DEV-02/publication_full_semantic_dev02_attempt_record.json")
+            self.assertEqual(resolved["verificationOf"]["priorAttemptSha256"], hashlib.sha256(prior_bytes).hexdigest())
+            self.assertEqual(resolved["verificationOf"]["priorAttemptStatus"], "completed")
+            self.assertEqual(resolved["verificationOf"]["priorAttemptResponseID"], "resp_attempt_3")
+            self.assertEqual(resolved["verificationOf"]["purpose"], "prospective_remedy_b_verification")
+            self.assertEqual(attempt3.read_bytes(), prior_bytes)
+            self.assertFalse(resolved["verificationRoot"].exists())
+
+    def test_unresolved_recovery_still_rejects_completed_attempt(self) -> None:
+        """Recovery semantics remain unavailable for completed historical attempts."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            attempt = output_dir / "DEV-02/publication_full_semantic_dev02_attempt_record.json"
+            attempt.parent.mkdir(parents=True)
+            attempt.write_text('{"attemptCount":1,"status":"completed"}\n')
+            with self.assertRaisesRegex(ValueError, "not eligible for a new recovery"):
+                resolve_next_recovery_attempt(output_dir, "DEV-02")
 
     def test_interrupted_full_semantic_attempt_remains_auditable_and_blocks_retry(self) -> None:
         """An interruption leaves initiated state and prevents automatic redispatch."""

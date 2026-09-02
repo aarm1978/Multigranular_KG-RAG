@@ -924,6 +924,7 @@ def run_live_unit(
     retrieval_transport: ResponseRetrieveTransport | None = None,
     full_semantic: bool = False,
     recovery_of: Mapping[str, Any] | None = None,
+    verification_of: Mapping[str, Any] | None = None,
     attempt_number: int = 1,
     resume: bool = False,
 ) -> dict[str, Any]:
@@ -974,8 +975,12 @@ def run_live_unit(
         "maxOutputTokens": C1B_MAX_OUTPUT_TOKENS,
         "store": STORE,
     }
+    if recovery_of is not None and verification_of is not None:
+        raise ValueError("attempt cannot be both recovery and verification")
     if recovery_of is not None:
         initiated_attempt["recoveryOf"] = deepcopy(dict(recovery_of))
+    if verification_of is not None:
+        initiated_attempt["verificationOf"] = deepcopy(dict(verification_of))
     if resume:
         initiated_attempt = load_json_object(existing_attempt)
         if initiated_attempt.get("status") != "submitted":
@@ -1209,6 +1214,78 @@ def resolve_next_recovery_attempt(
         "priorAttemptResponseID": prior.get("responseID"),
     }
     return {"recoveryRoot": recovery_root, "attemptCount": int(prior.get("attemptCount", 1)) + 1, "recoveryOf": recovery_of}
+
+
+def run_researcher_authorized_verification(
+    development_id: str,
+    api_key: str,
+    *,
+    output_dir: Path = FULL_SEMANTIC_OUTPUT_DIR,
+    transport: Transport | None = None,
+    retrieval_transport: ResponseRetrieveTransport | None = None,
+) -> dict[str, Any]:
+    """Run one explicit prospective Remedy B verification after a completed attempt."""
+
+    resolution = resolve_next_verification_attempt(output_dir, development_id)
+    return run_live_unit(
+        development_id, api_key, output_dir=resolution["verificationRoot"],
+        transport=transport, retrieval_transport=retrieval_transport,
+        full_semantic=True, verification_of=resolution["verificationOf"],
+        attempt_number=resolution["attemptCount"],
+    )
+
+
+def resolve_next_verification_attempt(
+    output_dir: Path, development_id: str
+) -> dict[str, Any]:
+    """Resolve one new verification root from the latest completed attempt without writing."""
+
+    paths = _unit_paths(
+        output_dir, development_id, artifact_prefix="publication_full_semantic"
+    )
+    if not paths["attempt"].exists():
+        raise ValueError(f"{development_id} has no completed attempt to verify")
+    candidates = [(0, paths["attempt"], paths["unitDir"])]
+    recovery_pattern = re.compile(r"researcher_authorized_recovery_(\d{3})$")
+    verification_pattern = re.compile(r"researcher_authorized_verification_(\d{3})$")
+    for child in sorted(paths["unitDir"].iterdir() if paths["unitDir"].exists() else []):
+        if verification_pattern.match(child.name):
+            raise ValueError(f"{development_id} researcher-authorized verification already exists")
+        recovery_match = recovery_pattern.match(child.name)
+        if recovery_match:
+            attempt = _unit_paths(
+                child, development_id, artifact_prefix="publication_full_semantic"
+            )["attempt"]
+            if attempt.exists():
+                candidates.append((int(recovery_match.group(1)), attempt, child))
+    _ordinal, prior_path, _prior_root = max(candidates, key=lambda row: row[0])
+    prior = load_json_object(prior_path)
+    if prior.get("status") != "completed":
+        raise ValueError(f"{development_id} latest attempt is not completed for verification")
+    verification_root = paths["unitDir"] / "researcher_authorized_verification_001"
+    verification_paths = _unit_paths(
+        verification_root, development_id, artifact_prefix="publication_full_semantic"
+    )
+    if any(
+        path.exists()
+        for path in (
+            verification_paths["attempt"], verification_paths["providerResponse"],
+            verification_paths["providerFailureMetadata"],
+        )
+    ):
+        raise ValueError(f"{development_id} researcher-authorized verification already exists")
+    verification_of = {
+        "priorAttemptPath": str(prior_path.relative_to(output_dir)),
+        "priorAttemptSha256": sha256_bytes(prior_path.read_bytes()),
+        "priorAttemptStatus": prior["status"],
+        "priorAttemptResponseID": prior.get("responseID"),
+        "purpose": "prospective_remedy_b_verification",
+    }
+    return {
+        "verificationRoot": verification_root,
+        "attemptCount": int(prior.get("attemptCount", 1)) + 1,
+        "verificationOf": verification_of,
+    }
 
 
 def replay_unit(
@@ -1614,6 +1691,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--prepare-only", action="store_true")
     parser.add_argument("--live-unit", choices=DEV_IDS)
     parser.add_argument("--recover-unresolved-unit", choices=DEV_IDS)
+    parser.add_argument("--researcher-authorized-verification-unit", choices=DEV_IDS)
     parser.add_argument("--resume-unit", choices=DEV_IDS)
     parser.add_argument("--aggregate-only", action="store_true")
     parser.add_argument("--replay-all", action="store_true")
@@ -1627,6 +1705,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         bool(value)
         for value in (
             args.prepare_only, args.live_unit, args.recover_unresolved_unit,
+            args.researcher_authorized_verification_unit,
             args.resume_unit,
             args.aggregate_only, args.replay_all
         )
@@ -1669,6 +1748,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             result = {
                 "developmentID": args.recover_unresolved_unit,
                 "recovery": True,
+                "responseID": live["providerResponse"]["responseID"],
+                "status": live["providerResponse"]["status"],
+            }
+        elif args.researcher_authorized_verification_unit:
+            if not args.full_semantic:
+                parser.error("researcher-authorized verification is full-semantic only")
+            live = run_researcher_authorized_verification(
+                args.researcher_authorized_verification_unit,
+                load_openai_api_key(), output_dir=output_dir,
+            )
+            result = {
+                "developmentID": args.researcher_authorized_verification_unit,
+                "verification": True,
                 "responseID": live["providerResponse"]["responseID"],
                 "status": live["providerResponse"]["status"],
             }
