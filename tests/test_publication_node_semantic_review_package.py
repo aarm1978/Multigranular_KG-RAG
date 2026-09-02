@@ -21,8 +21,8 @@ from src.extraction.llm.publications.build_publication_node_semantic_review_pack
 )
 from src.extraction.llm.publications.request_builder import canonical_json, sha256_bytes
 from src.extraction.llm.publications.run_publication_full_devset0_node_development import (
+    BASE_PROMPT_PATH,
     DEV_IDS,
-    PROMPT_PATH,
 )
 from src.extraction.llm.publications.run_publication_trusted_evidence_metadata_binding import (
     C1B_OUTPUT_DIR,
@@ -241,7 +241,7 @@ class PublicationNodeSemanticReviewPackageTests(unittest.TestCase):
             "5313dfba026eba38bb53b45b9260cb7ac419b052aa5d95a8bef7214d815d8454",
         )
         self.assertEqual(
-            hashlib.sha256(PROMPT_PATH.read_bytes()).hexdigest(),
+            hashlib.sha256(BASE_PROMPT_PATH.read_bytes()).hexdigest(),
             "6b180b88d718dbda7d9f30b28c484d263998ed8caa88eab516f531e488b8317f",
         )
         self.assertEqual(

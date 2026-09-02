@@ -110,6 +110,9 @@ PROMPT_PATH = (
 BASE_PROMPT_PATH = (
     PROJECT_ROOT / "src/extraction/llm/publications/prompts/publication_development_v0.1.4.txt"
 )
+HISTORICAL_PROMPT_V013_PATH = (
+    PROJECT_ROOT / "src/extraction/llm/publications/prompts/publication_development_v0.1.3.txt"
+)
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "data/curation/papers/m2/c1b"
 FULL_SEMANTIC_OUTPUT_DIR = (
     PROJECT_ROOT / "data/curation/papers/m2/future_full_semantic_devset0"
@@ -229,16 +232,55 @@ def _root_paths(
     }
 
 
+def build_historical_prompt_v014_diff() -> dict[str, Any]:
+    """Prove the frozen v0.1.3 to v0.1.4 one-sentence correction."""
+
+    base_bytes = HISTORICAL_PROMPT_V013_PATH.read_bytes()
+    prompt_bytes = BASE_PROMPT_PATH.read_bytes()
+    base = base_bytes.decode("utf-8")
+    prompt = prompt_bytes.decode("utf-8")
+    expected = base.replace(
+        "Publication semantic extraction development prompt v0.1.3",
+        "Publication semantic extraction development prompt v0.1.4", 1,
+    ).replace(OLD_SENTENCE, NEW_SENTENCE, 1)
+    if base.count(OLD_SENTENCE) != 1 or prompt != expected:
+        raise ValueError("historical v0.1.3 to v0.1.4 prompt correction drifted")
+    return {
+        "basePromptVersion": "publication-development-0.1.3",
+        "basePromptSha256": sha256_bytes(base_bytes),
+        "newPromptVersion": "publication-development-0.1.4",
+        "newPromptSha256": sha256_bytes(prompt_bytes),
+        "oldSentence": OLD_SENTENCE,
+        "newSentence": NEW_SENTENCE,
+        "semanticSentenceChangeCount": 1,
+        "basePromptOtherwiseByteIdentical": True,
+    }
+
+
 def build_prompt_semantic_diff() -> dict[str, Any]:
-    """Record the prospective evidence-binding prompt authority."""
+    """Record and constrain the prospective v0.1.4 to v0.1.5 transition."""
 
     base_bytes = BASE_PROMPT_PATH.read_bytes()
     prompt_bytes = PROMPT_PATH.read_bytes()
     base = base_bytes.decode("utf-8")
     prompt = prompt_bytes.decode("utf-8")
+    target_block_start = "COMPLETE AUTHORIZED TARGET-SPACE SEARCH\n"
+    abstention_start = "Abstain with an authorized reason"
+    def _target_search_paragraph(value: str) -> str:
+        """Extract only the immutable authorized-target search paragraph."""
+
+        start = value.index(target_block_start) + len(target_block_start)
+        end = value.index("\n\n", start)
+        return value[start:end]
+    target_block_unchanged = (
+        _target_search_paragraph(base) == _target_search_paragraph(prompt)
+    )
+    abstention_block_unchanged = base[base.index(abstention_start):] == prompt[prompt.index(abstention_start):]
+    if not target_block_unchanged or not abstention_block_unchanged:
+        raise ValueError("prospective prompt changed an unauthorized semantic instruction block")
     return {
         "recordSchemaVersion": "0.1.0",
-        "artifactRole": "reviewed_prompt_wording_correction",
+        "artifactRole": "prospective_deterministic_evidence_binding_prompt_transition",
         "developmentOnly": True,
         "basePromptVersion": "publication-development-0.1.4",
         "basePromptSha256": sha256_bytes(base_bytes),
@@ -248,12 +290,13 @@ def build_prompt_semantic_diff() -> dict[str, Any]:
         "coordinateGuidanceRemovedFromProviderInput": True,
         "evidenceRulesChanged": True,
         "evidenceChange": "model authors exact evidenceText; pipeline binds coordinates and hash",
-        "authorizedTargetRulesChanged": False,
-        "extractionCompletenessInstructionsChanged": False,
-        "abstentionRulesChanged": False,
+        "authorizedTargetRulesChanged": not target_block_unchanged,
+        "extractionCompletenessInstructionsChanged": not target_block_unchanged,
+        "abstentionRulesChanged": not abstention_block_unchanged,
         "targetDefinitionContentChanged": False,
         "unrelatedSemanticInstructionsChanged": False,
         "basePromptOtherwiseByteIdentical": False,
+        "historicalV014Regression": build_historical_prompt_v014_diff(),
     }
 
 
@@ -325,18 +368,18 @@ def load_c0_bindings() -> list[dict[str, Any]]:
 
 
 def build_c1b_request(binding: Mapping[str, Any]) -> dict[str, Any]:
-    """Build one v0.1.4 request from an exact accepted C0 unit binding."""
+    """Build one historical v0.1.4 node-only request from its C0 binding."""
 
     development_id = str(binding["developmentID"])
     request = build_development_request(
         str(binding["sourceUnitID"]),
         binding["eligibleNodeOperationalTargetIDs"],
         run_id=f"{RUN_ID}/{development_id.lower()}",
-        prompt_path=PROMPT_PATH,
+        prompt_path=BASE_PROMPT_PATH,
     )
     bound = deepcopy(request)
     bound["developmentID"] = development_id
-    bound["prompt"]["version"] = PROMPT_VERSION
+    bound["prompt"]["version"] = "publication-development-0.1.4"
     definitions = list(bound["targetDefinitions"])
     if any(row.get("emission_mode") != "llm_candidate" for row in definitions):
         raise ValueError(f"{development_id} request contains non-direct targets")
@@ -519,7 +562,7 @@ def _preflight_record(
             "totalApiBodyPercent": round(100 * (historical_api_bytes - api_body_bytes) / historical_api_bytes, 4),
         },
         "providerInputSha256": sha256_bytes(provider_input),
-        "promptVersion": PROMPT_VERSION,
+        "promptVersion": request["prompt"]["version"],
         "promptSha256": request["prompt"]["sha256"],
         "maxOutputTokens": C1B_MAX_OUTPUT_TOKENS,
         "historicalProviderDefaultMaxOutputTokens": MAX_OUTPUT_TOKENS,
@@ -631,7 +674,11 @@ def prepare_all(
 ) -> dict[str, Any]:
     """Construct all ten exact provider inputs and aggregate their offline sizes."""
 
-    prompt_diff = build_prompt_semantic_diff()
+    prompt_diff = (
+        build_prompt_semantic_diff()
+        if full_semantic
+        else build_historical_prompt_v014_diff()
+    )
     states = [
         prepare_unit(
             binding, output_dir=output_dir, full_semantic=full_semantic
@@ -716,6 +763,11 @@ def _reproducibility_record(
         "notFormalEvaluation": True,
         "liveGenerationDeterministic": False,
         "coordinateGuideConstructionDeterministic": True,
+        "coordinateGuideTransport": (
+            "excluded_from_prospective_full_semantic_provider_input"
+            if state["preflight"]["exposedRelationTargetCount"]
+            else "included_for_historical_non_full_semantic_transport"
+        ),
         "downstreamReplayDeterministic": True,
         "runID": request["runID"],
         "developmentID": binding["developmentID"],
@@ -723,7 +775,7 @@ def _reproducibility_record(
         "requestID": request["requestID"],
         "requestInputSha256": request["requestInputSha256"],
         "providerInputSha256": sha256_bytes(state["providerInput"]),
-        "promptVersion": PROMPT_VERSION,
+        "promptVersion": request["prompt"]["version"],
         "promptSha256": request["prompt"]["sha256"],
         "c0PolicySha256": binding["policySha256"],
         "c0PlanSha256": binding["planSha256"],
@@ -739,7 +791,11 @@ def _reproducibility_record(
         "coordinateGuideVersion": COORDINATE_GUIDE_VERSION,
         "coordinateGuideSha256": state["guideRecord"]["coordinateGuideSha256"],
         "coordinateGuideEntryCount": state["guideRecord"]["entryCount"],
-        "requestSpecializedSchemaVersion": TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION,
+        "requestSpecializedSchemaVersion": (
+            PROSPECTIVE_EVIDENCE_BINDING_SCHEMA_VERSION
+            if state["preflight"]["exposedRelationTargetCount"]
+            else TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION
+        ),
         "modelAuthorableSchemaSha256": sha256_bytes(canonical_json(state["schema"])),
         "modelAuthorableSchemaRecordHash": state["schemaRecord"]["recordSha256"],
         "requestBuilderVersion": REQUEST_BUILDER_VERSION,

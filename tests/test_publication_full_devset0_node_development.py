@@ -25,9 +25,11 @@ from src.extraction.llm.publications.run_publication_full_devset0_node_developme
     DEV_IDS,
     NEW_SENTENCE,
     OLD_SENTENCE,
+    HISTORICAL_PROMPT_V013_PATH,
     PROMPT_PATH,
     build_c1b_request,
     build_full_semantic_request,
+    build_historical_prompt_v014_diff,
     build_prompt_semantic_diff,
     load_c0_bindings,
     prepare_unit,
@@ -93,11 +95,13 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         self.assertEqual(first["unitCount"], 10)
         self.assertTrue(first["allProviderCompatibilityGatesPass"])
         self.assertTrue(first["allUnitsExposeFortyNodesAndZeroRelations"])
+        self.assertEqual(first["promptSemanticDiff"]["newPromptVersion"], "publication-development-0.1.4")
         self.assertGreater(first["aggregateProviderInputBytes"], 0)
         for row in first["units"]:
             with self.subTest(developmentID=row["developmentID"]):
                 self.assertEqual(row["exposedNodeTargetCount"], 40)
                 self.assertEqual(row["exposedRelationTargetCount"], 0)
+                self.assertEqual(row["promptVersion"], "publication-development-0.1.4")
                 self.assertEqual(row["schemaRefSiblingCount"], 0)
                 self.assertEqual(row["schemaUnresolvedReferenceCount"], 0)
                 self.assertEqual(row["schemaMissingExplicitTypeCount"], 0)
@@ -105,25 +109,32 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
                 self.assertGreater(row["coordinateGuideEntryCount"], 0)
                 self.assertEqual(row["providerCompatibilityGate"], "PASS")
 
-    def test_prompt_v014_has_only_the_reviewed_sentence_correction(self) -> None:
-        """The historical prompt is fixed and all other semantic categories are unchanged."""
+    def test_historical_prompt_v014_has_only_the_reviewed_sentence_correction(self) -> None:
+        """The frozen v0.1.3 to v0.1.4 correction remains independently pinned."""
 
-        record = build_prompt_semantic_diff()
+        record = build_historical_prompt_v014_diff()
         self.assertEqual(
-            hashlib.sha256(BASE_PROMPT_PATH.read_bytes()).hexdigest(),
+            hashlib.sha256(HISTORICAL_PROMPT_V013_PATH.read_bytes()).hexdigest(),
             "ca68cbb6ab4b326f10993e2fdc200ad518f34a3c8020b3ac43226e0adf186a87",
         )
         self.assertEqual(record["oldSentence"], OLD_SENTENCE)
         self.assertEqual(record["newSentence"], NEW_SENTENCE)
         self.assertEqual(record["semanticSentenceChangeCount"], 1)
         self.assertTrue(record["basePromptOtherwiseByteIdentical"])
+        self.assertEqual(record["newPromptSha256"], hashlib.sha256(BASE_PROMPT_PATH.read_bytes()).hexdigest())
+
+    def test_prospective_prompt_v015_is_limited_to_evidence_binding_transition(self) -> None:
+        """v0.1.5 changes evidence ownership without widening semantic extraction."""
+
+        record = build_prompt_semantic_diff()
+        self.assertEqual(record["basePromptVersion"], "publication-development-0.1.4")
+        self.assertEqual(record["newPromptVersion"], "publication-development-0.1.5")
+        self.assertTrue(record["coordinateGuidanceRemovedFromProviderInput"])
+        self.assertTrue(record["evidenceRulesChanged"])
+        self.assertEqual(record["evidenceChange"], "model authors exact evidenceText; pipeline binds coordinates and hash")
         for key in (
-            "coordinateGuidanceChanged",
-            "evidenceRulesChanged",
-            "authorizedTargetRulesChanged",
-            "extractionCompletenessInstructionsChanged",
-            "abstentionRulesChanged",
-            "targetDefinitionContentChanged",
+            "authorizedTargetRulesChanged", "extractionCompletenessInstructionsChanged",
+            "abstentionRulesChanged", "targetDefinitionContentChanged",
             "unrelatedSemanticInstructionsChanged",
         ):
             self.assertFalse(record[key])
@@ -204,9 +215,11 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
                     output_dir=Path(directory),
                     transport=transport,
                 )
+            reproducibility = json.loads((Path(directory) / "DEV-10/publication_m2c1b_dev10_reproducibility_record.json").read_text(encoding="utf-8"))
         self.assertEqual(len(calls), 1)
         self.assertTrue(result["replayByteIdentical"])
         self.assertEqual(result["diagnostics"]["candidateTotals"]["candidateNodes"], 0)
+        self.assertEqual(reproducibility["promptVersion"], "publication-development-0.1.4")
 
     def test_full_semantic_attempt_lifecycle_reaches_terminal_completion(self) -> None:
         """A durable initiated record is updated with its terminal success outcome."""
@@ -239,11 +252,14 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
             run_live_unit("DEV-10", "synthetic-secret", output_dir=output_dir, transport=transport, full_semantic=True)
             attempt_path = output_dir / "DEV-10/publication_full_semantic_dev10_attempt_record.json"
             attempt = json.loads(attempt_path.read_text(encoding="utf-8"))
+            reproducibility = json.loads((output_dir / "DEV-10/publication_full_semantic_dev10_reproducibility_record.json").read_text(encoding="utf-8"))
         self.assertEqual(attempt["status"], "completed")
         self.assertTrue(attempt["semanticResponseProduced"])
         self.assertEqual(attempt["requestInputSha256"], build_full_semantic_request(load_c0_bindings()[-1])["requestInputSha256"])
         self.assertEqual(len(attempt["providerInputSha256"]), 64)
         self.assertEqual(len(attempt["modelAuthorableSchemaSha256"]), 64)
+        self.assertEqual(reproducibility["requestSpecializedSchemaVersion"], "publication-request-specialized-0.3.0")
+        self.assertEqual(reproducibility["coordinateGuideTransport"], "excluded_from_prospective_full_semantic_provider_input")
 
     def test_background_creation_persists_response_id_and_polls_to_completion(self) -> None:
         """Full-semantic mode persists the background ID before terminal parsing."""
@@ -372,7 +388,7 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         self.assertEqual(first["providerInput"], second["providerInput"])
         self.assertEqual(
             hashlib.sha256(first["providerInput"]).hexdigest(),
-            "06a646eb9e15ca836b33235a6868f0e7a81ed2b835f8200e0714c22f6387148c",
+            "2420d77fb53e88e63a5f52d89a77afa15244b353f15a8ab602c5d77dc17707dc",
         )
 
     def test_aggregate_finding_frequencies_count_occurrences_not_units(self) -> None:

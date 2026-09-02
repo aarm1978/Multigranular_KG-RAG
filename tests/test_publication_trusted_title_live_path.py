@@ -32,13 +32,18 @@ class PublicationTrustedTitleLivePathTests(unittest.TestCase):
         self.assertEqual(properties["sectionID"].get("const"), None)
 
     def test_live_runner_has_no_counterfactual_or_repair_step(self) -> None:
-        """Provider output flows directly to schema validation and unchanged downstream."""
+        """Only full-semantic output receives the authorized literal-evidence binder."""
 
         source = inspect.getsource(runner.run_live_unit)
         self.assertNotIn("_section_title_only_copy", source)
         self.assertNotIn("repair", source.lower())
         self.assertIn("validate_model_authorable_payload(payload, state[\"schema\"])", source)
-        self.assertIn("_downstream(raw_output, request)", source)
+        self.assertIn(
+            "_downstream(raw_output, request, evidence_binding=full_semantic)",
+            source,
+        )
+        self.assertIn("if full_semantic:", source)
+        self.assertNotIn("_section_title_only_copy", inspect.getsource(runner))
 
     def test_v4_validator_still_owns_exact_title_equality(self) -> None:
         """The unchanged validator remains the semantic equality authority."""

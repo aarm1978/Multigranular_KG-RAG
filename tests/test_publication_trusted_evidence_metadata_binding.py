@@ -15,7 +15,7 @@ import jsonschema
 from src.extraction.llm.publications.candidate_validation import VALIDATOR_VERSION
 from src.extraction.llm.publications.request_builder import canonical_json
 from src.extraction.llm.publications.run_publication_full_devset0_node_development import (
-    PROMPT_PATH,
+    BASE_PROMPT_PATH,
     build_c1b_request,
     load_c0_bindings,
 )
@@ -235,7 +235,7 @@ class TrustedEvidenceMetadataBindingTests(unittest.TestCase):
             "bee13c4501597cf7793d6c9e93f3d4a5b35a2881bc0cd98b1a0a24ea03682a28",
         )
         self.assertEqual(
-            hashlib.sha256(PROMPT_PATH.read_bytes()).hexdigest(),
+            hashlib.sha256(BASE_PROMPT_PATH.read_bytes()).hexdigest(),
             "6b180b88d718dbda7d9f30b28c484d263998ed8caa88eab516f531e488b8317f",
         )
         accepted = {
