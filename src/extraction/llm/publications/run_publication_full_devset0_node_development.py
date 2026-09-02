@@ -17,6 +17,7 @@ from collections import Counter, defaultdict
 from copy import deepcopy
 from difflib import SequenceMatcher
 import json
+import os
 from pathlib import Path
 import sys
 from typing import Any, Mapping, Sequence
@@ -119,6 +120,16 @@ def _write_canonical(path: Path, value: Mapping[str, Any]) -> None:
 
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(canonical_json_file(value))
+
+
+def _write_durable_canonical(path: Path, value: Mapping[str, Any]) -> None:
+    """Persist one lifecycle record and force it to stable storage before dispatch."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("wb") as handle:
+        handle.write(canonical_json_file(value))
+        handle.flush()
+        os.fsync(handle.fileno())
 
 
 def _write_exact(path: Path, value: bytes) -> None:
@@ -742,6 +753,25 @@ def run_live_unit(
         output_dir=output_dir,
         full_semantic=full_semantic,
     )
+    initiated_attempt = {
+        "recordSchemaVersion": "0.1.0",
+        "artifactRole": "provider_attempt_lifecycle",
+        "developmentID": development_id,
+        "attemptCount": 1,
+        "status": "initiated",
+        "semanticResponseProduced": False,
+        "retryCount": 0,
+        "requestInputSha256": state["request"]["requestInputSha256"],
+        "providerInputSha256": sha256_bytes(state["providerInput"]),
+        "modelAuthorableSchemaSha256": sha256_bytes(
+            canonical_json(state["schema"])
+        ),
+        "requestedModel": REQUESTED_MODEL,
+        "reasoningEffort": REASONING_EFFORT,
+        "maxOutputTokens": C1B_MAX_OUTPUT_TOKENS,
+        "store": STORE,
+    }
+    _write_durable_canonical(paths["attempt"], initiated_attempt)
     kwargs = {} if transport is None else {"transport": transport}
     try:
         raw_output, response, raw_response = call_openai_responses_detailed(
@@ -764,8 +794,7 @@ def run_live_unit(
             },
         )
         attempt = {
-            "developmentID": development_id,
-            "attemptCount": 1,
+            **initiated_attempt,
             "status": "provider_failed",
             "httpStatus": diagnostic["httpStatus"],
             "xRequestID": diagnostic["xRequestID"],
@@ -783,8 +812,7 @@ def run_live_unit(
             "STATUS_NOT_COMPLETED", "INCOMPLETE_DETAILS_PRESENT"
         } else "provider_failed"
         attempt = {
-            "developmentID": development_id,
-            "attemptCount": 1,
+            **initiated_attempt,
             "status": status,
             "providerFailureCode": exc.failure_code,
             "semanticResponseProduced": False,
@@ -794,8 +822,7 @@ def run_live_unit(
         raise
     except OpenAIProviderError as exc:
         attempt = {
-            "developmentID": development_id,
-            "attemptCount": 1,
+            **initiated_attempt,
             "status": "provider_failed",
             "safeFailureMessage": str(exc),
             "semanticResponseProduced": False,
@@ -838,8 +865,7 @@ def run_live_unit(
     if canonical_json(record) != canonical_json(replay_record):
         raise ValueError(f"{development_id} reproducibility replay differs")
     attempt = {
-        "developmentID": development_id,
-        "attemptCount": 1,
+        **initiated_attempt,
         "status": "completed",
         "responseID": response["responseID"],
         "semanticResponseProduced": True,

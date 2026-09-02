@@ -26,8 +26,10 @@ from src.extraction.llm.publications.run_publication_full_devset0_node_developme
     OLD_SENTENCE,
     PROMPT_PATH,
     build_c1b_request,
+    build_full_semantic_request,
     build_prompt_semantic_diff,
     load_c0_bindings,
+    prepare_unit,
     prepare_all,
     run_live_unit,
     _validation_finding_code_counts,
@@ -203,6 +205,81 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         self.assertEqual(len(calls), 1)
         self.assertTrue(result["replayByteIdentical"])
         self.assertEqual(result["diagnostics"]["candidateTotals"]["candidateNodes"], 0)
+
+    def test_full_semantic_attempt_lifecycle_reaches_terminal_completion(self) -> None:
+        """A durable initiated record is updated with its terminal success outcome."""
+
+        payload = {
+            "candidateNodes": [],
+            "candidateEdges": [],
+            "evidenceSpans": [],
+            "abstentions": [],
+            "deferredRecords": [],
+        }
+
+        def transport(_api_key: str, _body: dict[str, object]) -> dict[str, object]:
+            """Return a no-network completed full-semantic response."""
+
+            return {
+                "id": "resp_lifecycle_success",
+                "object": "response",
+                "created_at": 1788000000,
+                "status": "completed",
+                "model": "gpt-5.6-sol",
+                "error": None,
+                "incomplete_details": None,
+                "output": [{"type": "message", "id": "msg", "status": "completed", "role": "assistant", "content": [{"type": "output_text", "text": canonical_json(payload).decode("utf-8")}]}],
+                "usage": {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150, "output_tokens_details": {"reasoning_tokens": 10}},
+            }
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            run_live_unit("DEV-10", "synthetic-secret", output_dir=output_dir, transport=transport, full_semantic=True)
+            attempt_path = output_dir / "DEV-10/publication_full_semantic_dev10_attempt_record.json"
+            attempt = json.loads(attempt_path.read_text(encoding="utf-8"))
+        self.assertEqual(attempt["status"], "completed")
+        self.assertTrue(attempt["semanticResponseProduced"])
+        self.assertEqual(attempt["requestInputSha256"], build_full_semantic_request(load_c0_bindings()[-1])["requestInputSha256"])
+        self.assertEqual(len(attempt["providerInputSha256"]), 64)
+        self.assertEqual(len(attempt["modelAuthorableSchemaSha256"]), 64)
+
+    def test_interrupted_full_semantic_attempt_remains_auditable_and_blocks_retry(self) -> None:
+        """An interruption leaves initiated state and prevents automatic redispatch."""
+
+        dispatches: list[dict[str, object]] = []
+
+        def interrupted_transport(_api_key: str, body: dict[str, object]) -> dict[str, object]:
+            """Simulate external interruption after the durable lifecycle write."""
+
+            dispatches.append(body)
+            raise KeyboardInterrupt("synthetic interruption")
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            with self.assertRaises(KeyboardInterrupt):
+                run_live_unit("DEV-10", "synthetic-secret", output_dir=output_dir, transport=interrupted_transport, full_semantic=True)
+            attempt_path = output_dir / "DEV-10/publication_full_semantic_dev10_attempt_record.json"
+            attempt = json.loads(attempt_path.read_text(encoding="utf-8"))
+            self.assertEqual(attempt["status"], "initiated")
+            self.assertFalse(attempt["semanticResponseProduced"])
+            self.assertEqual(attempt["developmentID"], "DEV-10")
+            self.assertEqual(len(attempt["providerInputSha256"]), 64)
+            with self.assertRaisesRegex(ValueError, "already has a provider-attempt artifact"):
+                run_live_unit("DEV-10", "synthetic-secret", output_dir=output_dir, transport=interrupted_transport, full_semantic=True)
+        self.assertEqual(len(dispatches), 1)
+
+    def test_dev02_full_semantic_provider_input_remains_identical_offline(self) -> None:
+        """DEV-02's large request remains deterministic without provider dispatch."""
+
+        binding = next(row for row in load_c0_bindings() if row["developmentID"] == "DEV-02")
+        with tempfile.TemporaryDirectory() as first_dir, tempfile.TemporaryDirectory() as second_dir:
+            first = prepare_unit(binding, output_dir=Path(first_dir), full_semantic=True)
+            second = prepare_unit(binding, output_dir=Path(second_dir), full_semantic=True)
+        self.assertEqual(first["providerInput"], second["providerInput"])
+        self.assertEqual(
+            hashlib.sha256(first["providerInput"]).hexdigest(),
+            "06a646eb9e15ca836b33235a6868f0e7a81ed2b835f8200e0714c22f6387148c",
+        )
 
     def test_aggregate_finding_frequencies_count_occurrences_not_units(self) -> None:
         """Repeated authoritative findings retain their actual occurrence frequency."""
