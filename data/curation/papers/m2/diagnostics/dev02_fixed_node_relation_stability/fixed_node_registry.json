@@ -1,0 +1,1438 @@
+{
+  "artifactRole": "development_only_fixed_node_registry_draft",
+  "developmentID": "DEV-02",
+  "ontologyVersion": "0.1.4",
+  "purpose": "causal diagnostic of relation stability conditional on fixed endpoints",
+  "authority": "draft_for_researcher_review_not_gold_not_production",
+  "sourceRuns": [
+    "A4",
+    "A7",
+    "A8"
+  ],
+  "nodeCount": 46,
+  "nodes": [
+    {
+      "diagnosticNodeID": "DEV02-FIXN-001",
+      "className": "Concept",
+      "canonicalLabel": "hydro-climatic uncertainties",
+      "operationalTargetID": "PUB-N-A-DOM05-CONCEPT",
+      "ontologyClassID": "A-DOM05",
+      "sourceRuns": [
+        "A4",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0009",
+          "label": "hydro-climatic uncertainties"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0007",
+          "label": "hydro-climatic uncertainties"
+        }
+      ],
+      "evidenceTexts": [
+        "Using the NWM as a source of streamflow input would be a logical choice due to its operational use, but this would introduce hydro-climatic uncertainties that could impact the results of adding a multi-fluvial source extension to HAND."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-002",
+      "className": "DataDescription",
+      "canonicalLabel": "This data set was selected due to its large spatial coverage, availability of cross-sections with streamflow information, higher level of sophistication when compared to HAND, engineering scale detail, and a storied use in the literature as an evaluation data set",
+      "operationalTargetID": "PUB-N-A-P26-DATADESCRIPTION",
+      "ontologyClassID": "A-P26",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0040",
+          "label": "large spatial coverage, availability of cross-sections with streamflow information, higher level of sophistication when compared to HAND, engineering scale detail, and a storied use in the literature as an evaluation data set"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0036",
+          "label": "This data set was selected due to its large spatial coverage, availability of cross-sections with streamflow information, higher level of sophistication when compared to HAND, engineering scale detail, and a storied use in the literature as an evaluation data set"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0035",
+          "label": "This data set was selected due to its large spatial coverage, availability of cross-sections with streamflow information, higher level of sophistication when compared to HAND, engineering scale detail, and a storied use in the literature as an evaluation data set"
+        }
+      ],
+      "evidenceTexts": [
+        "This data set was selected due to its large spatial coverage, availability of cross-sections with streamflow information, higher level of sophistication when compared to HAND, engineering scale detail, and a storied use in the literature as an evaluation data set",
+        "This data set was selected due to its large spatial coverage, availability of cross-sections with streamflow information, higher level of sophistication when compared to HAND, engineering scale detail, and a storied use in the literature as an evaluation data set (Afshari et al., [2018](#page-27-11); Bates et al., [2016;](#page-27-28) Cook & Merwade, [2009;](#page-27-29) Criss & Nelson, [2022;](#page-27-30) Follum et al., [2017](#page-28-30); Hu & Demir, [2021](#page-28-31); Li & Demir, [2022](#page-28-32); Li et al., [2022;](#page-28-33) Rajib et al., [2016;](#page-29-33) Wing et al., [2017;](#page-30-31) Wing et al., [2017](#page-30-31); Zheng, Maidment, et al., [2018](#page-30-12); Zheng, Maidment, et al., [2018](#page-30-12))."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-003",
+      "className": "DatasetMention",
+      "canonicalLabel": "BLE benchmark data set",
+      "operationalTargetID": "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
+      "ontologyClassID": "A-P25",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0039",
+          "label": "BLE benchmark data set"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0035",
+          "label": "BLE maps"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0034",
+          "label": "BLE benchmark data set"
+        }
+      ],
+      "evidenceTexts": [
+        "To calculate these secondary metrics, one must define three primary metrics starting with true positives (TP) which is predicted wet and wet in the BLE benchmark data set. The two types of errors consist of false positives (FP), or type I errors, which is dry in the benchmark but predicted wet and false negatives (FN), or type II errors, which is wet in the benchmark but predicted dry.",
+        "BLE maps are produced for two recurrence flows, 1% (100 years) and 0.2% (500 years), using 1D HEC-RAS models. The maps are used as benchmarks for validation purposes of OWP FIM.",
+        "Due to this fact, evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6 (Base Level Engineering (BLE) Tools and Resources, [2021](#page-27-21); estBFE Viewer, [2021;](#page-30-22) USACE, [2022\\)](#page-30-23).",
+        "This data set was selected due to its large spatial coverage, availability of cross-sections with streamflow information, higher level of sophistication when compared to HAND, engineering scale detail, and a storied use in the literature as an evaluation data set (Afshari et al., [2018](#page-27-11); Bates et al., [2016;](#page-27-28) Cook & Merwade, [2009;](#page-27-29) Criss & Nelson, [2022;](#page-27-30) Follum et al., [2017](#page-28-30); Hu & Demir, [2021](#page-28-31); Li & Demir, [2022](#page-28-32); Li et al., [2022;](#page-28-33) Rajib et al., [2016;](#page-29-33) Wing et al., [2017;](#page-30-31) Wing et al., [2017](#page-30-31); Zheng, Maidment, et al., [2018](#page-30-12); Zheng, Maidment, et al., [2018](#page-30-12)).",
+        "To calculate these secondary metrics, one must define three primary metrics starting with true positives (TP) which is predicted wet and wet in the BLE benchmark data set."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-004",
+      "className": "EvaluationMetric",
+      "canonicalLabel": "CSI",
+      "operationalTargetID": "PUB-N-A-DOM11-EVALUATIONMETRIC",
+      "ontologyClassID": "A-DOM11",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0016",
+          "label": "CSI"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0014",
+          "label": "CSI"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0016",
+          "label": "CSI"
+        }
+      ],
+      "evidenceTexts": [
+        "The metrics employed in this study to evaluate inundation extents include CSI, Probability of Detection (POD), and False Alarm Ratio (FAR) and are presented in Equations [6](#page-17-0)[–8,](#page-17-1) respectively."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-005",
+      "className": "EvaluationMetric",
+      "canonicalLabel": "Probability of Detection (POD)",
+      "operationalTargetID": "PUB-N-A-DOM11-EVALUATIONMETRIC",
+      "ontologyClassID": "A-DOM11",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0017",
+          "label": "Probability of Detection (POD)"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0015",
+          "label": "Probability of Detection (POD)"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0017",
+          "label": "Probability of Detection (POD)"
+        }
+      ],
+      "evidenceTexts": [
+        "The metrics employed in this study to evaluate inundation extents include CSI, Probability of Detection (POD), and False Alarm Ratio (FAR) and are presented in Equations [6](#page-17-0)[–8,](#page-17-1) respectively."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-006",
+      "className": "EvaluationMetric",
+      "canonicalLabel": "False Alarm Ratio (FAR)",
+      "operationalTargetID": "PUB-N-A-DOM11-EVALUATIONMETRIC",
+      "ontologyClassID": "A-DOM11",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0018",
+          "label": "False Alarm Ratio (FAR)"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0016",
+          "label": "False Alarm Ratio (FAR)"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0018",
+          "label": "False Alarm Ratio (FAR)"
+        }
+      ],
+      "evidenceTexts": [
+        "The metrics employed in this study to evaluate inundation extents include CSI, Probability of Detection (POD), and False Alarm Ratio (FAR) and are presented in Equations [6](#page-17-0)[–8,](#page-17-1) respectively."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-007",
+      "className": "EvaluationMetric",
+      "canonicalLabel": "true positives (TP)",
+      "operationalTargetID": "PUB-N-A-DOM11-EVALUATIONMETRIC",
+      "ontologyClassID": "A-DOM11",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0019",
+          "label": "true positives (TP)"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0017",
+          "label": "true positives (TP)"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0019",
+          "label": "true positives (TP)"
+        }
+      ],
+      "evidenceTexts": [
+        "To calculate these secondary metrics, one must define three primary metrics starting with true positives (TP) which is predicted wet and wet in the BLE benchmark data set. The two types of errors consist of false positives (FP), or type I errors, which is dry in the benchmark but predicted wet and false negatives (FN), or type II errors, which is wet in the benchmark but predicted dry.",
+        "To calculate these secondary metrics, one must define three primary metrics starting with true positives (TP) which is predicted wet and wet in the BLE benchmark data set."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-008",
+      "className": "EvaluationMetric",
+      "canonicalLabel": "false positives (FP)",
+      "operationalTargetID": "PUB-N-A-DOM11-EVALUATIONMETRIC",
+      "ontologyClassID": "A-DOM11",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0020",
+          "label": "false positives (FP)"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0018",
+          "label": "false positives (FP)"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0020",
+          "label": "false positives (FP)"
+        }
+      ],
+      "evidenceTexts": [
+        "To calculate these secondary metrics, one must define three primary metrics starting with true positives (TP) which is predicted wet and wet in the BLE benchmark data set. The two types of errors consist of false positives (FP), or type I errors, which is dry in the benchmark but predicted wet and false negatives (FN), or type II errors, which is wet in the benchmark but predicted dry.",
+        "The two types of errors consist of false positives (FP), or type I errors, which is dry in the benchmark but predicted wet and false negatives (FN), or type II errors, which is wet in the benchmark but predicted dry."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-009",
+      "className": "EvaluationMetric",
+      "canonicalLabel": "false negatives (FN)",
+      "operationalTargetID": "PUB-N-A-DOM11-EVALUATIONMETRIC",
+      "ontologyClassID": "A-DOM11",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0021",
+          "label": "false negatives (FN)"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0019",
+          "label": "false negatives (FN)"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0021",
+          "label": "false negatives (FN)"
+        }
+      ],
+      "evidenceTexts": [
+        "To calculate these secondary metrics, one must define three primary metrics starting with true positives (TP) which is predicted wet and wet in the BLE benchmark data set. The two types of errors consist of false positives (FP), or type I errors, which is dry in the benchmark but predicted wet and false negatives (FN), or type II errors, which is wet in the benchmark but predicted dry.",
+        "The two types of errors consist of false positives (FP), or type I errors, which is dry in the benchmark but predicted wet and false negatives (FN), or type II errors, which is wet in the benchmark but predicted dry."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-010",
+      "className": "Experiment",
+      "canonicalLabel": "evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6",
+      "operationalTargetID": "PUB-N-A-P14-EXPERIMENT",
+      "ontologyClassID": "A-P14",
+      "sourceRuns": [
+        "A4",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0027",
+          "label": "evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0025",
+          "label": "evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6"
+        }
+      ],
+      "evidenceTexts": [
+        "evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6",
+        "Due to this fact, evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6 (Base Level Engineering (BLE) Tools and Resources, [2021](#page-27-21); estBFE Viewer, [2021;](#page-30-22) USACE, [2022\\)](#page-30-23).",
+        "The metrics employed in this study to evaluate inundation extents include CSI, Probability of Detection (POD), and False Alarm Ratio (FAR) and are presented in Equations [6](#page-17-0)[–8,](#page-17-1) respectively."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-011",
+      "className": "Experiment",
+      "canonicalLabel": "The maps are used as benchmarks for validation purposes of OWP FIM",
+      "operationalTargetID": "PUB-N-A-P14-EXPERIMENT",
+      "ontologyClassID": "A-P14",
+      "sourceRuns": [
+        "A7"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A7",
+          "candidateID": "node-0027",
+          "label": "The maps are used as benchmarks for validation purposes of OWP FIM."
+        }
+      ],
+      "evidenceTexts": [
+        "BLE maps are produced for two recurrence flows, 1% (100 years) and 0.2% (500 years), using 1D HEC-RAS models. The maps are used as benchmarks for validation purposes of OWP FIM."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-012",
+      "className": "Finding",
+      "canonicalLabel": "leading to a significant amount of FNs along headwater streams with unit Horton-Strahler order",
+      "operationalTargetID": "PUB-N-A-P16-FINDING",
+      "ontologyClassID": "A-P16",
+      "sourceRuns": [
+        "A4"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0028",
+          "label": "leading to a significant amount of FNs along headwater streams with unit Horton-Strahler order"
+        }
+      ],
+      "evidenceTexts": [
+        "Additionally, the stream network of the InFRM furnished models are of higher stream densities and bifurcation ratios, as evident in Figure [8](#page-16-1), leading to a significant amount of FNs along headwater streams with unit Horton-Strahler order due to the lack of representation of these additional headwater streams in the NWM network."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-013",
+      "className": "Finding",
+      "canonicalLabel": "the stream network of the InFRM furnished models are of higher stream densities and bifurcation ratios",
+      "operationalTargetID": "PUB-N-A-P16-FINDING",
+      "ontologyClassID": "A-P16",
+      "sourceRuns": [
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A7",
+          "candidateID": "node-0028",
+          "label": "the stream network of the InFRM furnished models are of higher stream densities and bifurcation ratios"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0027",
+          "label": "the stream network of the InFRM furnished models are of higher stream densities and bifurcation ratios"
+        }
+      ],
+      "evidenceTexts": [
+        "Additionally, the stream network of the InFRM furnished models are of higher stream densities and bifurcation ratios, as evident in Figure [8](#page-16-1), leading to a significant amount of FNs along headwater streams with unit Horton-Strahler order due to the lack of representation of these additional headwater streams in the NWM network."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-014",
+      "className": "Finding",
+      "canonicalLabel": "This partially handles the influence of neighboring cross sections that could cause flow discontinuities and mass conservation issues",
+      "operationalTargetID": "PUB-N-A-P16-FINDING",
+      "ontologyClassID": "A-P16",
+      "sourceRuns": [
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A8",
+          "candidateID": "node-0026",
+          "label": "This partially handles the influence of neighboring cross sections that could cause flow discontinuities and mass conservation issues."
+        }
+      ],
+      "evidenceTexts": [
+        "We elected to spatially intersect the HEC-RAS cross sections with the NWM stream network assigning the 1% and 0.2% flow rates to each NWM reach. To handle multiple intersections, we opted to use a filter to select the median discharge value attributed to each NWM reach. This partially handles the influence of neighboring cross sections that could cause flow discontinuities and mass conservation issues."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-015",
+      "className": "Limitation",
+      "canonicalLabel": "this would introduce hydro-climatic uncertainties that could impact the results of adding a multi-fluvial source extension to HAND",
+      "operationalTargetID": "PUB-N-A-P19-LIMITATION",
+      "ontologyClassID": "A-P19",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0029",
+          "label": "this would introduce hydro-climatic uncertainties that could impact the results of adding a multi-fluvial source extension to HAND"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0030",
+          "label": "this would introduce hydro-climatic uncertainties that could impact the results of adding a multi-fluvial source extension to HAND."
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0030",
+          "label": "this would introduce hydro-climatic uncertainties that could impact the results of adding a multi-fluvial source extension to HAND"
+        }
+      ],
+      "evidenceTexts": [
+        "Using the NWM as a source of streamflow input would be a logical choice due to its operational use, but this would introduce hydro-climatic uncertainties that could impact the results of adding a multi-fluvial source extension to HAND."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-016",
+      "className": "Limitation",
+      "canonicalLabel": "these are not properly accounted for in the inundation sourced from OWP FIM",
+      "operationalTargetID": "PUB-N-A-P19-LIMITATION",
+      "ontologyClassID": "A-P19",
+      "sourceRuns": [
+        "A4"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0030",
+          "label": "these are not properly accounted for in the inundation sourced from OWP FIM"
+        }
+      ],
+      "evidenceTexts": [
+        "We did exclude NWM V2.1 Reservoirs from evaluation because these are not properly accounted for in the inundation sourced from OWP FIM. Since the BLE does account for reservoir inundation, some of the BLE reservoir inundation extents extend beyond the NWM reservoir geometries contributing to false negatives (FNs), or under-prediction."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-017",
+      "className": "Limitation",
+      "canonicalLabel": "the lack of representation of these additional headwater streams in the NWM network",
+      "operationalTargetID": "PUB-N-A-P19-LIMITATION",
+      "ontologyClassID": "A-P19",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0031",
+          "label": "the lack of representation of these additional headwater streams in the NWM network"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0032",
+          "label": "the lack of representation of these additional headwater streams in the NWM network."
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0032",
+          "label": "the lack of representation of these additional headwater streams in the NWM network"
+        }
+      ],
+      "evidenceTexts": [
+        "Additionally, the stream network of the InFRM furnished models are of higher stream densities and bifurcation ratios, as evident in Figure [8](#page-16-1), leading to a significant amount of FNs along headwater streams with unit Horton-Strahler order due to the lack of representation of these additional headwater streams in the NWM network."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-018",
+      "className": "Limitation",
+      "canonicalLabel": "frequency dependence in the case of CSI and FAR",
+      "operationalTargetID": "PUB-N-A-P19-LIMITATION",
+      "ontologyClassID": "A-P19",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0032",
+          "label": "frequency dependence in the case of CSI and FAR"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0033",
+          "label": "notable limitations including frequency dependence in the case of CSI and FAR"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0033",
+          "label": "frequency dependence in the case of CSI and FAR"
+        }
+      ],
+      "evidenceTexts": [
+        "While these metrics are commonly employed in the evaluation of FIM and binary weather prediction communities in general, they do come with some notable limitations including frequency dependence in the case of CSI and FAR",
+        "While these metrics are commonly employed in the evaluation of FIM and binary weather prediction communities in general, they do come with some notable limitations including frequency dependence in the case of CSI and FAR (Gerapetritis & Pelissier, [2004](#page-28-34); Jolliffe & Stephenson, [2012](#page-28-35); Schaefer, [1990;](#page-29-34) Stephens et al., [2014](#page-30-32))."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-019",
+      "className": "Limitation",
+      "canonicalLabel": "the three data sources mentioned do not have streamflow information, which is required by OWP FIM",
+      "operationalTargetID": "PUB-N-A-P19-LIMITATION",
+      "ontologyClassID": "A-P19",
+      "sourceRuns": [
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A7",
+          "candidateID": "node-0029",
+          "label": "the three data sources mentioned do not have streamflow information, which is required by OWP FIM."
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0029",
+          "label": "the three data sources mentioned do not have streamflow information, which is required by OWP FIM"
+        }
+      ],
+      "evidenceTexts": [
+        "Although they have advantages, the three data sources mentioned do not have streamflow information, which is required by OWP FIM."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-020",
+      "className": "Limitation",
+      "canonicalLabel": "limit the information available to only a single source of inundation at a specific site",
+      "operationalTargetID": "PUB-N-A-P19-LIMITATION",
+      "ontologyClassID": "A-P19",
+      "sourceRuns": [
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A7",
+          "candidateID": "node-0031",
+          "label": "limit the information available to only a single source of inundation at a specific site."
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0031",
+          "label": "limit the information available to only a single source of inundation at a specific site"
+        }
+      ],
+      "evidenceTexts": [
+        "On the other hand, relying on point sources of streamflow or stage, such as gages, would eliminate this limitation, but limit the information available to only a single source of inundation at a specific site."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-021",
+      "className": "Limitation",
+      "canonicalLabel": "approximately six HUC8s do not have NWM MS reaches",
+      "operationalTargetID": "PUB-N-A-P19-LIMITATION",
+      "ontologyClassID": "A-P19",
+      "sourceRuns": [
+        "A7"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A7",
+          "candidateID": "node-0034",
+          "label": "approximately six HUC8s do not have NWM MS reaches"
+        }
+      ],
+      "evidenceTexts": [
+        "Lastly, approximately six HUC8s do not have NWM MS reaches thus we imputed the metrics for FR for these sites as the best available forecasting capability to compare GMS metrics to"
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-022",
+      "className": "Method",
+      "canonicalLabel": "comparison to the HEC-RAS 1D models",
+      "operationalTargetID": "PUB-N-A-P13-METHOD",
+      "ontologyClassID": "A-P13",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0024",
+          "label": "comparison to the HEC-RAS 1D models"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0022",
+          "label": "evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0022",
+          "label": "comparison to the HEC-RAS 1D models"
+        }
+      ],
+      "evidenceTexts": [
+        "evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6",
+        "Our HAND based approach coupled with SRCs requires streamflow as input and is agnostic as to the source of that streamflow whether forecasted, observed, or probablistic. Due to this fact, evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6 (Base Level Engineering (BLE) Tools and Resources, [2021](#page-27-21); estBFE Viewer, [2021;](#page-30-22) USACE, [2022\\)](#page-30-23).",
+        "Due to this fact, evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6 (Base Level Engineering (BLE) Tools and Resources, [2021](#page-27-21); estBFE Viewer, [2021;](#page-30-22) USACE, [2022\\)](#page-30-23)."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-023",
+      "className": "Method",
+      "canonicalLabel": "spatially intersect the HEC-RAS cross sections with the NWM stream network",
+      "operationalTargetID": "PUB-N-A-P13-METHOD",
+      "ontologyClassID": "A-P13",
+      "sourceRuns": [
+        "A4",
+        "A7"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0025",
+          "label": "spatially intersect the HEC-RAS cross sections with the NWM stream network"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0023",
+          "label": "spatially intersect the HEC-RAS cross sections with the NWM stream network"
+        }
+      ],
+      "evidenceTexts": [
+        "We elected to spatially intersect the HEC-RAS cross sections with the NWM stream network assigning the 1% and 0.2% flow rates to each NWM reach.",
+        "We elected to spatially intersect the HEC-RAS cross sections with the NWM stream network assigning the 1% and 0.2% flow rates to each NWM reach. To handle multiple intersections, we opted to use a filter to select the median discharge value attributed to each NWM reach. This partially handles the influence of neighboring cross sections that could cause flow discontinuities and mass conservation issues."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-024",
+      "className": "Method",
+      "canonicalLabel": "use a filter to select the median discharge value attributed to each NWM reach",
+      "operationalTargetID": "PUB-N-A-P13-METHOD",
+      "ontologyClassID": "A-P13",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0026",
+          "label": "use a filter to select the median discharge value attributed to each NWM reach"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0024",
+          "label": "use a filter to select the median discharge value attributed to each NWM reach"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0024",
+          "label": "a filter to select the median discharge value attributed to each NWM reach"
+        }
+      ],
+      "evidenceTexts": [
+        "To handle multiple intersections, we opted to use a filter to select the median discharge value attributed to each NWM reach.",
+        "We elected to spatially intersect the HEC-RAS cross sections with the NWM stream network assigning the 1% and 0.2% flow rates to each NWM reach. To handle multiple intersections, we opted to use a filter to select the median discharge value attributed to each NWM reach. This partially handles the influence of neighboring cross sections that could cause flow discontinuities and mass conservation issues."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-025",
+      "className": "Method",
+      "canonicalLabel": "imputed the metrics for FR for these sites",
+      "operationalTargetID": "PUB-N-A-P13-METHOD",
+      "ontologyClassID": "A-P13",
+      "sourceRuns": [
+        "A7"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A7",
+          "candidateID": "node-0025",
+          "label": "imputed the metrics for FR for these sites"
+        }
+      ],
+      "evidenceTexts": [
+        "Lastly, approximately six HUC8s do not have NWM MS reaches thus we imputed the metrics for FR for these sites as the best available forecasting capability to compare GMS metrics to"
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-026",
+      "className": "Method",
+      "canonicalLabel": "Our HAND based approach coupled with SRCs",
+      "operationalTargetID": "PUB-N-A-P13-METHOD",
+      "ontologyClassID": "A-P13",
+      "sourceRuns": [
+        "A7"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A7",
+          "candidateID": "node-0026",
+          "label": "Our HAND based approach coupled with SRCs"
+        }
+      ],
+      "evidenceTexts": [
+        "Our HAND based approach coupled with SRCs requires streamflow as input and is agnostic as to the source of that streamflow whether forecasted, observed, or probablistic. Due to this fact, evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6 (Base Level Engineering (BLE) Tools and Resources, [2021](#page-27-21); estBFE Viewer, [2021;](#page-30-22) USACE, [2022\\)](#page-30-23)."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-027",
+      "className": "Method",
+      "canonicalLabel": "the use of existing HEC-RAS based models",
+      "operationalTargetID": "PUB-N-A-P13-METHOD",
+      "ontologyClassID": "A-P13",
+      "sourceRuns": [
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A8",
+          "candidateID": "node-0023",
+          "label": "the use of existing HEC-RAS based models"
+        }
+      ],
+      "evidenceTexts": [
+        "Given these limitations, we investigated the use of existing HEC-RAS based models to address the limitations caused by hydro-climatic uncertainties and sparse streamflow inputs."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-028",
+      "className": "NamedPlace",
+      "canonicalLabel": "FEMA region 6",
+      "operationalTargetID": "PUB-N-A-DOM08-NAMEDPLACE",
+      "ontologyClassID": "A-DOM08",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0015",
+          "label": "FEMA region 6"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0013",
+          "label": "FEMA region 6"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0015",
+          "label": "FEMA region 6"
+        }
+      ],
+      "evidenceTexts": [
+        "evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6",
+        "Our HAND based approach coupled with SRCs requires streamflow as input and is agnostic as to the source of that streamflow whether forecasted, observed, or probablistic. Due to this fact, evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6 (Base Level Engineering (BLE) Tools and Resources, [2021](#page-27-21); estBFE Viewer, [2021;](#page-30-22) USACE, [2022\\)](#page-30-23).",
+        "Due to this fact, evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6 (Base Level Engineering (BLE) Tools and Resources, [2021](#page-27-21); estBFE Viewer, [2021;](#page-30-22) USACE, [2022\\)](#page-30-23)."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-029",
+      "className": "Parameter",
+      "canonicalLabel": "1% (100 years)",
+      "operationalTargetID": "PUB-N-A-DOM12-PARAMETER",
+      "ontologyClassID": "A-DOM12",
+      "sourceRuns": [
+        "A4",
+        "A7"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0042",
+          "label": "1%"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0020",
+          "label": "1% (100 years)"
+        }
+      ],
+      "evidenceTexts": [
+        "We elected to spatially intersect the HEC-RAS cross sections with the NWM stream network assigning the 1% and 0.2% flow rates to each NWM reach.",
+        "BLE maps are produced for two recurrence flows, 1% (100 years) and 0.2% (500 years), using 1D HEC-RAS models. The maps are used as benchmarks for validation purposes of OWP FIM."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-030",
+      "className": "Parameter",
+      "canonicalLabel": "0.2% (500 years)",
+      "operationalTargetID": "PUB-N-A-DOM12-PARAMETER",
+      "ontologyClassID": "A-DOM12",
+      "sourceRuns": [
+        "A4",
+        "A7"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0043",
+          "label": "0.2%"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0021",
+          "label": "0.2% (500 years)"
+        }
+      ],
+      "evidenceTexts": [
+        "We elected to spatially intersect the HEC-RAS cross sections with the NWM stream network assigning the 1% and 0.2% flow rates to each NWM reach.",
+        "BLE maps are produced for two recurrence flows, 1% (100 years) and 0.2% (500 years), using 1D HEC-RAS models. The maps are used as benchmarks for validation purposes of OWP FIM."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-031",
+      "className": "ProcessBasedModel",
+      "canonicalLabel": "OWP FIM",
+      "operationalTargetID": "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+      "ontologyClassID": "A-DOM03a",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0001",
+          "label": "OWP FIM"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0001",
+          "label": "OWP FIM"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0001",
+          "label": "OWP FIM"
+        }
+      ],
+      "evidenceTexts": [
+        "OWP FIM is linked with the NWM for operational purposes, utilizing streamflow inputs, to produce FIM at a continental scale.",
+        "BLE maps are produced for two recurrence flows, 1% (100 years) and 0.2% (500 years), using 1D HEC-RAS models. The maps are used as benchmarks for validation purposes of OWP FIM."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-032",
+      "className": "ProcessBasedModel",
+      "canonicalLabel": "NWM",
+      "operationalTargetID": "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+      "ontologyClassID": "A-DOM03a",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0002",
+          "label": "NWM"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0002",
+          "label": "NWM"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0002",
+          "label": "NWM"
+        }
+      ],
+      "evidenceTexts": [
+        "OWP FIM is linked with the NWM for operational purposes, utilizing streamflow inputs, to produce FIM at a continental scale.",
+        "By using the same HEC-RAS derived discharges and FIM extents for creating maps with OWP FIM, we are able to separate out errors introduced by NWM inputs and processes including land surface interactions, groundwater fluxes, atmospheric forcings, hydraulic routing, and others that would have potentially affected our conclusions if we had used NWM forecasted discharges."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-033",
+      "className": "ProcessBasedModel",
+      "canonicalLabel": "HEC-RAS 1D models",
+      "operationalTargetID": "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+      "ontologyClassID": "A-DOM03a",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0003",
+          "label": "HEC-RAS 1D models"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0003",
+          "label": "HEC-RAS 1D models"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0004",
+          "label": "HEC-RAS 1D models"
+        }
+      ],
+      "evidenceTexts": [
+        "evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6",
+        "Our HAND based approach coupled with SRCs requires streamflow as input and is agnostic as to the source of that streamflow whether forecasted, observed, or probablistic. Due to this fact, evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6 (Base Level Engineering (BLE) Tools and Resources, [2021](#page-27-21); estBFE Viewer, [2021;](#page-30-22) USACE, [2022\\)](#page-30-23).",
+        "Due to this fact, evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6 (Base Level Engineering (BLE) Tools and Resources, [2021](#page-27-21); estBFE Viewer, [2021;](#page-30-22) USACE, [2022\\)](#page-30-23)."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-034",
+      "className": "RelatedResearch",
+      "canonicalLabel": "Some work by Gerapetritis and Pelissier ([2004\\)](#page-28-34) denotes CSI a good proxy for measuring a forecasting system's utility in protecting life and property and has been shown as mathematically optimized when POD = 1 − FAR",
+      "operationalTargetID": "PUB-N-A-P18-RELATEDRESEARCH",
+      "ontologyClassID": "A-P18",
+      "sourceRuns": [
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A8",
+          "candidateID": "node-0036",
+          "label": "Some work by Gerapetritis and Pelissier ([2004\\)](#page-28-34) denotes CSI a good proxy for measuring a forecasting system's utility in protecting life and property and has been shown as mathematically optimized when POD = 1 − FAR."
+        }
+      ],
+      "evidenceTexts": [
+        "Some work by Gerapetritis and Pelissier ([2004\\)](#page-28-34) denotes CSI a good proxy for measuring a forecasting system's utility in protecting life and property and has been shown as mathematically optimized when POD = 1 − FAR."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-035",
+      "className": "ResearchProblem",
+      "canonicalLabel": "the limitations caused by hydro-climatic uncertainties and sparse streamflow inputs",
+      "operationalTargetID": "PUB-N-A-P07-RESEARCHPROBLEM",
+      "ontologyClassID": "A-P07",
+      "sourceRuns": [
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A8",
+          "candidateID": "node-0028",
+          "label": "the limitations caused by hydro-climatic uncertainties and sparse streamflow inputs"
+        }
+      ],
+      "evidenceTexts": [
+        "Given these limitations, we investigated the use of existing HEC-RAS based models to address the limitations caused by hydro-climatic uncertainties and sparse streamflow inputs."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-036",
+      "className": "RiverReach",
+      "canonicalLabel": "West Fork Plum Creek",
+      "operationalTargetID": "PUB-N-A-DOM07B-RIVERREACH",
+      "ontologyClassID": "A-DOM07b",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0011",
+          "label": "West Fork Plum Creek"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0009",
+          "label": "West Fork Plum Creek"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0010",
+          "label": "West Fork Plum Creek"
+        }
+      ],
+      "evidenceTexts": [
+        "Illustrates Base Level Engineering (BLE) cross sections and flowpaths at the HUC8 12100203 near the confluences of West Fork Plum Creek and Clear Fork Plum Creek with Plum Creek."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-037",
+      "className": "RiverReach",
+      "canonicalLabel": "Clear Fork Plum Creek",
+      "operationalTargetID": "PUB-N-A-DOM07B-RIVERREACH",
+      "ontologyClassID": "A-DOM07b",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0012",
+          "label": "Clear Fork Plum Creek"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0010",
+          "label": "Clear Fork Plum Creek"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0011",
+          "label": "Clear Fork Plum Creek"
+        }
+      ],
+      "evidenceTexts": [
+        "Illustrates Base Level Engineering (BLE) cross sections and flowpaths at the HUC8 12100203 near the confluences of West Fork Plum Creek and Clear Fork Plum Creek with Plum Creek."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-038",
+      "className": "RiverReach",
+      "canonicalLabel": "Plum Creek",
+      "operationalTargetID": "PUB-N-A-DOM07B-RIVERREACH",
+      "ontologyClassID": "A-DOM07b",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0013",
+          "label": "Plum Creek"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0011",
+          "label": "Plum Creek"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0012",
+          "label": "Plum Creek"
+        }
+      ],
+      "evidenceTexts": [
+        "Illustrates Base Level Engineering (BLE) cross sections and flowpaths at the HUC8 12100203 near the confluences of West Fork Plum Creek and Clear Fork Plum Creek with Plum Creek."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-039",
+      "className": "Tool",
+      "canonicalLabel": "estBFE Viewer",
+      "operationalTargetID": "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
+      "ontologyClassID": "A-DOM02",
+      "sourceRuns": [
+        "A4",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0004",
+          "label": "estBFE Viewer"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0040",
+          "label": "estBFE Viewer"
+        }
+      ],
+      "evidenceTexts": [
+        "estBFE Viewer",
+        "Due to this fact, evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6 (Base Level Engineering (BLE) Tools and Resources, [2021](#page-27-21); estBFE Viewer, [2021;](#page-30-22) USACE, [2022\\)](#page-30-23)."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-040",
+      "className": "Variable",
+      "canonicalLabel": "streamflow",
+      "operationalTargetID": "PUB-N-A-DOM04-VARIABLE",
+      "ontologyClassID": "A-DOM04",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0005",
+          "label": "streamflow"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0004",
+          "label": "streamflow inputs"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0005",
+          "label": "streamflow"
+        }
+      ],
+      "evidenceTexts": [
+        "OWP FIM is linked with the NWM for operational purposes, utilizing streamflow inputs, to produce FIM at a continental scale.",
+        "Our HAND based approach coupled with SRCs requires streamflow as input and is agnostic as to the source of that streamflow whether forecasted, observed, or probablistic."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-041",
+      "className": "Variable",
+      "canonicalLabel": "stage",
+      "operationalTargetID": "PUB-N-A-DOM04-VARIABLE",
+      "ontologyClassID": "A-DOM04",
+      "sourceRuns": [
+        "A4",
+        "A7"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0006",
+          "label": "stage"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0005",
+          "label": "stage"
+        }
+      ],
+      "evidenceTexts": [
+        "On the other hand, relying on point sources of streamflow or stage, such as gages, would eliminate this limitation, but limit the information available to only a single source of inundation at a specific site."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-042",
+      "className": "Variable",
+      "canonicalLabel": "inundation extents",
+      "operationalTargetID": "PUB-N-A-DOM04-VARIABLE",
+      "ontologyClassID": "A-DOM04",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0007",
+          "label": "inundation extents"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0006",
+          "label": "inundation extents"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0006",
+          "label": "inundation extents"
+        }
+      ],
+      "evidenceTexts": [
+        "The metrics employed in this study to evaluate inundation extents include CSI, Probability of Detection (POD), and False Alarm Ratio (FAR) and are presented in Equations [6](#page-17-0)[–8,](#page-17-1) respectively."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-043",
+      "className": "Variable",
+      "canonicalLabel": "median recurrence discharge",
+      "operationalTargetID": "PUB-N-A-DOM04-VARIABLE",
+      "ontologyClassID": "A-DOM04",
+      "sourceRuns": [
+        "A4"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0008",
+          "label": "median recurrence discharge"
+        }
+      ],
+      "evidenceTexts": [
+        "BLE cross sections are intersected with NWM reaches and the median recurrence discharge for 1% and 0.2% levels are selected per NWM V2.1 Full Resolution (FR) flowpaths."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-044",
+      "className": "WaterBody",
+      "canonicalLabel": "NWM V2.1 Reservoirs",
+      "operationalTargetID": "PUB-N-A-DOM07D-WATERBODY",
+      "ontologyClassID": "A-DOM07d",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0014",
+          "label": "NWM V2.1 Reservoirs"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0012",
+          "label": "NWM V2.1 Reservoirs"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0014",
+          "label": "NWM V2.1 Reservoirs"
+        }
+      ],
+      "evidenceTexts": [
+        "We did exclude NWM V2.1 Reservoirs from evaluation because these are not properly accounted for in the inundation sourced from OWP FIM. Since the BLE does account for reservoir inundation, some of the BLE reservoir inundation extents extend beyond the NWM reservoir geometries contributing to false negatives (FNs), or under-prediction."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-045",
+      "className": "Watershed",
+      "canonicalLabel": "49 available HUC8s",
+      "operationalTargetID": "PUB-N-A-DOM07A-WATERSHED",
+      "ontologyClassID": "A-DOM07a",
+      "sourceRuns": [
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A7",
+          "candidateID": "node-0007",
+          "label": "49 available HUC8s"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0008",
+          "label": "49 available HUC8s"
+        }
+      ],
+      "evidenceTexts": [
+        "We selected 49 available HUC8s, shown in Figure [7](#page-16-0), which span about 185 thousand km2 across nine states."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    },
+    {
+      "diagnosticNodeID": "DEV02-FIXN-046",
+      "className": "Watershed",
+      "canonicalLabel": "HUC8 12100203",
+      "operationalTargetID": "PUB-N-A-DOM07A-WATERSHED",
+      "ontologyClassID": "A-DOM07a",
+      "sourceRuns": [
+        "A4",
+        "A7",
+        "A8"
+      ],
+      "sourceCandidates": [
+        {
+          "run": "A4",
+          "candidateID": "node-0010",
+          "label": "HUC8 12100203"
+        },
+        {
+          "run": "A7",
+          "candidateID": "node-0008",
+          "label": "HUC8 12100203"
+        },
+        {
+          "run": "A8",
+          "candidateID": "node-0009",
+          "label": "HUC8 12100203"
+        }
+      ],
+      "evidenceTexts": [
+        "Illustrates Base Level Engineering (BLE) cross sections and flowpaths at the HUC8 12100203 near the confluences of West Fork Plum Creek and Clear Fork Plum Creek with Plum Creek."
+      ],
+      "status": "proposed_include",
+      "purpose": "fixed_endpoint_relation_stability_diagnostic"
+    }
+  ],
+  "excludedAmbiguousEndpoints": [
+    {
+      "className": "ProcessBasedModel",
+      "label": "HAND",
+      "reason": "typing_ambiguity_observed_A7_abstained_A8_processbasedmodel",
+      "disposition": "exclude_from_primary_fixed_registry"
+    },
+    {
+      "className": "Gauge",
+      "label": "gages",
+      "reason": "generic_category_mention_not_identifiable_station_endpoint",
+      "disposition": "exclude_from_primary_fixed_registry"
+    },
+    {
+      "className": "EvaluationMetric",
+      "label": "true negatives (TN)",
+      "reason": "only_available_evidence_span_crosses_page_figure_and_is_canonically_broken",
+      "disposition": "exclude_from_primary_fixed_registry"
+    },
+    {
+      "className": "RiverReach",
+      "label": "NWM reach",
+      "reason": "generic_collective_referent_not_unambiguous_concrete_source_local_feature",
+      "disposition": "exclude_from_primary_fixed_registry"
+    }
+  ],
+  "notes": [
+    "Only relation-eligible node classes are included; relation-ineligible discourse nodes such as Definition and ResearchGoal are intentionally omitted.",
+    "BLE maps and BLE benchmark data set are locally reconciled as one DatasetMention for this diagnostic.",
+    "Parameter labels use the fuller exact source forms 1% (100 years) and 0.2% (500 years).",
+    "This artifact is for development diagnosis only and must not be used as evaluation gold."
+  ]
+}
