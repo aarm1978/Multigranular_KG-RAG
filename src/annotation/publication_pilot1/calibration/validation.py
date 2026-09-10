@@ -150,6 +150,44 @@ def _mention_span(
     }
 
 
+def _mention_spans(
+    raw_primary: object, raw_fragments: object | None, *, contracts: AnnotationContracts,
+    primary_source_unit_id: str, exposed_context_ids: Sequence[str],
+) -> tuple[dict[str, Any], list[dict[str, Any]] | None]:
+    """Validate a legacy primary mention or an ordered same-unit composite mention."""
+
+    primary = _mention_span(
+        raw_primary, contracts=contracts, primary_source_unit_id=primary_source_unit_id,
+        exposed_context_ids=exposed_context_ids,
+    )
+    if raw_fragments is None:
+        return primary, None
+    fragments = _require_list(raw_fragments, "ANNOTATION_NODE_MENTION_FRAGMENTS_ARRAY_REQUIRED")
+    if len(fragments) < 2:
+        raise AnnotationContractError("ANNOTATION_NODE_MENTION_FRAGMENTS_MINIMUM_REQUIRED")
+    cleaned = [
+        _mention_span(
+            fragment, contracts=contracts, primary_source_unit_id=primary_source_unit_id,
+            exposed_context_ids=exposed_context_ids,
+        )
+        for fragment in fragments
+    ]
+    if cleaned[0] != primary:
+        raise AnnotationContractError("ANNOTATION_NODE_MENTION_PRIMARY_FRAGMENT_MISMATCH")
+    source_unit_id = primary["sourceUnitID"]
+    if any(fragment["sourceUnitID"] != source_unit_id for fragment in cleaned[1:]):
+        raise AnnotationContractError("ANNOTATION_NODE_MENTION_FRAGMENTS_CROSS_UNIT")
+    previous_end = -1
+    for fragment in cleaned:
+        start, end = fragment["startOffsetInUnit"], fragment["endOffsetInUnit"]
+        if start < previous_end:
+            raise AnnotationContractError("ANNOTATION_NODE_MENTION_FRAGMENTS_OVERLAP_OR_DUPLICATE")
+        if previous_end >= 0 and start == previous_end:
+            raise AnnotationContractError("ANNOTATION_NODE_MENTION_FRAGMENTS_NOT_NONCONTIGUOUS")
+        previous_end = end
+    return primary, cleaned
+
+
 def _class_name(target: Mapping[str, Any]) -> str:
     """Return the one concrete formal class for a node target."""
 
@@ -390,7 +428,7 @@ def validate_annotation(
             raise AnnotationContractError("ANNOTATION_NODE_OBJECT_REQUIRED")
         allowed_fields = {
             "localID", "operationalTargetID", "action", "existingNodeID", "deferredRecordID", "evidence",
-            "mentionSpan", "attributes", "discoveryScope", "distributedEvidenceReason",
+            "mentionSpan", "mentionSpans", "attributes", "discoveryScope", "distributedEvidenceReason",
         }
         if set(raw) - allowed_fields:
             raise AnnotationContractError("ANNOTATION_NODE_FIELDS_INVALID")
@@ -424,9 +462,9 @@ def validate_annotation(
             deferred_id, origin = None, "open_discovery"
         if "mentionSpan" not in raw:
             raise AnnotationContractError(f"ANNOTATION_NODE_MENTION_REQUIRED:{local_id}")
-        mention_span = _mention_span(
-            raw["mentionSpan"], contracts=contracts, primary_source_unit_id=source_unit_id,
-            exposed_context_ids=exposed_context_ids,
+        mention_span, mention_spans = _mention_spans(
+            raw["mentionSpan"], raw.get("mentionSpans"), contracts=contracts,
+            primary_source_unit_id=source_unit_id, exposed_context_ids=exposed_context_ids,
         )
         raw_evidence = _require_list(raw.get("evidence", []), "ANNOTATION_NODE_EVIDENCE_ARRAY_REQUIRED")
         if not raw_evidence:
@@ -451,7 +489,9 @@ def validate_annotation(
             "artifactScope": artifact_scope, "provisionalIdentity": action == "propose_new",
             "existingNodeID": existing_node_id or None, "deferredRecordID": deferred_id,
             "discoveryScope": scope, "distributedEvidenceReason": distributed_reason,
-            "mentionSpan": mention_span, "attributes": attributes, "evidenceSpanIDs": span_ids,
+            "mentionSpan": mention_span,
+            **({"mentionSpans": mention_spans} if mention_spans is not None else {}),
+            "attributes": attributes, "evidenceSpanIDs": span_ids,
         })
         node_ids.add(local_id); node_classes[local_id] = class_name; node_artifact_scopes[local_id] = artifact_scope
         positive_targets.add(str(target_id))

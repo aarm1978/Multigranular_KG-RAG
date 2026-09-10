@@ -262,6 +262,79 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         with self.assertRaisesRegex(AnnotationContractError, "ANNOTATION_NODE_MENTION_REQUIRED"):
             validate_annotation(self.contracts, self.unit_id, payload, annotation_session_id="s", annotator_id="a")
 
+    def test_composite_same_unit_node_mention_preserves_contiguous_fragments(self) -> None:
+        """Two ordered same-unit literals identify one node without forming a synthetic span."""
+
+        payload = self.payload(); node = self.node("node-0001", "PUB-N-A-P13-METHOD", "method")
+        node["mentionSpans"] = [node["mentionSpan"], self.span("produced")]
+        payload["nodes"] = [node]
+        normalized = validate_annotation(
+            self.contracts, self.unit_id, payload, annotation_session_id="s", annotator_id="a"
+        )
+        fragments = normalized["nodes"][0]["mentionSpans"]
+        self.assertEqual([fragment["exactText"] for fragment in fragments], ["method", "produced"])
+        self.assertEqual(fragments[0]["endOffsetInUnit"], normalized["nodes"][0]["mentionSpan"]["endOffsetInUnit"])
+        self.assertNotIn(" … ", "".join(fragment["exactText"] for fragment in fragments))
+        self.assertEqual(len(normalized["evidenceSpans"]), 1)
+
+    def test_composite_mentions_reject_overlap_duplicate_and_cross_unit_fragments(self) -> None:
+        """Composite mention fragments remain ordered, non-overlapping, and same-unit only."""
+
+        base = self.node("node-0001", "PUB-N-A-P13-METHOD", "method")
+        duplicate = dict(base["mentionSpan"])
+        payload = self.payload(); node = dict(base); node["mentionSpans"] = [base["mentionSpan"], duplicate]; payload["nodes"] = [node]
+        with self.assertRaisesRegex(AnnotationContractError, "ANNOTATION_NODE_MENTION_FRAGMENTS_OVERLAP_OR_DUPLICATE"):
+            validate_annotation(self.contracts, self.unit_id, payload, annotation_session_id="s", annotator_id="a")
+        context_id = "synthetic:publication:context:0001"
+        payload = self.payload(); node = dict(base); node["mentionSpans"] = [base["mentionSpan"], self.span("reported value", context_id)]; payload["nodes"] = [node]
+        with self.assertRaisesRegex(AnnotationContractError, "ANNOTATION_NODE_MENTION_FRAGMENTS_CROSS_UNIT"):
+            validate_annotation(
+                self.contracts, self.unit_id, payload, annotation_session_id="s", annotator_id="a",
+                context_exposures=self.exposures(context_id),
+            )
+
+    def test_legacy_single_mention_session_remains_unchanged(self) -> None:
+        """Legacy records retain only their original singular mention field on reload."""
+
+        service, _ = self.service("legacy-single-mention")
+        payload = self.payload(); payload["nodes"] = [self.node("node-0001", "PUB-N-A-P13-METHOD", "method")]
+        normalized = service.save(self.unit_id, payload)
+        self.assertNotIn("mentionSpans", normalized["nodes"][0])
+        self.assertNotIn("mentionSpans", service.unit(self.unit_id)["editableDraft"]["nodes"][0])
+
+    def test_composite_mention_save_submit_reopen_export_round_trip(self) -> None:
+        """Autosave, immutable submission, reopen, and export retain each mention fragment."""
+
+        service, store = self.service("composite-round-trip")
+        service.unit(self.unit_id)
+        for event_type in (
+            "reading_complete", "node_pass_started", "node_pass_completed", "relation_pass_started",
+            "relation_pass_completed", "review_started",
+        ):
+            service.timing(self.unit_id, event_type)
+        payload = self.payload(); payload["workflowState"] = "review"
+        node = self.node("node-0001", "PUB-N-A-P13-METHOD", "method")
+        node["mentionSpans"] = [node["mentionSpan"], self.span("produced")]
+        payload["nodes"] = [node]
+        route = self.contracts.routes_by_id[self.unit_id]
+        target_ids = [*route["eligibleNodeOperationalTargetIDs"], *route["eligibleRelationOperationalTargetIDs"]]
+        payload["targetStates"] = [{
+            "operationalTargetID": target_id,
+            "state": "reviewed_positive" if target_id == "PUB-N-A-P13-METHOD" else "reviewed_no_positive" if (
+                self.contracts.node_targets.get(target_id, self.contracts.relation_targets.get(target_id))["pilot_treatment"]
+                == "extract_and_evaluate"
+            ) else "monitored_review_complete",
+        } for target_id in target_ids]
+        saved = service.save(self.unit_id, payload)
+        self.assertEqual(len(service.unit(self.unit_id)["editableDraft"]["nodes"][0]["mentionSpans"]), 2)
+        submitted = service.submit(self.unit_id, payload)
+        self.assertEqual(len(submitted["nodes"][0]["mentionSpans"]), 2)
+        service.reopen(self.unit_id, "Corrected review workflow.")
+        exported = json.loads(service.export().read_text())
+        self.assertEqual(len(exported["annotations"][0]["annotation"]["nodes"][0]["mentionSpans"]), 2)
+        self.assertEqual(len(exported["submissions"][0]["annotation"]["nodes"][0]["mentionSpans"]), 2)
+        self.assertEqual(store.load(self.unit_id)["workflowState"], "reopened")
+
     def test_invalid_node_mentions_fail_closed(self) -> None:
         """Mention hashes, code-point slices, literal text, and context authorization are independent checks."""
 

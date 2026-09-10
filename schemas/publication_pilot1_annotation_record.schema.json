@@ -173,6 +173,10 @@
         "existingNodeID": {"$ref": "#/$defs/nonEmptyStringOrNull"},
         "deferredRecordID": {"$ref": "#/$defs/nonEmptyStringOrNull"},
         "mentionSpan": {"$ref": "#/$defs/mentionSpan"},
+        "mentionSpans": {
+          "type": "array", "minItems": 2,
+          "items": {"$ref": "#/$defs/mentionSpan"}
+        },
         "discoveryScope": {"$ref": "#/$defs/discoveryScope"},
         "distributedEvidenceReason": {"$ref": "#/$defs/nonEmptyStringOrNull"},
         "attributes": {"type": "array", "items": {"$ref": "#/$defs/nodeAttribute"}},

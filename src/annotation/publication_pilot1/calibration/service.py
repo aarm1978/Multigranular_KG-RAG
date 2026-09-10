@@ -176,6 +176,15 @@ class AnnotationService:
                 "exactText": evidence[item]["evidenceText"],
             } for item in ids]
 
+        def mention(span: Mapping[str, Any]) -> dict[str, Any]:
+            """Convert one persisted contiguous mention fragment to editable form."""
+
+            return {
+                "sourceUnitID": span["sourceUnitID"], "sourceUnitTextHash": span["sourceUnitTextHash"],
+                "startOffset": span["startOffsetInUnit"], "endOffset": span["endOffsetInUnit"],
+                "exactText": span["exactText"],
+            }
+
         return {
             "workflowState": draft.get("workflowState", "reading"),
             "nodes": [{
@@ -184,13 +193,9 @@ class AnnotationService:
                 "deferredRecordID": node.get("deferredRecordID"),
                 "discoveryScope": node.get("discoveryScope"),
                 "distributedEvidenceReason": node.get("distributedEvidenceReason"),
-                "mentionSpan": {
-                    "sourceUnitID": node["mentionSpan"]["sourceUnitID"],
-                    "sourceUnitTextHash": node["mentionSpan"]["sourceUnitTextHash"],
-                    "startOffset": node["mentionSpan"]["startOffsetInUnit"],
-                    "endOffset": node["mentionSpan"]["endOffsetInUnit"],
-                    "exactText": node["mentionSpan"]["exactText"],
-                },
+                "mentionSpan": mention(node["mentionSpan"]),
+                **({"mentionSpans": [mention(span) for span in node["mentionSpans"]]}
+                   if node.get("mentionSpans") else {}),
                 "attributes": [{
                     "attributeName": attribute["attributeName"], "value": attribute["value"],
                     "evidence": spans(attribute["evidenceSpanIDs"]),
