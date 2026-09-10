@@ -14,11 +14,13 @@ parser/validator results, confidence, or proposed labels while creating the Huma
 record. The task is source-bounded representation of what the canonical text supports;
 it is not a determination of hydrological truth in the world.
 
-Use only the canonical text displayed by the application and bounded canonical context
-opened through the application. Do not routinely consult a PDF, web page, repository,
-publisher page, or other external source to repair, resolve, or enrich evidence. Record
-a genuinely unresolved new boundary case as an uncertainty; do not resolve it with model
-assistance.
+During primary Human Core annotation, use only canonical material available through the
+application, including bounded canonical context opened through the application. Do not
+use PDFs, web sources, repositories, LLMs, or other external material to repair, resolve,
+or enrich an assertion. Record source uncertainty instead when canonical material is
+insufficient or defective. Expert knowledge may help interpret canonical text and apply
+the ontology, but it cannot substitute for canonical evidence or introduce unsupported
+facts.
 
 **Governing rule: no supported evidence span means no accepted semantic assertion.**
 
@@ -37,8 +39,9 @@ The target menu is a bounded inspection task, not a prediction that a positive e
 
 - For routed `extract_and_evaluate` targets, search the declared unit scope
   exhaustively and record every supported positive.
-- For `extract_and_monitor` targets, record clear supported positives encountered but
-  do not make an exhaustive absence claim.
+- `extract_and_monitor` targets are not systematically searched. Incidental clear
+  positives may be recorded, but are optional unless a node is needed as an endpoint for
+  a scored relation; no exhaustive absence claim applies.
 - A monitor-only node may be created when it is needed as an endpoint for a scored
   relation. That supporting node does not independently enter the primary entity Recall
   denominator unless its own target is scored.
