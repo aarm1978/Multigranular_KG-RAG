@@ -15,6 +15,8 @@ from . import (
     GUIDELINE_VERSION,
     HANDBOOK_VERSION,
     INTERFACE_VERSION,
+    LEGACY_ANNOTATION_OUTPUT_SCHEMA_VERSION,
+    LEGACY_INTERFACE_VERSION,
     ROUTING_VERSION,
 )
 from .contracts import AnnotationContractError
@@ -110,7 +112,13 @@ class AnnotationStore:
         }
         if existed:
             for key, value in expected.items():
-                if self.metadata(key) != value:
+                stored = self.metadata(key)
+                legacy_version = (
+                    key in {"interfaceVersion", "annotationSchemaVersion"}
+                    and self.metadata("interfaceVersion") == LEGACY_INTERFACE_VERSION
+                    and self.metadata("annotationSchemaVersion") == LEGACY_ANNOTATION_OUTPUT_SCHEMA_VERSION
+                )
+                if stored != value and not legacy_version:
                     self.connection.close()
                     raise AnnotationContractError(f"ANNOTATION_STATE_CONTRACT_MISMATCH:{key}")
         else:
@@ -373,8 +381,8 @@ class AnnotationStore:
             timing.extend(self.timing_events(str(row["source_unit_id"])))
         return {
             "annotationSessionID": self.annotation_session_id, "annotatorID": self.annotator_id,
-            "mode": self.mode, "interfaceVersion": INTERFACE_VERSION,
-            "annotationSchemaVersion": ANNOTATION_OUTPUT_SCHEMA_VERSION,
+            "mode": self.mode, "interfaceVersion": self.metadata("interfaceVersion") or INTERFACE_VERSION,
+            "annotationSchemaVersion": self.metadata("annotationSchemaVersion") or ANNOTATION_OUTPUT_SCHEMA_VERSION,
             "guidelineVersion": GUIDELINE_VERSION, "handbookVersion": HANDBOOK_VERSION,
             "routingVersion": ROUTING_VERSION,
             "contextPolicyName": CONTEXT_POLICY_NAME, "contextPolicyVersion": CONTEXT_POLICY_VERSION,

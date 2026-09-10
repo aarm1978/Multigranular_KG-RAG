@@ -276,6 +276,11 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         self.assertEqual(fragments[0]["endOffsetInUnit"], normalized["nodes"][0]["mentionSpan"]["endOffsetInUnit"])
         self.assertNotIn(" … ", "".join(fragment["exactText"] for fragment in fragments))
         self.assertEqual(len(normalized["evidenceSpans"]), 1)
+        node.pop("mentionSpans")
+        legacy_after_removal = validate_annotation(
+            self.contracts, self.unit_id, payload, annotation_session_id="s", annotator_id="a"
+        )
+        self.assertNotIn("mentionSpans", legacy_after_removal["nodes"][0])
 
     def test_composite_mentions_reject_overlap_duplicate_and_cross_unit_fragments(self) -> None:
         """Composite mention fragments remain ordered, non-overlapping, and same-unit only."""
@@ -301,6 +306,47 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         normalized = service.save(self.unit_id, payload)
         self.assertNotIn("mentionSpans", normalized["nodes"][0])
         self.assertNotIn("mentionSpans", service.unit(self.unit_id)["editableDraft"]["nodes"][0])
+
+    def test_legacy_schema_record_remains_valid_and_composite_requires_prospective_version(self) -> None:
+        """Version pairing retains legacy records while reserving fragments for schema 0.1.2."""
+
+        schema = json.loads((ROOT / "schemas/publication_pilot1_annotation_record.schema.json").read_text())
+        legacy_payload = self.payload(); legacy_payload["nodes"] = [self.node("node-0001", "PUB-N-A-P13-METHOD", "method")]
+        legacy = validate_annotation(
+            self.contracts, self.unit_id, legacy_payload, annotation_session_id="legacy", annotator_id="a"
+        )
+        legacy["annotationSchemaVersion"] = "0.1.1"
+        legacy["interfaceVersion"] = "publication-pilot1-annotation-calibration/0.1.2"
+        validator = Draft202012Validator(schema)
+        self.assertEqual(list(validator.iter_errors(legacy)), [])
+        legacy["nodes"][0]["mentionSpans"] = [
+            dict(legacy["nodes"][0]["mentionSpan"]), dict(legacy["nodes"][0]["mentionSpan"]),
+        ]
+        self.assertTrue(list(validator.iter_errors(legacy)))
+
+    def test_legacy_session_metadata_remains_reloadable(self) -> None:
+        """The current application opens an existing 0.1.1/0.1.2 session without migration."""
+
+        store = self.store("legacy-session")
+        legacy = validate_annotation(
+            self.contracts, self.unit_id, self.payload(), annotation_session_id="legacy-session", annotator_id="annotator-a"
+        )
+        legacy["annotationSchemaVersion"] = "0.1.1"
+        legacy["interfaceVersion"] = "publication-pilot1-annotation-calibration/0.1.2"
+        store.save(self.unit_id, legacy)
+        store.connection.execute("UPDATE metadata SET value=? WHERE key='annotationSchemaVersion'", ("0.1.1",))
+        store.connection.execute(
+            "UPDATE metadata SET value=? WHERE key='interfaceVersion'",
+            ("publication-pilot1-annotation-calibration/0.1.2",),
+        )
+        store.connection.commit(); store.close()
+        reopened = AnnotationStore(
+            self.runtime / "legacy-session.sqlite3", mode="synthetic", annotation_session_id="legacy-session",
+            annotator_id="annotator-a", bindings={"fixture": "discarded-v1"}, clock=MinuteClock(),
+        )
+        self.addCleanup(reopened.close)
+        self.assertEqual(reopened.load(self.unit_id)["annotationSchemaVersion"], "0.1.1")
+        self.assertEqual(reopened.export_payload()["annotationSchemaVersion"], "0.1.1")
 
     def test_composite_mention_save_submit_reopen_export_round_trip(self) -> None:
         """Autosave, immutable submission, reopen, and export retain each mention fragment."""
@@ -378,6 +424,9 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         ):
             self.assertIn(placeholder, app)
         self.assertIn("node.mentionSpan.exactText", app)
+        self.assertIn('id="add-node-mention-fragment"', page)
+        self.assertIn("Remove mention fragment", app)
+        self.assertIn("if(node.mentionSpans.length===1)delete node.mentionSpans", app)
         self.assertIn("Select a calibration unit to begin.", app)
         self.assertIn("Set node mention from highlight", page)
         self.assertIn('id="add-node" disabled', page)
@@ -1139,11 +1188,11 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
 
         schema = json.loads((ROOT / "schemas/publication_pilot1_annotation_record.schema.json").read_text())
         handbook = (ROOT / "docs/publication_pilot1_annotation_calibration_handbook.md").read_text()
-        self.assertEqual(schema["properties"]["annotationSchemaVersion"]["const"], "0.1.1")
+        self.assertEqual(schema["properties"]["annotationSchemaVersion"]["enum"], ["0.1.1", "0.1.2"])
         self.assertIn("**Handbook version:** 0.1.2", handbook); self.assertIn("No supported evidence span", handbook)
         self.assertEqual(
-            schema["properties"]["interfaceVersion"]["const"],
-            "publication-pilot1-annotation-calibration/0.1.2",
+            schema["properties"]["interfaceVersion"]["enum"],
+            ["publication-pilot1-annotation-calibration/0.1.2", "publication-pilot1-annotation-calibration/0.1.3"],
         )
 
     def test_hardened_annotation_schema_validates_normalized_nested_records(self) -> None:
