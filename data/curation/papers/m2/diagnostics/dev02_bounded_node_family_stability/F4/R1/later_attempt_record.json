@@ -1,0 +1,33 @@
+{
+  "artifactRole": "development_only_dev02_bounded_node_family_stability_attempt",
+  "diagnosticVersion": "dev02-bounded-node-family-stability-0.1.0",
+  "familyID": "F4",
+  "replicateID": "R1",
+  "status": "provider_completed_pending_offline_materialization",
+  "semanticResponseProduced": true,
+  "executionMode": "synchronous",
+  "requestBodySha256": "7b07de727671b5091928655b761f0048401f114e9007d2526f6810ec4a4814b2",
+  "model": "gpt-5.6-sol",
+  "reasoningEffort": "medium",
+  "maxOutputTokens": 32768,
+  "store": false,
+  "startedAtUTC": "2026-09-07T17:30:40Z",
+  "responseID": "resp_0c3c8c18dccd0a09016a9ef4c268b487d2817d75a84818a123",
+  "terminalProviderStatus": "completed",
+  "rawProviderResponseSha256": "2264e65c17cb9bf3023ea5180fde8bdec687d1b54841666bc3d45af06305b146",
+  "httpCode": 200,
+  "totalTimeSeconds": 40.191604,
+  "usage": {
+    "input_tokens": 8723,
+    "input_tokens_details": {
+      "cache_write_tokens": 8720,
+      "cached_tokens": 0
+    },
+    "output_tokens": 4549,
+    "output_tokens_details": {
+      "reasoning_tokens": 1633
+    },
+    "total_tokens": 13272
+  },
+  "endedAtUTC": "2026-09-07T17:31:22Z"
+}

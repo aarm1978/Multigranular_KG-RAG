@@ -81,3 +81,6 @@ var/publication_pilot1_annotation/
 
 # Temporary folder used to store intermediate files during the development. Not used in production.
 /temp/
+
+# Provider HTTP response headers may contain cookies/account identifiers
+data/curation/papers/m2/**/*_http_headers.txt
