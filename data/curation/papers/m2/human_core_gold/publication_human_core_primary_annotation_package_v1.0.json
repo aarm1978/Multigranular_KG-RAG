@@ -1,0 +1,35 @@
+{
+  "application": {
+    "annotationSchemaVersion": "0.1.2",
+    "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.3",
+    "mode": "human-core",
+    "module": "src.annotation.publication_pilot1.calibration.app",
+    "stateNamespace": "human-core/primary-researcher"
+  },
+  "freeze": {
+    "path": "data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json",
+    "reliabilitySourceUnitIDs": [
+      "pub:34:sec:0015:unit:0001",
+      "pub:79:sec:0004:unit:0001"
+    ],
+    "selectedSourceUnitIDs": [
+      "pub:10:sec:0008:unit:0001",
+      "pub:15:sec:0004:unit:0001",
+      "pub:16:sec:0033:unit:0001",
+      "pub:34:sec:0015:unit:0001",
+      "pub:79:sec:0004:unit:0001"
+    ],
+    "sha256": "0005a1c37f3eb7597651a7bee898098a0cd71e29c15464c36a06dffe19b486e0"
+  },
+  "guide": {
+    "path": "docs/publication_human_core_expert_annotation_guide.md",
+    "sha256": "8fd6da3cb387986e73933218e08c04d69ed29b5600e1aa616b503bd3eacc3ae5",
+    "version": "1.0"
+  },
+  "historicalSeparation": "No CAL_A, CAL_B, or CORE_FEAS unit, session, export, or provenance is included or modified.",
+  "localStateAndExports": "ignored var/publication_pilot1_annotation/human-core/primary-researcher/ only",
+  "modelBlind": true,
+  "packageDefinitionVersion": "1.0.0",
+  "packageIdentity": "publication-human-core-gold-n5-primary-v1",
+  "status": "ready_for_primary_researcher_local_use"
+}

@@ -16,6 +16,7 @@ from .contracts import (
     ANNOTATION_MVP_BASE_CHECKPOINT,
     AnnotationContractError,
     canonical_json_hash,
+    HUMAN_CORE_FREEZE_RELATIVE,
     load_annotation_contracts,
     verify_production_activation,
 )
@@ -75,7 +76,8 @@ def make_handler(service: AnnotationService) -> type[BaseHTTPRequestHandler]:
                 if parsed.path == "/api/bootstrap":
                     self._json(HTTPStatus.OK, service.bootstrap()); return
                 if parsed.path == "/handbook":
-                    body = (service.contracts.root / "docs/publication_pilot1_annotation_calibration_handbook.md").read_bytes()
+                    handbook = "docs/publication_human_core_expert_annotation_guide.md" if service.contracts.mode == "human-core" else "docs/publication_pilot1_annotation_calibration_handbook.md"
+                    body = (service.contracts.root / handbook).read_bytes()
                     self.send_response(HTTPStatus.OK)
                     self.send_header("Content-Type", "text/markdown; charset=utf-8")
                     self.send_header("Content-Length", str(len(body)))
@@ -150,16 +152,16 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
             activation, root, annotator_id=args.annotator_id,
             annotation_session_id=args.annotation_session_id,
         )
-    namespace = "synthetic" if args.mode == "synthetic" else "calibration/production"
+    namespace = "synthetic" if args.mode == "synthetic" else ("human-core/primary-researcher" if args.mode == "human-core" else "calibration/production")
     runtime = root / "var/publication_pilot1_annotation" / namespace
     state_path = runtime / "sessions" / f"{_safe_component(args.annotation_session_id)}.sqlite3"
     bindings = {
         "sourceUnitInventoryHash": contracts.hashes["data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl"],
-        "calibrationManifestHash": contracts.hashes["data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json"],
+        "sampleFreezeHash": sha256_file(root / HUMAN_CORE_FREEZE_RELATIVE) if args.mode == "human-core" else contracts.hashes["data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json"],
         "routingHash": contracts.hashes["data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl"],
         "routingSchemaHash": contracts.hashes["schemas/publication_pilot1_unit_routing.schema.json"],
         "targetInventoryHash": contracts.hashes["src/extraction/llm/publications/publication_target_inventory.yaml"],
-        "annotationHandbookHash": sha256_file(root / "docs/publication_pilot1_annotation_calibration_handbook.md"),
+        "annotationHandbookHash": sha256_file(root / ("docs/publication_human_core_expert_annotation_guide.md" if args.mode == "human-core" else "docs/publication_pilot1_annotation_calibration_handbook.md")),
         "annotationSchemaHash": sha256_file(root / "schemas/publication_pilot1_annotation_record.schema.json"),
         "canonicalDocumentHashesHash": canonical_json_hash(dict(contracts.canonical_document_hashes)),
         "phaseBArtifactHash": contracts.hashes["data/interim/papers/publication_nodes_edges.json"],
@@ -179,7 +181,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse explicit identity and guarded mode options."""
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("synthetic", "calibration"), default="synthetic")
+    parser.add_argument("--mode", choices=("synthetic", "calibration", "human-core"), default="synthetic")
     parser.add_argument("--annotation-session-id", required=True)
     parser.add_argument("--annotator-id", required=True)
     parser.add_argument("--activation-file", help="Required exact local JSON binding for calibration mode")

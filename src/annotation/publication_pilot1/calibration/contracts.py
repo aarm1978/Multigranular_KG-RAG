@@ -33,6 +33,7 @@ ACTIVATION_PHRASE = "ACTIVATE_PUBLICATION_PILOT1_CALIBRATION_V1"
 REGRESSION_SOURCE_UNIT_ID = "pub:34:sec:0028:unit:0001"
 ANNOTATION_MVP_BASE_CHECKPOINT = "a67c5f3d70a3f4a71f79561646572781eeae89b4"
 ACTIVATION_SCHEMA_VERSION = "0.1.0"
+HUMAN_CORE_FREEZE_RELATIVE = "data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json"
 
 LEGACY_ONTOLOGY_0_1_3_PROTECTED_HASHES = {
     "data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl": "7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e",
@@ -555,8 +556,10 @@ def load_annotation_contracts(root: Path, *, mode: str = "synthetic", activation
     hashes = verify_protected_hashes(root)
     if mode == "synthetic":
         return _synthetic_contracts(root, hashes)
-    if mode != "calibration":
+    if mode not in {"calibration", "human-core"}:
         raise AnnotationContractError(f"ANNOTATION_MODE_UNKNOWN:{mode}")
+    if mode == "human-core":
+        return _load_human_core_contracts(root, hashes)
     verify_production_activation(activation_path, root)
     manifest = json.loads((root / "data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json").read_text(encoding="utf-8"))
     order_ids = tuple(manifest["calibrationSourceUnitIDs"])
@@ -612,3 +615,47 @@ def load_annotation_contracts(root: Path, *, mode: str = "synthetic", activation
         root, "calibration", units, routes, order_ids, nodes, relations, _display_index(root), expansions,
         hashes, dict(canonical_hashes), phase_nodes,
     )
+
+
+def _load_human_core_contracts(root: Path, hashes: Mapping[str, str]) -> AnnotationContracts:
+    """Load the distinct researcher-authorized Human Core Gold freeze.
+
+    This path does not reuse the historical calibration manifest or its cardinality
+    rule.  The Human Core freeze itself is the immutable production binding.
+    """
+
+    try:
+        freeze = json.loads((root / HUMAN_CORE_FREEZE_RELATIVE).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise AnnotationContractError("HUMAN_CORE_FREEZE_INVALID") from exc
+    if freeze.get("status") != "final_and_binding_for_human_core_gold_only":
+        raise AnnotationContractError("HUMAN_CORE_FREEZE_NOT_FINAL")
+    if freeze.get("authorities", {}).get("annotationSchema", {}).get("version") != ANNOTATION_OUTPUT_SCHEMA_VERSION:
+        raise AnnotationContractError("HUMAN_CORE_ANNOTATION_SCHEMA_VERSION_MISMATCH")
+    if freeze.get("authorities", {}).get("interfaceVersion") != INTERFACE_VERSION:
+        raise AnnotationContractError("HUMAN_CORE_INTERFACE_VERSION_MISMATCH")
+    selected = freeze.get("selectedUnits", [])
+    order_ids = tuple(str(item.get("sourceUnitID", "")) for item in selected)
+    if len(order_ids) != 5 or len(set(order_ids)) != 5:
+        raise AnnotationContractError("HUMAN_CORE_FREEZE_CARDINALITY_MISMATCH")
+    inventory = _jsonl_index(root / "data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl", omit_source_text=True)
+    routing = _jsonl_index(root / "data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl")
+    source_manifest = json.loads((root / "data/curation/papers/pilot1/publication_pilot1_source_unit_manifest.json").read_text(encoding="utf-8"))
+    canonical_hashes = source_manifest.get("canonicalDocumentHashes", {})
+    if not isinstance(canonical_hashes, Mapping):
+        raise AnnotationContractError("ANNOTATION_CANONICAL_DOCUMENT_HASHES_INVALID")
+    phase_nodes = _phase_b_nodes(root, str(source_manifest.get("phaseBArtifactHash", "")))
+    nodes, relations, expansions = _target_indexes(root)
+    deferred_ids = {target_id for target_id, target in {**nodes, **relations}.items() if target["pilot_treatment"] == "deferred_resolution"}
+    routes: dict[str, Mapping[str, Any]] = {}
+    for binding in selected:
+        unit_id = str(binding["sourceUnitID"]); unit, route = inventory.get(unit_id), routing.get(unit_id)
+        if unit is None or route is None or route.get("routingStatus") != "routed":
+            raise AnnotationContractError(f"HUMAN_CORE_UNIT_BINDING_INVALID:{unit_id}")
+        if binding.get("sourceUnitTextHash") != unit.get("textHash") or binding.get("canonicalDocumentHash") != unit.get("canonicalTextSha256"):
+            raise AnnotationContractError(f"HUMAN_CORE_SOURCE_HASH_DRIFT:{unit_id}")
+        if unit.get("canonicalTextSha256") != canonical_hashes.get(str(unit.get("paperID"))):
+            raise AnnotationContractError(f"HUMAN_CORE_DOCUMENT_HASH_DRIFT:{unit_id}")
+        validate_effective_route(route, unit, deferred_ids)
+        routes[unit_id] = route
+    return AnnotationContracts(root, "human-core", inventory, routes, order_ids, nodes, relations, _display_index(root), expansions, hashes, dict(canonical_hashes), phase_nodes)
