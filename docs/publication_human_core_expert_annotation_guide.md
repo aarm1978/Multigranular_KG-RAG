@@ -1,4 +1,4 @@
-# Publication Pilot 1 — Human Core Expert Annotation Guide v1.0
+# Publication Pilot 1 — Human Core Expert Annotation Guide v1.1
 
 ## Purpose, role, and authority
 
@@ -8,6 +8,10 @@ authority. If it conflicts with frozen CIROH ontology `0.1.4`, the Publication t
 inventory (`src/extraction/llm/publications/publication_target_inventory.yaml`), the
 annotation/adjudication guideline, evidence contract, routing contract, or the
 implemented application, those authorities control.
+
+Guide v1.1 prospectively supersedes Guide v1.0 before any Human Core annotation was
+created. It preserves the same source-bounded task, frozen N=5 sample, reliability
+subset, schema, interface, routing, and ontology authorities.
 
 Human Core annotation is **model-blind**. Do not view LLM prompts, candidate outputs,
 parser/validator results, confidence, or proposed labels while creating the Human Core
@@ -68,6 +72,19 @@ automatically establish a relation between them.
 Use literal, smallest-sufficient text selections. The application validates each selected
 span against its canonical text and coordinates. Do not paraphrase, normalize, repair,
 or select across a source-unit boundary.
+
+### Tabular results and gauge mentions
+
+Exhaustive annotation applies to routed semantic targets, not every numeric or result
+cell in a table. Annotate a table value only when the target contract explicitly models
+it as a target or attribute, or when it is necessary evidence for a routed assertion.
+Do not transcribe a table merely because it contains results.
+
+For a Gauge mention, select the smallest sufficient literal canonical span. Do not
+normalize or invent a form such as `USGS <id>` unless that exact form is literal in the
+canonical text. A gauge ID alone may be the identifying mention when canonical evidence
+establishes its Gauge role. If conversion corruption prevents safe interpretation, record
+`source_conversion_problem`; do not repair it from an external source.
 
 Multiple supporting evidence spans from one `sourceUnitID` are local multi-span evidence.
 When the final node or relation cites spans from more than one `sourceUnitID`, it is
@@ -151,6 +168,10 @@ plausible interpretation into an assertion without canonical evidence.
 Use **Inspect bounded canonical context** only when the primary text needs controlled
 same-document context. It opens one authorized canonical unit at a time.
 
+A primary unit may have multiple bounded-context requests. “One authorized canonical
+unit at a time” means one context unit per exposure/request, not one total context unit
+per primary unit. Every request must identify the primary-unit target or task it serves.
+
 - **Context-request reason** explains why another unit is opened. For another section,
   select the narrowest offered reconciliation reason and the affected primary-unit
   target/task. It is exposure-audit metadata.
@@ -158,6 +179,9 @@ same-document context. It opens one authorized canonical unit at a time.
   It explains why that assertion cites more than one source unit.
 
 Opening context alone neither changes a claim nor makes it distributed evidence.
+Context is claim-scoped, not an additional annotation surface: do not create nodes or
+relations merely because they are discovered in context. Use context only to identify,
+reconcile, or support an assertion that belongs to the current primary unit.
 
 ## B. Node annotation pass
 

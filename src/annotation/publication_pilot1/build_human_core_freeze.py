@@ -20,6 +20,8 @@ import yaml
 
 FREEZE_VERSION = "1.0.0"
 PACKAGE_ID = "publication-human-core-gold-n5-primary-v1"
+FROZEN_GUIDE_V1_HASH = "8fd6da3cb387986e73933218e08c04d69ed29b5600e1aa616b503bd3eacc3ae5"
+HUMAN_CORE_GUIDE_VERSION = "1.1"
 SELECTED_IDS = (
     "pub:10:sec:0008:unit:0001",
     "pub:15:sec:0004:unit:0001",
@@ -66,7 +68,7 @@ def build_freeze(root: Path) -> dict[str, Any]:
     input_paths = {
         "samplingAnalysis": analysis, "targetFamilyMapping": mapping_path,
         "coverageMatrix": matrix_path, "sourceUnitInventory": inventory_path,
-        "unitRouting": routing_path, "expertGuide": guide_path, "annotationSchema": schema_path,
+        "unitRouting": routing_path, "annotationSchema": schema_path,
     }
     with matrix_path.open(encoding="utf-8", newline="") as handle:
         coverage = {row["sourceUnitID"]: row for row in csv.DictReader(handle)}
@@ -124,12 +126,15 @@ def build_freeze(root: Path) -> dict[str, Any]:
             "notRepresentativeOfAllPrimaryPublications": True,
         },
         "authorities": {
-            "expertGuide": {"path": str(guide_path.relative_to(root)), "version": "1.0", "sha256": sha256_file(guide_path)},
+            "expertGuide": {"path": str(guide_path.relative_to(root)), "version": "1.0", "sha256": FROZEN_GUIDE_V1_HASH},
             "annotationSchema": {"path": str(schema_path.relative_to(root)), "version": "0.1.2", "sha256": sha256_file(schema_path)},
             "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.3",
             "samplingAnalysis": {"path": str(analysis.relative_to(root)), "sha256": sha256_file(analysis)},
         },
-        "inputArtifacts": {key: {"path": str(path.relative_to(root)), "sha256": sha256_file(path)} for key, path in input_paths.items()},
+        "inputArtifacts": {
+            **{key: {"path": str(path.relative_to(root)), "sha256": sha256_file(path)} for key, path in input_paths.items()},
+            "expertGuide": {"path": str(guide_path.relative_to(root)), "sha256": FROZEN_GUIDE_V1_HASH},
+        },
         "selectedUnits": selected,
         "reliabilitySubset": {
             "sourceUnitIDs": sorted(reliability_ids),
@@ -174,8 +179,9 @@ def write_primary_package_definition(root: Path, freeze_path: Path) -> Path:
     """
 
     freeze = build_freeze(root)
+    guide_path = root / "docs/publication_human_core_expert_annotation_guide.md"
     payload = {
-        "packageDefinitionVersion": "1.0.0",
+        "packageDefinitionVersion": "1.1.0",
         "packageIdentity": PACKAGE_ID,
         "status": "ready_for_primary_researcher_local_use",
         "application": {
@@ -193,12 +199,19 @@ def write_primary_package_definition(root: Path, freeze_path: Path) -> Path:
             "selectedSourceUnitIDs": [item["sourceUnitID"] for item in freeze["selectedUnits"]],
             "reliabilitySourceUnitIDs": freeze["reliabilitySubset"]["sourceUnitIDs"],
         },
-        "guide": freeze["authorities"]["expertGuide"],
+        "guide": {
+            "path": str(guide_path.relative_to(root)), "version": HUMAN_CORE_GUIDE_VERSION,
+            "sha256": sha256_file(guide_path),
+            "supersedes": {
+                "version": "1.0", "sha256": FROZEN_GUIDE_V1_HASH,
+                "reason": "prospectively superseded before first Human Core annotation",
+            },
+        },
         "modelBlind": True,
         "localStateAndExports": "ignored var/publication_pilot1_annotation/human-core/primary-researcher/ only",
         "historicalSeparation": freeze["package"]["historicalCalibrationSeparation"],
     }
-    path = freeze_path.with_name("publication_human_core_primary_annotation_package_v1.0.json")
+    path = freeze_path.with_name("publication_human_core_primary_annotation_package_v1.1.json")
     encoded = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
     path.write_bytes(encoded)
     return path

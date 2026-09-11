@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import unittest
 from argparse import Namespace
+import hashlib
+import json
 from pathlib import Path
 
 from src.annotation.publication_pilot1.build_human_core_freeze import SELECTED_IDS, build_freeze, write_primary_package_definition
@@ -43,8 +45,21 @@ class HumanCoreFreezeTests(unittest.TestCase):
         freeze_path = ROOT / "data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json"
         package_path = write_primary_package_definition(ROOT, freeze_path)
         self.assertTrue(package_path.is_file())
-        self.assertIn("human_core", package_path.read_text(encoding="utf-8"))
-        self.assertIn("HUMAN_CORE_N5_PRIMARY_V1", package_path.read_text(encoding="utf-8"))
+        payload = json.loads(package_path.read_text(encoding="utf-8"))
+        self.assertEqual(payload["packageDefinitionVersion"], "1.1.0")
+        self.assertEqual(payload["guide"]["version"], "1.1")
+        guide_bytes = (ROOT / payload["guide"]["path"]).read_bytes()
+        self.assertEqual(payload["guide"]["sha256"], hashlib.sha256(guide_bytes).hexdigest())
+        self.assertEqual(payload["guide"]["supersedes"]["version"], "1.0")
+
+    def test_guide_v11_records_the_pre_annotation_operational_rules(self) -> None:
+        guide = (ROOT / "docs/publication_human_core_expert_annotation_guide.md").read_text(encoding="utf-8")
+        self.assertIn("Human Core Expert Annotation Guide v1.1", guide)
+        self.assertIn("prospectively supersedes Guide v1.0 before any Human Core annotation was", guide)
+        self.assertIn("not every numeric or result\ncell in a table", guide)
+        self.assertIn("multiple bounded-context requests", guide)
+        self.assertIn("Context is claim-scoped, not an additional annotation surface", guide)
+        self.assertIn("smallest sufficient literal canonical span", guide)
 
     def test_human_core_application_mode_loads_only_the_frozen_units(self) -> None:
         contracts = load_annotation_contracts(ROOT, mode="human-core")
@@ -52,7 +67,7 @@ class HumanCoreFreezeTests(unittest.TestCase):
         self.assertEqual(contracts.unit_order, SELECTED_IDS)
 
     def test_human_core_metadata_versions_are_guide_v1(self) -> None:
-        self.assertEqual(metadata_versions("human-core"), ("1.0", "1.0"))
+        self.assertEqual(metadata_versions("human-core"), ("1.1", "1.1"))
         self.assertEqual(metadata_versions("calibration"), ("0.1.1", "0.1.2"))
 
     def test_human_core_primary_identity_is_exact(self) -> None:
