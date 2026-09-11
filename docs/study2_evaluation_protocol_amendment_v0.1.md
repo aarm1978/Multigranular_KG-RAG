@@ -87,22 +87,25 @@ controlling for their respective frozen roles; this amendment does not modify th
 
 ## 5. Broader accepted evaluation architecture
 
-The accepted Study 2 architecture separates evaluation purposes and evidence sources:
+The accepted Publication semantic-extraction evaluation architecture within Study 2
+separates evaluation purposes and evidence sources:
 
 1. **Human Core Gold:** the bounded, model-blind human reference described above.
 2. **Pooled human-adjudicated reference:** a later pooled reference for human decisions
    under a separately specified procedure.
-3. **Model-blind completeness audit:** a separate audit of reference completeness that
-   remains independent of model outputs.
+3. **Model-blind completeness audit:** a separate audit of reference completeness whose
+   human exhaustive-search phase is model-blind, followed by comparison of its findings
+   with the pooled reference.
 4. **SciERC external IE anchor:** an external information-extraction anchor, governed by
    its own later contract.
 5. **GraphRAG structural comparison only:** comparison is limited to the accepted
    schema-agnostic structural measures; it is not a correctness or human-gold baseline.
 
-This architecture preserves the distinction between human semantic truth, extraction
-quality, completeness evidence, external IE context, and structural comparison. In
-particular, GraphRAG density or relational-richness results cannot establish semantic
-correctness, and SciERC does not replace the Human Core for the CIROH publication task.
+This architecture preserves the distinction between source-bounded human reference
+judgments, extraction quality, completeness evidence, external IE context, and structural
+comparison. In particular, GraphRAG density or relational-richness results cannot
+establish semantic correctness, and SciERC does not replace the Human Core for the CIROH
+publication task.
 
 ### Already-accepted pooled-reference and audit invariants
 
