@@ -2,7 +2,7 @@
 
 **Status:** prospective amendment; effective while Human Core primary annotation is beginning
 
-**Scope:** Study 2 publication-extraction evaluation
+**Scope:** Study 2 Publication semantic-extraction evaluation architecture
 
 **Purpose:** record the prospective redesign of the human reference component. This is a
 protocol amendment, not a manuscript section, an evaluation result, or a replacement for
@@ -16,8 +16,9 @@ Calibration or DEV artifacts. It also does not alter the ontology, extraction
 architecture, target inventory, routing, evidence rules, Human Core guide, annotation
 application, Human Core freeze/package, or annotation state.
 
-The amendment concerns evaluation architecture and the scope of the prospective human
-reference. It does not make a representativeness claim for all 11 primary publications.
+The amendment concerns the Publication semantic-extraction evaluation architecture within
+Study 2, not an evaluation contract for every Study 2 source type. It does not make a
+representativeness claim for all 11 primary publications.
 
 ## 2. Original protocol and reason for amendment
 
@@ -37,7 +38,7 @@ scope and reliability controls over an unsupported claim of broad, exhaustive hu
 | Relatively large stratified human gold | Frozen N=5 Human Core, selected prospectively and model-blind before semantic inspection |
 | At least two annotators per artifact | Researcher/task expert is the primary annotator; independent annotation is predeclared for a two-unit reliability subset |
 | IAA plus adjudication across the planned gold | Reliability is limited to the predeclared subset; pooled human adjudication is a separate, pending reference component |
-| Entity and relation P/R/F1 against the planned broad gold | Any production scoring must follow a pending amended Human Core matching and acceptance contract; Human Core does not claim representation of all 11 primary publications |
+| Entity and relation P/R/F1 against the planned broad gold | P/R/F1 depend on a pending amended Human Core matching contract; production acceptance remains a separate pending policy, and Human Core does not claim representation of all 11 primary publications |
 
 ## 3. Rejected shortcut: LLM consensus is not gold
 
@@ -61,11 +62,28 @@ The prospective Human Core is frozen with the following properties:
 - Exhaustive review applies only to routed `extract_and_evaluate` targets. It must not be
   generalized to monitor targets, structurally unavailable targets, unrouted targets, or
   the entire publication corpus.
-- An independent reliability subset of **2 units** is predeclared.
+- An independent reliability subset of **2 units** is predeclared. The second annotator
+  must not see the primary Human Core annotations before completing those units. Comparison
+  and any adjudication occur only after both independent records are complete.
 
 These properties establish a bounded, coverage-oriented Human Core. They do not support a
 claim that the five units are representative of every semantic condition, artifact unit,
 or all 11 primary publications.
+
+### Frozen reference artifacts
+
+The frozen sampling analysis is
+`data/curation/papers/m2/human_core_sampling_analysis/publication_human_core_sampling_analysis_v0.1.0.md`.
+N=5 was selected prospectively from its N=4/5/6 metadata-only comparison, before semantic
+inspection; that coverage-oriented selection does not establish representativeness.
+
+The Human Core sample freeze and primary package are
+`data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json`
+and
+`data/curation/papers/m2/human_core_gold/publication_human_core_primary_annotation_package_v1.0.json`.
+The frozen operational instructions are in
+`docs/publication_human_core_expert_annotation_guide.md`. These artifacts remain
+controlling for their respective frozen roles; this amendment does not modify them.
 
 ## 5. Broader accepted evaluation architecture
 
@@ -86,21 +104,33 @@ quality, completeness evidence, external IE context, and structural comparison. 
 particular, GraphRAG density or relational-richness results cannot establish semantic
 correctness, and SciERC does not replace the Human Core for the CIROH publication task.
 
+### Already-accepted pooled-reference and audit invariants
+
+The following invariants are accepted, while the detailed pooled-reference and
+completeness-audit procedures remain pending:
+
+- System provenance is hidden during pooled human judgment.
+- Pooled adjudication alone is not exhaustive gold.
+- The completeness audit first performs a model-blind exhaustive search, then compares its
+  findings to the pooled reference.
+
 ## 6. Status of amended components
 
 | Component | Status | Boundary |
 | --- | --- | --- |
 | Human Core N=5 selection, five publications, 5/5 strata, and 19-node/16-relation routed coverage | **FROZEN** | Prospective, model-blind selection before semantic inspection |
 | Primary annotator role, canonical-source/model-blind annotation, routed `extract_and_evaluate` exhaustiveness, and two-unit reliability subset | **FROZEN** | Bounded Human Core procedure only |
-| Amended Human Core matching contract | **PENDING — not frozen** | Defines future scoring correspondence and aggregation; it does not alter historical Pilot 1 contracts |
+| Amended Human Core matching contract | **PENDING — not frozen** | Defines the correspondence and aggregation required for Human Core P/R/F1; it does not alter historical Pilot 1 contracts |
 | Pooled contributors, deduplication, and adjudication procedure | **PENDING — not frozen** | Defines the pooled human-adjudicated reference |
 | Completeness-audit design and statistic | **PENDING — not frozen** | Must remain model-blind |
 | SciERC contract | **PENDING — not frozen** | Defines the external IE anchor and permitted claims |
-| Production acceptance policy | **PENDING — not frozen** | Does not follow automatically from Human Core annotation |
+| Production acceptance policy | **PENDING — not frozen** | Separate from Human Core P/R/F1 scoring and does not follow automatically from Human Core annotation |
 
 Pending components must be specified prospectively before their respective results are
-used for production acceptance or confirmatory claims. This amendment does not silently
-freeze any of them.
+used for production acceptance or confirmatory claims. P/R/F1 may not be computed as a
+confirmatory Human Core result until the amended matching contract is frozen; production
+acceptance additionally requires its separate pending policy. This amendment does not
+silently freeze any pending procedure.
 
 ## 7. Operational interpretation
 
