@@ -1,6 +1,8 @@
 {
   "application": {
     "annotationSchemaVersion": "0.1.2",
+    "annotationSessionID": "HUMAN_CORE_N5_PRIMARY_V1",
+    "annotatorID": "HUMAN_CORE_PRIMARY_RESEARCHER",
     "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.3",
     "mode": "human-core",
     "module": "src.annotation.publication_pilot1.calibration.app",

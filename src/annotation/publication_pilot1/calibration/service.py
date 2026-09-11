@@ -14,6 +14,7 @@ from . import (
     CONTEXT_POLICY_VERSION,
     GUIDELINE_VERSION,
     HANDBOOK_VERSION,
+    metadata_versions,
     INTERFACE_VERSION,
     ROUTING_VERSION,
 )
@@ -112,7 +113,7 @@ class AnnotationService:
             "annotatorID": self.store.annotator_id,
             "versions": {
                 "interfaceVersion": INTERFACE_VERSION, "annotationSchemaVersion": ANNOTATION_OUTPUT_SCHEMA_VERSION,
-                "guidelineVersion": GUIDELINE_VERSION, "handbookVersion": HANDBOOK_VERSION,
+                "guidelineVersion": metadata_versions(self.contracts.mode)[0], "handbookVersion": metadata_versions(self.contracts.mode)[1],
                 "routingVersion": ROUTING_VERSION,
             },
             "units": [{

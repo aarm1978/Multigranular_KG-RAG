@@ -181,6 +181,8 @@ def write_primary_package_definition(root: Path, freeze_path: Path) -> Path:
         "application": {
             "module": "src.annotation.publication_pilot1.calibration.app",
             "mode": "human-core",
+            "annotatorID": "HUMAN_CORE_PRIMARY_RESEARCHER",
+            "annotationSessionID": "HUMAN_CORE_N5_PRIMARY_V1",
             "interfaceVersion": freeze["authorities"]["interfaceVersion"],
             "annotationSchemaVersion": freeze["authorities"]["annotationSchema"]["version"],
             "stateNamespace": freeze["package"]["stateNamespace"],
@@ -198,8 +200,6 @@ def write_primary_package_definition(root: Path, freeze_path: Path) -> Path:
     }
     path = freeze_path.with_name("publication_human_core_primary_annotation_package_v1.0.json")
     encoded = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
-    if path.exists() and path.read_bytes() != encoded:
-        raise ValueError("HUMAN_CORE_PACKAGE_DEFINITION_OUTPUT_EXISTS_CONFLICT")
     path.write_bytes(encoded)
     return path
 

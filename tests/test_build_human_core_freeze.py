@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import unittest
+from argparse import Namespace
 from pathlib import Path
 
 from src.annotation.publication_pilot1.build_human_core_freeze import SELECTED_IDS, build_freeze, write_primary_package_definition
 from src.annotation.publication_pilot1.calibration.contracts import load_annotation_contracts
+from src.annotation.publication_pilot1.calibration import metadata_versions
+from src.annotation.publication_pilot1.calibration.app import build_service
+from src.annotation.publication_pilot1.calibration.contracts import AnnotationContractError
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -40,11 +44,24 @@ class HumanCoreFreezeTests(unittest.TestCase):
         package_path = write_primary_package_definition(ROOT, freeze_path)
         self.assertTrue(package_path.is_file())
         self.assertIn("human_core", package_path.read_text(encoding="utf-8"))
+        self.assertIn("HUMAN_CORE_N5_PRIMARY_V1", package_path.read_text(encoding="utf-8"))
 
     def test_human_core_application_mode_loads_only_the_frozen_units(self) -> None:
         contracts = load_annotation_contracts(ROOT, mode="human-core")
         self.assertEqual(contracts.mode, "human-core")
         self.assertEqual(contracts.unit_order, SELECTED_IDS)
+
+    def test_human_core_metadata_versions_are_guide_v1(self) -> None:
+        self.assertEqual(metadata_versions("human-core"), ("1.0", "1.0"))
+        self.assertEqual(metadata_versions("calibration"), ("0.1.1", "0.1.2"))
+
+    def test_human_core_primary_identity_is_exact(self) -> None:
+        args = Namespace(
+            mode="human-core", activation_file=None,
+            annotator_id="DIFFERENT_ANNOTATOR", annotation_session_id="DIFFERENT_SESSION",
+        )
+        with self.assertRaisesRegex(AnnotationContractError, "HUMAN_CORE_PRIMARY_IDENTITY_MISMATCH"):
+            build_service(args)
 
 
 if __name__ == "__main__":

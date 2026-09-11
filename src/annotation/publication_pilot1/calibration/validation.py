@@ -12,6 +12,7 @@ from . import (
     CONTEXT_POLICY_VERSION,
     GUIDELINE_VERSION,
     HANDBOOK_VERSION,
+    metadata_versions,
     INTERFACE_VERSION,
     ROUTING_VERSION,
 )
@@ -617,8 +618,8 @@ def validate_annotation(
         "sourceUnitTextHash": unit["textHash"], "canonicalDocumentHash": canonical_document_hash,
         "sectionID": unit["sectionID"], "sectionTitle": unit.get("sectionTitleRaw"),
         "authorizedContextUnits": context_bindings,
-        "interfaceVersion": INTERFACE_VERSION, "guidelineVersion": GUIDELINE_VERSION,
-        "handbookVersion": HANDBOOK_VERSION, "routingVersion": ROUTING_VERSION,
+        "interfaceVersion": INTERFACE_VERSION, "guidelineVersion": metadata_versions(contracts.mode)[0],
+        "handbookVersion": metadata_versions(contracts.mode)[1], "routingVersion": ROUTING_VERSION,
         "workflowState": workflow, "completenessTreatmentByTarget": treatments,
         "nodes": cleaned_nodes, "relations": cleaned_relations, "evidenceSpans": evidence_spans,
         "targetStates": target_states, "uncertainties": uncertainties,

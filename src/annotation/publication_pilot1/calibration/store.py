@@ -17,6 +17,7 @@ from . import (
     INTERFACE_VERSION,
     LEGACY_ANNOTATION_OUTPUT_SCHEMA_VERSION,
     LEGACY_INTERFACE_VERSION,
+    metadata_versions,
     ROUTING_VERSION,
 )
 from .contracts import AnnotationContractError
@@ -101,11 +102,12 @@ class AnnotationStore:
             );
             """
         )
+        guideline_version, handbook_version = metadata_versions(mode)
         expected = {
             "annotationSessionID": self.annotation_session_id, "annotatorID": self.annotator_id,
             "mode": mode, "interfaceVersion": INTERFACE_VERSION,
             "annotationSchemaVersion": ANNOTATION_OUTPUT_SCHEMA_VERSION,
-            "guidelineVersion": GUIDELINE_VERSION, "handbookVersion": HANDBOOK_VERSION,
+            "guidelineVersion": guideline_version, "handbookVersion": handbook_version,
             "routingVersion": ROUTING_VERSION,
             "contextPolicyName": CONTEXT_POLICY_NAME, "contextPolicyVersion": CONTEXT_POLICY_VERSION,
             **bindings,
@@ -336,8 +338,8 @@ class AnnotationStore:
         self.connection.execute(
             """INSERT INTO timing_events(source_unit_id,source_unit_text_hash,interface_version,guideline_version,
                handbook_version,routing_version,event_type,timestamp) VALUES (?,?,?,?,?,?,?,?)""",
-            (source_unit_id, source_unit_text_hash, INTERFACE_VERSION, GUIDELINE_VERSION,
-             HANDBOOK_VERSION, ROUTING_VERSION, event_type, timestamp),
+            (source_unit_id, source_unit_text_hash, INTERFACE_VERSION, *metadata_versions(self.mode),
+             ROUTING_VERSION, event_type, timestamp),
         )
         self.connection.commit()
         return self.timing_events(source_unit_id)[-1]
@@ -383,7 +385,7 @@ class AnnotationStore:
             "annotationSessionID": self.annotation_session_id, "annotatorID": self.annotator_id,
             "mode": self.mode, "interfaceVersion": self.metadata("interfaceVersion") or INTERFACE_VERSION,
             "annotationSchemaVersion": self.metadata("annotationSchemaVersion") or ANNOTATION_OUTPUT_SCHEMA_VERSION,
-            "guidelineVersion": GUIDELINE_VERSION, "handbookVersion": HANDBOOK_VERSION,
+            "guidelineVersion": metadata_versions(self.mode)[0], "handbookVersion": metadata_versions(self.mode)[1],
             "routingVersion": ROUTING_VERSION,
             "contextPolicyName": CONTEXT_POLICY_NAME, "contextPolicyVersion": CONTEXT_POLICY_VERSION,
             "annotations": annotations,
