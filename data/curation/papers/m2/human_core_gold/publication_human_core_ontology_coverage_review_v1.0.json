@@ -1,0 +1,56 @@
+{
+  "artifactType": "researcher_decided_ontology_coverage_review",
+  "artifactVersion": "1.0.0",
+  "status": "frozen_researcher_decisions_for_one_bounded_additive_refinement",
+  "baselinePreservationArtifact": "data/curation/papers/m2/human_core_gold/publication_human_core_primary_annotation_baseline_v1.0.json",
+  "immutableObservationLog": {
+    "path": "data/curation/papers/m2/human_core_gold/publication_human_core_ontology_gap_observations_v1.0.json",
+    "sha256": "c967d006ec2e7a33d69bd6316e23d8b326e358706472d41f39f102daefd776dd",
+    "status": "immutable_researcher_observation_log",
+    "preservationAction": "not modified"
+  },
+  "reviewAuthority": {
+    "observedOntologyVersion": "0.1.4",
+    "plannedAdditiveOntologyVersion": "0.1.5",
+    "scope": "Human Core ontology coverage observations only"
+  },
+  "decisions": [
+    {
+      "observation": "AgentBasedModel",
+      "decision": "ACCEPT",
+      "implementationDirection": "Add AgentBasedModel as a new concrete ComputationalModel subtype.",
+      "constraints": [
+        "Additive refinement only.",
+        "Do not reinterpret or modify existing v0.1.4 Human Core annotations."
+      ]
+    },
+    {
+      "observation": "Publication-scoped composition/containment relation between models",
+      "decision": "ACCEPT",
+      "implementationDirection": "Reuse existing hasComponent semantics with a Publication prose realization.",
+      "constraints": [
+        "Do not create a new property.",
+        "Do not alter the existing hasComponent semantics."
+      ]
+    },
+    {
+      "observation": "Organization as a substantive discourse agent in publication prose",
+      "decision": "ACCEPT",
+      "implementationDirection": "Permit prose Organization for Publication LLM/hybrid extraction with generic mentions only.",
+      "constraints": [
+        "Do not add organization-specific semantic relations.",
+        "Generic mentions do not authorize organization-specific relation semantics."
+      ]
+    }
+  ],
+  "stopRule": {
+    "rule": "These Human Core observations authorize one bounded additive ontology refinement, planned as v0.1.5. After v0.1.5 is frozen, further ontology expansion is deferred unless a reproducible blocker invalidates the frozen Study 2 evaluation protocol.",
+    "currentTaskBoundary": "Do not implement ontology v0.1.5 in this task."
+  },
+  "supplementalReviewRequirement": {
+    "requiredAfter": "v0.1.5 is implemented and frozen",
+    "scope": "Targeted supplemental review of all five Human Core units only for new or affected targets and relations.",
+    "preservation": "Existing v0.1.4 annotations remain preserved.",
+    "notAuthorized": "A full manual re-screening of the 358 units is not authorized."
+  }
+}

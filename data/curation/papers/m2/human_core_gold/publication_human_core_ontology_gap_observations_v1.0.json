@@ -1,0 +1,106 @@
+[
+  {
+    "unit_id": "pub:15:sec:0004:unit:0001",
+    "gap_type": "ontology_coverage_gap",
+    "missing_concept": "AgentBasedModel",
+    "evidence_span": {
+      "text": "integrating the episodic training structure into the runtime execution of an agent-based model",
+      "source_unit_id": "pub:15:sec:0004:unit:0001",
+      "start": 336,
+      "end": 430
+    },
+    "current_ontology_boundary": "ontology_spec.yaml v0.1.4. ciroh:ComputationalModel (A-DOM03) is abstract: true, parent ciroh:SoftwareEntity. Concrete subtypes: A-DOM03a ProcessBasedModel, A-DOM03b ConceptualModel, A-DOM03c StatisticalModel, A-DOM03d MLModel. No concrete subtype covers an agent-based simulation model.",
+    "why_existing_classes_do_not_fit": "Not ProcessBasedModel - does not represent physical/hydrologic/hydraulic/environmental processes. Not ConceptualModel - not a simplified conceptual storage structure. Not StatisticalModel - no named statistical model identity (A-DOM03c is vestigial per its status_note). Not MLModel - not data-driven or a trained architecture; the unit states deep RL is integrated into the ABM, which distinguishes them. ComputationalModel itself is not instantiable.",
+    "potential_relations_affected": {
+      "unannotatable_in_this_unit": [
+        {
+          "id": "C-P13",
+          "name": "usesModel",
+          "signature": "Paper -> ComputationalModel",
+          "note": "The unit states the study integrates episodic training into the ABM's runtime execution."
+        },
+        {
+          "id": "C-P14",
+          "name": "appliesTo",
+          "signature": "Method -> ComputationalModel",
+          "note": "From Method 'episodic training structure' to the ABM."
+        }
+      ],
+      "inherited_but_not_applicable_here": [
+        {"id": "C-P23", "name": "mentionsModel", "signature": "Paper -> ComputationalModel"},
+        {"id": "C-P26", "name": "evaluates", "signature": "EvaluationMetric -> [ComputationalModel, Method]"},
+        {"id": "C-P27", "name": "hasParameter", "signature": "[Method, Experiment, ComputationalModel] -> Parameter"},
+        {"id": "D-16", "name": "consolidatesTo", "signature": "owl:Thing -> [ComputationalModel, ...]"},
+        {"id": "D-22", "name": "implementedBy", "signature": "[Tool, ComputationalModel] -> Repository"},
+        {"id": "D-23", "name": "describedInPaper", "signature": "[Tool, ComputationalModel] -> Paper"},
+        {"id": "D-25", "name": "documentedBy", "signature": "[Tool, ComputationalModel, DatasetResource, Method] -> DocumentationPage"},
+        {"id": "D-26", "name": "mentions", "signature": "[Paper, ...] -> [ComputationalModel, ...]"}
+      ],
+      "inheritance_note": "All signatures are declared at ComputationalModel level and no subtype declares its own, so a new A-DOM03e AgentBasedModel with parent: ciroh:ComputationalModel would inherit them without further declaration."
+    },
+    "decision_status": "pending end-of-core coverage review"
+  },
+  {
+    "unit_id": "pub:15:sec:0004:unit:0001",
+    "gap_type": "relation_coverage_gap",
+    "missing_concept": "Publication-scoped composition/containment relation between models",
+    "evidence_span": {
+      "text": "each agent has two paired actor-critic neural network architectures — one pair, which is used for 'active' learning, and a 'target' pair which is used for passive learning",
+      "source_unit_id": "pub:15:sec:0004:unit:0001",
+      "start": 449,
+      "end": 620
+    },
+    "current_ontology_boundary": "hasComponent (C-DC19, domain and range [Tool, ComputationalModel]) exists but is DocumentationPage-scoped, with evidence 'DocCardList / card links (det)'. No equivalent relation appears in the publication module (C-P*).",
+    "why_existing_classes_do_not_fit": "The unit explicitly describes a containment hierarchy - the actor-critic architecture contains the actor and critic networks; the active and target pairs are instances of that architecture. The five MLModel nodes are recorded as flat siblings because no publication-scoped relation expresses composition.",
+    "potential_relations_affected": {
+      "unannotatable_in_this_unit": [
+        {
+          "id": "C-DC19",
+          "name": "hasComponent",
+          "signature": "[Tool, ComputationalModel] -> [Tool, ComputationalModel]",
+          "note": "DocumentationPage-scoped only; not routed for publication units."
+        }
+      ],
+      "inheritance_note": "Adding AgentBasedModel would not resolve this gap: the ABM/neural-network containment would also be unrepresentable from a paper."
+    },
+    "decision_status": "pending end-of-core coverage review"
+  },
+  {
+    "unit_id": "pub:16:sec:0033:unit:0001",
+    "gap_type": "ontology_coverage_gap",
+    "missing_concept": "Organization as a substantive discourse agent (prose-scoped)",
+    "evidence_span": {
+      "text": "IAHS enables these community-based efforts by providing support and facilitation.",
+      "source_unit_id": "pub:16:sec:0033:unit:0001",
+      "start": 2298,
+      "end": 2379
+    },
+    "current_ontology_boundary": "ontology_spec.yaml v0.1.4. A-AG02 Organization (schema:Organization) exists in the agent layer but is declared extraction: det with locus 'affiliation; awards[].funding_agency'. Its only relations are A-AG-R1 affiliatedWith (Person -> Organization), A-AG-R2 fundedBy (Paper/DatasetResource -> Award) and C-D09 fundedBy (DatasetResource -> [Award, Organization]), all deterministic and all outside the discourse layer.",
+    "why_existing_classes_do_not_fit": "IAHS, the World Economic Forum and the UN appear in body prose as substantive agents - IAHS recommends foci and enables community efforts, the WEF classifies the water crisis as a top global risk, the UN hosts the aligned global agendas. None of these roles is affiliation or funding. Organization is not routed for LLM-extracted discourse units, and no routed node type (Concept, Background, Theme, ResearchProblem, ResearchGoal, ResearchSignificance, Method, Finding, Conclusion, Contribution, FutureWork, Claim) covers a named organization.",
+    "potential_relations_affected": {
+      "unannotatable_in_this_unit": [],
+      "missing_relation_shape": "No relation connects Organization to a discourse unit or to a domain entity from publication prose. Expressing 'IAHS recommends Method X' or 'WEF classifies ResearchProblem Y' would require both prose-scoped Organization instantiation and a new relation signature.",
+      "inheritance_note": "Unlike the AgentBasedModel gap, this one is not resolved by adding a subtype: Organization already exists, but in a layer whose extraction mode and locus exclude body prose."
+    },
+    "decision_status": "pending end-of-core coverage review"
+  },
+  {
+    "unit_id": "pub:79:sec:0004:unit:0001",
+    "gap_type": "ontology_coverage_gap",
+    "missing_concept": "Organization as a substantive discourse agent (prose-scoped)",
+    "evidence_span": {
+      "text": "The workflow was developed with the interests of the National Water Center (NWC) and for the National Water Model (NWM) outputs",
+      "source_unit_id": "pub:79:sec:0004:unit:0001",
+      "start": 4655,
+      "end": 4782
+    },
+    "current_ontology_boundary": "ontology_spec.yaml v0.1.4. A-AG02 Organization (schema:Organization) is declared extraction: det with locus 'affiliation; awards[].funding_agency'. Same boundary as the pub:16 instance of this gap.",
+    "why_existing_classes_do_not_fit": "The National Water Center (NWC) appears four times in body prose as a substantive agent - the workflow was developed with its interests in mind, its Innovators Program: Summer Institute 2019 provided the HBV and TOPMODEL case studies, and the Contribution names it as an intended beneficiary. None of these roles is affiliation or funding. No routed node type covers a named organization.",
+    "potential_relations_affected": {
+      "unannotatable_in_this_unit": [],
+      "missing_relation_shape": "Same as pub:16. No relation connects Organization to a discourse unit or domain entity from publication prose.",
+      "recurrence_note": "Second instance of this gap, in a different artifact and a different domain (computational hydrology vs. community initiative). Suggests the gap is transversal to the corpus rather than specific to programmatic society papers."
+    },
+    "decision_status": "pending end-of-core coverage review"
+  }
+]
