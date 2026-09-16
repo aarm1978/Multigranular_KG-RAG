@@ -23,6 +23,13 @@ Review only the five frozen Human Core units and only these targets:
 - Relations: C-P13 `usesModel` (Paper and Method branches), C-P14 `appliesTo`, C-P23
   `mentionsModel`, C-P26 `evaluates`, C-P27 `hasParameter`, and C-P34 `hasComponent`.
 
+C-P13, C-P14, C-P23, C-P26, and C-P27 are **AgentBasedModel delta branches only**.
+Their supplemental signatures admit only `AgentBasedModel` on the changed model side;
+they do not reopen ProcessBasedModel, ConceptualModel, StatisticalModel, MLModel, Method,
+or Experiment branches already covered by the immutable primary review. C-P34 is new and
+retains its full Tool/ComputationalModel concrete endpoint signature, including eligible
+immutable baseline endpoints.
+
 Do not reopen, copy, revise, normalize, or recreate any primary annotation. Submitted
 same-unit primary nodes shown in the interface are immutable relation endpoints only.
 Their saved artifact scope is preserved when relation scope is calculated. D-26 generic

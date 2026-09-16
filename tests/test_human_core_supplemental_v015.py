@@ -19,11 +19,13 @@ from src.annotation.publication_pilot1.calibration import (
 from src.annotation.publication_pilot1.calibration.contracts import (
     HUMAN_CORE_SUPPLEMENTAL_PACKAGE_RELATIVE,
     AnnotationContractError,
+    baseline_endpoint_artifact_id,
     load_annotation_contracts,
+    resolve_phase_b_endpoint,
 )
 from src.annotation.publication_pilot1.calibration.service import AnnotationService
 from src.annotation.publication_pilot1.calibration.store import AnnotationStore
-from src.annotation.publication_pilot1.calibration.validation import validate_annotation
+from src.annotation.publication_pilot1.calibration.validation import _endpoint_matches, validate_annotation
 from src.annotation.publication_pilot1.calibration import app as annotation_app
 
 
@@ -80,6 +82,46 @@ class HumanCoreSupplementalV015Tests(unittest.TestCase):
             prior = current_by_id[target["operational_id"]]
             self.assertEqual(target["pilot_treatment"], prior["pilot_treatment"])
             self.assertEqual(target["evaluation_mode"], prior["evaluation_mode"])
+
+    def test_existing_relation_signatures_are_agent_based_model_delta_only(self) -> None:
+        """Existing relations expose no primary-review branch in the supplemental overlay."""
+
+        expected = {
+            "PUB-R-C-P13-USESMODEL-PAPER-BRANCH": (["Paper"], ["AgentBasedModel"]),
+            "PUB-R-C-P13-USESMODEL-METHOD-BRANCH": (["Method"], ["AgentBasedModel"]),
+            "PUB-R-C-P14-APPLIESTO": (["Method"], ["AgentBasedModel"]),
+            "PUB-R-C-P23-MENTIONSMODEL": (["Paper"], ["AgentBasedModel"]),
+            "PUB-R-C-P26-EVALUATES": (["EvaluationMetric"], ["AgentBasedModel"]),
+            "PUB-R-C-P27-HASPARAMETER": (["AgentBasedModel"], ["Parameter"]),
+        }
+        for target_id, (domain, range_) in expected.items():
+            signature = self.contracts.relation_targets[target_id]["operational_signatures"]
+            self.assertEqual(signature, [{"domain": {"classes": domain, "match": "exact"}, "range": {"classes": range_, "match": "exact"}}])
+
+    def test_old_baseline_model_endpoints_are_rejected_for_delta_relations(self) -> None:
+        """Prior model branches remain unavailable while C-P34 retains its full signature."""
+
+        unit_id = "pub:34:sec:0015:unit:0001"
+        endpoints = self.contracts.baseline_endpoints(unit_id)
+        model_id = next(key for key, value in endpoints.items() if value["className"] == "MLModel")
+        method_id = next(key for key, value in endpoints.items() if value["className"] == "Method")
+        metric_id = next(key for key, value in endpoints.items() if value["className"] == "EvaluationMetric")
+        text = self.contracts.source_text(unit_id)
+        span = {"sourceUnitID": unit_id, "sourceUnitTextHash": self.contracts.units_by_id[unit_id]["textHash"], "startOffset": 0, "endOffset": 1, "exactText": text[:1]}
+        cases = (
+            ("PUB-R-C-P13-USESMODEL-PAPER-BRANCH", f"paper:{self.contracts.units_by_id[unit_id]['paperID']}", model_id),
+            ("PUB-R-C-P13-USESMODEL-METHOD-BRANCH", method_id, model_id),
+            ("PUB-R-C-P14-APPLIESTO", method_id, model_id),
+            ("PUB-R-C-P23-MENTIONSMODEL", f"paper:{self.contracts.units_by_id[unit_id]['paperID']}", model_id),
+            ("PUB-R-C-P26-EVALUATES", metric_id, model_id),
+        )
+        for target_id, source_id, target_id_endpoint in cases:
+            payload = {"workflowState": "relation_pass", "nodes": [], "targetStates": [], "uncertainties": [], "relations": [{"localID": "edge-0001", "operationalTargetID": target_id, "sourceEndpointID": source_id, "targetEndpointID": target_id_endpoint, "evidence": [span]}]}
+            with self.assertRaisesRegex(AnnotationContractError, "ANNOTATION_RELATION_DOMAIN_RANGE_MISMATCH"):
+                validate_annotation(self.contracts, unit_id, payload, annotation_session_id=HUMAN_CORE_SUPPLEMENTAL_SESSION_ID, annotator_id=HUMAN_CORE_PRIMARY_ANNOTATOR_ID)
+        parameter_signature = self.contracts.relation_targets["PUB-R-C-P27-HASPARAMETER"]["operational_signatures"][0]
+        self.assertFalse(_endpoint_matches("Method", parameter_signature["domain"], self.contracts.class_expansions))
+        self.assertFalse(_endpoint_matches("MLModel", parameter_signature["domain"], self.contracts.class_expansions))
 
     def test_primary_endpoints_are_read_only_same_unit_relation_endpoints(self) -> None:
         """Baseline endpoint projections neither appear as node targets nor cross unit boundaries."""
@@ -139,7 +181,20 @@ class HumanCoreSupplementalV015Tests(unittest.TestCase):
         payload = {"workflowState": "relation_pass", "targetStates": [], "uncertainties": [], "nodes": [{"localID": "node-0001", "operationalTargetID": "PUB-N-A-DOM03E-AGENTBASEDMODEL", "action": "propose_new", "mentionSpan": span, "evidence": [span], "attributes": []}], "relations": [{"localID": "edge-0001", "operationalTargetID": "PUB-R-C-P34-HASCOMPONENT", "sourceEndpointID": "node-0001", "targetEndpointID": endpoint_id, "evidence": [span]}]}
         normalized = validate_annotation(self.contracts, unit_id, payload, annotation_session_id=HUMAN_CORE_SUPPLEMENTAL_SESSION_ID, annotator_id=HUMAN_CORE_PRIMARY_ANNOTATOR_ID)
         self.assertEqual(endpoint["artifactScope"], "external_artifact")
+        self.assertIsNone(endpoint["artifactID"])
+        self.assertNotEqual(endpoint["artifactID"], self.contracts.units_by_id[unit_id]["canonicalArtifactID"])
         self.assertEqual(normalized["relations"][0]["relationScope"], "inter_source")
+
+    def test_exact_link_existing_baseline_recovers_phase_b_artifact_identity(self) -> None:
+        """An external exact link uses Phase-B identity; unresolved external proposals remain null."""
+
+        reference = next(iter(self.contracts.phase_b_nodes))
+        resolved = resolve_phase_b_endpoint(reference, self.contracts.phase_b_nodes)
+        linked = baseline_endpoint_artifact_id({"artifactScope": "external_artifact", "action": "link_existing", "existingNodeID": reference}, current_artifact_id="paper-artifact", phase_b_nodes=self.contracts.phase_b_nodes)
+        proposed = baseline_endpoint_artifact_id({"artifactScope": "external_artifact", "action": "propose_new", "existingNodeID": None}, current_artifact_id="paper-artifact", phase_b_nodes=self.contracts.phase_b_nodes)
+        self.assertEqual(linked, resolved["artifactID"])
+        self.assertNotEqual(linked, "paper-artifact")
+        self.assertIsNone(proposed)
 
     def test_mode_session_and_handbook_bindings_fail_closed(self) -> None:
         """Each Human Core mode accepts only its own session and authority hash."""
@@ -157,7 +212,7 @@ class HumanCoreSupplementalV015Tests(unittest.TestCase):
             annotation_app.build_service(SimpleNamespace(**base, mode="human-core-supplemental", annotation_session_id=HUMAN_CORE_SUPPLEMENTAL_SESSION_ID, annotator_id=HUMAN_CORE_PRIMARY_ANNOTATOR_ID))
         bindings = captured["bindings"]
         self.assertEqual(bindings["annotationHandbookHash"], "c937a86bfe2a920dac0ad0b7c9f16cc863f2c2ece68cd65e5b3bfa7aef2ba56e")
-        self.assertEqual(bindings["supplementalGuideHash"], "9f0cdfbc73ec3ce68f27fb87a3e588325fa1800e6dd65d50dc29e5ed120cbfec")
+        self.assertEqual(bindings["supplementalGuideHash"], "e2ff6d58e9a982080891b373595b8a3ab747f674e68d76ed5ed0082d9f3bd562")
 
     def test_service_exposes_baseline_endpoints_without_mutating_primary_export(self) -> None:
         """UI contract exposes relation endpoints while the preserved primary bytes remain exact."""

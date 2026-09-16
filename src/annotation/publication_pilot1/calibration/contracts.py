@@ -186,21 +186,45 @@ def resolve_deterministic_endpoints(
         for reference in unit.get("deterministicNodeRefs", []):
             if not isinstance(reference, str) or reference not in phase_b_nodes:
                 raise AnnotationContractError(f"ANNOTATION_DETERMINISTIC_NODE_REF_UNRESOLVED:{reference}")
-            node = phase_b_nodes[reference]
-            class_name = node.get("class")
-            if not isinstance(class_name, str) or not class_name:
-                raise AnnotationContractError(f"ANNOTATION_DETERMINISTIC_NODE_CLASS_INVALID:{reference}")
-            attributes = node.get("attributes", {}) if isinstance(node.get("attributes"), Mapping) else {}
-            represented_artifact = (
-                attributes.get("canonicalArtifactId") or attributes.get("htmlUrl")
-                or attributes.get("identifierUri") or node.get("canonicalKey") or reference
-            )
-            result[reference] = {
-                "className": class_name,
-                "artifactID": str(represented_artifact),
-                "displayLabel": _deterministic_label(node),
-            }
+            result[reference] = resolve_phase_b_endpoint(reference, phase_b_nodes)
     return result
+
+
+def resolve_phase_b_endpoint(reference: str, phase_b_nodes: Mapping[str, Mapping[str, Any]]) -> dict[str, str]:
+    """Resolve one exact Phase-B endpoint without guessing an external identity."""
+
+    node = phase_b_nodes.get(reference)
+    if node is None:
+        raise AnnotationContractError(f"ANNOTATION_DETERMINISTIC_NODE_REF_UNRESOLVED:{reference}")
+    class_name = node.get("class")
+    if not isinstance(class_name, str) or not class_name:
+        raise AnnotationContractError(f"ANNOTATION_DETERMINISTIC_NODE_CLASS_INVALID:{reference}")
+    attributes = node.get("attributes", {}) if isinstance(node.get("attributes"), Mapping) else {}
+    represented_artifact = (
+        attributes.get("canonicalArtifactId") or attributes.get("htmlUrl")
+        or attributes.get("identifierUri") or node.get("canonicalKey") or reference
+    )
+    return {"className": class_name, "artifactID": str(represented_artifact), "displayLabel": _deterministic_label(node)}
+
+
+def baseline_endpoint_artifact_id(
+    node: Mapping[str, Any], *, current_artifact_id: str, phase_b_nodes: Mapping[str, Mapping[str, Any]],
+) -> str | None:
+    """Preserve a baseline node's artifact identity without fabricating an external ID."""
+
+    artifact_scope = node.get("artifactScope")
+    if artifact_scope == "source_artifact":
+        return current_artifact_id
+    if artifact_scope != "external_artifact":
+        raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_BASELINE_ENDPOINT_ARTIFACT_SCOPE_INVALID")
+    if node.get("action") == "link_existing":
+        existing_node_id = node.get("existingNodeID")
+        if not isinstance(existing_node_id, str) or not existing_node_id:
+            raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_BASELINE_EXTERNAL_LINK_ID_MISSING")
+        return resolve_phase_b_endpoint(existing_node_id, phase_b_nodes)["artifactID"]
+    if node.get("action") == "propose_new" and node.get("existingNodeID") in {None, ""}:
+        return None
+    raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_BASELINE_EXTERNAL_IDENTITY_UNRESOLVED")
 
 
 def _profile(root: Path) -> Mapping[str, Any]:
@@ -278,7 +302,7 @@ class AnnotationContracts:
     hashes: Mapping[str, str]
     canonical_document_hashes: Mapping[str, str]
     phase_b_nodes: Mapping[str, Mapping[str, Any]]
-    baseline_endpoints_by_unit: Mapping[str, Mapping[str, Mapping[str, str]]] = field(default_factory=dict)
+    baseline_endpoints_by_unit: Mapping[str, Mapping[str, Mapping[str, Any]]] = field(default_factory=dict)
 
     def canonical_document_hash(self, source_unit_id: str) -> str:
         """Return and cross-check the accepted artifact-level canonical-text hash."""
@@ -364,7 +388,7 @@ class AnnotationContracts:
             self.phase_b_nodes,
         )
 
-    def baseline_endpoints(self, primary_source_unit_id: str) -> Mapping[str, Mapping[str, str]]:
+    def baseline_endpoints(self, primary_source_unit_id: str) -> Mapping[str, Mapping[str, Any]]:
         """Return immutable primary-baseline endpoints for one supplemental unit only."""
 
         return (self.baseline_endpoints_by_unit or {}).get(primary_source_unit_id, {})
@@ -737,16 +761,17 @@ def _load_human_core_supplemental_contracts(root: Path, hashes: Mapping[str, str
         if set(node_ids) != set(nodes) or set(relation_ids) != set(relations):
             raise AnnotationContractError(f"HUMAN_CORE_SUPPLEMENTAL_TARGET_ISOLATION_MISMATCH:{unit_id}")
         routes[unit_id] = {"sourceUnitID": unit_id, "sourceUnitTextHash": unit["textHash"], "routingStatus": "routed", "routingVersion": ROUTING_VERSION, "eligibleNodeOperationalTargetIDs": node_ids, "eligibleRelationOperationalTargetIDs": relation_ids, "structurallyUnavailableOperationalTargets": []}
-        endpoint_rows: dict[str, dict[str, str]] = {}
+        endpoint_rows: dict[str, dict[str, Any]] = {}
         for node in baseline_rows[unit_id]["annotation"].get("nodes", []):
             candidate_id, class_name = node.get("candidateID"), node.get("className")
             if not isinstance(candidate_id, str) or not isinstance(class_name, str):
                 raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_BASELINE_ENDPOINT_INVALID")
             endpoint_id = f"baseline:{unit_id}:{candidate_id}"
             artifact_scope = node.get("artifactScope")
-            if artifact_scope not in {"source_artifact", "external_artifact"}:
-                raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_BASELINE_ENDPOINT_ARTIFACT_SCOPE_INVALID")
-            endpoint_rows[endpoint_id] = {"className": class_name, "artifactID": str(node.get("sourceArtifactID", unit["canonicalArtifactID"])), "artifactScope": str(artifact_scope), "displayLabel": str(node.get("label", candidate_id)), "endpointOrigin": "immutable_primary_baseline"}
+            artifact_id = baseline_endpoint_artifact_id(
+                node, current_artifact_id=str(unit["canonicalArtifactID"]), phase_b_nodes=phase_nodes,
+            )
+            endpoint_rows[endpoint_id] = {"className": class_name, "artifactID": artifact_id, "artifactScope": str(artifact_scope), "displayLabel": str(node.get("label", candidate_id)), "endpointOrigin": "immutable_primary_baseline"}
         endpoints[unit_id] = endpoint_rows
     expansions = {str(key): list(value) for key, value in targets.get("class_expansions", {}).items()}
     displays = {target_id: {"displayLabel": target["displayLabel"], "shortDefinition": target["shortDefinition"], "boundaryHint": target["boundaryHint"], "displayGroup": "supplemental_v015"} for target_id, target in {**nodes, **relations}.items()}
