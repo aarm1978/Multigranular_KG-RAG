@@ -932,6 +932,7 @@ def run_live_unit(
     transport: Transport | None = None,
     retrieval_transport: ResponseRetrieveTransport | None = None,
     full_semantic: bool = False,
+    authority_bundle: PublicationAuthorityBundle = V014,
     recovery_of: Mapping[str, Any] | None = None,
     verification_of: Mapping[str, Any] | None = None,
     retest_of: Mapping[str, Any] | None = None,
@@ -966,6 +967,7 @@ def run_live_unit(
         bindings[development_id],
         output_dir=output_dir,
         full_semantic=full_semantic,
+        authority_bundle=authority_bundle,
     )
     if retest_of is not None:
         expected_input = retest_of["requiredProviderInputSha256"]
