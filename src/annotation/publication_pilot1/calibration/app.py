@@ -18,10 +18,10 @@ from .contracts import (
     canonical_json_hash,
     HUMAN_CORE_FREEZE_RELATIVE,
     HUMAN_CORE_PRIMARY_ANNOTATOR_ID,
-    HUMAN_CORE_PRIMARY_SESSION_ID,
     load_annotation_contracts,
     verify_production_activation,
 )
+from . import human_core_session_namespace
 from .service import AnnotationService
 from .store import AnnotationStore
 
@@ -146,11 +146,13 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
     """Validate contracts and activation before creating mutable state."""
 
     root = repository_root()
-    if args.mode == "human-core" and (
-        args.annotator_id != HUMAN_CORE_PRIMARY_ANNOTATOR_ID
-        or args.annotation_session_id != HUMAN_CORE_PRIMARY_SESSION_ID
-    ):
-        raise AnnotationContractError("HUMAN_CORE_PRIMARY_IDENTITY_MISMATCH")
+    if args.mode == "human-core":
+        if args.annotator_id != HUMAN_CORE_PRIMARY_ANNOTATOR_ID:
+            raise AnnotationContractError("HUMAN_CORE_PRIMARY_IDENTITY_MISMATCH")
+        try:
+            human_core_session_namespace(args.annotation_session_id)
+        except ValueError as exc:
+            raise AnnotationContractError("HUMAN_CORE_SESSION_ID_NOT_AUTHORIZED") from exc
     activation = None if args.activation_file is None else Path(args.activation_file).resolve()
     contracts = load_annotation_contracts(root, mode=args.mode, activation_path=activation)
     activation_payload = None
@@ -159,7 +161,7 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
             activation, root, annotator_id=args.annotator_id,
             annotation_session_id=args.annotation_session_id,
         )
-    namespace = "synthetic" if args.mode == "synthetic" else ("human-core/primary-researcher" if args.mode == "human-core" else "calibration/production")
+    namespace = "synthetic" if args.mode == "synthetic" else (human_core_session_namespace(args.annotation_session_id) if args.mode == "human-core" else "calibration/production")
     runtime = root / "var/publication_pilot1_annotation" / namespace
     state_path = runtime / "sessions" / f"{_safe_component(args.annotation_session_id)}.sqlite3"
     bindings = {

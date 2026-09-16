@@ -397,6 +397,22 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
             "9d71ae66c3218c4b8be21a3ea10b4015cb5502fce5eaf75f6bb0ac9922bc4e74",
         )
 
+    def test_human_core_timing_uses_persisted_guide_handbook_versions(self) -> None:
+        """Runtime guide constants cannot alter persisted Human Core timing provenance."""
+
+        store = AnnotationStore(
+            self.runtime / "human-core-timing.sqlite3", mode="human-core",
+            annotation_session_id="human-core-timing", annotator_id="annotator-a",
+            bindings={"guideAuthorityVersion": "1.1", "guideAuthorityHash": "a" * 64}, clock=MinuteClock(),
+        )
+        self.addCleanup(store.close)
+        store.connection.execute("UPDATE metadata SET value=? WHERE key='guidelineVersion'", ("1.0",))
+        store.connection.execute("UPDATE metadata SET value=? WHERE key='handbookVersion'", ("1.0",))
+        store.connection.commit()
+        with patch("src.annotation.publication_pilot1.calibration.store.metadata_versions", return_value=("9.9", "9.9")):
+            event = store.log_timing("unit", "hash", "unit_opened")
+        self.assertEqual((event["guidelineVersion"], event["handbookVersion"]), ("1.0", "1.0"))
+
     def test_composite_mention_save_submit_reopen_export_round_trip(self) -> None:
         """Autosave, immutable submission, reopen, and export retain each mention fragment."""
 

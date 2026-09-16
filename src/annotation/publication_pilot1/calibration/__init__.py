@@ -9,6 +9,9 @@ HANDBOOK_VERSION = "0.1.2"
 HUMAN_CORE_GUIDE_VERSION = "1.1"
 HUMAN_CORE_PRIMARY_ANNOTATOR_ID = "HUMAN_CORE_PRIMARY_RESEARCHER"
 HUMAN_CORE_PRIMARY_SESSION_ID = "HUMAN_CORE_N5_PRIMARY_V1"
+HUMAN_CORE_SUPPLEMENTAL_SESSION_ID = "HUMAN_CORE_N5_SUPPLEMENTAL_V015"
+HUMAN_CORE_PRIMARY_NAMESPACE = "human-core/primary-researcher"
+HUMAN_CORE_SUPPLEMENTAL_NAMESPACE = "human-core/supplemental-researcher"
 ROUTING_VERSION = "0.1.2"
 CONTEXT_POLICY_NAME = "bounded_human_annotation_context"
 CONTEXT_POLICY_VERSION = "0.1.0"
@@ -20,3 +23,13 @@ def metadata_versions(mode: str) -> tuple[str, str]:
     if mode == "human-core":
         return HUMAN_CORE_GUIDE_VERSION, HUMAN_CORE_GUIDE_VERSION
     return GUIDELINE_VERSION, HANDBOOK_VERSION
+
+
+def human_core_session_namespace(annotation_session_id: str) -> str:
+    """Return the isolated namespace for an explicitly authorized Human Core session."""
+
+    if annotation_session_id == HUMAN_CORE_PRIMARY_SESSION_ID:
+        return HUMAN_CORE_PRIMARY_NAMESPACE
+    if annotation_session_id == HUMAN_CORE_SUPPLEMENTAL_SESSION_ID:
+        return HUMAN_CORE_SUPPLEMENTAL_NAMESPACE
+    raise ValueError("HUMAN_CORE_SESSION_ID_NOT_AUTHORIZED")

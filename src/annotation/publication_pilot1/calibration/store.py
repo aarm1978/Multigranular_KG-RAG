@@ -364,7 +364,7 @@ class AnnotationStore:
         self.connection.execute(
             """INSERT INTO timing_events(source_unit_id,source_unit_text_hash,interface_version,guideline_version,
                handbook_version,routing_version,event_type,timestamp) VALUES (?,?,?,?,?,?,?,?)""",
-            (source_unit_id, source_unit_text_hash, INTERFACE_VERSION, *metadata_versions(self.mode),
+            (source_unit_id, source_unit_text_hash, INTERFACE_VERSION, *self.guide_handbook_versions(),
              ROUTING_VERSION, event_type, timestamp),
         )
         self.connection.commit()

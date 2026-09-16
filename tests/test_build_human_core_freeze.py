@@ -10,7 +10,14 @@ from pathlib import Path
 
 from src.annotation.publication_pilot1.build_human_core_freeze import SELECTED_IDS, build_freeze, write_primary_package_definition
 from src.annotation.publication_pilot1.calibration.contracts import load_annotation_contracts
-from src.annotation.publication_pilot1.calibration import metadata_versions
+from src.annotation.publication_pilot1.calibration import (
+    HUMAN_CORE_PRIMARY_NAMESPACE,
+    HUMAN_CORE_PRIMARY_SESSION_ID,
+    HUMAN_CORE_SUPPLEMENTAL_NAMESPACE,
+    HUMAN_CORE_SUPPLEMENTAL_SESSION_ID,
+    human_core_session_namespace,
+    metadata_versions,
+)
 from src.annotation.publication_pilot1.calibration.app import build_service
 from src.annotation.publication_pilot1.calibration.contracts import AnnotationContractError
 
@@ -77,6 +84,18 @@ class HumanCoreFreezeTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(AnnotationContractError, "HUMAN_CORE_PRIMARY_IDENTITY_MISMATCH"):
             build_service(args)
+
+    def test_supplemental_session_identity_and_namespace_are_isolated(self) -> None:
+        """Supplemental state/export paths cannot alias the preserved primary baseline."""
+
+        self.assertEqual(human_core_session_namespace(HUMAN_CORE_PRIMARY_SESSION_ID), HUMAN_CORE_PRIMARY_NAMESPACE)
+        self.assertEqual(human_core_session_namespace(HUMAN_CORE_SUPPLEMENTAL_SESSION_ID), HUMAN_CORE_SUPPLEMENTAL_NAMESPACE)
+        self.assertNotEqual(HUMAN_CORE_PRIMARY_SESSION_ID, HUMAN_CORE_SUPPLEMENTAL_SESSION_ID)
+        self.assertNotEqual(HUMAN_CORE_PRIMARY_NAMESPACE, HUMAN_CORE_SUPPLEMENTAL_NAMESPACE)
+        primary_export = ROOT / "var/publication_pilot1_annotation" / HUMAN_CORE_PRIMARY_NAMESPACE / "exports" / f"{HUMAN_CORE_PRIMARY_SESSION_ID}.annotation.json"
+        supplemental_export = ROOT / "var/publication_pilot1_annotation" / HUMAN_CORE_SUPPLEMENTAL_NAMESPACE / "exports" / f"{HUMAN_CORE_SUPPLEMENTAL_SESSION_ID}.annotation.json"
+        self.assertNotEqual(primary_export, supplemental_export)
+        self.assertEqual(hashlib.sha256(primary_export.read_bytes()).hexdigest(), "9d71ae66c3218c4b8be21a3ea10b4015cb5502fce5eaf75f6bb0ac9922bc4e74")
 
 
 if __name__ == "__main__":
