@@ -8,11 +8,12 @@ import unittest
 
 from src.extraction.llm.publications.publication_relation_development_gate import (
     CLARIFIED_SOURCE_LOCAL_RELATION_IDS,
+    V015_PLAN_PATH,
     build_relation_development_gate_plan,
     write_relation_development_gate_plan,
 )
 from src.extraction.llm.publications.authority_bundle import V015
-from src.extraction.llm.publications.request_builder import canonical_json_file
+from src.extraction.llm.publications.request_builder import canonical_json, canonical_json_file, sha256_bytes
 from src.extraction.llm.publications.run_publication_full_devset0_node_development import (
     build_c1b_request,
     build_full_semantic_request,
@@ -133,6 +134,22 @@ class PublicationRelationDevelopmentGateTests(unittest.TestCase):
         self.assertIn("PUB-R-C-P34-HASCOMPONENT", plan["modelAuthorableRelationOperationalTargetIDs"])
         self.assertNotIn("D-26", plan["modelAuthorableRelationOperationalTargetIDs"])
         self.assertTrue(all(row["providerCompatibility"] == "PASS" for row in plan["units"]))
+
+    def test_tracked_v015_plan_is_current_and_hashes_its_authorities(self) -> None:
+        """A changed V015 authority cannot leave the tracked gate stale."""
+
+        plan = build_relation_development_gate_plan(V015)
+        self.assertEqual(V015_PLAN_PATH.read_bytes(), canonical_json_file(plan))
+        projection = dict(plan)
+        recorded_hash = projection.pop("planSha256")
+        self.assertEqual(recorded_hash, sha256_bytes(canonical_json(projection)))
+        self.assertEqual(plan["authorityBindings"], {
+            "targetInventorySha256": "84aa773f0a4931fafc50d27240d784b2c977ef29767f3d9e80f3f4a42ef8e6e0",
+            "candidateSchemaSha256": "5c7640e80d4f622fcf55c497235ecf2080ee4d99a45e5eca852fa08a22bab66c",
+            "promptSha256": "5f8d48d7f95192ce9ec1622a3fe8be8980573afee3f80436cc4869ec2e7bd540",
+            "ontologyVersion": "0.1.5",
+            "ontologyOwlSha256": "ce5f6d3d8ac926dc8ff872c9a36066758a86068b6681417bf7edc6aaeccf1e71",
+        })
 
 
 if __name__ == "__main__":

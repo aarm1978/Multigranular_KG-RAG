@@ -286,8 +286,16 @@ def build_relation_development_gate_plan(
         "units": units,
     }
     if authority_bundle == V015:
+        profile = load_yaml_object(authority_bundle.target_inventory_path)
         record["authorityBundleID"] = authority_bundle.identifier
         record["candidateAuthorableRelationTargetCount"] = 28
+        record["authorityBindings"] = {
+            "targetInventorySha256": sha256_bytes(authority_bundle.target_inventory_path.read_bytes()),
+            "candidateSchemaSha256": sha256_bytes(authority_bundle.candidate_schema_path.read_bytes()),
+            "promptSha256": sha256_bytes(authority_bundle.prompt_path.read_bytes()),
+            "ontologyVersion": profile["ontology"]["version"],
+            "ontologyOwlSha256": profile["ontology"]["validated_owl_sha256"],
+        }
     record["planSha256"] = sha256_bytes(canonical_json(record))
     return record
 
