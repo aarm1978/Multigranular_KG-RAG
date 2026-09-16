@@ -685,11 +685,14 @@ def _load_human_core_supplemental_contracts(root: Path, hashes: Mapping[str, str
         raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_PACKAGE_IDENTITY_MISMATCH")
     if package.get("session", {}).get("annotationSessionID") != HUMAN_CORE_SUPPLEMENTAL_SESSION_ID:
         raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_SESSION_ID_MISMATCH")
+    if package.get("session", {}).get("annotatorID") != HUMAN_CORE_PRIMARY_ANNOTATOR_ID:
+        raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_ANNOTATOR_ID_MISMATCH")
     authorities = package.get("authorities", {})
     for relative, expected in {
         "src/ontology/ontology_spec.yaml": authorities.get("ontologySpec", {}).get("sha256"),
         "src/ontology/ciroh_ontology.owl": authorities.get("ontologyOwl", {}).get("sha256"),
         "docs/publication_human_core_expert_annotation_guide.md": authorities.get("guide", {}).get("sha256"),
+        "docs/publication_human_core_supplemental_annotation_addendum_v0.1.5.md": authorities.get("supplementalGuide", {}).get("sha256"),
         "data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json": authorities.get("sampleFreeze", {}).get("sha256"),
         "data/curation/papers/m2/human_core_gold/publication_human_core_primary_annotation_baseline_v1.0.json": authorities.get("primaryBaselineRecord", {}).get("sha256"),
     }.items():
@@ -740,7 +743,10 @@ def _load_human_core_supplemental_contracts(root: Path, hashes: Mapping[str, str
             if not isinstance(candidate_id, str) or not isinstance(class_name, str):
                 raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_BASELINE_ENDPOINT_INVALID")
             endpoint_id = f"baseline:{unit_id}:{candidate_id}"
-            endpoint_rows[endpoint_id] = {"className": class_name, "artifactID": str(node.get("sourceArtifactID", unit["canonicalArtifactID"])), "displayLabel": str(node.get("label", candidate_id)), "endpointOrigin": "immutable_primary_baseline"}
+            artifact_scope = node.get("artifactScope")
+            if artifact_scope not in {"source_artifact", "external_artifact"}:
+                raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_BASELINE_ENDPOINT_ARTIFACT_SCOPE_INVALID")
+            endpoint_rows[endpoint_id] = {"className": class_name, "artifactID": str(node.get("sourceArtifactID", unit["canonicalArtifactID"])), "artifactScope": str(artifact_scope), "displayLabel": str(node.get("label", candidate_id)), "endpointOrigin": "immutable_primary_baseline"}
         endpoints[unit_id] = endpoint_rows
     expansions = {str(key): list(value) for key, value in targets.get("class_expansions", {}).items()}
     displays = {target_id: {"displayLabel": target["displayLabel"], "shortDefinition": target["shortDefinition"], "boundaryHint": target["boundaryHint"], "displayGroup": "supplemental_v015"} for target_id, target in {**nodes, **relations}.items()}

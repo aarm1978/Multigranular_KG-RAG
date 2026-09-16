@@ -7,11 +7,13 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import yaml
 
 from src.annotation.publication_pilot1.calibration import (
-    HUMAN_CORE_SUPPLEMENTAL_ANNOTATOR_ID,
+    HUMAN_CORE_PRIMARY_ANNOTATOR_ID,
     HUMAN_CORE_SUPPLEMENTAL_SESSION_ID,
 )
 from src.annotation.publication_pilot1.calibration.contracts import (
@@ -22,6 +24,7 @@ from src.annotation.publication_pilot1.calibration.contracts import (
 from src.annotation.publication_pilot1.calibration.service import AnnotationService
 from src.annotation.publication_pilot1.calibration.store import AnnotationStore
 from src.annotation.publication_pilot1.calibration.validation import validate_annotation
+from src.annotation.publication_pilot1.calibration import app as annotation_app
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -47,8 +50,8 @@ class HumanCoreSupplementalV015Tests(unittest.TestCase):
 
         package = json.loads((ROOT / HUMAN_CORE_SUPPLEMENTAL_PACKAGE_RELATIVE).read_text(encoding="utf-8"))
         self.assertEqual(package["session"]["annotationSessionID"], HUMAN_CORE_SUPPLEMENTAL_SESSION_ID)
-        self.assertEqual(package["session"]["annotatorID"], HUMAN_CORE_SUPPLEMENTAL_ANNOTATOR_ID)
-        for key in ("ontologySpec", "ontologyOwl", "guide", "sampleFreeze", "primaryBaselineRecord", "primaryBaselineExport"):
+        self.assertEqual(package["session"]["annotatorID"], HUMAN_CORE_PRIMARY_ANNOTATOR_ID)
+        for key in ("ontologySpec", "ontologyOwl", "guide", "supplementalGuide", "sampleFreeze", "primaryBaselineRecord", "primaryBaselineExport"):
             authority = package["authorities"][key]
             self.assertEqual(hashlib.sha256((ROOT / authority["path"]).read_bytes()).hexdigest(), authority["sha256"])
         self.assertEqual(package["authorities"]["ontologySpec"]["version"], "0.1.5")
@@ -108,7 +111,7 @@ class HumanCoreSupplementalV015Tests(unittest.TestCase):
             }],
         }
         with self.assertRaisesRegex(AnnotationContractError, "ANNOTATION_NODE_ACTION_NOT_ALLOWED|ANNOTATION_LINK_EXISTING_ENDPOINT_NOT_AUTHORIZED"):
-            validate_annotation(self.contracts, unit_id, payload, annotation_session_id=HUMAN_CORE_SUPPLEMENTAL_SESSION_ID, annotator_id=HUMAN_CORE_SUPPLEMENTAL_ANNOTATOR_ID)
+            validate_annotation(self.contracts, unit_id, payload, annotation_session_id=HUMAN_CORE_SUPPLEMENTAL_SESSION_ID, annotator_id=HUMAN_CORE_PRIMARY_ANNOTATOR_ID)
 
     def test_baseline_model_or_tool_can_be_used_as_a_relation_only_endpoint(self) -> None:
         """A session-local ABM may relate to a same-unit immutable baseline endpoint."""
@@ -122,9 +125,39 @@ class HumanCoreSupplementalV015Tests(unittest.TestCase):
             "nodes": [{"localID": "node-0001", "operationalTargetID": "PUB-N-A-DOM03E-AGENTBASEDMODEL", "action": "propose_new", "mentionSpan": span, "evidence": [span], "attributes": []}],
             "relations": [{"localID": "edge-0001", "operationalTargetID": "PUB-R-C-P34-HASCOMPONENT", "sourceEndpointID": "node-0001", "targetEndpointID": endpoint_id, "evidence": [span]}],
         }
-        normalized = validate_annotation(self.contracts, unit_id, payload, annotation_session_id=HUMAN_CORE_SUPPLEMENTAL_SESSION_ID, annotator_id=HUMAN_CORE_SUPPLEMENTAL_ANNOTATOR_ID)
+        normalized = validate_annotation(self.contracts, unit_id, payload, annotation_session_id=HUMAN_CORE_SUPPLEMENTAL_SESSION_ID, annotator_id=HUMAN_CORE_PRIMARY_ANNOTATOR_ID)
         self.assertEqual(normalized["relations"][0]["target"]["referenceID"], endpoint_id)
         self.assertEqual(normalized["relations"][0]["target"]["referenceType"], "deterministic_node")
+
+    def test_external_baseline_endpoint_preserves_inter_source_relation_scope(self) -> None:
+        """A primary external Tool remains external even when its artifact ID is the paper ID."""
+
+        unit_id = self.contracts.unit_order[0]
+        endpoint_id, endpoint = next((item for item in self.contracts.baseline_endpoints(unit_id).items() if item[1]["className"] == "Tool" and item[1]["artifactScope"] == "external_artifact"))
+        text = self.contracts.source_text(unit_id)
+        span = {"sourceUnitID": unit_id, "sourceUnitTextHash": self.contracts.units_by_id[unit_id]["textHash"], "startOffset": 0, "endOffset": 1, "exactText": text[:1]}
+        payload = {"workflowState": "relation_pass", "targetStates": [], "uncertainties": [], "nodes": [{"localID": "node-0001", "operationalTargetID": "PUB-N-A-DOM03E-AGENTBASEDMODEL", "action": "propose_new", "mentionSpan": span, "evidence": [span], "attributes": []}], "relations": [{"localID": "edge-0001", "operationalTargetID": "PUB-R-C-P34-HASCOMPONENT", "sourceEndpointID": "node-0001", "targetEndpointID": endpoint_id, "evidence": [span]}]}
+        normalized = validate_annotation(self.contracts, unit_id, payload, annotation_session_id=HUMAN_CORE_SUPPLEMENTAL_SESSION_ID, annotator_id=HUMAN_CORE_PRIMARY_ANNOTATOR_ID)
+        self.assertEqual(endpoint["artifactScope"], "external_artifact")
+        self.assertEqual(normalized["relations"][0]["relationScope"], "inter_source")
+
+    def test_mode_session_and_handbook_bindings_fail_closed(self) -> None:
+        """Each Human Core mode accepts only its own session and authority hash."""
+
+        base = {"activation_file": None, "host": "127.0.0.1", "port": 8766}
+        for mode, session in (("human-core", HUMAN_CORE_SUPPLEMENTAL_SESSION_ID), ("human-core-supplemental", "HUMAN_CORE_N5_PRIMARY_V1")):
+            with self.assertRaisesRegex(AnnotationContractError, "IDENTITY_MISMATCH"):
+                annotation_app.build_service(SimpleNamespace(**base, mode=mode, annotation_session_id=session, annotator_id=HUMAN_CORE_PRIMARY_ANNOTATOR_ID))
+        captured: dict[str, object] = {}
+
+        def fake_store(*args: object, **kwargs: object) -> object:
+            captured.update(kwargs); return object()
+
+        with patch.object(annotation_app, "AnnotationStore", side_effect=fake_store):
+            annotation_app.build_service(SimpleNamespace(**base, mode="human-core-supplemental", annotation_session_id=HUMAN_CORE_SUPPLEMENTAL_SESSION_ID, annotator_id=HUMAN_CORE_PRIMARY_ANNOTATOR_ID))
+        bindings = captured["bindings"]
+        self.assertEqual(bindings["annotationHandbookHash"], "c937a86bfe2a920dac0ad0b7c9f16cc863f2c2ece68cd65e5b3bfa7aef2ba56e")
+        self.assertEqual(bindings["supplementalGuideHash"], "9f0cdfbc73ec3ce68f27fb87a3e588325fa1800e6dd65d50dc29e5ed120cbfec")
 
     def test_service_exposes_baseline_endpoints_without_mutating_primary_export(self) -> None:
         """UI contract exposes relation endpoints while the preserved primary bytes remain exact."""
@@ -133,7 +166,7 @@ class HumanCoreSupplementalV015Tests(unittest.TestCase):
         path = ROOT / package["authorities"]["primaryBaselineExport"]["path"]
         before = hashlib.sha256(path.read_bytes()).hexdigest()
         with tempfile.TemporaryDirectory() as temporary:
-            store = AnnotationStore(Path(temporary) / "supplemental.sqlite3", mode="human-core-supplemental", annotation_session_id=HUMAN_CORE_SUPPLEMENTAL_SESSION_ID, annotator_id=HUMAN_CORE_SUPPLEMENTAL_ANNOTATOR_ID, bindings={"fixture": "supplemental-v015"})
+            store = AnnotationStore(Path(temporary) / "supplemental.sqlite3", mode="human-core-supplemental", annotation_session_id=HUMAN_CORE_SUPPLEMENTAL_SESSION_ID, annotator_id=HUMAN_CORE_PRIMARY_ANNOTATOR_ID, bindings={"fixture": "supplemental-v015"})
             try:
                 unit = AnnotationService(self.contracts, store, Path(temporary) / "exports").unit(self.contracts.unit_order[0], record_open=False)
             finally:

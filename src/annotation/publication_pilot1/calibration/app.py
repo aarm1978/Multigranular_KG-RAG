@@ -22,11 +22,7 @@ from .contracts import (
     load_annotation_contracts,
     verify_production_activation,
 )
-from . import (
-    HUMAN_CORE_SUPPLEMENTAL_ANNOTATOR_ID,
-    HUMAN_CORE_SUPPLEMENTAL_SESSION_ID,
-    human_core_session_namespace,
-)
+from . import HUMAN_CORE_PRIMARY_SESSION_ID, HUMAN_CORE_SUPPLEMENTAL_SESSION_ID, human_core_session_namespace
 from .service import AnnotationService
 from .store import AnnotationStore
 
@@ -83,7 +79,7 @@ def make_handler(service: AnnotationService) -> type[BaseHTTPRequestHandler]:
                 if parsed.path == "/api/bootstrap":
                     self._json(HTTPStatus.OK, service.bootstrap()); return
                 if parsed.path == "/handbook":
-                    handbook = "docs/publication_human_core_expert_annotation_guide.md" if service.contracts.mode in {"human-core", "human-core-supplemental"} else "docs/publication_pilot1_annotation_calibration_handbook.md"
+                    handbook = "docs/publication_human_core_supplemental_annotation_addendum_v0.1.5.md" if service.contracts.mode == "human-core-supplemental" else ("docs/publication_human_core_expert_annotation_guide.md" if service.contracts.mode == "human-core" else "docs/publication_pilot1_annotation_calibration_handbook.md")
                     body = (service.contracts.root / handbook).read_bytes()
                     self.send_response(HTTPStatus.OK)
                     self.send_header("Content-Type", "text/markdown; charset=utf-8")
@@ -152,12 +148,12 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
 
     root = repository_root()
     if args.mode in {"human-core", "human-core-supplemental"}:
-        expected_annotator = HUMAN_CORE_PRIMARY_ANNOTATOR_ID if args.mode == "human-core" else HUMAN_CORE_SUPPLEMENTAL_ANNOTATOR_ID
-        expected_session = None if args.mode == "human-core" else HUMAN_CORE_SUPPLEMENTAL_SESSION_ID
+        expected_annotator = HUMAN_CORE_PRIMARY_ANNOTATOR_ID
+        expected_session = HUMAN_CORE_PRIMARY_SESSION_ID if args.mode == "human-core" else HUMAN_CORE_SUPPLEMENTAL_SESSION_ID
         if args.annotator_id != expected_annotator:
             raise AnnotationContractError("HUMAN_CORE_PRIMARY_IDENTITY_MISMATCH" if args.mode == "human-core" else "HUMAN_CORE_SUPPLEMENTAL_IDENTITY_MISMATCH")
-        if expected_session is not None and args.annotation_session_id != expected_session:
-            raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_IDENTITY_MISMATCH")
+        if args.annotation_session_id != expected_session:
+            raise AnnotationContractError("HUMAN_CORE_PRIMARY_IDENTITY_MISMATCH" if args.mode == "human-core" else "HUMAN_CORE_SUPPLEMENTAL_IDENTITY_MISMATCH")
         try:
             human_core_session_namespace(args.annotation_session_id)
         except ValueError as exc:
@@ -179,7 +175,7 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
         "routingHash": contracts.hashes["data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl"],
         "routingSchemaHash": contracts.hashes["schemas/publication_pilot1_unit_routing.schema.json"],
         "targetInventoryHash": contracts.hashes["src/extraction/llm/publications/publication_target_inventory.yaml"],
-        "annotationHandbookHash": sha256_file(root / ("docs/publication_human_core_expert_annotation_guide.md" if args.mode == "human-core" else "docs/publication_pilot1_annotation_calibration_handbook.md")),
+        "annotationHandbookHash": sha256_file(root / ("docs/publication_human_core_expert_annotation_guide.md" if args.mode in {"human-core", "human-core-supplemental"} else "docs/publication_pilot1_annotation_calibration_handbook.md")),
         "annotationSchemaHash": sha256_file(root / "schemas/publication_pilot1_annotation_record.schema.json"),
         "canonicalDocumentHashesHash": canonical_json_hash(dict(contracts.canonical_document_hashes)),
         "phaseBArtifactHash": contracts.hashes["data/interim/papers/publication_nodes_edges.json"],
@@ -194,6 +190,7 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
         if args.mode == "human-core-supplemental":
             bindings["supplementalPackageHash"] = sha256_file(root / HUMAN_CORE_SUPPLEMENTAL_PACKAGE_RELATIVE)
             bindings["primaryBaselineExportHash"] = str(package["authorities"]["primaryBaselineExport"]["sha256"])
+            bindings["supplementalGuideHash"] = str(package["authorities"]["supplementalGuide"]["sha256"])
     if activation_payload is not None:
         bindings["activationHash"] = canonical_json_hash(activation_payload)
         bindings["packageBuildCheckpoint"] = str(activation_payload["packageBuildCheckpoint"])

@@ -4,7 +4,7 @@
   "status": "prepared_for_researcher_supplemental_review; no_annotations_created",
   "session": {
     "annotationSessionID": "HUMAN_CORE_N5_SUPPLEMENTAL_V015",
-    "annotatorID": "HUMAN_CORE_SUPPLEMENTAL_RESEARCHER",
+    "annotatorID": "HUMAN_CORE_PRIMARY_RESEARCHER",
     "mode": "human-core-supplemental",
     "stateNamespace": "human-core/supplemental-researcher"
   },
@@ -12,6 +12,7 @@
     "ontologySpec": {"path": "src/ontology/ontology_spec.yaml", "version": "0.1.5", "sha256": "eac8ec2e0eeec380d05e75c804dc386e9e8aaf8f443b79e20a25a163e513efc5"},
     "ontologyOwl": {"path": "src/ontology/ciroh_ontology.owl", "version": "0.1.5", "sha256": "ce5f6d3d8ac926dc8ff872c9a36066758a86068b6681417bf7edc6aaeccf1e71"},
     "guide": {"path": "docs/publication_human_core_expert_annotation_guide.md", "version": "1.1", "sha256": "c937a86bfe2a920dac0ad0b7c9f16cc863f2c2ece68cd65e5b3bfa7aef2ba56e"},
+    "supplementalGuide": {"path": "docs/publication_human_core_supplemental_annotation_addendum_v0.1.5.md", "version": "0.1.5", "sha256": "9f0cdfbc73ec3ce68f27fb87a3e588325fa1800e6dd65d50dc29e5ed120cbfec"},
     "sampleFreeze": {"path": "data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json", "sha256": "0005a1c37f3eb7597651a7bee898098a0cd71e29c15464c36a06dffe19b486e0"},
     "primaryBaselineRecord": {"path": "data/curation/papers/m2/human_core_gold/publication_human_core_primary_annotation_baseline_v1.0.json", "sha256": "377610a7dbd4ffca587e76942c4438e53a7d28d535aea4d0aa8daae4044e02cc"},
     "primaryBaselineExport": {"path": "var/publication_pilot1_annotation/human-core/primary-researcher/exports/HUMAN_CORE_N5_PRIMARY_V1.annotation.json", "sha256": "9d71ae66c3218c4b8be21a3ea10b4015cb5502fce5eaf75f6bb0ac9922bc4e74", "immutable": true}

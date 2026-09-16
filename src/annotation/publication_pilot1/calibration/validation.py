@@ -227,7 +227,7 @@ def _endpoint(
         item = deterministic[endpoint_id]
         return (
             {"referenceType": "deterministic_node", "referenceID": endpoint_id, "artifactID": item["artifactID"]},
-            item["className"], item["artifactID"] != source_artifact_id,
+            item["className"], item.get("artifactScope") == "external_artifact" if "artifactScope" in item else item["artifactID"] != source_artifact_id,
         )
     raise AnnotationContractError(f"ANNOTATION_RELATION_ENDPOINT_UNKNOWN:{endpoint_id}")
 
