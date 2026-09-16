@@ -7,6 +7,7 @@ from contextlib import redirect_stdout, redirect_stderr
 from io import StringIO
 import json
 from unittest.mock import patch
+from collections import Counter
 
 from src.annotation.publication_pilot1.human_core_reference_composition import compose_human_core_reference
 from src.extraction.llm.publications.authority_bundle import V015
@@ -78,6 +79,25 @@ class PublicationV015AuthorityBundleTests(unittest.TestCase):
             profile["cross_category_targets"][0]["operational_id"],
             "PUB-N-A-AG02-ORGANIZATION-PROSE",
         )
+
+    def test_all_stored_count_summaries_match_actual_inventory_rows(self) -> None:
+        """V015 count metadata is derived from, and agrees with, target rows."""
+
+        profile = load_yaml_object(V015.target_inventory_path)
+        expected = {
+            "nodes": Counter(row["pilot_treatment"] for row in profile["node_targets"]),
+            "relations": Counter(row["pilot_treatment"] for row in profile["relation_targets"]),
+        }
+        legacy = profile["counts"]
+        for kind, rows_key, legacy_key in (
+            ("nodes", "node_targets", "nodes_by_treatment"),
+            ("relations", "relation_targets", "relations_by_treatment"),
+        ):
+            actual = expected[kind]
+            self.assertEqual(profile["operational_row_counts"][kind]["total"], len(profile[rows_key]))
+            self.assertEqual(dict(profile["operational_row_counts"][kind]["by_pilot_treatment"]), dict(actual))
+            self.assertEqual(legacy[f"{kind[:-1]}_operational_rows"], len(profile[rows_key]))
+            self.assertEqual(dict(legacy[legacy_key]), dict(actual))
 
     def test_cli_requires_authority_and_prepares_v015_without_network(self) -> None:
         """The real CLI cannot silently choose V014 for a full-semantic run."""

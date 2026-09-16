@@ -15,6 +15,7 @@ from src.extraction.llm.publications.evidence_coordinate_guide import (
 )
 from src.extraction.llm.publications.openai_provider import MAX_OUTPUT_TOKENS
 from src.extraction.llm.publications.request_builder import canonical_json
+from src.extraction.llm.publications.authority_bundle import V014, V015
 from src.extraction.llm.publications.openai_provider import OpenAIProviderResponseError
 from src.extraction.llm.publications.run_publication_coordinate_guided_development_smoke import (
     build_m2b3_request,
@@ -47,6 +48,22 @@ from src.extraction.llm.publications.run_publication_full_devset0_node_developme
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _write_authorized_full_attempt(
+    path: Path, payload: dict[str, object], *, authority_bundle=V014
+) -> bytes:
+    """Write a synthetic lifecycle fixture with its matching persisted request."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    attempt = {**payload, "authorityBundleID": authority_bundle.identifier}
+    path.write_text(json.dumps(attempt, sort_keys=True) + "\n", encoding="utf-8")
+    request_name = path.name.replace("_attempt_record.json", "_live_request.json")
+    (path.parent / request_name).write_text(
+        json.dumps({"authorityBundleID": authority_bundle.identifier}, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return path.read_bytes()
 
 
 class FullDevset0NodeDevelopmentTests(unittest.TestCase):
@@ -368,9 +385,7 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output_dir = Path(directory)
             prior_path = output_dir / "DEV-02/publication_full_semantic_dev02_attempt_record.json"
-            prior_path.parent.mkdir(parents=True)
-            prior_path.write_text(json.dumps({"developmentID": "DEV-02", "attemptCount": 1, "status": "initiated", "providerInputSha256": "prior"}, sort_keys=True) + "\n")
-            prior_bytes = prior_path.read_bytes()
+            prior_bytes = _write_authorized_full_attempt(prior_path, {"developmentID": "DEV-02", "attemptCount": 1, "status": "initiated", "providerInputSha256": "prior"})
             result = run_unresolved_attempt_recovery("DEV-02", "synthetic-secret", output_dir=output_dir, transport=create)
             recovery_attempt = next((output_dir / "DEV-02/researcher_authorized_recovery_001").rglob("*_attempt_record.json"))
             recovery = json.loads(recovery_attempt.read_text())
@@ -386,10 +401,8 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
             output_dir = Path(directory)
             root = output_dir / "DEV-02/publication_full_semantic_dev02_attempt_record.json"
             second = output_dir / "DEV-02/researcher_authorized_recovery_001/DEV-02/publication_full_semantic_dev02_attempt_record.json"
-            root.parent.mkdir(parents=True); second.parent.mkdir(parents=True)
-            root.write_bytes(b'{"attemptCount":1,"status":"initiated"}\n')
-            second.write_bytes(b'{"attemptCount":2,"responseID":"resp_attempt_2","status":"incomplete"}\n')
-            root_bytes, second_bytes = root.read_bytes(), second.read_bytes()
+            root_bytes = _write_authorized_full_attempt(root, {"attemptCount": 1, "status": "initiated"})
+            second_bytes = _write_authorized_full_attempt(second, {"attemptCount": 2, "responseID": "resp_attempt_2", "status": "incomplete"})
             resolved = resolve_next_recovery_attempt(output_dir, "DEV-02")
             self.assertEqual(resolved["recoveryRoot"], output_dir / "DEV-02/researcher_authorized_recovery_002")
             self.assertEqual(resolved["attemptCount"], 3)
@@ -406,11 +419,36 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output_dir = Path(directory)
             attempt = output_dir / "DEV-02/publication_full_semantic_dev02_attempt_record.json"
-            attempt.parent.mkdir(parents=True)
-            attempt.write_text('{"attemptCount":1,"responseID":"resp_submitted","status":"submitted"}\n')
+            _write_authorized_full_attempt(attempt, {"attemptCount": 1, "responseID": "resp_submitted", "status": "submitted"})
             with self.assertRaisesRegex(ValueError, "exact-response resumption"):
                 resolve_next_recovery_attempt(output_dir, "DEV-02")
             self.assertFalse((output_dir / "DEV-02/researcher_authorized_recovery_001").exists())
+
+    def test_missing_persisted_authority_fails_closed(self) -> None:
+        """A legacy-shaped synthetic record cannot enter the new lifecycle."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            attempt = output_dir / "DEV-02/publication_full_semantic_dev02_attempt_record.json"
+            attempt.parent.mkdir(parents=True)
+            attempt.write_text('{"attemptCount":1,"status":"initiated"}\n')
+            with self.assertRaisesRegex(ValueError, "authority bundle"):
+                resolve_next_recovery_attempt(output_dir, "DEV-02")
+
+    def test_attempt_request_and_selected_authorities_must_match(self) -> None:
+        """Lifecycle selection cannot silently cross authority bundles."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            attempt = output_dir / "DEV-02/publication_full_semantic_dev02_attempt_record.json"
+            _write_authorized_full_attempt(attempt, {"attemptCount": 1, "status": "initiated"})
+            request = attempt.with_name(attempt.name.replace("_attempt_record.json", "_live_request.json"))
+            request.write_text('{"authorityBundleID":"publication-semantic-v0.1.5"}\n')
+            with self.assertRaisesRegex(ValueError, "request authority bundle"):
+                resolve_next_recovery_attempt(output_dir, "DEV-02")
+            _write_authorized_full_attempt(attempt, {"attemptCount": 1, "status": "initiated"})
+            with self.assertRaisesRegex(ValueError, "attempt authority bundle"):
+                resolve_next_recovery_attempt(output_dir, "DEV-02", authority_bundle=V015)
 
     def test_completed_attempt_resolves_one_immutable_remedy_b_verification(self) -> None:
         """A completed attempt creates one separate, exactly linked verification location."""
@@ -421,13 +459,9 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
             attempt1 = root / "publication_full_semantic_dev02_attempt_record.json"
             attempt2 = root / "researcher_authorized_recovery_001/DEV-02/publication_full_semantic_dev02_attempt_record.json"
             attempt3 = root / "researcher_authorized_recovery_002/DEV-02/publication_full_semantic_dev02_attempt_record.json"
-            attempt1.parent.mkdir(parents=True)
-            attempt2.parent.mkdir(parents=True)
-            attempt3.parent.mkdir(parents=True)
-            attempt1.write_bytes(b'{"attemptCount":1,"status":"initiated"}\n')
-            attempt2.write_bytes(b'{"attemptCount":2,"responseID":"resp_attempt_2","status":"incomplete"}\n')
-            attempt3.write_bytes(b'{"attemptCount":3,"responseID":"resp_attempt_3","status":"completed"}\n')
-            prior_bytes = attempt3.read_bytes()
+            _write_authorized_full_attempt(attempt1, {"attemptCount": 1, "status": "initiated"})
+            _write_authorized_full_attempt(attempt2, {"attemptCount": 2, "responseID": "resp_attempt_2", "status": "incomplete"})
+            prior_bytes = _write_authorized_full_attempt(attempt3, {"attemptCount": 3, "responseID": "resp_attempt_3", "status": "completed"})
 
             resolved = resolve_next_verification_attempt(output_dir, "DEV-02")
 
@@ -447,8 +481,7 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output_dir = Path(directory)
             attempt = output_dir / "DEV-02/publication_full_semantic_dev02_attempt_record.json"
-            attempt.parent.mkdir(parents=True)
-            attempt.write_text('{"attemptCount":1,"status":"completed"}\n')
+            _write_authorized_full_attempt(attempt, {"attemptCount": 1, "status": "completed"})
             with self.assertRaisesRegex(ValueError, "not eligible for a new recovery"):
                 resolve_next_recovery_attempt(output_dir, "DEV-02")
 
@@ -458,9 +491,7 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output_dir = Path(directory)
             prior = output_dir / "DEV-02/researcher_authorized_verification_001/DEV-02/publication_full_semantic_dev02_attempt_record.json"
-            prior.parent.mkdir(parents=True)
-            prior.write_bytes(b'{"attemptCount":4,"modelAuthorableSchemaSha256":"schema-sha","providerInputSha256":"input-sha","responseID":"resp_attempt_4","status":"completed"}\n')
-            prior_bytes = prior.read_bytes()
+            prior_bytes = _write_authorized_full_attempt(prior, {"attemptCount": 4, "modelAuthorableSchemaSha256": "schema-sha", "providerInputSha256": "input-sha", "responseID": "resp_attempt_4", "status": "completed"})
             resolved = resolve_next_retest_attempt(output_dir, "DEV-02")
             self.assertEqual(resolved["retestRoot"], output_dir / "DEV-02/researcher_authorized_retest_001")
             self.assertEqual(resolved["attemptCount"], 5)
@@ -486,8 +517,7 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output_dir = Path(directory)
             prior = output_dir / "DEV-02/researcher_authorized_verification_001/DEV-02/publication_full_semantic_dev02_attempt_record.json"
-            prior.parent.mkdir(parents=True)
-            prior.write_text(json.dumps({"attemptCount": 4, "status": "completed", "responseID": "resp_attempt_4", "providerInputSha256": "wrong-input", "modelAuthorableSchemaSha256": "wrong-schema"}) + "\n")
+            _write_authorized_full_attempt(prior, {"attemptCount": 4, "status": "completed", "responseID": "resp_attempt_4", "providerInputSha256": "wrong-input", "modelAuthorableSchemaSha256": "wrong-schema"})
             with self.assertRaisesRegex(ValueError, "configuration identity gate failed"):
                 run_researcher_authorized_retest("DEV-02", "synthetic-secret", output_dir=output_dir, transport=transport)
             self.assertFalse((output_dir / "DEV-02/researcher_authorized_retest_001/DEV-02/publication_full_semantic_dev02_attempt_record.json").exists())

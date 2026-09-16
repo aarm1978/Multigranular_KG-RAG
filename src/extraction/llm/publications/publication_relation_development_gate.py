@@ -1,6 +1,6 @@
 """Build the deterministic no-call Publication relation-gate run plan.
 
-The record is prospective.  It derives the 26-relation universe and all request/schema
+The record is prospective. It derives the selected bundle's relation universe and request/schema
 measurements from current frozen authorities, makes no provider call, and does not
 alter any historical development artifact.
 """
@@ -72,7 +72,7 @@ CLARIFIED_SOURCE_LOCAL_RELATION_IDS = (
 
 
 def _relation_rows(authority_bundle: PublicationAuthorityBundle = V014) -> list[dict[str, Any]]:
-    """Return exact profile rows for the current 26-relation universe."""
+    """Return exact profile rows for the selected relation universe."""
 
     profile = load_yaml_object(authority_bundle.target_inventory_path)
     indexed = {

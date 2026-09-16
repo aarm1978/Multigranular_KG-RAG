@@ -418,20 +418,20 @@ pilot_sample:
 - '87'
 - 87-corrigendum
 counts:
-  node_operational_rows: 61
-  relation_operational_rows: 44
+  node_operational_rows: 62
+  relation_operational_rows: 45
   nodes_by_treatment:
     required_infrastructure: 5
     context_only: 9
-    out_of_scope: 5
+    out_of_scope: 4
     extract_and_monitor: 21
-    extract_and_evaluate: 19
+    extract_and_evaluate: 21
     deferred_resolution: 2
   relations_by_treatment:
     required_infrastructure: 5
     context_only: 8
     out_of_scope: 3
-    extract_and_evaluate: 16
+    extract_and_evaluate: 17
     extract_and_monitor: 10
     separate_follow_on_protocol: 1
     deferred_resolution: 1

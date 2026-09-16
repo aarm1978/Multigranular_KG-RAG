@@ -1235,7 +1235,7 @@ def resolve_next_recovery_attempt(
     )
     if not paths["attempt"].exists():
         raise ValueError(f"{development_id} has no unresolved attempt to recover")
-    candidates = [(0, paths["attempt"], paths["unitDir"])]
+    candidates = [(0, paths["attempt"], output_dir)]
     pattern = re.compile(r"researcher_authorized_recovery_(\d{3})$")
     for child in sorted(paths["unitDir"].iterdir() if paths["unitDir"].exists() else []):
         match = pattern.match(child.name)
@@ -1304,7 +1304,7 @@ def resolve_next_verification_attempt(
     )
     if not paths["attempt"].exists():
         raise ValueError(f"{development_id} has no completed attempt to verify")
-    candidates = [(0, paths["attempt"], paths["unitDir"])]
+    candidates = [(0, paths["attempt"], output_dir)]
     recovery_pattern = re.compile(r"researcher_authorized_recovery_(\d{3})$")
     verification_pattern = re.compile(r"researcher_authorized_verification_(\d{3})$")
     for child in sorted(paths["unitDir"].iterdir() if paths["unitDir"].exists() else []):
@@ -1832,7 +1832,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--full-semantic",
         action="store_true",
-        help="prospectively expose 40 nodes plus the frozen 26 relations",
+        help="prospectively expose the selected bundle's direct nodes and model-authorable relations",
     )
     args = parser.parse_args(argv)
     actions = sum(
