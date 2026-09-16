@@ -83,7 +83,7 @@ def make_handler(service: AnnotationService) -> type[BaseHTTPRequestHandler]:
                 if parsed.path == "/api/bootstrap":
                     self._json(HTTPStatus.OK, service.bootstrap()); return
                 if parsed.path == "/handbook":
-                    handbook = "docs/publication_human_core_expert_annotation_guide.md" if service.contracts.mode == "human-core" else "docs/publication_pilot1_annotation_calibration_handbook.md"
+                    handbook = "docs/publication_human_core_expert_annotation_guide.md" if service.contracts.mode in {"human-core", "human-core-supplemental"} else "docs/publication_pilot1_annotation_calibration_handbook.md"
                     body = (service.contracts.root / handbook).read_bytes()
                     self.send_response(HTTPStatus.OK)
                     self.send_header("Content-Type", "text/markdown; charset=utf-8")
