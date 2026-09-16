@@ -115,6 +115,11 @@ class AnnotationStore:
         if existed:
             for key, value in expected.items():
                 stored = self.metadata(key)
+                if mode == "human-core" and key in {
+                    "guidelineVersion", "handbookVersion", "annotationHandbookHash",
+                    "guideAuthorityVersion", "guideAuthorityHash",
+                }:
+                    continue
                 legacy_version = (
                     key in {"interfaceVersion", "annotationSchemaVersion"}
                     and self.metadata("interfaceVersion") == LEGACY_INTERFACE_VERSION
@@ -148,6 +153,25 @@ class AnnotationStore:
             (key, value),
         )
 
+    def guide_handbook_versions(self) -> tuple[str, str]:
+        """Return the immutable guide and handbook versions persisted for this session."""
+
+        guideline = self.metadata("guidelineVersion")
+        handbook = self.metadata("handbookVersion")
+        if not guideline or not handbook:
+            raise AnnotationContractError("ANNOTATION_SESSION_GUIDE_HANDBOOK_METADATA_MISSING")
+        return guideline, handbook
+
+    def _assert_payload_guide_handbook_versions(self, payload: Mapping[str, Any]) -> None:
+        """Fail closed when a record disagrees with persisted session authority."""
+
+        guideline, handbook = self.guide_handbook_versions()
+        if (
+            payload.get("guidelineVersion") != guideline
+            or payload.get("handbookVersion") != handbook
+        ):
+            raise AnnotationContractError("ANNOTATION_SESSION_GUIDE_HANDBOOK_VERSION_MISMATCH")
+
     def load(self, source_unit_id: str) -> dict[str, Any] | None:
         """Load this session's draft for one unit."""
 
@@ -176,6 +200,7 @@ class AnnotationStore:
     def save(self, source_unit_id: str, payload: Mapping[str, Any], *, action: str = "autosave") -> dict[str, Any]:
         """Append an immutable revision and update the current draft pointer."""
 
+        self._assert_payload_guide_handbook_versions(payload)
         previous = self.connection.execute(
             "SELECT status,revision_number FROM drafts WHERE source_unit_id=?", (source_unit_id,)
         ).fetchone()
@@ -201,6 +226,7 @@ class AnnotationStore:
     def submit(self, source_unit_id: str, payload: Mapping[str, Any]) -> dict[str, Any]:
         """Create an immutable submission snapshot without overwriting prior submissions."""
 
+        self._assert_payload_guide_handbook_versions(payload)
         saved = self.save(source_unit_id, payload, action="submit_revision")
         revision, now = int(saved["persistence"]["revisionNumber"]), self.clock()
         serialized = json.dumps(dict(payload), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
@@ -358,6 +384,7 @@ class AnnotationStore:
     def export_payload(self) -> dict[str, Any]:
         """Build a deterministic session-scoped annotations, audit, and timing export."""
 
+        guideline_version, handbook_version = self.guide_handbook_versions()
         annotations = [{
             "sourceUnitID": row["source_unit_id"], "status": row["status"],
             "revisionNumber": row["revision_number"], "updatedAt": row["updated_at"],
@@ -385,7 +412,10 @@ class AnnotationStore:
             "annotationSessionID": self.annotation_session_id, "annotatorID": self.annotator_id,
             "mode": self.mode, "interfaceVersion": self.metadata("interfaceVersion") or INTERFACE_VERSION,
             "annotationSchemaVersion": self.metadata("annotationSchemaVersion") or ANNOTATION_OUTPUT_SCHEMA_VERSION,
-            "guidelineVersion": metadata_versions(self.mode)[0], "handbookVersion": metadata_versions(self.mode)[1],
+            "guidelineVersion": guideline_version,
+            "handbookVersion": handbook_version,
+            "guideAuthorityVersion": self.metadata("guideAuthorityVersion"),
+            "guideAuthorityHash": self.metadata("guideAuthorityHash"),
             "routingVersion": ROUTING_VERSION,
             "contextPolicyName": CONTEXT_POLICY_NAME, "contextPolicyVersion": CONTEXT_POLICY_VERSION,
             "annotations": annotations,

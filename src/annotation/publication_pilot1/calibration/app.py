@@ -174,6 +174,11 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
         "phaseBArtifactHash": contracts.hashes["data/interim/papers/publication_nodes_edges.json"],
         "annotationMVPBaseCheckpoint": ANNOTATION_MVP_BASE_CHECKPOINT,
     }
+    if args.mode == "human-core":
+        package = json.loads((root / "data/curation/papers/m2/human_core_gold/publication_human_core_primary_annotation_package_v1.1.json").read_text(encoding="utf-8"))
+        guide = package["guide"]
+        bindings["guideAuthorityVersion"] = str(guide["version"])
+        bindings["guideAuthorityHash"] = str(guide["sha256"])
     if activation_payload is not None:
         bindings["activationHash"] = canonical_json_hash(activation_payload)
         bindings["packageBuildCheckpoint"] = str(activation_payload["packageBuildCheckpoint"])

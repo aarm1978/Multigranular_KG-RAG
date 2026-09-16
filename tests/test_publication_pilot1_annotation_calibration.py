@@ -348,6 +348,55 @@ try{o.codePointOffsetFromUtf16('A😀B',2);process.exit(5)}catch(e){if(e.message
         self.assertEqual(reopened.load(self.unit_id)["annotationSchemaVersion"], "0.1.1")
         self.assertEqual(reopened.export_payload()["annotationSchemaVersion"], "0.1.1")
 
+    def test_human_core_export_uses_persisted_guide_authority_metadata(self) -> None:
+        """Human Core export roots read guide authority from immutable session metadata."""
+
+        store = AnnotationStore(
+            self.runtime / "human-core.sqlite3", mode="human-core", annotation_session_id="human-core",
+            annotator_id="annotator-a", bindings={
+                "guideAuthorityVersion": "1.1", "guideAuthorityHash": "a" * 64,
+            }, clock=MinuteClock(),
+        )
+        self.addCleanup(store.close)
+        store.connection.execute("UPDATE metadata SET value=? WHERE key='guidelineVersion'", ("1.0",))
+        store.connection.execute("UPDATE metadata SET value=? WHERE key='handbookVersion'", ("1.0",))
+        store.connection.execute("UPDATE metadata SET value=? WHERE key='guideAuthorityVersion'", ("1.0",))
+        store.connection.execute("UPDATE metadata SET value=? WHERE key='guideAuthorityHash'", ("b" * 64,))
+        store.connection.commit()
+        exported = store.export_payload()
+        self.assertEqual((exported["guidelineVersion"], exported["handbookVersion"]), ("1.0", "1.0"))
+        self.assertEqual((exported["guideAuthorityVersion"], exported["guideAuthorityHash"]), ("1.0", "b" * 64))
+
+    def test_human_core_runtime_guide_mismatch_fails_closed_before_save_or_submit(self) -> None:
+        """Mutable runtime guide constants cannot write a record under another session authority."""
+
+        contracts = load_annotation_contracts(ROOT, mode="human-core")
+        unit_id = contracts.unit_order[0]
+        store = AnnotationStore(
+            self.runtime / "human-core-mismatch.sqlite3", mode="human-core",
+            annotation_session_id="human-core-mismatch", annotator_id="annotator-a",
+            bindings={"guideAuthorityVersion": "1.1", "guideAuthorityHash": "a" * 64}, clock=MinuteClock(),
+        )
+        self.addCleanup(store.close)
+        service = AnnotationService(contracts, store, self.runtime / "exports")
+        payload = {"workflowState": "node_pass", "nodes": [], "relations": [], "targetStates": [], "uncertainties": []}
+        with patch("src.annotation.publication_pilot1.calibration.validation.metadata_versions", return_value=("9.9", "9.9")):
+            with self.assertRaisesRegex(AnnotationContractError, "ANNOTATION_SESSION_GUIDE_HANDBOOK_VERSION_MISMATCH"):
+                service.save(unit_id, payload)
+        with self.assertRaisesRegex(AnnotationContractError, "ANNOTATION_SESSION_GUIDE_HANDBOOK_VERSION_MISMATCH"):
+            store.submit(unit_id, {"guidelineVersion": "9.9", "handbookVersion": "9.9"})
+        self.assertIsNone(store.load(unit_id))
+        self.assertEqual(store.connection.execute("SELECT COUNT(*) FROM submissions").fetchone()[0], 0)
+
+    def test_historical_human_core_primary_export_hash_remains_unchanged(self) -> None:
+        """The completed Human Core primary export is an immutable historical artifact."""
+
+        path = ROOT / "var/publication_pilot1_annotation/human-core/primary-researcher/exports/HUMAN_CORE_N5_PRIMARY_V1.annotation.json"
+        self.assertEqual(
+            hashlib.sha256(path.read_bytes()).hexdigest(),
+            "9d71ae66c3218c4b8be21a3ea10b4015cb5502fce5eaf75f6bb0ac9922bc4e74",
+        )
+
     def test_composite_mention_save_submit_reopen_export_round_trip(self) -> None:
         """Autosave, immutable submission, reopen, and export retain each mention fragment."""
 

@@ -113,7 +113,7 @@ class AnnotationService:
             "annotatorID": self.store.annotator_id,
             "versions": {
                 "interfaceVersion": INTERFACE_VERSION, "annotationSchemaVersion": ANNOTATION_OUTPUT_SCHEMA_VERSION,
-                "guidelineVersion": metadata_versions(self.contracts.mode)[0], "handbookVersion": metadata_versions(self.contracts.mode)[1],
+                "guidelineVersion": self.store.guide_handbook_versions()[0], "handbookVersion": self.store.guide_handbook_versions()[1],
                 "routingVersion": ROUTING_VERSION,
             },
             "units": [{

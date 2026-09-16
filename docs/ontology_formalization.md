@@ -634,7 +634,8 @@ researcher confirmed zero named unsatisfiable classes under `owl:Nothing`.
 
 Third-party import-resolution or parser/loading warnings, if emitted by the Protégé
 environment, are distinct from CIROH ontology errors and do not alter this result. The
-formal finding concerns the exact CIROH ontology artifact and its resolved import closure.
+formal finding concerns the exact CIROH ontology artifact and the import configuration
+available for the manual run; it does not claim a fully resolved import closure.
 Ontology 0.1.5 is formally frozen; any future downstream authority migration must preserve
 the historical authorities of existing artifacts.
 
