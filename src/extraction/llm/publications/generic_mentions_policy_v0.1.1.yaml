@@ -1,5 +1,5 @@
 policy_id: publication-generic-mentions-materialization
-policy_version: 0.1.0
+policy_version: 0.1.1
 status: approved_operational
 ontology:
   version: 0.1.5

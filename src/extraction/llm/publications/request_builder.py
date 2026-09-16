@@ -176,13 +176,13 @@ def build_development_request(
             "sha256": sha256_bytes(candidate_schema_path.read_bytes()),
         },
         "evidenceValidationContract": {
-            "path": str(EVIDENCE_VALIDATION_CONTRACT_PATH.relative_to(PROJECT_ROOT)),
+            "path": str(authority_bundle.evidence_contract_path.relative_to(PROJECT_ROOT)),
             "version": "0.1.2",
-            "sha256": sha256_bytes(EVIDENCE_VALIDATION_CONTRACT_PATH.read_bytes()),
+            "sha256": sha256_bytes(authority_bundle.evidence_contract_path.read_bytes()),
         },
         "evaluationMatchingContract": {
-            "path": str(EVALUATION_MATCHING_CONTRACT_PATH.relative_to(PROJECT_ROOT)),
-            "sha256": sha256_bytes(EVALUATION_MATCHING_CONTRACT_PATH.read_bytes()),
+            "path": str(authority_bundle.evaluation_contract_path.relative_to(PROJECT_ROOT)),
+            "sha256": sha256_bytes(authority_bundle.evaluation_contract_path.read_bytes()),
         },
         "ontology": {
             "path": str(ONTOLOGY_SPEC_PATH.relative_to(PROJECT_ROOT)),
@@ -233,7 +233,7 @@ def build_development_request(
         "targetDefinitions": target_rows,
         "prompt": {
             "path": str(prompt_path.relative_to(PROJECT_ROOT)),
-            "version": PROMPT_VERSION,
+            "version": authority_bundle.prompt_version,
             "sha256": sha256_bytes(prompt_bytes),
             "text": prompt_text,
         },

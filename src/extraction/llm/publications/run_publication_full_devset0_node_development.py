@@ -519,7 +519,7 @@ def build_full_semantic_request(binding: Mapping[str, Any], authority_bundle: Pu
     )
     bound = deepcopy(request)
     bound["developmentID"] = development_id
-    bound["prompt"]["version"] = PROMPT_VERSION
+    bound["prompt"]["version"] = authority_bundle.prompt_version
     bound["deterministicEndpoints"] = [
         {
             "nodeID": bound["sourceArtifactID"],
@@ -696,6 +696,7 @@ def prepare_unit(
     *,
     output_dir: Path = DEFAULT_OUTPUT_DIR,
     full_semantic: bool = False,
+    authority_bundle: PublicationAuthorityBundle = V014,
 ) -> dict[str, Any]:
     """Construct and persist one unit's deterministic no-network artifacts."""
 
@@ -709,13 +710,15 @@ def prepare_unit(
         output_dir, development_id, artifact_prefix=artifact_prefix
     )
     request = (
-        build_full_semantic_request(binding)
+        build_full_semantic_request(binding, authority_bundle)
         if full_semantic
         else build_c1b_request(binding)
     )
     effective_binding = deepcopy(dict(binding))
     if full_semantic:
-        relation_ids = model_authorable_relation_target_ids()
+        if authority_bundle == V015:
+            effective_binding["eligibleNodeOperationalTargetIDs"] = list(binding["eligibleNodeOperationalTargetIDs"]) + ["PUB-N-A-DOM03E-AGENTBASEDMODEL", "PUB-N-A-AG02-ORGANIZATION-PROSE"]
+        relation_ids = model_authorable_relation_target_ids(authority_bundle)
         effective_binding["eligibleRelationOperationalTargetIDs"] = relation_ids
         effective_binding["eligibleRelationOperationalTargetIDCount"] = len(
             relation_ids
@@ -760,7 +763,7 @@ def prepare_unit(
 
 
 def prepare_all(
-    output_dir: Path = DEFAULT_OUTPUT_DIR, *, full_semantic: bool = False
+    output_dir: Path = DEFAULT_OUTPUT_DIR, *, full_semantic: bool = False, authority_bundle: PublicationAuthorityBundle = V014
 ) -> dict[str, Any]:
     """Construct all ten exact provider inputs and aggregate their offline sizes."""
 
@@ -771,7 +774,7 @@ def prepare_all(
     )
     states = [
         prepare_unit(
-            binding, output_dir=output_dir, full_semantic=full_semantic
+            binding, output_dir=output_dir, full_semantic=full_semantic, authority_bundle=authority_bundle
         )
         for binding in load_c0_bindings()
     ]
@@ -791,14 +794,14 @@ def prepare_all(
             row["providerCompatibilityGate"] == "PASS" for row in rows
         ),
         "allUnitsExposeFortyNodesAndZeroRelations": all(
-            row["exposedNodeTargetCount"] == 40
+            row["exposedNodeTargetCount"] == (42 if full_semantic and authority_bundle == V015 else 40)
             and row["exposedRelationTargetCount"] == 0
             for row in rows
         ),
         "allUnitsExposeExpectedTargets": all(
-            row["exposedNodeTargetCount"] == 40
+            row["exposedNodeTargetCount"] == (42 if full_semantic and authority_bundle == V015 else 40)
             and row["exposedRelationTargetCount"]
-            == (EXPECTED_MODEL_AUTHORABLE_RELATION_TARGET_COUNT if full_semantic else 0)
+            == ((27 if authority_bundle == V015 else EXPECTED_MODEL_AUTHORABLE_RELATION_TARGET_COUNT) if full_semantic else 0)
             for row in rows
         ),
         "aggregateBoundedRequestCanonicalBytes": sum(

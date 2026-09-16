@@ -137,8 +137,8 @@ def trusted_evidence_metadata_schema_record(
             "normalizationApplied": False,
         },
         "onlyProspectiveFieldBound": "evidenceSpan.sectionTitle",
-        "candidateSchemaSha256": sha256_bytes(CANDIDATE_SCHEMA_PATH.read_bytes()),
-        "targetInventorySha256": sha256_bytes(TARGET_INVENTORY_PATH.read_bytes()),
+        "candidateSchemaSha256": request["authorities"]["candidateSchema"]["sha256"],
+        "targetInventorySha256": request["authorities"]["targetInventory"]["sha256"],
         "historicalSchemaSha256": sha256_bytes(canonical_json(historical)),
         "prospectiveSchemaSha256": sha256_bytes(canonical_json(prospective)),
         "providerCompatibilityAudit": audit_openai_structured_outputs_schema(

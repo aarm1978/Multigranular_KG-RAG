@@ -1,11 +1,23 @@
-# Publication LLM Extraction Target Inventory — Final for Pilot 1
+# Publication LLM Extraction Target Inventory — v0.1.5 Successor
+
+**Successor authority.** This document binds `publication_target_inventory_v0.1.5.yaml`
+and `publication_candidate_output_v0.1.1.json`, ontology v0.1.5, and OWL SHA-256
+`ce5f6d3d8ac926dc8ff872c9a36066758a86068b6681417bf7edc6aaeccf1e71`.
+Publication-prose Organization is LLM / extract_and_evaluate; AgentBasedModel is the
+fifth concrete ComputationalModel subtype; C-P34 is full production; and all six
+affected model signatures include AgentBasedModel. Nodes: 62 total (9 context_only,
+2 deferred_resolution, 21 extract_and_evaluate, 21 extract_and_monitor, 4 out_of_scope,
+5 required_infrastructure). Relations: 45 total (8 context_only, 1 deferred_resolution,
+17 extract_and_evaluate, 10 extract_and_monitor, 3 out_of_scope, 5 required_infrastructure,
+1 separate_follow_on_protocol). Candidate coverage: 48 nodes (42 direct, 4 deterministic,
+2 deferred) and 28 relations (27 production model-authorable). D-26 is post-acceptance only.
 
 **Status:** final and binding for Publication Pilot 1
 **Artifact family:** Scientific publications
 **Source scope:** curated publication corpus
 **Stage scope:** ontology-guided LLM semantic overlay over the frozen Phase B backbone
 **Frozen ontology:** CIROH ontology 0.1.5
-**Validated OWL SHA-256:** `7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635`
+**Validated OWL SHA-256:** `ce5f6d3d8ac926dc8ff872c9a36066758a86068b6681417bf7edc6aaeccf1e71`
 **Decision basis:** Ten-block publication target review plus approved pre-pilot ontology gate
 **Date consolidated:** 2026-07-30
 

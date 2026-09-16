@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://w3id.org/ciroh/schemas/publication-candidate-output/0.1.0",
+  "$id": "https://w3id.org/ciroh/schemas/publication-candidate-output/0.1.1",
   "title": "Publication Pilot 1 Candidate Output Envelope",
   "description": "Provider-neutral parsed candidate artifact for Publication Pilot 1. The pipeline wraps the model semantic payload with request/run metadata before validation. Validation outcomes are stored separately and are not authored by the model.",
   "type": "object",
@@ -307,7 +307,7 @@
           "const": "0.1.1"
         },
         "targetInventorySha256": {
-          "const": "1f2301a31f643112fef734852189e41451dd730f49fbf603197de5de3861a51c"
+          "const": "0c990cb03a336d6eab16a256f7937968c5f29462a1e10a7840aa4b29416222b7"
         },
         "sourceUnitContractVersion": {
           "const": "0.1.2"
@@ -1907,11 +1907,11 @@
     "artifactFamily": "scientific_publications",
     "sourceScope": "publications",
     "stageScope": "llm_semantic_overlay",
-    "bindingTargetProfile": "src/extraction/llm/publications/publication_target_inventory.yaml",
+    "bindingTargetProfile": "src/extraction/llm/publications/publication_target_inventory_v0.1.5.yaml",
     "targetProfileSchemaVersion": "0.1.1",
     "sourceUnitContract": "docs/publication_source_unit_contract.md",
     "sourceUnitContractVersion": "0.1.2",
-    "ontologyVersion": "0.1.4",
+    "ontologyVersion": "0.1.5",
     "ontologySha256": "ce5f6d3d8ac926dc8ff872c9a36066758a86068b6681417bf7edc6aaeccf1e71",
     "nodeOperationalTargetsAuthorized": 48,
     "relationOperationalTargetsAuthorized": 28,

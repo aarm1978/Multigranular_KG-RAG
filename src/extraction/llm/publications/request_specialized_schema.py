@@ -325,10 +325,12 @@ def derive_request_specialized_schema(
 def request_specialized_schema_record(request: Mapping[str, Any]) -> dict[str, Any]:
     """Return auditable request-specialization provenance and hashes."""
 
-    generic = derive_model_authorable_schema()
-    specialized = derive_request_specialized_schema(request)
-    frozen = load_json_object(CANDIDATE_SCHEMA_PATH)
-    profile = load_yaml_object(TARGET_INVENTORY_PATH)
+    schema_path = CANDIDATE_SCHEMA_PATH.parent.parent / request["authorities"]["candidateSchema"]["path"]
+    inventory_path = CANDIDATE_SCHEMA_PATH.parent.parent / request["authorities"]["targetInventory"]["path"]
+    generic = derive_model_authorable_schema(schema_path, enforce_frozen_hash=schema_path == CANDIDATE_SCHEMA_PATH)
+    specialized = derive_request_specialized_schema(request, schema_path=schema_path, inventory_path=inventory_path)
+    frozen = load_json_object(schema_path)
+    profile = load_yaml_object(inventory_path)
     coverage: list[dict[str, Any]] = []
     for kind, row in _trusted_request_targets(request, profile):
         _, item = (_node_branch(row, request, generic, frozen) if kind == "node" else _edge_branch(row, request, generic, frozen))
@@ -339,8 +341,8 @@ def request_specialized_schema_record(request: Mapping[str, Any]) -> dict[str, A
         "developmentOnly": True,
         "genericModelAuthorableSchemaVersion": MODEL_AUTHORABLE_SCHEMA_VERSION,
         "requestSpecializedSchemaVersion": REQUEST_SPECIALIZED_SCHEMA_VERSION,
-        "candidateSchemaSha256": sha256_bytes(CANDIDATE_SCHEMA_PATH.read_bytes()),
-        "targetInventorySha256": sha256_bytes(TARGET_INVENTORY_PATH.read_bytes()),
+        "candidateSchemaSha256": sha256_bytes(schema_path.read_bytes()),
+        "targetInventorySha256": sha256_bytes(inventory_path.read_bytes()),
         "requestInputSha256": request.get("requestInputSha256"),
         "eligibleOperationalTargetIDs": list(request.get("eligibleOperationalTargetIDs", [])),
         "conditionalCompilationCoverage": coverage,

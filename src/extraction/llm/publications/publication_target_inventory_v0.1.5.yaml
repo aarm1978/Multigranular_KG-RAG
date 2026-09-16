@@ -14,8 +14,8 @@ ontology:
   source_class_declarations: 76
   source_relation_declarations: 127
 reviewed_sources:
-- path: docs/publication_llm_extraction_target_inventory.md
-  sha256: fcf5619006def7839f910881099f1534341b3b36fc64ad23e920311b9d07cba9
+- path: docs/publication_llm_extraction_target_inventory_v0.1.5.md
+  sha256: 4421790c3cc444ced39ed1fda2f8d249777691ad2f162ca06c44db1c8352900b
   role: binding operational inventory
 - path: docs/publication_ontology_observations_register.md
   sha256: d06dbdf64fa7bd2ac81c7c1e97d16eebb8ded3d432396414c03a3e0ebca79d5e
@@ -24,7 +24,7 @@ reviewed_sources:
   sha256: 9cf993ca137cf0dfd12da5e5942d02c08964b136989d8e4ab20b8f118aeb16c3
   role: publication routing categories and human-readable ontology inventory
 authority_order:
-- frozen ontology 0.1.4 specification and generated OWL
+- frozen ontology 0.1.5 specification and generated OWL
 - frozen deterministic Phase B outputs and tests
 - final Publication Pilot 1 human-readable target inventory
 - publication ontology observations register

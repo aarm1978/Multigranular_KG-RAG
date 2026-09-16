@@ -8,6 +8,9 @@ from src.annotation.publication_pilot1.human_core_reference_composition import c
 from src.extraction.llm.publications.authority_bundle import V015
 from src.extraction.llm.publications.request_builder import load_yaml_object
 from src.extraction.llm.publications.semantic_materializer import materialize_generic_mentions
+from src.extraction.llm.publications.run_publication_full_devset0_node_development import load_c0_bindings, prepare_unit
+from pathlib import Path
+import tempfile
 
 
 class PublicationV015AuthorityBundleTests(unittest.TestCase):
@@ -44,6 +47,18 @@ class PublicationV015AuthorityBundleTests(unittest.TestCase):
         self.assertFalse(result["destructiveMergeAuthorized"])
         self.assertEqual([row["partition"] for row in result["partitions"]], ["primary_v014", "supplemental_v015"])
         self.assertTrue(result["projectionSha256"])
+
+    def test_real_full_semantic_preflight_is_v015_and_offline(self) -> None:
+        """The same future-live preparation path selects only V015 authorities."""
+        with tempfile.TemporaryDirectory() as directory:
+            state = prepare_unit(load_c0_bindings()[0], output_dir=Path(directory), full_semantic=True, authority_bundle=V015)
+        request, preflight = state["request"], state["preflight"]
+        self.assertEqual(request["authorityBundleID"], V015.identifier)
+        self.assertEqual((preflight["exposedNodeTargetCount"], preflight["exposedRelationTargetCount"]), (42, 27))
+        self.assertEqual(request["prompt"]["version"], "publication-development-0.1.8")
+        self.assertIn("PUB-R-C-P34-HASCOMPONENT", request["eligibleOperationalTargetIDs"])
+        self.assertNotIn("D-26", request["eligibleOperationalTargetIDs"])
+        self.assertEqual(preflight["providerCompatibilityGate"], "PASS")
 
 
 if __name__ == "__main__":
