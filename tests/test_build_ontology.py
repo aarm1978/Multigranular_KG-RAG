@@ -125,6 +125,7 @@ D26_RANGE = {
     "Parameter",
     "Algorithm",
     "Repository",
+    "Organization",
 }
 D26_EVIDENCE = (
     "pipeline-derived from accepted evidence-backed entity occurrence; "
@@ -282,11 +283,43 @@ def inventory_table_ids() -> set[str]:
 
 
 class OntologyFormalizationPatchTests(unittest.TestCase):
-    """Verify the complete ontology 0.1.4 regression suite."""
+    """Verify the complete ontology 0.1.5 candidate regression suite."""
 
-    def test_spec_version_is_0_1_4(self) -> None:
-        """The authoritative specification records candidate version 0.1.4."""
-        self.assertEqual(load_spec()["ontology"]["version"], "0.1.4")
+    def test_spec_version_is_0_1_5(self) -> None:
+        """The authoritative specification records candidate version 0.1.5."""
+        self.assertEqual(load_spec()["ontology"]["version"], "0.1.5")
+
+    def test_agent_based_model_source_and_generated_class(self) -> None:
+        """A-DOM03e is a minted ComputationalModel subclass."""
+        declaration = next(
+            item for item in load_spec()["classes"] if item["id"] == "A-DOM03e"
+        )
+        self.assertEqual(declaration["name"], "AgentBasedModel")
+        self.assertEqual(declaration["parent"], "ciroh:ComputationalModel")
+        self.assertEqual(declaration["iri"], "ciroh:AgentBasedModel")
+
+        generated = entity_for_inventory_id(parse_owl(), "A-DOM03e")
+        self.assertEqual(generated.tag, f"{{{NS['owl']}}}Class")
+        self.assertEqual(generated.get(RDF_ABOUT), "#AgentBasedModel")
+        self.assertIn(
+            "#ComputationalModel",
+            {
+                item.get(RDF_RESOURCE)
+                for item in generated.findall("rdfs:subClassOf", NS)
+            },
+        )
+
+    def test_organization_hybrid_extraction_and_publication_locus(self) -> None:
+        """A-AG02 retains deterministic loci and adds Publication prose extraction."""
+        declaration = next(
+            item for item in load_spec()["classes"] if item["id"] == "A-AG02"
+        )
+        self.assertEqual(declaration["name"], "Organization")
+        self.assertEqual(declaration["extraction"], "hybrid")
+        self.assertEqual(
+            declaration["locus"],
+            "affiliation; awards[].funding_agency; publication body prose",
+        )
 
     def test_d26_source_declaration(self) -> None:
         """D-26 preserves the complete researcher-approved source declaration."""
@@ -317,11 +350,30 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
         self.assertEqual(relation["alt_anchor"], "dcterms:references")
         self.assertTrue(relation["consol"])
 
-    def test_generated_version_is_0_1_4(self) -> None:
+    def test_generated_version_is_0_1_5(self) -> None:
         """The generated ontology records the patched semantic version."""
         version = parse_owl().find("owl:Ontology/owl:versionInfo", NS)
         self.assertIsNotNone(version)
-        self.assertEqual(version.text, "0.1.4")
+        self.assertEqual(version.text, "0.1.5")
+
+    def test_c_p34_source_and_generated_has_component_property(self) -> None:
+        """C-P34 merges into the existing hasComponent object property."""
+        relation = relation_by_id("C-P34")
+        self.assertEqual(relation["name"], "hasComponent")
+        self.assertEqual(as_set(relation["domain"]), {"Tool", "ComputationalModel"})
+        self.assertEqual(as_set(relation["range"]), {"Tool", "ComputationalModel"})
+        self.assertEqual(relation["evidence"], "paper prose with a verbatim quoted span")
+
+        properties = object_properties(parse_owl(), "hasComponent")
+        self.assertEqual(len(properties), 1)
+        prop = properties[0]
+        self.assertEqual(property_inventory_ids(prop), {"C-P34", "C-DC19"})
+        self.assertEqual(
+            property_expression_members(prop, "domain"), {"Tool", "ComputationalModel"}
+        )
+        self.assertEqual(
+            property_expression_members(prop, "range"), {"Tool", "ComputationalModel"}
+        )
 
     def test_generated_d26_mentions_property(self) -> None:
         """The generated generic mention property exactly realizes D-26."""
@@ -589,11 +641,11 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
                 self.assertEqual(property_expression_members(properties[0], "range"), ranges)
                 self.assertEqual(property_inventory_ids(properties[0]), inventory_ids)
 
-    def test_source_relation_declaration_count_is_126(self) -> None:
-        """The approved specification has 126 relations and retains 75 classes."""
+    def test_source_declaration_counts_are_0_1_5(self) -> None:
+        """The approved 0.1.5 source adds one class and one relation declaration."""
         spec = load_spec()
-        self.assertEqual(len(spec["classes"]), 75)
-        self.assertEqual(len(spec["relations"]), 126)
+        self.assertEqual(len(spec["classes"]), 76)
+        self.assertEqual(len(spec["relations"]), 127)
         all_ids = [entry["id"] for section in ("classes", "relations") for entry in spec[section]]
         self.assertEqual(len(all_ids), len(set(all_ids)))
 

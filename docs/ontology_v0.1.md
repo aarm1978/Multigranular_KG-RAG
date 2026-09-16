@@ -5,13 +5,13 @@
 > exhaustive human-readable schema with stable IDs; `src/ontology/ontology_spec.yaml`
 > is the current machine-readable authority; and `ontology_formalization.md` records
 > formalization history, exact hashes, generated-artifact counts, and reasoner
-> validation. The current formally frozen ontology release is **0.1.4**.
+> validation. The current formally frozen ontology release is **0.1.5**.
 
-**Current 0.1.4 summary.** The frozen ontology has 75 source class declarations and
-126 source relation declarations: 51 minted CIROH classes, 22 referenced external
+**Current 0.1.5 summary.** The frozen ontology has 76 source class declarations and
+127 source relation declarations: 52 minted CIROH classes, 22 referenced external
 classes, 91 object properties, 18 datatype properties, and 6 direct OWL imports. The
 generated RDF/XML OWL SHA-256 is
-`7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635`.
+`ce5f6d3d8ac926dc8ff872c9a36066758a86068b6681417bf7edc6aaeccf1e71`.
 The formal HermiT gate passed: classification completed, the ontology is consistent,
 zero named unsatisfiable classes were found under `owl:Nothing`, and no execution
 errors were observed.
@@ -104,7 +104,11 @@ later alignment/consolidation applies the canonicalization policy.
 ## 6. Agent layer
 
 `Person` uses `schema:Person` and `Organization` uses `schema:Organization`; schema.org
-remains primary, with FOAF only as an optional equivalence. Module relations include
+remains primary, with FOAF only as an optional equivalence. Organization extraction is
+hybrid in 0.1.5: deterministic affiliation/funding loci remain unchanged, while evidence-backed
+Publication body prose may also instantiate source-local Organization occurrences. No new
+organization-specific semantic relation family is introduced; generic `mentions` provides the
+weak Publication prose connection when no stronger modeled role applies. Module relations include
 `hasAuthor`, `hasCreator`, `hasContributor`, `affiliatedWith`, and `fundedBy`.
 Formally, `fundedBy` is declared for `Paper`/`DatasetResource` subjects; the current
 machine-readable ontology does not declare an `Award`-subject funding relation. The
@@ -118,8 +122,11 @@ are already globally consolidated.
 
 `SoftwareEntity` has sibling specializations `Tool` and `ComputationalModel`.
 `ComputationalModel` includes `ProcessBasedModel`, `ConceptualModel`,
-`StatisticalModel` (`E`, only when a named statistical model has its own identity), and
-`MLModel`/`DataDrivenModel`; no `EmpiricalModel` class is introduced. A named entity
+`StatisticalModel` (`E`, only when a named statistical model has its own identity),
+`MLModel`/`DataDrivenModel`, and `AgentBasedModel`. `AgentBasedModel` represents
+agent-based simulation models organized around interacting autonomous agents; embedding
+learned components inside an agent-based model does not by itself make the enclosing model
+an `MLModel`. No `EmpiricalModel` or residual `OtherComputationalModel` class is introduced. A named entity
 that can own a repository, dataset, or paper is a model, tool, or `Algorithm`; an
 applied technique is a `Method`. `Method` may `appliesTo` a `ComputationalModel` and
 `usesAlgorithm` an `Algorithm`.
@@ -137,7 +144,10 @@ The discourse layer is anchored to DEO and conceptually informed by PEO. CIROH a
 materials decompose into existing entity types. Paper relations distinguish explicit
 `usesModel`/`usesTool` from weaker `mentionsModel`, `mentionsTool`, `mentionsConcept`,
 and `mentionsDataset`; `referencesRepository` is distinct from the paper implementation
-repository relation `hasCodeRepository`. A citation or name occurrence alone does not
+repository relation `hasCodeRepository`. Publication prose may also assert `hasComponent`
+between `Tool`/`ComputationalModel` entities when explicit evidence establishes composition;
+this reuses the same ontology property already used by Documentation rather than minting a
+second composition relation. A citation or name occurrence alone does not
 establish use. Cited software/dataset DOI stubs are typed as `Tool`, `Repository`, or
 `DatasetResource`, not as Paper stubs, when the evidence supports that typing.
 
@@ -194,7 +204,9 @@ unchanged. No named generic CIROH inverse mention property is introduced.
 
 The generic relation is a weak parent/fallback: it does not imply use, study,
 evaluation, reporting, description, implementation, citation, or another stronger
-role. Specialized mention semantics remain authoritative; generic connectivity may be
+role. In 0.1.5 its target range also includes `Organization`, allowing evidence-backed
+Publication prose occurrences to remain representable without inventing organization-specific
+semantic relations. Specialized mention semantics remain authoritative; generic connectivity may be
 derived downstream from accepted evidence without replacing those relations.
 
 ## 13. Version history and current status
@@ -231,5 +243,21 @@ Version 0.1.4 adds only D-26 `ciroh:mentions` as the generic weak semantic-menti
 parent anchored to reference-only `mito:mentions`. The six specialized `mentionsX`
 properties remain direct sub-properties with their prior domains, ranges, and meanings;
 no named inverse was added. Structural validation and the formal HermiT gate passed,
-and 0.1.4 is the current formally frozen release. For exact counts, hashes,
+and 0.1.4 was formally frozen. For exact counts, hashes,
 deterministic-build records, and reasoner history, see `ontology_formalization.md`.
+
+### 0.1.5 Human Core coverage refinement and freeze
+
+Version 0.1.5 is the single bounded additive refinement authorized by the completed
+model-blind Human Core ontology-coverage review. It adds `AgentBasedModel` as a concrete
+`ComputationalModel` subtype, reuses `hasComponent` for explicit composition expressed in
+Publication prose, and permits evidence-backed Publication-prose `Organization` occurrences
+with generic `mentions` connectivity only. It does not add an organization-specific relation
+family, does not alter historical annotations, and does not reopen the frozen deterministic
+graphs. Structural validation passed (38 focused ontology regression tests, including
+byte-deterministic regeneration and frozen Phase B byte-integrity checks). The researcher
+then ran HermiT on the exact OWL artifact above: classification completed successfully, no
+inconsistency was reported, and zero named classes were unsatisfiable under `owl:Nothing`.
+Ontology 0.1.5 is formally frozen. Third-party import/parser warnings are distinct from
+CIROH ontology errors and do not alter the formal HermiT result. Further ontology expansion
+is deferred unless a reproducible blocker invalidates the frozen Study 2 evaluation protocol.

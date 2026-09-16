@@ -1,6 +1,6 @@
 # Ontology Inventory — Study 2 (Phase 1 closure)
 
-**Current semantic version:** 0.1.4, formally frozen — 75 class declarations and 126 source relation declarations. The formal HermiT gate passed: classification completed, the ontology is consistent, zero named unsatisfiable classes were found under `owl:Nothing`, and no execution errors were observed. The frozen deterministic graphs remain unchanged.
+**Current semantic version:** 0.1.5, formally frozen — 76 class declarations and 127 source relation declarations. The structural suite passed (38 tests), and the researcher-confirmed HermiT gate passed on the exact generated OWL artifact. The frozen deterministic graphs remain unchanged.
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 **Companion to `Study2_Ontology_v0.1.md` (concepts + namespaces §3.1). Vocabulary reuse verified (validation 1); schema fit-checked on 6 real artifacts (validation 2, Etapa A) — GO, with the schema-change log below applied.**
@@ -38,7 +38,7 @@ unnumbered shared `hasIdentifier` relation.
 | # | Class | Extraction | Locus | Reuse anchor | Status |
 |---|---|---|---|---|---|
 | A-AG01 | `Person` (`Author`/`Creator`/`Contributor` roles) | hybrid | creators / author block / `contributors.json` / doc lines | `schema:Person` (primary; `foaf:Person` optional equiv) | S |
-| A-AG02 | `Organization` | det | affiliation; `awards[].funding_agency` | `schema:Organization` + ROR | S |
+| A-AG02 | `Organization` | hybrid | affiliation; `awards[].funding_agency`; Publication body prose | `schema:Organization` + ROR | S |
 
 Person canonicalization across four regimes (ORCID / name+affiliation+email / name+email / GitHub login). **Confirmed at scale:** `jmframe` (GitHub login) = J.M. Frame (paper author, ORCID) — one Person across two artifact types.
 
@@ -66,6 +66,7 @@ dataset-module C-D09 signature directly permits `DatasetResource` → `Award` or
 | A-DOM03b | `ConceptualModel` (leaky bucket/tank) | domain | LLM | prose | `ciroh:` | S |
 | A-DOM03c | `StatisticalModel` (named statistical model with own identity) | domain | LLM | prose | `ciroh:` | **E (vestigial — regression resolves to `Method`)** |
 | A-DOM03d | `MLModel`/`DataDrivenModel` (LSTM, RF) | domain | LLM | prose | `ciroh:` | S |
+| A-DOM03e | `AgentBasedModel` (agent-based simulation; ABM) | domain | LLM | prose | `ciroh:` | S |
 | A-DOM04 | `Variable` | domain | LLM | abstract/README/paper/doc prose | `schema:variableMeasured`/`PropertyValue`; CF Standard Names | E |
 | A-DOM05 | `Concept` | domain | LLM | prose | `skos:Concept` | S |
 | A-DOM06 | `Place` (abstract) | domain | — | — | `schema:Place` | S |
@@ -83,7 +84,7 @@ dataset-module C-D09 signature directly permits `DatasetResource` → `Award` or
 | A-DOM12 | `Parameter` (attrs `range`, `value`, `calibrationStatus`∈{calibrated,default}) | domain | hybrid | param tables / config / doc | `schema:PropertyValue` | S (E at paper level) |
 | A-DOM13 | `Algorithm` (named technique: SCE-UA, DDS) | domain | LLM | prose | `ciroh:` | E |
 
-**Model hierarchy (validation-2 confirmed; all four subtypes lands cleanly).** `StatisticalModel` demoted to **E** — stepwise regression resolved to `Method`, not a model entity (paper 221); it instantiates only if a *named* statistical model with its own identity appears. No intermediate `EmpiricalModel`. Literal `PhysicalModel` (lab-scale) → future, not seen.
+**Model hierarchy.** Validation 2 confirmed the four then-existing concrete subtypes. Formally frozen 0.1.5 adds `AgentBasedModel` as a fifth concrete subtype following the model-blind Human Core coverage review. `StatisticalModel` remains **E** — stepwise regression resolved to `Method`, not a model entity (paper 221); it instantiates only if a *named* statistical model with its own identity appears. No intermediate `EmpiricalModel` or residual `OtherComputationalModel` is introduced. Literal `PhysicalModel` (lab-scale) → future, not seen.
 **Model / Method / Algorithm discriminant:** *named thing that could own a repo/dataset/paper* → `ComputationalModel`/`Tool`/`Algorithm`; *technique applied* → `Method`. Relations: `Method appliesTo ComputationalModel`; `Method usesAlgorithm Algorithm` (a named algorithm is an entity; applying it is the Method). Cross-cutting shared relations: `reportsMetric`/`evaluates` (`EvaluationMetric`), `hasParameter` (`Parameter`), `usesAlgorithm` (`Algorithm`) — all consolidate like `Variable` (→ D-16).
 **Geographic split** (validated at scale — HUC-10, USGS/SNOTEL gauges, VPU): `gn:Feature` for `NamedPlace`; `geo:Feature`/`geo:Geometry` for `HydrologicFeature`/`SpatialCoverage`; never both on one entity. Relation `hasSpatialCoverage`.
 
@@ -184,6 +185,7 @@ dataset-module C-D09 signature directly permits `DatasetResource` → `Award` or
 | C-P31 | `mentionsTool` | `Paper` → `Tool` | `ciroh:` | related-work, background, citation, or availability prose with a verbatim quoted span | cross+same | S · consol; weaker than `usesTool` |
 | C-P32 | `referencesRepository` | `Paper` → `Repository` | `ciroh:` | explicit repository reference without paper-code ownership evidence | cross | S · consol (→ D-04) |
 | C-P33 | `hasCodeRepository` ⊑ `referencesRepository` | `Paper` → `Repository` | `schema:codeRepository` | explicit code/software availability or associated-implementation statement | cross | S · consol (→ D-04) |
+| C-P34 | `hasComponent` | `Tool`/`ComputationalModel` → `Tool`/`ComputationalModel` | `ciroh:` | Publication body prose with verbatim evidence | intra | S · consol |
 
 `TheoreticalBasis` remains an available node class, but no theory-to-method grounding
 property is declared in ontology 0.1.3. Such a relation is deferred pending corpus
@@ -425,7 +427,7 @@ reverse from a repository; no duplicate `implementsModel` inverse is declared.
 | D-23 | `describedInPaper` | `Tool`/`ComputationalModel` → `Paper` | cross | `ciroh:` (backs D-06) | product card links (det) | yes | S |
 | D-24 | `describes` | `DocumentationPage` → `Tool`/`ComputationalModel`/`DatasetResource`/`Method` | cross | `ciroh:` | documentation body prose | yes | S |
 | D-25 | `documentedBy` | `Tool`/`ComputationalModel`/`DatasetResource`/`Method` → `DocumentationPage` | cross | `ciroh:` | inverse of `describes` | yes | S |
-| D-26 | `mentions` | `Paper`/`DatasetResource`/`Repository`/`DocumentationPage`/Publication discourse unit → `ComputationalModel`/`Tool`/`DatasetMention`/`DatasetResource`/`Variable`/`Concept`/`HydrologicFeature`/`NamedPlace`/`EvaluationMetric`/`Parameter`/`Algorithm`/`Repository` | intra+cross+same | `mito:mentions` (MiTO; reference-only reuse anchor) | pipeline-derived from accepted evidence-backed entity occurrence; discourse→entity requires strict evidence containment | yes | S |
+| D-26 | `mentions` | `Paper`/`DatasetResource`/`Repository`/`DocumentationPage`/Publication discourse unit → `ComputationalModel`/`Tool`/`DatasetMention`/`DatasetResource`/`Variable`/`Concept`/`HydrologicFeature`/`NamedPlace`/`EvaluationMetric`/`Parameter`/`Algorithm`/`Repository`/`Organization` | intra+cross+same | `mito:mentions` (MiTO; reference-only reuse anchor) | pipeline-derived from accepted evidence-backed entity occurrence; discourse→entity requires strict evidence containment | yes | S |
 
 **D-26 generic mention semantics.** `mentions` is the weak fallback relation for an explicit, evidence-supported semantic mention when no stronger role-specific relation represents the same source→target occurrence. It does **not** imply use, study role, evaluation, reporting, description, implementation, citation, or other stronger semantics. The Publication discourse-unit branch comprises the 21 accepted discourse classes (`Background`, `Theme`, `ResearchProblem`, `ResearchQuestion`, `ResearchGoal`, `ResearchSignificance`, `Definition`, `TheoreticalBasis`, `Method`, `Experiment`, `Examples`, `Finding`, `Discussion`, `RelatedResearch`, `Limitation`, `Conclusion`, `Contribution`, `FutureWork`, `Hypothesis`, `Claim`, `DataDescription`). The bounded target range uses shared superclasses where available (`ComputationalModel`, `HydrologicFeature`) rather than enumerating their concrete subtypes.
 
@@ -504,7 +506,9 @@ its broadened inverse.
 - **Frozen 0.1.4 mention-coverage amendment:** add global D-26 `ciroh:mentions` with `mito:mentions` (SPAR MiTO) as its reference-only reuse anchor; retain the six existing specialized `mentionsX` properties as CIROH properties and declare them subproperties of `mentions`. No `isMentionedBy` inverse is added. The amendment is additive at the TBox level and is motivated by Publication development evidence showing relation-coverage gaps for mention-only geographic entities, metrics, parameters, algorithms, and other shared entities. It does not retrospectively change screening, calibration, or node eligibility.
 - **`ciroh:` short list (the contribution):** `ComputationalModel` hierarchy + Model/Method/Algorithm discriminant; `EvaluationMetric`; `Algorithm`; `Aquifer`/`VPU`; controlled classifications (`ResourceType`, `RepositoryPurpose`, `productCategory`); `Variable`/`Measurement` semantics; `ToolConfiguration`; `dependsOnRepository`; mention-vs-use + `archivedAs` resolution + product-hub backing edges; the PEO-aligned discourse classes not in DEO + PEO relation vocabulary; the cross-artifact (R2O) relation semantics. `Parameter` reuses `schema:PropertyValue`.
 
-**Current outcome.** Ontology 0.1.4 is complete and formally frozen. It adds only the
+**Human Core coverage refinement — formally frozen 0.1.5.** The completed model-blind Human Core coverage review authorized one bounded additive refinement: (i) `AgentBasedModel` (A-DOM03e) as a concrete `ComputationalModel` subtype; (ii) Publication prose realization `C-P34 hasComponent`, reusing the existing `hasComponent` property rather than minting a new relation; and (iii) `Organization` becomes hybrid so evidence-backed Publication prose occurrences can be extracted, while D-26 `mentions` expands its range to include `Organization`. No organization-specific semantic relation family is introduced. The 38-test structural suite and the formal HermiT gate passed. This is the designated one-pass ontology coverage refinement from the Human Core stress test; further ontology expansion is deferred unless a reproducible blocker invalidates the frozen Study 2 evaluation protocol.
+
+**Prior formally frozen outcome (0.1.4).** Ontology 0.1.4 adds only the
 D-26 generic weak-mention hierarchy described above: one new global `ciroh:mentions`
 property anchored to `mito:mentions`, with the existing specialized `mentionsX`
 properties as subproperties. The amendment does not add an inverse property and does not

@@ -2,12 +2,12 @@
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 
-**Current formalization status.** Ontology 0.1.4 is formally frozen. HermiT completed
-successfully, found the validated ontology consistent with zero unsatisfiable named
-classes, and reported no execution errors; it is authoritative for the formal
-validation and freeze decision. The 0.1.4 patch adds the generic pipeline-derived
-`ciroh:mentions` relation above the six unchanged specialized `mentionsX` properties.
-Frozen deterministic outputs are unchanged.
+**Current formalization status.** Ontology 0.1.5 is formally frozen. The 38-test
+structural suite passed, and the researcher-confirmed HermiT run on the exact generated
+OWL completed successfully with no ontology inconsistency and zero named unsatisfiable
+classes. Third-party import/parser warnings are distinct from CIROH ontology errors.
+Ontology 0.1.5 adds the bounded Human Core coverage refinement while preserving frozen
+deterministic outputs unchanged.
 
 **Purpose.** Validate *what the ontology covers* and *which decisions we took*, including where decisions **changed or refined** the four characterizations. Updated through **validation 2 (Etapa A) — GO**, schema-change log applied. Working documents:
 - `Study2_Ontology_v0.1.md` — conceptual model + namespaces/import notes (§3.1).
@@ -66,6 +66,17 @@ Walked 3 papers (process / deep-learning / conceptual+statistical) + 1 HydroShar
 
 ---
 
+
+## Human Core coverage refinement — formally frozen 0.1.5
+
+The completed five-unit model-blind Human Core ontology-coverage review authorizes one bounded additive refinement before production extraction/evaluation:
+
+- add `AgentBasedModel` as a concrete `ComputationalModel` subtype;
+- reuse the existing `hasComponent` property in the Publication module for explicit evidence-backed composition expressed in paper prose;
+- change `Organization` from deterministic-only to hybrid extraction by retaining affiliation/funding loci and permitting evidence-backed Publication body-prose occurrences; generic `mentions` is sufficient for prose connectivity, and no organization-specific semantic relation family is introduced.
+
+These decisions are additive and do not reinterpret historical deterministic graphs or the preserved Human Core baseline under ontology 0.1.4. The structural validation and formal HermiT gates passed, formally freezing ontology 0.1.5. Further ontology expansion is deferred unless a reproducible blocker invalidates the frozen Study 2 evaluation protocol.
+
 ## 4b. Validation 3 (CQ dry-run) — 23/26 clean → 5 additive fixes → schema frozen
 
 The 26 competency questions were traced as query patterns over the schema. **23 traced unchanged.** The other 3 (E-05, E-10, E-14 — the product hub) pointed to a single well-bounded schema gap plus minor items; all additive (no restructuring):
@@ -81,7 +92,7 @@ The 26 competency questions were traced as query patterns over the schema. **23 
 
 - `ciroh:` = `https://w3id.org/ciroh/ontology#`; `peo:` cited, not imported.
 - **Software:** `SoftwareEntity` (`schema:SoftwareApplication`) → siblings `Tool`, `ComputationalModel`.
-- **Model hierarchy:** `ComputationalModel` → `ProcessBasedModel` / `ConceptualModel` / `StatisticalModel` (**E**) / `MLModel`. Model/Method/Algorithm discriminant: `Method appliesTo ComputationalModel`; `Method usesAlgorithm Algorithm`.
+- **Model hierarchy:** `ComputationalModel` → `ProcessBasedModel` / `ConceptualModel` / `StatisticalModel` (**E**) / `MLModel` / `AgentBasedModel`. Model/Method/Algorithm discriminant: `Method appliesTo ComputationalModel`; `Method usesAlgorithm Algorithm`.
 - **Promoted shared entities:** `EvaluationMetric`, `Parameter`, `Algorithm` (consolidate like `Variable`).
 - **`Variable` vs. `Concept`:** measurable vs. non-measurable.
 - **Geographic:** `HydrologicFeature` (CIROH) vs. `NamedPlace` (not CIROH) vs. `SpatialCoverage` (footprint geometry).
@@ -115,7 +126,7 @@ The 26 competency questions were traced as query patterns over the schema. **23 
 | Provenance | `EvidenceSpan` | `hasEvidence` (min 1), `wasExtractedBy` | PROV-O, RO-Crate | S | — |
 | Identifier | `Identifier` (+ related DOI) | `hasIdentifier` | DataCite (+`relatedIdentifier`), ORCID, ROR, geoconnex | S | — |
 | Agent | `Person`, `Organization` | `hasAuthor`/`hasCreator`/`hasContributor` (module tables), `affiliatedWith` (`Person`→`Organization`), `fundedBy` (`Paper`/`DatasetResource`→`Award`); no formal `Award`→`Organization` branch | schema.org primary, ROR | S | residual name-only disambiguation |
-| Shared domain | `SoftwareEntity`→{`Tool`, `ComputationalModel`→4 leaves}, `Variable`, `Concept`, `Place`→{`HydrologicFeature`×6, `NamedPlace`}, `SpatialCoverage`, `TemporalCoverage`, **`EvaluationMetric`, `Parameter`, `Algorithm`** | `hasSpatialCoverage`, `appliesTo`, `reportsMetric`/`evaluates`, `hasParameter`, `usesAlgorithm`, consolidation | schema.org, SKOS, HY_Features, GeoSPARQL, GeoNames, geoconnex; `ciroh:` for model hierarchy + `EvaluationMetric` + `Algorithm` + Aquifer/VPU | S (E: `Variable`, `Algorithm`, `StatisticalModel`) | literal `PhysicalModel` |
+| Shared domain | `SoftwareEntity`→{`Tool`, `ComputationalModel`→5 leaves}, `Variable`, `Concept`, `Place`→{`HydrologicFeature`×6, `NamedPlace`}, `SpatialCoverage`, `TemporalCoverage`, **`EvaluationMetric`, `Parameter`, `Algorithm`** | `hasSpatialCoverage`, `appliesTo`, `reportsMetric`/`evaluates`, `hasParameter`, `usesAlgorithm`, consolidation | schema.org, SKOS, HY_Features, GeoSPARQL, GeoNames, geoconnex; `ciroh:` for model hierarchy + `EvaluationMetric` + `Algorithm` + Aquifer/VPU | S (E: `Variable`, `Algorithm`, `StatisticalModel`) | literal `PhysicalModel` |
 | Paper | ~26 (+ reaches `EvaluationMetric`/`Parameter`/`Algorithm`) | ~28 (PEO-18 subset + domain + integration + CiTO-typed + mention-vs-use + metric/param/algorithm) | DEO, FaBiO, CiTO, DataCite, schema.org; `ciroh:` aligned-PEO | S (E: Hyp, Claim, PEO 2nd-level) | figure/table visual content; in-text citation-marker resolution |
 | Dataset | ~12 (+`ToolConfiguration`, `Variable`, `Measurement`) | ~19 | schema.org, DataCite, PROV-O, dcterms, SPDX, GeoSPARQL; `ciroh:` | S (E: `Variable`; `Measurement` coverage ≈ 0) | opening data files; `ToolResource`→dedicated class |
 | Code | ~11 (`File`+`fileRole`; `Dependency`, `ExecutionEnvironment`, `RepositoryPurpose`, `Function`, `ModelVersion`, `Workflow`; `Algorithm`→shared) | ~18 (+`forkedFrom` parent E, `archivedAs`) | schema.org (CodeMeta profile), DOAP, SPDX, `cito:`/`codemeta:referencePublication`, DataCite `relatedIdentifier`; `ciroh:` | S (E: `Function`, `Algorithm`, `ModelVersion`, `archivedAs`, fork parent) | source-code AST |
@@ -128,7 +139,7 @@ The 26 competency questions were traced as query patterns over the schema. **23 
 
 ## 8. Status of open decisions
 
-**All five open decisions resolved (validation 2):** D1 PASS (strong); D2 keep 4 leaves + `StatisticalModel` E; D3 `deo:Materials` not adopted (closed); D4 `Measurement` E/coverage ≈ 0 (re-confirm in Etapa B); D5 PASS. `PhysicalModel` stays `future`.
+**All five open decisions resolved (validation 2):** D1 PASS (strong); D2 originally kept 4 leaves + `StatisticalModel` E; D3 `deo:Materials` not adopted (closed); D4 `Measurement` E/coverage ≈ 0 (re-confirm in Etapa B); D5 PASS. `PhysicalModel` stays `future`. The later Human Core coverage refinement prospectively supersedes only the four-leaf count by adding `AgentBasedModel`; it does not reopen the other Validation-2 decisions.
 
 **Validation 3 (CQ dry-run) complete:** 23/26 CQs unchanged; 3 resolved by 5 additive fixes (§4b). **Schema frozen — ready for Protégé.**
 
@@ -138,7 +149,7 @@ The 26 competency questions were traced as query patterns over the schema. **23 
 
 ## 9. Next step
 
-Use the formally frozen ontology 0.1.4 baseline for the remaining Publication Pilot 1
+Use the formally frozen ontology 0.1.5 baseline for prospective remaining Publication Pilot 1
 protocol, annotation, validator, and reproducibility preparation. The historical Etapa B
 planning sequence is superseded by the current versioned formalization record in
 `ontology_formalization.md`.

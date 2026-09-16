@@ -14,7 +14,7 @@
   <owl:imports rdf:resource="http://www.w3.org/2004/02/skos/core"/>
   <owl:imports rdf:resource="http://purl.org/net/p-plan"/>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts</rdfs:comment>
-  <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.1.4</owl:versionInfo>
+  <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.1.5</owl:versionInfo>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Generated from src/ontology/ontology_spec.yaml by build_ontology.py.</rdfs:comment>
 </owl:Ontology>
 
@@ -592,12 +592,16 @@
       </owl:unionOf>
     </owl:Class>
   </rdfs:range>
-  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-DC19</inventoryId>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-DC19</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-P34</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-P34</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: hierarchical aggregation; product node -&gt; component/distribution</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Publication-module realization of existing hasComponent semantics; explicit model/tool composition only, never inferred from co-occurrence.</rdfs:comment>
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: paper prose with a verbatim quoted span</rdfs:comment>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-DC19</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-DC19</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: hierarchical aggregation; product node -&gt; component/distribution</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Maps to inventory relation: D-06</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: DocCardList / card links (det)</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
@@ -1201,6 +1205,7 @@
         <rdf:Description rdf:about="#Parameter"/>
         <rdf:Description rdf:about="#Algorithm"/>
         <rdf:Description rdf:about="#Repository"/>
+        <rdf:Description rdf:about="https://schema.org/Organization"/>
       </owl:unionOf>
     </owl:Class>
   </rdfs:range>
@@ -2171,7 +2176,7 @@
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: A-AG02</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
   <sourceKind rdf:datatype="http://www.w3.org/2001/XMLSchema#string">agent</sourceKind>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: + ROR</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: + ROR; deterministic affiliation/funding loci retained; Publication prose permits evidence-backed LLM occurrence extraction</rdfs:comment>
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">schema:Organization</reuseAnchor>
 </owl:Class>
 
@@ -2298,6 +2303,23 @@
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
   <sourceKind rdf:datatype="http://www.w3.org/2001/XMLSchema#string">domain</sourceKind>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: aka DataDrivenModel</rdfs:comment>
+</owl:Class>
+
+<owl:Class rdf:about="#AgentBasedModel">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+  <rdfs:subClassOf rdf:resource="#ComputationalModel"/>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#hasEvidence"/>
+      <owl:onClass rdf:resource="#EvidenceSpan"/>
+      <owl:minQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:minQualifiedCardinality>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">A-DOM03e</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: A-DOM03e</rdfs:comment>
+  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
+  <sourceKind rdf:datatype="http://www.w3.org/2001/XMLSchema#string">domain</sourceKind>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Simulation model organized around interacting autonomous agents; distinct from MLModel even when learned components are embedded within agents.</rdfs:comment>
 </owl:Class>
 
 <owl:Class rdf:about="#Variable">
