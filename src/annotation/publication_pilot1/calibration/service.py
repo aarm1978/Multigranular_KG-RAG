@@ -157,7 +157,10 @@ class AnnotationService:
             "displayLabel": "Current paper", "artifactID": unit["canonicalArtifactID"],
         }] + [
             {"endpointID": endpoint_id, **endpoint}
-            for endpoint_id, endpoint in sorted(self.contracts.deterministic_endpoints(source_unit_id, exposed).items())
+        for endpoint_id, endpoint in sorted(self.contracts.deterministic_endpoints(source_unit_id, exposed).items())
+        ] + [
+            {"endpointID": endpoint_id, **endpoint}
+            for endpoint_id, endpoint in sorted(self.contracts.baseline_endpoints(source_unit_id).items())
         ]
 
     def _editable(self, draft: Mapping[str, Any] | None) -> dict[str, Any]:

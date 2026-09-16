@@ -417,6 +417,11 @@ def validate_annotation(
     deterministic = {
         f"paper:{unit['paperID']}": {"className": "Paper", "artifactID": unit["canonicalArtifactID"], "displayLabel": "Current paper"},
         **contracts.deterministic_endpoints(source_unit_id, exposed_context_ids),
+        **contracts.baseline_endpoints(source_unit_id),
+    }
+    link_existing = {
+        f"paper:{unit['paperID']}": deterministic[f"paper:{unit['paperID']}"],
+        **contracts.deterministic_endpoints(source_unit_id, exposed_context_ids),
     }
     deferred_refs = {
         ref for context_id in contracts.authorized_context_ids(source_unit_id, exposed_context_ids)
@@ -447,7 +452,7 @@ def validate_annotation(
         if action not in target.get("allowed_actions", []):
             raise AnnotationContractError(f"ANNOTATION_NODE_ACTION_NOT_ALLOWED:{target_id}")
         if action == "link_existing" and (
-            existing_node_id not in deterministic or deterministic[str(existing_node_id)]["className"] != class_name
+            existing_node_id not in link_existing or link_existing[str(existing_node_id)]["className"] != class_name
         ):
             raise AnnotationContractError("ANNOTATION_LINK_EXISTING_ENDPOINT_NOT_AUTHORIZED")
         if action == "propose_new" and existing_node_id not in (None, ""):
@@ -479,7 +484,7 @@ def validate_annotation(
             raw.get("discoveryScope"), raw.get("distributedEvidenceReason"), exposed_context_ids,
         )
         artifact_scope = "external_artifact" if class_name in EXTERNAL_ARTIFACT_CLASSES else "source_artifact"
-        if action == "link_existing" and deterministic[str(existing_node_id)]["artifactID"] == unit["canonicalArtifactID"]:
+        if action == "link_existing" and link_existing[str(existing_node_id)]["artifactID"] == unit["canonicalArtifactID"]:
             artifact_scope = "source_artifact"
         cleaned_nodes.append({
             "candidateID": local_id, "action": action, "origin": origin,

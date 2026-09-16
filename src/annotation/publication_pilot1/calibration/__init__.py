@@ -8,6 +8,7 @@ GUIDELINE_VERSION = "0.1.1"
 HANDBOOK_VERSION = "0.1.2"
 HUMAN_CORE_GUIDE_VERSION = "1.1"
 HUMAN_CORE_PRIMARY_ANNOTATOR_ID = "HUMAN_CORE_PRIMARY_RESEARCHER"
+HUMAN_CORE_SUPPLEMENTAL_ANNOTATOR_ID = "HUMAN_CORE_SUPPLEMENTAL_RESEARCHER"
 HUMAN_CORE_PRIMARY_SESSION_ID = "HUMAN_CORE_N5_PRIMARY_V1"
 HUMAN_CORE_SUPPLEMENTAL_SESSION_ID = "HUMAN_CORE_N5_SUPPLEMENTAL_V015"
 HUMAN_CORE_PRIMARY_NAMESPACE = "human-core/primary-researcher"
@@ -20,7 +21,7 @@ CONTEXT_POLICY_VERSION = "0.1.0"
 def metadata_versions(mode: str) -> tuple[str, str]:
     """Return the guide and handbook versions bound to one annotation mode."""
 
-    if mode == "human-core":
+    if mode in {"human-core", "human-core-supplemental"}:
         return HUMAN_CORE_GUIDE_VERSION, HUMAN_CORE_GUIDE_VERSION
     return GUIDELINE_VERSION, HANDBOOK_VERSION
 

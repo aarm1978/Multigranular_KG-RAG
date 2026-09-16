@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -24,6 +24,7 @@ from . import (
     HANDBOOK_VERSION,
     HUMAN_CORE_PRIMARY_ANNOTATOR_ID,
     HUMAN_CORE_PRIMARY_SESSION_ID,
+    HUMAN_CORE_SUPPLEMENTAL_SESSION_ID,
     INTERFACE_VERSION,
     ROUTING_VERSION,
 )
@@ -36,6 +37,7 @@ REGRESSION_SOURCE_UNIT_ID = "pub:34:sec:0028:unit:0001"
 ANNOTATION_MVP_BASE_CHECKPOINT = "a67c5f3d70a3f4a71f79561646572781eeae89b4"
 ACTIVATION_SCHEMA_VERSION = "0.1.0"
 HUMAN_CORE_FREEZE_RELATIVE = "data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json"
+HUMAN_CORE_SUPPLEMENTAL_PACKAGE_RELATIVE = "data/curation/papers/m2/human_core_gold/publication_human_core_supplemental_annotation_package_v0.1.5.json"
 
 LEGACY_ONTOLOGY_0_1_3_PROTECTED_HASHES = {
     "data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl": "7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e",
@@ -276,6 +278,7 @@ class AnnotationContracts:
     hashes: Mapping[str, str]
     canonical_document_hashes: Mapping[str, str]
     phase_b_nodes: Mapping[str, Mapping[str, Any]]
+    baseline_endpoints_by_unit: Mapping[str, Mapping[str, Mapping[str, str]]] = field(default_factory=dict)
 
     def canonical_document_hash(self, source_unit_id: str) -> str:
         """Return and cross-check the accepted artifact-level canonical-text hash."""
@@ -360,6 +363,11 @@ class AnnotationContracts:
             self.authorized_context_ids(primary_source_unit_id, exposed_context_ids),
             self.phase_b_nodes,
         )
+
+    def baseline_endpoints(self, primary_source_unit_id: str) -> Mapping[str, Mapping[str, str]]:
+        """Return immutable primary-baseline endpoints for one supplemental unit only."""
+
+        return (self.baseline_endpoints_by_unit or {}).get(primary_source_unit_id, {})
 
     def source_text(self, source_unit_id: str) -> str:
         """Reconstruct exact text and validate code-point length and UTF-8 hash."""
@@ -558,10 +566,12 @@ def load_annotation_contracts(root: Path, *, mode: str = "synthetic", activation
     hashes = verify_protected_hashes(root)
     if mode == "synthetic":
         return _synthetic_contracts(root, hashes)
-    if mode not in {"calibration", "human-core"}:
+    if mode not in {"calibration", "human-core", "human-core-supplemental"}:
         raise AnnotationContractError(f"ANNOTATION_MODE_UNKNOWN:{mode}")
     if mode == "human-core":
         return _load_human_core_contracts(root, hashes)
+    if mode == "human-core-supplemental":
+        return _load_human_core_supplemental_contracts(root, hashes)
     verify_production_activation(activation_path, root)
     manifest = json.loads((root / "data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json").read_text(encoding="utf-8"))
     order_ids = tuple(manifest["calibrationSourceUnitIDs"])
@@ -661,3 +671,77 @@ def _load_human_core_contracts(root: Path, hashes: Mapping[str, str]) -> Annotat
         validate_effective_route(route, unit, deferred_ids)
         routes[unit_id] = route
     return AnnotationContracts(root, "human-core", inventory, routes, order_ids, nodes, relations, _display_index(root), expansions, hashes, dict(canonical_hashes), phase_nodes)
+
+
+def _load_human_core_supplemental_contracts(root: Path, hashes: Mapping[str, str]) -> AnnotationContracts:
+    """Load the v0.1.5-only Human Core overlay without altering production contracts."""
+
+    package_path = root / HUMAN_CORE_SUPPLEMENTAL_PACKAGE_RELATIVE
+    try:
+        package = json.loads(package_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_PACKAGE_INVALID") from exc
+    if package.get("packageIdentity") != "publication-human-core-gold-n5-supplemental-v015":
+        raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_PACKAGE_IDENTITY_MISMATCH")
+    if package.get("session", {}).get("annotationSessionID") != HUMAN_CORE_SUPPLEMENTAL_SESSION_ID:
+        raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_SESSION_ID_MISMATCH")
+    authorities = package.get("authorities", {})
+    for relative, expected in {
+        "src/ontology/ontology_spec.yaml": authorities.get("ontologySpec", {}).get("sha256"),
+        "src/ontology/ciroh_ontology.owl": authorities.get("ontologyOwl", {}).get("sha256"),
+        "docs/publication_human_core_expert_annotation_guide.md": authorities.get("guide", {}).get("sha256"),
+        "data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json": authorities.get("sampleFreeze", {}).get("sha256"),
+        "data/curation/papers/m2/human_core_gold/publication_human_core_primary_annotation_baseline_v1.0.json": authorities.get("primaryBaselineRecord", {}).get("sha256"),
+    }.items():
+        if not isinstance(expected, str) or sha256_file(root / relative) != expected:
+            raise AnnotationContractError(f"HUMAN_CORE_SUPPLEMENTAL_AUTHORITY_HASH_MISMATCH:{relative}")
+    baseline = json.loads((root / "data/curation/papers/m2/human_core_gold/publication_human_core_primary_annotation_baseline_v1.0.json").read_text(encoding="utf-8"))
+    export = baseline["deterministicSessionExport"]
+    export_path = root / str(export["path"])
+    if not export_path.is_file() or sha256_file(export_path) != export.get("sha256"):
+        raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_PRIMARY_EXPORT_HASH_MISMATCH")
+    try:
+        primary_export = json.loads(export_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_PRIMARY_EXPORT_INVALID") from exc
+    if primary_export.get("annotationSessionID") != HUMAN_CORE_PRIMARY_SESSION_ID:
+        raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_PRIMARY_EXPORT_SESSION_MISMATCH")
+    freeze = json.loads((root / HUMAN_CORE_FREEZE_RELATIVE).read_text(encoding="utf-8"))
+    order_ids = tuple(str(row["sourceUnitID"]) for row in freeze.get("selectedUnits", []))
+    route_rows = package.get("routingOverlay", {}).get("units", [])
+    if len(order_ids) != 5 or {str(row.get("sourceUnitID")) for row in route_rows} != set(order_ids):
+        raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_FIVE_UNIT_COVERAGE_MISMATCH")
+    inventory = _jsonl_index(root / "data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl", omit_source_text=True)
+    source_manifest = json.loads((root / "data/curation/papers/pilot1/publication_pilot1_source_unit_manifest.json").read_text(encoding="utf-8"))
+    canonical_hashes = source_manifest.get("canonicalDocumentHashes", {})
+    phase_nodes = _phase_b_nodes(root, str(source_manifest.get("phaseBArtifactHash", "")))
+    targets = package.get("targets", {})
+    nodes = {str(row["operational_id"]): dict(row) for row in targets.get("node_targets", [])}
+    relations = {str(row["operational_id"]): dict(row) for row in targets.get("relation_targets", [])}
+    if set(nodes) != {"PUB-N-A-DOM03E-AGENTBASEDMODEL", "PUB-N-A-AG02-ORGANIZATION-PROSE"} or set(relations) != {
+        "PUB-R-C-P13-USESMODEL-PAPER-BRANCH", "PUB-R-C-P13-USESMODEL-METHOD-BRANCH", "PUB-R-C-P14-APPLIESTO", "PUB-R-C-P23-MENTIONSMODEL", "PUB-R-C-P26-EVALUATES", "PUB-R-C-P27-HASPARAMETER", "PUB-R-C-P34-HASCOMPONENT",
+    }:
+        raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_TARGET_SET_MISMATCH")
+    baseline_rows = {str(row.get("sourceUnitID")): row for row in primary_export.get("annotations", [])}
+    routes: dict[str, Mapping[str, Any]] = {}; endpoints: dict[str, dict[str, dict[str, str]]] = {}
+    for row in route_rows:
+        unit_id = str(row["sourceUnitID"]); unit = inventory.get(unit_id)
+        if unit is None or unit_id not in baseline_rows or baseline_rows[unit_id].get("status") != "submitted":
+            raise AnnotationContractError(f"HUMAN_CORE_SUPPLEMENTAL_BASELINE_UNIT_INVALID:{unit_id}")
+        if row.get("sourceUnitTextHash") != unit.get("textHash"):
+            raise AnnotationContractError(f"HUMAN_CORE_SUPPLEMENTAL_SOURCE_HASH_DRIFT:{unit_id}")
+        node_ids, relation_ids = list(row.get("eligibleNodeOperationalTargetIDs", [])), list(row.get("eligibleRelationOperationalTargetIDs", []))
+        if set(node_ids) != set(nodes) or set(relation_ids) != set(relations):
+            raise AnnotationContractError(f"HUMAN_CORE_SUPPLEMENTAL_TARGET_ISOLATION_MISMATCH:{unit_id}")
+        routes[unit_id] = {"sourceUnitID": unit_id, "sourceUnitTextHash": unit["textHash"], "routingStatus": "routed", "routingVersion": ROUTING_VERSION, "eligibleNodeOperationalTargetIDs": node_ids, "eligibleRelationOperationalTargetIDs": relation_ids, "structurallyUnavailableOperationalTargets": []}
+        endpoint_rows: dict[str, dict[str, str]] = {}
+        for node in baseline_rows[unit_id]["annotation"].get("nodes", []):
+            candidate_id, class_name = node.get("candidateID"), node.get("className")
+            if not isinstance(candidate_id, str) or not isinstance(class_name, str):
+                raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_BASELINE_ENDPOINT_INVALID")
+            endpoint_id = f"baseline:{unit_id}:{candidate_id}"
+            endpoint_rows[endpoint_id] = {"className": class_name, "artifactID": str(node.get("sourceArtifactID", unit["canonicalArtifactID"])), "displayLabel": str(node.get("label", candidate_id)), "endpointOrigin": "immutable_primary_baseline"}
+        endpoints[unit_id] = endpoint_rows
+    expansions = {str(key): list(value) for key, value in targets.get("class_expansions", {}).items()}
+    displays = {target_id: {"displayLabel": target["displayLabel"], "shortDefinition": target["shortDefinition"], "boundaryHint": target["boundaryHint"], "displayGroup": "supplemental_v015"} for target_id, target in {**nodes, **relations}.items()}
+    return AnnotationContracts(root, "human-core-supplemental", inventory, routes, order_ids, nodes, relations, displays, expansions, hashes, dict(canonical_hashes), phase_nodes, endpoints)

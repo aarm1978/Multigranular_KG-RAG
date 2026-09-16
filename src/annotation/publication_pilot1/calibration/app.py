@@ -18,10 +18,15 @@ from .contracts import (
     canonical_json_hash,
     HUMAN_CORE_FREEZE_RELATIVE,
     HUMAN_CORE_PRIMARY_ANNOTATOR_ID,
+    HUMAN_CORE_SUPPLEMENTAL_PACKAGE_RELATIVE,
     load_annotation_contracts,
     verify_production_activation,
 )
-from . import human_core_session_namespace
+from . import (
+    HUMAN_CORE_SUPPLEMENTAL_ANNOTATOR_ID,
+    HUMAN_CORE_SUPPLEMENTAL_SESSION_ID,
+    human_core_session_namespace,
+)
 from .service import AnnotationService
 from .store import AnnotationStore
 
@@ -146,9 +151,13 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
     """Validate contracts and activation before creating mutable state."""
 
     root = repository_root()
-    if args.mode == "human-core":
-        if args.annotator_id != HUMAN_CORE_PRIMARY_ANNOTATOR_ID:
-            raise AnnotationContractError("HUMAN_CORE_PRIMARY_IDENTITY_MISMATCH")
+    if args.mode in {"human-core", "human-core-supplemental"}:
+        expected_annotator = HUMAN_CORE_PRIMARY_ANNOTATOR_ID if args.mode == "human-core" else HUMAN_CORE_SUPPLEMENTAL_ANNOTATOR_ID
+        expected_session = None if args.mode == "human-core" else HUMAN_CORE_SUPPLEMENTAL_SESSION_ID
+        if args.annotator_id != expected_annotator:
+            raise AnnotationContractError("HUMAN_CORE_PRIMARY_IDENTITY_MISMATCH" if args.mode == "human-core" else "HUMAN_CORE_SUPPLEMENTAL_IDENTITY_MISMATCH")
+        if expected_session is not None and args.annotation_session_id != expected_session:
+            raise AnnotationContractError("HUMAN_CORE_SUPPLEMENTAL_IDENTITY_MISMATCH")
         try:
             human_core_session_namespace(args.annotation_session_id)
         except ValueError as exc:
@@ -161,12 +170,12 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
             activation, root, annotator_id=args.annotator_id,
             annotation_session_id=args.annotation_session_id,
         )
-    namespace = "synthetic" if args.mode == "synthetic" else (human_core_session_namespace(args.annotation_session_id) if args.mode == "human-core" else "calibration/production")
+    namespace = "synthetic" if args.mode == "synthetic" else (human_core_session_namespace(args.annotation_session_id) if args.mode in {"human-core", "human-core-supplemental"} else "calibration/production")
     runtime = root / "var/publication_pilot1_annotation" / namespace
     state_path = runtime / "sessions" / f"{_safe_component(args.annotation_session_id)}.sqlite3"
     bindings = {
         "sourceUnitInventoryHash": contracts.hashes["data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl"],
-        "sampleFreezeHash": sha256_file(root / HUMAN_CORE_FREEZE_RELATIVE) if args.mode == "human-core" else contracts.hashes["data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json"],
+        "sampleFreezeHash": sha256_file(root / HUMAN_CORE_FREEZE_RELATIVE) if args.mode in {"human-core", "human-core-supplemental"} else contracts.hashes["data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json"],
         "routingHash": contracts.hashes["data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl"],
         "routingSchemaHash": contracts.hashes["schemas/publication_pilot1_unit_routing.schema.json"],
         "targetInventoryHash": contracts.hashes["src/extraction/llm/publications/publication_target_inventory.yaml"],
@@ -176,11 +185,15 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
         "phaseBArtifactHash": contracts.hashes["data/interim/papers/publication_nodes_edges.json"],
         "annotationMVPBaseCheckpoint": ANNOTATION_MVP_BASE_CHECKPOINT,
     }
-    if args.mode == "human-core":
-        package = json.loads((root / "data/curation/papers/m2/human_core_gold/publication_human_core_primary_annotation_package_v1.1.json").read_text(encoding="utf-8"))
-        guide = package["guide"]
+    if args.mode in {"human-core", "human-core-supplemental"}:
+        package_relative = HUMAN_CORE_SUPPLEMENTAL_PACKAGE_RELATIVE if args.mode == "human-core-supplemental" else "data/curation/papers/m2/human_core_gold/publication_human_core_primary_annotation_package_v1.1.json"
+        package = json.loads((root / package_relative).read_text(encoding="utf-8"))
+        guide = package["authorities"]["guide"] if args.mode == "human-core-supplemental" else package["guide"]
         bindings["guideAuthorityVersion"] = str(guide["version"])
         bindings["guideAuthorityHash"] = str(guide["sha256"])
+        if args.mode == "human-core-supplemental":
+            bindings["supplementalPackageHash"] = sha256_file(root / HUMAN_CORE_SUPPLEMENTAL_PACKAGE_RELATIVE)
+            bindings["primaryBaselineExportHash"] = str(package["authorities"]["primaryBaselineExport"]["sha256"])
     if activation_payload is not None:
         bindings["activationHash"] = canonical_json_hash(activation_payload)
         bindings["packageBuildCheckpoint"] = str(activation_payload["packageBuildCheckpoint"])
@@ -195,7 +208,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse explicit identity and guarded mode options."""
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("synthetic", "calibration", "human-core"), default="synthetic")
+    parser.add_argument("--mode", choices=("synthetic", "calibration", "human-core", "human-core-supplemental"), default="synthetic")
     parser.add_argument("--annotation-session-id", required=True)
     parser.add_argument("--annotator-id", required=True)
     parser.add_argument("--activation-file", help="Required exact local JSON binding for calibration mode")
