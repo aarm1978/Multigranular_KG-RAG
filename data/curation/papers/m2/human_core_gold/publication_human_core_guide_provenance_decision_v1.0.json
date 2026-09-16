@@ -1,0 +1,8 @@
+{
+  "artifactType": "researcher_provenance_decision",
+  "artifactVersion": "1.0",
+  "decision": "Guide 1.1 is the prospectively package-bound primary authority. Export-recorded Guide/Handbook 1.0 values are preserved as a runtime provenance/version-recording defect.",
+  "limitation": "There is no retrospective cryptographic proof of the viewed guide version.",
+  "nonActions": ["do not alter the primary export", "do not reinterpret historical annotations"],
+  "appliesTo": "Human Core v0.1.5 composite reference"
+}

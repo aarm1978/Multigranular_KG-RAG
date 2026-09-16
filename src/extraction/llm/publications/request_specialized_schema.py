@@ -302,7 +302,7 @@ def derive_request_specialized_schema(
 ) -> dict[str, Any]:
     """Derive and audit a strict transport schema specialized to one request."""
 
-    generic = derive_model_authorable_schema(schema_path)
+    generic = derive_model_authorable_schema(schema_path, enforce_frozen_hash=schema_path == CANDIDATE_SCHEMA_PATH)
     frozen = load_json_object(schema_path)
     profile = load_yaml_object(inventory_path)
     targets = _trusted_request_targets(request, profile)

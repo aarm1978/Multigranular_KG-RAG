@@ -14,6 +14,8 @@ from typing import Any, Mapping, Sequence
 
 import yaml
 
+from src.extraction.llm.publications.authority_bundle import PublicationAuthorityBundle, V014
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 DEVELOPMENT_MANIFEST_PATH = PROJECT_ROOT / "data/curation/papers/publication_llm_development_only_manifest.json"
@@ -126,6 +128,7 @@ def build_development_request(
     prompt_path: Path = DEFAULT_PROMPT_PATH,
     development_manifest_path: Path = DEVELOPMENT_MANIFEST_PATH,
     development_inventory_path: Path = DEVELOPMENT_INVENTORY_PATH,
+    authority_bundle: PublicationAuthorityBundle = V014,
 ) -> dict[str, Any]:
     """Build one canonical request for an exact approved development source unit."""
 
@@ -154,9 +157,11 @@ def build_development_request(
     if source_unit.get("eligibility") != "eligible" or not source_unit.get("requestEligible"):
         raise RequestBuildError("source unit is not request eligible")
 
-    profile = load_yaml_object(TARGET_INVENTORY_PATH)
+    target_inventory_path = authority_bundle.target_inventory_path
+    candidate_schema_path = authority_bundle.candidate_schema_path
+    profile = load_yaml_object(target_inventory_path)
     ontology = load_yaml_object(ONTOLOGY_SPEC_PATH)
-    schema = load_json_object(CANDIDATE_SCHEMA_PATH)
+    schema = load_json_object(candidate_schema_path)
     target_rows = _validate_requested_targets(operational_target_ids, profile)
     prompt_bytes = prompt_path.read_bytes()
     try:
@@ -166,9 +171,9 @@ def build_development_request(
 
     authority = {
         "candidateSchema": {
-            "path": str(CANDIDATE_SCHEMA_PATH.relative_to(PROJECT_ROOT)),
+            "path": str(candidate_schema_path.relative_to(PROJECT_ROOT)),
             "version": schema["properties"]["schemaVersion"]["const"],
-            "sha256": sha256_bytes(CANDIDATE_SCHEMA_PATH.read_bytes()),
+            "sha256": sha256_bytes(candidate_schema_path.read_bytes()),
         },
         "evidenceValidationContract": {
             "path": str(EVIDENCE_VALIDATION_CONTRACT_PATH.relative_to(PROJECT_ROOT)),
@@ -191,15 +196,16 @@ def build_development_request(
             "sha256": sha256_bytes(SOURCE_UNIT_CONTRACT_PATH.read_bytes()),
         },
         "targetInventory": {
-            "path": str(TARGET_INVENTORY_PATH.relative_to(PROJECT_ROOT)),
+            "path": str(target_inventory_path.relative_to(PROJECT_ROOT)),
             "profileID": profile["profile_id"],
             "version": str(profile["schema_version"]),
-            "sha256": sha256_bytes(TARGET_INVENTORY_PATH.read_bytes()),
+            "sha256": sha256_bytes(target_inventory_path.read_bytes()),
         },
     }
     request: dict[str, Any] = {
         "requestSchemaVersion": REQUEST_SCHEMA_VERSION,
         "requestBuilderVersion": REQUEST_BUILDER_VERSION,
+        "authorityBundleID": authority_bundle.identifier,
         "purpose": "publication_llm_development_only",
         "developmentManifest": {
             "path": str(development_manifest_path.relative_to(PROJECT_ROOT)),

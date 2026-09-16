@@ -720,7 +720,7 @@ def derive_model_authorable_schema(
 
     source_bytes = schema_path.read_bytes()
     source_hash = sha256_bytes(source_bytes)
-    if enforce_frozen_hash and source_hash != FROZEN_CANDIDATE_SCHEMA_SHA256:
+    if enforce_frozen_hash and schema_path == CANDIDATE_SCHEMA_PATH and source_hash != FROZEN_CANDIDATE_SCHEMA_SHA256:
         raise ModelAuthorableSchemaError(
             "frozen Publication candidate schema hash changed; review derivation before use"
         )

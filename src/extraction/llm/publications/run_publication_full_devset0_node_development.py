@@ -83,6 +83,7 @@ from src.extraction.llm.publications.request_builder import (  # noqa: E402
     load_yaml_object,
     sha256_bytes,
 )
+from src.extraction.llm.publications.authority_bundle import PublicationAuthorityBundle, V014, V015  # noqa: E402
 from src.extraction.llm.publications.trusted_evidence_metadata_schema import (  # noqa: E402
     TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION,
     derive_trusted_evidence_metadata_schema,
@@ -482,10 +483,10 @@ def build_c1b_request(binding: Mapping[str, Any]) -> dict[str, Any]:
     return bound
 
 
-def model_authorable_relation_target_ids() -> list[str]:
+def model_authorable_relation_target_ids(authority_bundle: PublicationAuthorityBundle = V014) -> list[str]:
     """Derive the exact current relation universe from the frozen target profile."""
 
-    profile = load_yaml_object(TARGET_INVENTORY_PATH)
+    profile = load_yaml_object(authority_bundle.target_inventory_path)
     relation_ids = [
         str(row["operational_id"])
         for row in profile["relation_targets"]
@@ -494,22 +495,27 @@ def model_authorable_relation_target_ids() -> list[str]:
         and row.get("pilot_treatment")
         in {"extract_and_evaluate", "extract_and_monitor"}
     ]
-    if len(relation_ids) != EXPECTED_MODEL_AUTHORABLE_RELATION_TARGET_COUNT:
-        raise ValueError("frozen model-authorable relation universe is not exactly 26")
+    expected = 27 if authority_bundle == V015 else EXPECTED_MODEL_AUTHORABLE_RELATION_TARGET_COUNT
+    if len(relation_ids) != expected:
+        raise ValueError("authority-bundle model-authorable relation universe drifted")
     return relation_ids
 
 
-def build_full_semantic_request(binding: Mapping[str, Any]) -> dict[str, Any]:
+def build_full_semantic_request(binding: Mapping[str, Any], authority_bundle: PublicationAuthorityBundle = V014) -> dict[str, Any]:
     """Build one prospective combined node-and-relation DEV request."""
 
     development_id = str(binding["developmentID"])
-    relation_ids = model_authorable_relation_target_ids()
-    target_ids = list(binding["eligibleNodeOperationalTargetIDs"]) + relation_ids
+    relation_ids = model_authorable_relation_target_ids(authority_bundle)
+    node_ids = list(binding["eligibleNodeOperationalTargetIDs"])
+    if authority_bundle == V015:
+        node_ids += ["PUB-N-A-DOM03E-AGENTBASEDMODEL", "PUB-N-A-AG02-ORGANIZATION-PROSE"]
+    target_ids = node_ids + relation_ids
     request = build_development_request(
         str(binding["sourceUnitID"]),
         target_ids,
         run_id=f"{FULL_SEMANTIC_RUN_ID}/{development_id.lower()}",
-        prompt_path=PROMPT_PATH,
+        prompt_path=authority_bundle.prompt_path,
+        authority_bundle=authority_bundle,
     )
     bound = deepcopy(request)
     bound["developmentID"] = development_id

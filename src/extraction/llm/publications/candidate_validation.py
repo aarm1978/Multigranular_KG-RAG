@@ -765,8 +765,8 @@ def validate_candidate_envelope(
     envelope: Mapping[str, Any] = (
         parsed_document if isinstance(parsed_document, Mapping) else {}
     )
-    schema = load_json_object(CANDIDATE_SCHEMA_PATH)
-    profile = load_yaml_object(TARGET_INVENTORY_PATH)
+    schema = load_json_object(PROJECT_ROOT / request["authorities"]["candidateSchema"]["path"])
+    profile = load_yaml_object(PROJECT_ROOT / request["authorities"]["targetInventory"]["path"])
     ontology = load_yaml_object(ONTOLOGY_SPEC_PATH)
     if not ontology.get("classes") or not ontology.get("relations"):
         raise ValueError("frozen ontology specification is incomplete")

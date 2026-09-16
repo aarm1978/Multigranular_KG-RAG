@@ -58,7 +58,7 @@ def parse_recorded_response(
 
     injection_attempts = sorted(set(payload) & PIPELINE_OWNED_ENVELOPE_KEYS)
     envelope = {
-        "schemaVersion": "0.1.0",
+        "schemaVersion": request["authorities"]["candidateSchema"]["version"],
         "outputStage": "parsed_candidate",
         "metadata": expected_candidate_metadata(request, raw_hash),
     }

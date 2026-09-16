@@ -72,6 +72,12 @@ def derive_trusted_evidence_metadata_schema(
 ) -> dict[str, Any]:
     """Derive the current provider schema and bind exactly one trusted field."""
 
+    schema_path = Path(request["authorities"]["candidateSchema"]["path"]) if "authorities" in request else schema_path
+    inventory_path = Path(request["authorities"]["targetInventory"]["path"]) if "authorities" in request else inventory_path
+    if not schema_path.is_absolute():
+        schema_path = CANDIDATE_SCHEMA_PATH.parents[1] / schema_path
+    if not inventory_path.is_absolute():
+        inventory_path = TARGET_INVENTORY_PATH.parents[4] / inventory_path
     schema = deepcopy(
         derive_request_specialized_schema(
             request,

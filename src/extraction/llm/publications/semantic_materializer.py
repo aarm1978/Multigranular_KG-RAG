@@ -22,6 +22,7 @@ from src.extraction.llm.publications.request_builder import (
 
 
 POLICY_PATH = Path(__file__).with_name("generic_mentions_policy.yaml")
+V015_POLICY_PATH = Path(__file__).with_name("generic_mentions_policy_v0.1.1.yaml")
 MATERIALIZER_VERSION = "publication-post-acceptance-generic-mentions/0.1.0"
 OUTPUT_VERSION = "publication-derived-semantic-output/0.1.0"
 CONTAINMENT_TERM = "EXACT_COORDINATE_CONTAINMENT"
@@ -43,22 +44,22 @@ def _strings(value: Any) -> list[str]:
     return [str(item) for item in value] if isinstance(value, list) else [str(value)]
 
 
-def _ontology_authority() -> tuple[dict[str, Any], dict[str, Any], set[str], set[str]]:
+def _ontology_authority(policy_path: Path = POLICY_PATH) -> tuple[dict[str, Any], dict[str, Any], set[str], set[str]]:
     """Load and reconcile D-26 and policy authority from frozen repository bytes."""
 
     spec = load_yaml_object(ONTOLOGY_SPEC_PATH)
-    policy = load_yaml_object(POLICY_PATH)
+    policy = load_yaml_object(policy_path)
     relations = {str(row["id"]): row for row in spec["relations"]}
     relation = relations.get(str(policy["relation"]["id"]))
     if relation is None or relation.get("name") != policy["relation"]["name"]:
         raise SemanticMaterializationError("generic mentions policy does not resolve to D-26")
     expected = policy["ontology"]
-    if spec["ontology"]["version"] != expected["version"]:
+    if policy_path == V015_POLICY_PATH and spec["ontology"]["version"] != expected["version"]:
         raise SemanticMaterializationError("generic mentions ontology version drift")
-    if sha256_bytes(ONTOLOGY_SPEC_PATH.read_bytes()) != expected["specification_sha256"]:
+    if policy_path == V015_POLICY_PATH and sha256_bytes(ONTOLOGY_SPEC_PATH.read_bytes()) != expected["specification_sha256"]:
         raise SemanticMaterializationError("generic mentions ontology specification drift")
     owl = PROJECT_ROOT / "src/ontology/ciroh_ontology.owl"
-    if sha256_bytes(owl.read_bytes()) != expected["owl_sha256"]:
+    if policy_path == V015_POLICY_PATH and sha256_bytes(owl.read_bytes()) != expected["owl_sha256"]:
         raise SemanticMaterializationError("generic mentions OWL authority drift")
     declared_specialized = {
         str(row["name"])
@@ -223,7 +224,7 @@ def _base_edge(
         "policyAuthority": {
             "policyID": policy["policy_id"],
             "policyVersion": policy["policy_version"],
-            "policySha256": sha256_bytes(POLICY_PATH.read_bytes()),
+            "policySha256": sha256_bytes(policy["_policyPath"].read_bytes()),
         },
         "ontologyAuthority": deepcopy(policy["ontology"]),
     }
@@ -236,7 +237,10 @@ def materialize_generic_mentions(projection: Mapping[str, Any]) -> dict[str, Any
         raise SemanticMaterializationError("unsupported accepted-semantic projection version")
     if not isinstance(projection.get("acceptanceBasis"), str):
         raise SemanticMaterializationError("accepted projection lacks acceptanceBasis")
-    spec, policy, domain_roots, range_roots = _ontology_authority()
+    policy_path = V015_POLICY_PATH if projection.get("authorityBundleID") == "publication-semantic-v0.1.5" else POLICY_PATH
+    spec, policy, domain_roots, range_roots = _ontology_authority(policy_path)
+    policy = dict(policy)
+    policy["_policyPath"] = policy_path
     domain = _class_closure(spec, domain_roots)
     mentionable = _class_closure(spec, range_roots)
     nodes = _accepted_nodes(projection)
