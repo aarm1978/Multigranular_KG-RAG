@@ -83,7 +83,12 @@ from src.extraction.llm.publications.request_builder import (  # noqa: E402
     load_yaml_object,
     sha256_bytes,
 )
-from src.extraction.llm.publications.authority_bundle import PublicationAuthorityBundle, V014, V015  # noqa: E402
+from src.extraction.llm.publications.authority_bundle import (  # noqa: E402
+    PublicationAuthorityBundle,
+    V014,
+    V015,
+    bundle_for_identifier,
+)
 from src.extraction.llm.publications.trusted_evidence_metadata_schema import (  # noqa: E402
     TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION,
     derive_trusted_evidence_metadata_schema,
@@ -219,7 +224,7 @@ def _unit_paths(
 
     unit_dir = output_dir / development_id
     prefix = f"{artifact_prefix}_{development_id.lower().replace('-', '')}"
-    return {
+    record = {
         "unitDir": unit_dir,
         "request": unit_dir / f"{prefix}_live_request.json",
         "providerInput": unit_dir / f"{prefix}_exact_provider_input.txt",
@@ -242,6 +247,20 @@ def _unit_paths(
         "providerFailureResponse": unit_dir / f"{prefix}_provider_failure_response.json",
         "providerFailureMetadata": unit_dir / f"{prefix}_provider_failure_metadata.json",
     }
+    return record
+
+
+def _verify_persisted_authority(
+    attempt: Mapping[str, Any], request_path: Path, authority_bundle: PublicationAuthorityBundle
+) -> None:
+    """Fail closed unless both lifecycle records bind the selected authority."""
+
+    if attempt.get("authorityBundleID") != authority_bundle.identifier:
+        raise ValueError("persisted attempt authority bundle does not match selection")
+    if not request_path.exists():
+        raise ValueError("persisted authority request record is missing")
+    if load_json_object(request_path).get("authorityBundleID") != authority_bundle.identifier:
+        raise ValueError("persisted request authority bundle does not match selection")
 
 
 def _root_paths(
@@ -254,7 +273,7 @@ def _root_paths(
         if full_semantic
         else "publication_m2c1b"
     )
-    return {
+    record = {
         "promptDiff": output_dir / (
             f"{prefix}_prompt_v0.1.6_to_v0.1.7_endpoint_metadata_diff.json"
             if full_semantic else f"{prefix}_prompt_v0.1.3_to_v0.1.4_diff.json"
@@ -263,6 +282,7 @@ def _root_paths(
         "aggregate": output_dir / f"{prefix}_aggregate_development_diagnostics.json",
         "replay": output_dir / f"{prefix}_replay_summary.json",
     }
+    return record
 
 
 def build_historical_prompt_v014_diff() -> dict[str, Any]:
@@ -613,7 +633,7 @@ def _preflight_record(
     api_body_bytes = len(canonical_json(body))
     historical_provider_bytes = len(historical_provider_input)
     historical_api_bytes = len(canonical_json(historical_body))
-    return {
+    record = {
         "recordSchemaVersion": "0.1.0",
         "artifactRole": (
             "prospective_full_semantic_unit_offline_preflight"
@@ -689,6 +709,13 @@ def _preflight_record(
         },
         "providerCompatibilityGate": "PASS",
     }
+    if request.get("authorityBundleID") == V015.identifier:
+        authorities = request["authorities"]
+        record["authorityBundleID"] = V015.identifier
+        record["ontologyVersion"] = authorities["ontology"]["version"]
+        record["candidateSchemaVersion"] = authorities["candidateSchema"]["version"]
+        record["targetInventoryVersion"] = authorities["targetInventory"]["version"]
+    return record
 
 
 def prepare_unit(
@@ -963,6 +990,9 @@ def run_live_unit(
             raise ValueError("only a submitted full-semantic attempt can be resumed")
         if paths["providerResponse"].exists() or paths["providerFailureMetadata"].exists():
             raise ValueError(f"{development_id} already has a terminal provider artifact")
+        _verify_persisted_authority(
+            load_json_object(existing_attempt), paths["request"], authority_bundle
+        )
     state = prepare_unit(
         bindings[development_id],
         output_dir=output_dir,
@@ -985,6 +1015,7 @@ def run_live_unit(
         "semanticResponseProduced": False,
         "retryCount": 0,
         "requestInputSha256": state["request"]["requestInputSha256"],
+        "authorityBundleID": authority_bundle.identifier,
         "providerInputSha256": sha256_bytes(state["providerInput"]),
         "modelAuthorableSchemaSha256": sha256_bytes(
             canonical_json(state["schema"])
@@ -1181,20 +1212,21 @@ def run_unresolved_attempt_recovery(
     output_dir: Path = FULL_SEMANTIC_OUTPUT_DIR,
     transport: Transport | None = None,
     retrieval_transport: ResponseRetrieveTransport | None = None,
+    authority_bundle: PublicationAuthorityBundle = V014,
 ) -> dict[str, Any]:
     """Create one explicitly requested recovery attempt beside an unresolved record."""
 
-    resolution = resolve_next_recovery_attempt(output_dir, development_id)
+    resolution = resolve_next_recovery_attempt(output_dir, development_id, authority_bundle=authority_bundle)
     return run_live_unit(
         development_id, api_key, output_dir=resolution["recoveryRoot"],
         transport=transport, retrieval_transport=retrieval_transport,
         full_semantic=True, recovery_of=resolution["recoveryOf"],
-        attempt_number=resolution["attemptCount"],
+        attempt_number=resolution["attemptCount"], authority_bundle=authority_bundle,
     )
 
 
 def resolve_next_recovery_attempt(
-    output_dir: Path, development_id: str
+    output_dir: Path, development_id: str, *, authority_bundle: PublicationAuthorityBundle = V014
 ) -> dict[str, Any]:
     """Resolve, without writing, the sole next researcher-authorized recovery path."""
 
@@ -1212,6 +1244,11 @@ def resolve_next_recovery_attempt(
             candidates.append((int(match.group(1)), attempt, child))
     ordinal, prior_path, prior_root = max(candidates, key=lambda row: row[0])
     prior = load_json_object(prior_path)
+    _verify_persisted_authority(
+        prior,
+        _unit_paths(prior_root, development_id, artifact_prefix="publication_full_semantic")["request"],
+        authority_bundle,
+    )
     if prior.get("status") == "submitted" and prior.get("responseID"):
         raise ValueError(f"{development_id} submitted attempt requires exact-response resumption")
     if prior.get("status") not in {"initiated", "incomplete", "provider_failed"}:
@@ -1244,20 +1281,21 @@ def run_researcher_authorized_verification(
     output_dir: Path = FULL_SEMANTIC_OUTPUT_DIR,
     transport: Transport | None = None,
     retrieval_transport: ResponseRetrieveTransport | None = None,
+    authority_bundle: PublicationAuthorityBundle = V014,
 ) -> dict[str, Any]:
     """Run one explicit prospective Remedy B verification after a completed attempt."""
 
-    resolution = resolve_next_verification_attempt(output_dir, development_id)
+    resolution = resolve_next_verification_attempt(output_dir, development_id, authority_bundle=authority_bundle)
     return run_live_unit(
         development_id, api_key, output_dir=resolution["verificationRoot"],
         transport=transport, retrieval_transport=retrieval_transport,
         full_semantic=True, verification_of=resolution["verificationOf"],
-        attempt_number=resolution["attemptCount"],
+        attempt_number=resolution["attemptCount"], authority_bundle=authority_bundle,
     )
 
 
 def resolve_next_verification_attempt(
-    output_dir: Path, development_id: str
+    output_dir: Path, development_id: str, *, authority_bundle: PublicationAuthorityBundle = V014
 ) -> dict[str, Any]:
     """Resolve one new verification root from the latest completed attempt without writing."""
 
@@ -1279,8 +1317,13 @@ def resolve_next_verification_attempt(
             )["attempt"]
             if attempt.exists():
                 candidates.append((int(recovery_match.group(1)), attempt, child))
-    _ordinal, prior_path, _prior_root = max(candidates, key=lambda row: row[0])
+    _ordinal, prior_path, prior_root = max(candidates, key=lambda row: row[0])
     prior = load_json_object(prior_path)
+    _verify_persisted_authority(
+        prior,
+        _unit_paths(prior_root, development_id, artifact_prefix="publication_full_semantic")["request"],
+        authority_bundle,
+    )
     if prior.get("status") != "completed":
         raise ValueError(f"{development_id} latest attempt is not completed for verification")
     verification_root = paths["unitDir"] / "researcher_authorized_verification_001"
@@ -1316,20 +1359,21 @@ def run_researcher_authorized_retest(
     output_dir: Path = FULL_SEMANTIC_OUTPUT_DIR,
     transport: Transport | None = None,
     retrieval_transport: ResponseRetrieveTransport | None = None,
+    authority_bundle: PublicationAuthorityBundle = V014,
 ) -> dict[str, Any]:
     """Run one explicit test-retest replication only after configuration identity passes."""
 
-    resolution = resolve_next_retest_attempt(output_dir, development_id)
+    resolution = resolve_next_retest_attempt(output_dir, development_id, authority_bundle=authority_bundle)
     return run_live_unit(
         development_id, api_key, output_dir=resolution["retestRoot"],
         transport=transport, retrieval_transport=retrieval_transport,
         full_semantic=True, retest_of=resolution["retestOf"],
-        attempt_number=resolution["attemptCount"],
+        attempt_number=resolution["attemptCount"], authority_bundle=authority_bundle,
     )
 
 
 def resolve_next_retest_attempt(
-    output_dir: Path, development_id: str
+    output_dir: Path, development_id: str, *, authority_bundle: PublicationAuthorityBundle = V014
 ) -> dict[str, Any]:
     """Resolve one immutable attempt-4-anchored retest root without writing."""
 
@@ -1343,6 +1387,9 @@ def resolve_next_retest_attempt(
     if not prior_path.exists():
         raise ValueError(f"{development_id} has no completed attempt 4 to retest")
     prior = load_json_object(prior_path)
+    _verify_persisted_authority(prior, _unit_paths(
+        verification_root, development_id, artifact_prefix="publication_full_semantic"
+    )["request"], authority_bundle)
     if prior.get("status") != "completed" or prior.get("attemptCount") != 4:
         raise ValueError(f"{development_id} retest requires completed attempt 4")
     retest_root = paths["unitDir"] / "researcher_authorized_retest_001"
@@ -1778,6 +1825,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--aggregate-only", action="store_true")
     parser.add_argument("--replay-all", action="store_true")
     parser.add_argument(
+        "--authority-bundle",
+        choices=(V014.identifier, V015.identifier),
+        help="immutable Publication semantic authority for a full-semantic lifecycle",
+    )
+    parser.add_argument(
         "--full-semantic",
         action="store_true",
         help="prospectively expose 40 nodes plus the frozen 26 relations",
@@ -1795,15 +1847,24 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     if actions != 1:
         parser.error("select exactly one action")
+    if args.full_semantic and args.authority_bundle is None:
+        parser.error("--full-semantic requires --authority-bundle")
+    if not args.full_semantic and args.authority_bundle not in (None, V014.identifier):
+        parser.error("non-full-semantic operations retain the historical V014 authority")
     if args.full_semantic and (args.aggregate_only or args.replay_all):
         parser.error("full-semantic aggregate/replay requires completed future outputs")
+    authority_bundle = (
+        bundle_for_identifier(args.authority_bundle)
+        if args.full_semantic else V014
+    )
     output_dir = args.output_dir or (
         FULL_SEMANTIC_OUTPUT_DIR if args.full_semantic else DEFAULT_OUTPUT_DIR
     )
     try:
         if args.prepare_only:
             result = prepare_all(
-                output_dir, full_semantic=args.full_semantic
+                output_dir, full_semantic=args.full_semantic,
+                authority_bundle=authority_bundle,
             )["preflight"]
         elif args.live_unit:
             live = run_live_unit(
@@ -1811,6 +1872,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 load_openai_api_key(),
                 output_dir=output_dir,
                 full_semantic=args.full_semantic,
+                authority_bundle=authority_bundle,
             )
             result = {
                 "developmentID": args.live_unit,
@@ -1827,6 +1889,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 args.recover_unresolved_unit,
                 load_openai_api_key(),
                 output_dir=output_dir,
+                authority_bundle=authority_bundle,
             )
             result = {
                 "developmentID": args.recover_unresolved_unit,
@@ -1840,6 +1903,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             live = run_researcher_authorized_verification(
                 args.researcher_authorized_verification_unit,
                 load_openai_api_key(), output_dir=output_dir,
+                authority_bundle=authority_bundle,
             )
             result = {
                 "developmentID": args.researcher_authorized_verification_unit,
@@ -1853,6 +1917,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             live = run_researcher_authorized_retest(
                 args.researcher_authorized_retest_unit,
                 load_openai_api_key(), output_dir=output_dir,
+                authority_bundle=authority_bundle,
             )
             result = {
                 "developmentID": args.researcher_authorized_retest_unit,
@@ -1868,6 +1933,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 load_openai_api_key(),
                 output_dir=output_dir,
                 full_semantic=True,
+                authority_bundle=authority_bundle,
                 resume=True,
             )
             result = {

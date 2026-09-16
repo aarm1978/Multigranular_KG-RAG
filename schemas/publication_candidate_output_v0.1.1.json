@@ -307,7 +307,7 @@
           "const": "0.1.1"
         },
         "targetInventorySha256": {
-          "const": "0c990cb03a336d6eab16a256f7937968c5f29462a1e10a7840aa4b29416222b7"
+          "const": "da55c25da340c37f4293e7967255d2ee17f4aa8e0419452245bf306c182f1b18"
         },
         "sourceUnitContractVersion": {
           "const": "0.1.2"

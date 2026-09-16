@@ -11,6 +11,7 @@ from src.extraction.llm.publications.publication_relation_development_gate impor
     build_relation_development_gate_plan,
     write_relation_development_gate_plan,
 )
+from src.extraction.llm.publications.authority_bundle import V015
 from src.extraction.llm.publications.request_builder import canonical_json_file
 from src.extraction.llm.publications.run_publication_full_devset0_node_development import (
     build_c1b_request,
@@ -113,6 +114,25 @@ class PublicationRelationDevelopmentGateTests(unittest.TestCase):
             path = Path(directory) / "plan.json"
             plan = write_relation_development_gate_plan(path)
             self.assertEqual(path.read_bytes(), canonical_json_file(plan))
+
+    def test_v015_gate_uses_the_authority_aware_preparation_path(self) -> None:
+        """The successor plan records V015 coverage without a provider call."""
+
+        plan = build_relation_development_gate_plan(V015)
+        self.assertEqual(plan["authorityBundleID"], V015.identifier)
+        self.assertEqual(plan["ontologyVersion"], "0.1.5")
+        self.assertEqual(plan["promptVersion"], "publication-development-0.1.8")
+        self.assertEqual(plan["nodePolicy"], {
+            "candidateAuthorableNodeTargetCount": 48,
+            "directOpenDiscoveryTargetCount": 42,
+            "deterministicContextTargetCount": 4,
+            "deferredResolutionTargetCount": 2,
+        })
+        self.assertEqual(plan["candidateAuthorableRelationTargetCount"], 28)
+        self.assertEqual(plan["modelAuthorableRelationTargetCount"], 27)
+        self.assertIn("PUB-R-C-P34-HASCOMPONENT", plan["modelAuthorableRelationOperationalTargetIDs"])
+        self.assertNotIn("D-26", plan["modelAuthorableRelationOperationalTargetIDs"])
+        self.assertTrue(all(row["providerCompatibility"] == "PASS" for row in plan["units"]))
 
 
 if __name__ == "__main__":

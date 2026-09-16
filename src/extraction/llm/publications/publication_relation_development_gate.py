@@ -8,6 +8,7 @@ alter any historical development artifact.
 from __future__ import annotations
 
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any, Mapping
 
 from src.extraction.llm.publications.evidence_coordinate_guide import (
@@ -32,6 +33,12 @@ from src.extraction.llm.publications.run_publication_full_devset0_node_developme
     build_full_semantic_request,
     load_c0_bindings,
     model_authorable_relation_target_ids,
+    prepare_unit,
+)
+from src.extraction.llm.publications.authority_bundle import (
+    PublicationAuthorityBundle,
+    V014,
+    V015,
 )
 from src.extraction.llm.publications.run_publication_multitarget_node_development import (
     _exposed_targets,
@@ -39,6 +46,9 @@ from src.extraction.llm.publications.run_publication_multitarget_node_developmen
 from src.extraction.llm.publications.trusted_evidence_metadata_schema import (
     TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION,
     derive_trusted_evidence_metadata_schema,
+)
+from src.extraction.llm.publications.prospective_endpoint_binding_schema import (
+    PROSPECTIVE_ENDPOINT_BINDING_SCHEMA_VERSION,
 )
 
 
@@ -48,6 +58,11 @@ DEFAULT_PLAN_PATH = (
     / "data/curation/papers/m2/relation_development_gate/"
     "publication_relation_development_gate_plan.json"
 )
+V015_PLAN_PATH = (
+    PROJECT_ROOT
+    / "data/curation/papers/m2/relation_development_gate/"
+    "publication_relation_development_gate_v0.1.5_plan.json"
+)
 CLARIFIED_SOURCE_LOCAL_RELATION_IDS = (
     "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
     "PUB-R-C-P24-MENTIONSDATASET",
@@ -56,18 +71,58 @@ CLARIFIED_SOURCE_LOCAL_RELATION_IDS = (
 )
 
 
-def _relation_rows() -> list[dict[str, Any]]:
+def _relation_rows(authority_bundle: PublicationAuthorityBundle = V014) -> list[dict[str, Any]]:
     """Return exact profile rows for the current 26-relation universe."""
 
-    profile = load_yaml_object(TARGET_INVENTORY_PATH)
+    profile = load_yaml_object(authority_bundle.target_inventory_path)
     indexed = {
         str(row["operational_id"]): row for row in profile["relation_targets"]
     }
-    return [indexed[target_id] for target_id in model_authorable_relation_target_ids()]
+    return [indexed[target_id] for target_id in model_authorable_relation_target_ids(authority_bundle)]
 
 
-def _unit_plan(binding: Mapping[str, Any]) -> dict[str, Any]:
+def _unit_plan(binding: Mapping[str, Any], authority_bundle: PublicationAuthorityBundle = V014) -> dict[str, Any]:
     """Audit one combined request without persisting provider input or calling a model."""
+
+    if authority_bundle == V015:
+        # Exercise the real offline full-semantic preparation path in an ephemeral
+        # directory, so this gate cannot drift from a future live request.
+        with TemporaryDirectory() as temporary:
+            state = prepare_unit(
+                binding, output_dir=Path(temporary), full_semantic=True,
+                authority_bundle=authority_bundle,
+            )
+        request = state["request"]
+        schema = state["schema"]
+        provider_input = state["providerInput"]
+        audit = state["schemaAudit"]
+        nodes = _exposed_targets(schema, "operationalTargetID")
+        relations = _exposed_targets(schema, "operationalRelationID")
+        if len(nodes) != 42 or relations != sorted(model_authorable_relation_target_ids(authority_bundle)):
+            raise ValueError("V015 combined DEV schema does not expose the frozen target universe")
+        if not audit["compatible"]:
+            raise ValueError("V015 combined DEV schema failed provider compatibility")
+        metrics = audit["metrics"]
+        return {
+            "developmentID": binding["developmentID"],
+            "sourceUnitID": binding["sourceUnitID"],
+            "sectionRole": binding["sectionRole"],
+            "eligibleNodeTargetCount": len(nodes),
+            "eligibleRelationTargetCount": len(relations),
+            "eligibleRelationOperationalTargetIDs": relations,
+            "deterministicEndpointRoutes": request["deterministicEndpoints"],
+            "candidateNodeEndpointsAllowed": True,
+            "acceptedLocalCandidateEndpointsAllowed": True,
+            "allApplicableRelationsEndpointBindable": True,
+            "requestInputSha256": request["requestInputSha256"],
+            "providerSchemaSha256": sha256_bytes(canonical_json(schema)),
+            "providerSchemaCanonicalBytes": len(canonical_json(schema)),
+            "boundedRequestCanonicalBytes": len(canonical_json(provider_input_projection(request))),
+            "providerInputBytes": len(provider_input),
+            "providerInputSha256": sha256_bytes(provider_input),
+            "providerSchemaMetrics": metrics,
+            "providerCompatibility": "PASS",
+        }
 
     request = build_full_semantic_request(binding)
     guide = build_evidence_coordinate_guide(request["sourceUnit"])
@@ -105,11 +160,13 @@ def _unit_plan(binding: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def build_relation_development_gate_plan() -> dict[str, Any]:
+def build_relation_development_gate_plan(
+    authority_bundle: PublicationAuthorityBundle = V014,
+) -> dict[str, Any]:
     """Return the canonical prospective ten-unit full-semantic run plan."""
 
-    relation_rows = _relation_rows()
-    units = [_unit_plan(binding) for binding in load_c0_bindings()]
+    relation_rows = _relation_rows(authority_bundle)
+    units = [_unit_plan(binding, authority_bundle) for binding in load_c0_bindings()]
     relation_coverage = [
         {
             "operationalRelationID": row["operational_id"],
@@ -152,25 +209,33 @@ def build_relation_development_gate_plan() -> dict[str, Any]:
         "providerCalls": 0,
         "modelCallMade": False,
         "costUSD": 0,
-        "ontologyVersion": "0.1.4",
+        "ontologyVersion": "0.1.5" if authority_bundle == V015 else "0.1.4",
         "requestSpecializedSchemaVersion": (
-            TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION
+            PROSPECTIVE_ENDPOINT_BINDING_SCHEMA_VERSION
+            if authority_bundle == V015 else TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION
         ),
-        "promptVersion": PROMPT_VERSION,
+        "promptVersion": authority_bundle.prompt_version,
         "promptSemanticsChanged": False,
         "relationScopeRule": (
             "V8 derives intra_source or inter_source from resolved endpoint "
             "artifact ownership; ontology relation type does not fix assertion scope"
         ),
-        "nodePolicy": {
-            "candidateAuthorableNodeTargetCount": 46,
-            "directOpenDiscoveryTargetCount": 40,
-            "deterministicContextTargetCount": 4,
-            "deferredResolutionTargetCount": 2,
-        },
+        "nodePolicy": (
+            {
+                "candidateAuthorableNodeTargetCount": 48,
+                "directOpenDiscoveryTargetCount": 42,
+                "deterministicContextTargetCount": 4,
+                "deferredResolutionTargetCount": 2,
+            } if authority_bundle == V015 else {
+                "candidateAuthorableNodeTargetCount": 46,
+                "directOpenDiscoveryTargetCount": 40,
+                "deterministicContextTargetCount": 4,
+                "deferredResolutionTargetCount": 2,
+            }
+        ),
         "modelAuthorableRelationTargetCount": len(relation_rows),
         "modelAuthorableRelationOperationalTargetIDs": (
-            model_authorable_relation_target_ids()
+            model_authorable_relation_target_ids(authority_bundle)
         ),
         "genericMentionsModelAuthorable": False,
         "clarifiedEndpointPaths": clarified,
@@ -220,16 +285,20 @@ def build_relation_development_gate_plan() -> dict[str, Any]:
         ),
         "units": units,
     }
+    if authority_bundle == V015:
+        record["authorityBundleID"] = authority_bundle.identifier
+        record["candidateAuthorableRelationTargetCount"] = 28
     record["planSha256"] = sha256_bytes(canonical_json(record))
     return record
 
 
 def write_relation_development_gate_plan(
-    path: Path = DEFAULT_PLAN_PATH,
+    path: Path | None = None, *, authority_bundle: PublicationAuthorityBundle = V014,
 ) -> dict[str, Any]:
     """Write the deterministic prospective plan with one trailing line feed."""
 
-    plan = build_relation_development_gate_plan()
+    plan = build_relation_development_gate_plan(authority_bundle)
+    path = path or (V015_PLAN_PATH if authority_bundle == V015 else DEFAULT_PLAN_PATH)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(canonical_json_file(plan))
     return plan

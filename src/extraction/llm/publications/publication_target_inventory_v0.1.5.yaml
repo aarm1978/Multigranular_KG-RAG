@@ -15,7 +15,7 @@ ontology:
   source_relation_declarations: 127
 reviewed_sources:
 - path: docs/publication_llm_extraction_target_inventory_v0.1.5.md
-  sha256: 4421790c3cc444ced39ed1fda2f8d249777691ad2f162ca06c44db1c8352900b
+  sha256: 3d7570db291b034e95b74dcd270c3e4582ceb3af69b09f703ca972d8906612ae
   role: binding operational inventory
 - path: docs/publication_ontology_observations_register.md
   sha256: d06dbdf64fa7bd2ac81c7c1e97d16eebb8ded3d432396414c03a3e0ebca79d5e
@@ -31,6 +31,29 @@ authority_order:
 - LLM extraction decision record
 - this machine-readable profile
 - source-unit contract
+operational_row_counts:
+  nodes:
+    total: 62
+    by_pilot_treatment:
+      context_only: 9
+      deferred_resolution: 2
+      extract_and_evaluate: 21
+      extract_and_monitor: 21
+      out_of_scope: 4
+      required_infrastructure: 5
+  relations:
+    total: 45
+    by_pilot_treatment:
+      context_only: 8
+      deferred_resolution: 1
+      extract_and_evaluate: 17
+      extract_and_monitor: 10
+      out_of_scope: 3
+      required_infrastructure: 5
+      separate_follow_on_protocol: 1
+cross_category_targets:
+- operational_id: PUB-N-A-AG02-ORGANIZATION-PROSE
+  reason: Publication-prose Organization can occur in any routing category and is therefore global rather than category-assigned.
 controlled_vocabularies:
   production_responsibility:
   - deterministic
@@ -226,12 +249,14 @@ routing_categories:
   - A-DOM03b
   - A-DOM03c
   - A-DOM03d
+  - A-DOM03e
   - A-DOM13
   active_operational_target_ids:
   - PUB-N-A-DOM03A-PROCESSBASEDMODEL
   - PUB-N-A-DOM03B-CONCEPTUALMODEL
   - PUB-N-A-DOM03C-STATISTICALMODEL
   - PUB-N-A-DOM03D-MLMODEL
+  - PUB-N-A-DOM03E-AGENTBASEDMODEL
   - PUB-N-A-DOM13-ALGORITHM
   - PUB-N-A-P13-METHOD
   - PUB-N-A-P14-EXPERIMENT
@@ -669,7 +694,7 @@ node_targets:
   endpoint_usage: context_or_pipeline_only
   evidence_requirement: inherited_from_concrete_assertion
   evaluation_mode: pipeline_validation
-  positive_criterion: Superclass membership derived from ProcessBasedModel, ConceptualModel, StatisticalModel, or MLModel.
+  positive_criterion: Superclass membership derived from ProcessBasedModel, ConceptualModel, StatisticalModel, MLModel, or AgentBasedModel.
   boundary: The LLM may not use ComputationalModel as a fallback for ambiguous subtype classification.
   observation_refs:
   - OBS-PUB-023
