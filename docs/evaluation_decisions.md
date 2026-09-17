@@ -164,11 +164,11 @@ boundaries and status.
 ### 2.4 Ontology validation — partially done
 
 Competency questions as Cypher/SPARQL queries (pending instances), logical consistency via
-the formal HermiT gate (PASS for ontology 0.1.4 — classification completed, consistent,
-zero named unsatisfiable classes, and no execution errors), and constraint validation
-during assembly. Recorded for completeness; the formalization phase already established
-consistency. The validated ontology 0.1.4 artifact SHA-256 is
-`7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635`.
+the formal HermiT gate (PASS for formally frozen ontology 0.1.5 — classification completed,
+consistent, zero named unsatisfiable classes, and no execution errors), and constraint
+validation during assembly. Recorded for completeness; the formalization phase already
+established consistency. The validated ontology 0.1.5 OWL SHA-256 is
+`ce5f6d3d8ac926dc8ff872c9a36066758a86068b6681417bf7edc6aaeccf1e71`.
 
 ---
 
