@@ -4,7 +4,7 @@ import hashlib, json, shutil, zipfile
 from pathlib import Path
 
 IDS = {"pub:34:sec:0015:unit:0001", "pub:79:sec:0004:unit:0001"}
-COPY = ("src/annotation/publication_pilot1", "schemas/publication_pilot1_annotation_record.schema.json", "src/ontology/ontology_spec.yaml", "src/ontology/ciroh_ontology.owl", "src/extraction/llm/publications/publication_target_inventory.yaml", "docs/publication_human_core_reliability_annotation_guide_v0.1.5.md", "data/curation/papers/m2/human_core_gold/publication_human_core_reliability_annotation_package_v0.1.5.json", "data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json")
+COPY = ("src/annotation/__init__.py","src/annotation/publication_pilot1/__init__.py","src/annotation/publication_pilot1/contracts.py","src/annotation/publication_pilot1/calibration/__init__.py","src/annotation/publication_pilot1/calibration/app.py","src/annotation/publication_pilot1/calibration/contracts.py","src/annotation/publication_pilot1/calibration/service.py","src/annotation/publication_pilot1/calibration/store.py","src/annotation/publication_pilot1/calibration/validation.py","src/annotation/publication_pilot1/calibration/static", "schemas/publication_pilot1_annotation_record.schema.json", "src/ontology/ontology_spec.yaml", "src/ontology/ciroh_ontology.owl", "src/extraction/llm/publications/publication_target_inventory.yaml", "docs/publication_human_core_reliability_annotation_guide_v0.1.5.md", "data/curation/papers/m2/human_core_gold/publication_human_core_reliability_annotation_package_v0.1.5.json", "data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json")
 def sha(p: Path)->str: return hashlib.sha256(p.read_bytes()).hexdigest()
 def build(root: Path, output: Path)->Path:
     """Materialize only two-paper context, exact endpoint rows, and runtime files."""
@@ -13,7 +13,7 @@ def build(root: Path, output: Path)->Path:
     inv=[json.loads(x) for x in (root/"data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl").read_text().splitlines() if x]
     papers={x["paperID"] for x in inv if x["sourceUnitID"] in IDS}; inv=[x for x in inv if x["paperID"] in papers]
     refs={r for x in inv for r in x.get("deterministicNodeRefs",[])}
-    graph=json.loads((root/"data/interim/papers/publication_nodes_edges.json").read_text()); graph["nodes"]=[x for x in graph["nodes"] if x["id"] in refs]
+    graph=json.loads((root/"data/interim/papers/publication_nodes_edges.json").read_text()); graph["nodes"]=[x for x in graph["nodes"] if x["id"] in refs]; graph["edges"]=[]
     for item in COPY:
         s=root/item; d=output/item; d.parent.mkdir(parents=True,exist_ok=True)
         if s.is_dir(): shutil.copytree(s,d,ignore=shutil.ignore_patterns("__pycache__"))
@@ -29,9 +29,12 @@ def build(root: Path, output: Path)->Path:
     docs={x["paperID"]:x["canonicalTextSha256"] for x in inv}; mp=output/"data/curation/papers/pilot1/publication_pilot1_source_unit_manifest.json"; mp.write_text(json.dumps({"canonicalDocumentHashes":docs,"phaseBArtifactHash":sha(gp)},sort_keys=True)+"\n")
     for source in sorted({x["sourceFile"] for x in inv}):
         d=output/source; d.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(root/source,d)
-    for relative in ("data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl","schemas/publication_pilot1_unit_routing.schema.json"):
+    routing=[json.loads(x) for x in (root/"data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl").read_text().splitlines() if x]; routing=[x for x in routing if x["paperID"] in papers]
+    rp=output/"data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl"; rp.write_text("\n".join(json.dumps(x,sort_keys=True) for x in routing)+"\n")
+    for relative in ("schemas/publication_pilot1_unit_routing.schema.json",):
         d=output/relative; d.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(root/relative,d)
-    (output/"README_ANNOTATOR.md").write_text("# Annotator 2 Reliability Bundle\n\nUse Python 3.9+ with PyYAML installed. Do not consult external sources or researcher/model annotations.\n\nLaunch:\n```bash\nPYTHONPATH=. python -m src.annotation.publication_pilot1.calibration.app --mode human-core-reliability --annotation-session-id HUMAN_CORE_N2_RELIABILITY_V015 --annotator-id HUMAN_CORE_RELIABILITY_ANNOTATOR_2 --port 8766\n```\nOpen http://127.0.0.1:8766. Pause/resume in the UI. After both submissions, use **Export this session** and return `var/publication_pilot1_annotation/human-core/reliability-annotator-2/exports/HUMAN_CORE_N2_RELIABILITY_V015.annotation.json`.\n")
+    (output/"requirements.txt").write_text("PyYAML\n")
+    (output/"README_ANNOTATOR.md").write_text("# Annotator 2 Reliability Bundle\n\n1. Unzip this folder. Open Terminal and `cd` into it.\n2. Run `python -m pip install -r requirements.txt`.\n3. Launch: `PYTHONPATH=. python -m src.annotation.publication_pilot1.calibration.app --mode human-core-reliability --annotation-session-id HUMAN_CORE_N2_RELIABILITY_V015 --annotator-id HUMAN_CORE_RELIABILITY_ANNOTATOR_2 --port 8766`\n4. Open http://127.0.0.1:8766, read the handbook, and complete both units. Pause/resume in the UI. Do not seek external sources or researcher/model annotations.\n5. Use **Export this session** and return only `var/publication_pilot1_annotation/human-core/reliability-annotator-2/exports/HUMAN_CORE_N2_RELIABILITY_V015.annotation.json`.\n")
     paths=["data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl","data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl","schemas/publication_pilot1_unit_routing.schema.json","data/interim/papers/publication_nodes_edges.json"]
     inventory={str(p.relative_to(output)) for p in output.rglob('*') if p.is_file()}
     forbidden=("primary-researcher/exports", "supplemental-researcher/exports", "publication_human_core_primary_annotation_baseline", "adjudication", "rawresponse", "prompt")

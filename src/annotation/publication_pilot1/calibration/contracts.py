@@ -601,6 +601,11 @@ def load_annotation_contracts(root: Path, *, mode: str = "synthetic", activation
     bundle_manifest = root / "RELIABILITY_BUNDLE_MANIFEST.json"
     if mode == "human-core-reliability" and bundle_manifest.is_file():
         payload = json.loads(bundle_manifest.read_text(encoding="utf-8"))
+        for relative, expected in payload.get("files", {}).items():
+            if relative == "RELIABILITY_BUNDLE_MANIFEST.json" or relative.startswith("var/"):
+                continue
+            if not (root / relative).is_file() or sha256_file(root / relative) != expected:
+                raise AnnotationContractError(f"RELIABILITY_BUNDLE_INTEGRITY_MISMATCH:{relative}")
         hashes = {relative: sha256_file(root / relative) for relative in payload["runtimeHashPaths"]}
     else:
         hashes = verify_protected_hashes(root)
