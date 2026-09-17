@@ -33,7 +33,11 @@ def build(root: Path, output: Path)->Path:
         d=output/relative; d.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(root/relative,d)
     (output/"README_ANNOTATOR.md").write_text("# Annotator 2 Reliability Bundle\n\nUse Python 3.9+ with PyYAML installed. Do not consult external sources or researcher/model annotations.\n\nLaunch:\n```bash\nPYTHONPATH=. python -m src.annotation.publication_pilot1.calibration.app --mode human-core-reliability --annotation-session-id HUMAN_CORE_N2_RELIABILITY_V015 --annotator-id HUMAN_CORE_RELIABILITY_ANNOTATOR_2 --port 8766\n```\nOpen http://127.0.0.1:8766. Pause/resume in the UI. After both submissions, use **Export this session** and return `var/publication_pilot1_annotation/human-core/reliability-annotator-2/exports/HUMAN_CORE_N2_RELIABILITY_V015.annotation.json`.\n")
     paths=["data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl","data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl","schemas/publication_pilot1_unit_routing.schema.json","data/interim/papers/publication_nodes_edges.json"]
-    manifest={"bundleVersion":"1.0","runtimeHashPaths":paths,"files":{str(p.relative_to(output)):sha(p) for p in sorted(output.rglob('*')) if p.is_file()}}
+    inventory={str(p.relative_to(output)) for p in output.rglob('*') if p.is_file()}
+    forbidden=("primary-researcher/exports", "supplemental-researcher/exports", "publication_human_core_primary_annotation_baseline", "adjudication", "rawresponse", "prompt")
+    hits=sorted(item for item in inventory if any(token in item.lower() for token in forbidden))
+    if hits: raise ValueError(f"RELIABILITY_BUNDLE_FORBIDDEN_PATHS:{hits}")
+    manifest={"bundleVersion":"1.0","runtimeHashPaths":paths,"files":{item:sha(output/item) for item in sorted(inventory)},"forbiddenContentAudit":{"passed":True,"forbiddenPathTokens":list(forbidden),"matches":hits}}
     (output/"RELIABILITY_BUNDLE_MANIFEST.json").write_text(json.dumps(manifest,indent=2,sort_keys=True)+"\n")
     with zipfile.ZipFile(output.with_suffix('.zip'),'w',zipfile.ZIP_DEFLATED) as z:
         for p in sorted(output.rglob('*')):
