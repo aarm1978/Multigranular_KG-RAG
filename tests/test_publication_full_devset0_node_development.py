@@ -16,7 +16,8 @@ from src.extraction.llm.publications.evidence_coordinate_guide import (
 from src.extraction.llm.publications.openai_provider import MAX_OUTPUT_TOKENS
 from src.extraction.llm.publications.request_builder import canonical_json
 from src.extraction.llm.publications.authority_bundle import V014, V015
-from src.extraction.llm.publications.authority_bundle import V015_SCHEMA012
+from src.extraction.llm.publications.authority_bundle import V015_SCHEMA012, V015_SCHEMA013
+from src.extraction.llm.publications.publication_schema013_compatibility_audit import audit_unit
 from src.extraction.llm.publications.openai_provider import OpenAIProviderResponseError
 from src.extraction.llm.publications.run_publication_coordinate_guided_development_smoke import (
     build_m2b3_request,
@@ -81,6 +82,45 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
         self.assertIn("PUB-R-C-P34-HASCOMPONENT", state["preflight"]["exposedRelationOperationalTargetIDs"])
         self.assertNotIn("D-26", state["preflight"]["exposedRelationOperationalTargetIDs"])
         self.assertEqual(state["preflight"]["networkCalls"], 0)
+
+    def test_schema013_preparation_is_v015_family_and_offline(self) -> None:
+        """The C-P34 enum successor uses the unchanged V015 execution universe."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            state = prepare_unit(load_c0_bindings()[0], output_dir=Path(directory),
+                                 full_semantic=True, authority_bundle=V015_SCHEMA013)
+        self.assertEqual(state["request"]["authorityBundleID"], V015_SCHEMA013.identifier)
+        self.assertEqual((state["preflight"]["exposedNodeTargetCount"], state["preflight"]["exposedRelationTargetCount"]), (42, 27))
+        self.assertIn("PUB-R-C-P34-HASCOMPONENT", state["preflight"]["exposedRelationOperationalTargetIDs"])
+        self.assertNotIn("D-26", state["preflight"]["exposedRelationOperationalTargetIDs"])
+        self.assertEqual(state["preflight"]["providerCompatibilityGate"], "PASS")
+        self.assertEqual(state["preflight"]["networkCalls"], 0)
+
+    def test_schema013_replay_closes_dev08_without_a_provider_call(self) -> None:
+        """The preserved C-P34 output replays cleanly under the enum successor."""
+
+        result = audit_unit("DEV-08")
+        self.assertEqual(result["networkCalls"], 0)
+        self.assertTrue(result["compatible"])
+        self.assertTrue(result["transport"]["providerInput"]["byteIdentical"])
+        self.assertTrue(result["transport"]["requestSpecializedModelSchema"]["byteIdentical"])
+        closure = result["dev08Closure"]
+        self.assertTrue(closure["cP34GenericEnumFailuresClosed"])
+        self.assertTrue(closure["endpointLifecycleCascadeClosed"])
+        self.assertEqual(
+            result["downstream"]["successorFindingCodeCounts"],
+            {
+                "globalFindings": {},
+                "evidenceResults": {"UNREFERENCED_EVIDENCE_SPAN": 2},
+                "recordResults": {},
+            },
+        )
+        self.assertEqual(
+            closure["independentRemainingWarningCodeCounts"],
+            {"UNREFERENCED_EVIDENCE_SPAN": 2},
+        )
+        self.assertEqual(closure["independentRemainingNonWarningFindingCodeCounts"], {})
+        self.assertEqual(closure["usableCandidateCount"], 63)
 
     def test_all_requests_come_from_exact_accepted_c0_plan(self) -> None:
         """All ten requests consume plan IDs and source-unit bindings mechanically."""
@@ -305,21 +345,22 @@ class FullDevset0NodeDevelopmentTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             output_dir = Path(directory)
-            run_live_unit("DEV-10", "synthetic-secret", output_dir=output_dir, transport=transport, full_semantic=True, authority_bundle=V015_SCHEMA012)
+            run_live_unit("DEV-10", "synthetic-secret", output_dir=output_dir, transport=transport, full_semantic=True, authority_bundle=V015_SCHEMA013)
             attempt_path = output_dir / "DEV-10/publication_full_semantic_dev10_attempt_record.json"
             attempt = json.loads(attempt_path.read_text(encoding="utf-8"))
             reproducibility = json.loads((output_dir / "DEV-10/publication_full_semantic_dev10_reproducibility_record.json").read_text(encoding="utf-8"))
         self.assertEqual(attempt["status"], "completed")
         self.assertTrue(attempt["semanticResponseProduced"])
-        self.assertEqual(attempt["requestInputSha256"], build_full_semantic_request(load_c0_bindings()[-1], V015_SCHEMA012)["requestInputSha256"])
+        self.assertEqual(attempt["requestInputSha256"], build_full_semantic_request(load_c0_bindings()[-1], V015_SCHEMA013)["requestInputSha256"])
         self.assertEqual(len(attempt["providerInputSha256"]), 64)
         self.assertEqual(len(attempt["modelAuthorableSchemaSha256"]), 64)
         self.assertEqual(reproducibility["requestSpecializedSchemaVersion"], "publication-request-specialized-0.5.0")
         self.assertEqual(reproducibility["coordinateGuideTransport"], "excluded_from_prospective_full_semantic_provider_input")
-        self.assertEqual(reproducibility["authorityBundleID"], V015_SCHEMA012.identifier)
+        self.assertEqual(reproducibility["authorityBundleID"], V015_SCHEMA013.identifier)
         authorities = reproducibility["authorityBindings"]
-        self.assertEqual(authorities["candidateSchema"]["version"], "0.1.2")
-        self.assertEqual(authorities["candidateSchema"]["path"], "schemas/publication_candidate_output_v0.1.2.json")
+        self.assertEqual(authorities["candidateSchema"]["version"], "0.1.3")
+        self.assertEqual(authorities["candidateSchema"]["path"], "schemas/publication_candidate_output_v0.1.3.json")
+        self.assertEqual(authorities["candidateSchema"]["sha256"], "cca85195d6d4833cf754907480b1b25faba8aa10c050856a3bd4f373d05277dd")
         self.assertEqual(authorities["targetInventory"]["sha256"], "84aa773f0a4931fafc50d27240d784b2c977ef29767f3d9e80f3f4a42ef8e6e0")
         self.assertEqual(authorities["ontology"]["version"], "0.1.5")
         self.assertEqual(authorities["prompt"], {

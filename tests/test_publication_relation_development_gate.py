@@ -10,10 +10,11 @@ from src.extraction.llm.publications.publication_relation_development_gate impor
     CLARIFIED_SOURCE_LOCAL_RELATION_IDS,
     V015_PLAN_PATH,
     V015_SCHEMA012_PLAN_PATH,
+    V015_SCHEMA013_PLAN_PATH,
     build_relation_development_gate_plan,
     write_relation_development_gate_plan,
 )
-from src.extraction.llm.publications.authority_bundle import V015, V015_SCHEMA012
+from src.extraction.llm.publications.authority_bundle import V015, V015_SCHEMA012, V015_SCHEMA013
 from src.extraction.llm.publications.request_builder import canonical_json, canonical_json_file, sha256_bytes
 from src.extraction.llm.publications.run_publication_full_devset0_node_development import (
     build_c1b_request,
@@ -25,13 +26,28 @@ from src.extraction.llm.publications.run_publication_full_devset0_node_developme
 
 
 class PublicationRelationDevelopmentGateTests(unittest.TestCase):
-    """Prove the prospective path exposes exactly 40 nodes and 26 relations."""
+    """Prove each prospective authority exposes its frozen relation universe."""
 
     def test_successor_gate_path_is_distinct_and_canonical_check_is_ready(self) -> None:
         """The schema successor cannot overwrite the original V015 gate."""
 
         self.assertNotEqual(V015_SCHEMA012_PLAN_PATH, V015_PLAN_PATH)
         self.assertEqual(V015_SCHEMA012.identifier, "publication-semantic-v0.1.5-schema-v0.1.2")
+
+    def test_schema013_gate_path_and_plan_are_distinct_and_call_free(self) -> None:
+        """The C-P34 schema repair gets its own future tracked gate artifact."""
+
+        self.assertNotEqual(V015_SCHEMA013_PLAN_PATH, V015_PLAN_PATH)
+        self.assertNotEqual(V015_SCHEMA013_PLAN_PATH, V015_SCHEMA012_PLAN_PATH)
+        self.assertEqual(V015_SCHEMA013.identifier, "publication-semantic-v0.1.5-schema-v0.1.3")
+        plan = build_relation_development_gate_plan(V015_SCHEMA013)
+        self.assertEqual(plan["authorityBundleID"], V015_SCHEMA013.identifier)
+        self.assertEqual((plan["nodePolicy"]["directOpenDiscoveryTargetCount"], plan["modelAuthorableRelationTargetCount"]), (42, 27))
+        self.assertIn("PUB-R-C-P34-HASCOMPONENT", plan["modelAuthorableRelationOperationalTargetIDs"])
+        self.assertNotIn("D-26", plan["modelAuthorableRelationOperationalTargetIDs"])
+        self.assertEqual(plan["providerCalls"], 0)
+        self.assertTrue(all(row["providerCompatibility"] == "PASS" for row in plan["units"]))
+        self.assertEqual(plan["authorityBindings"]["candidateSchemaSha256"], "cca85195d6d4833cf754907480b1b25faba8aa10c050856a3bd4f373d05277dd")
 
     def test_successor_gate_requires_locally_regenerated_canonical_bytes(self) -> None:
         """Run after the researcher generates the distinct successor gate artifact."""

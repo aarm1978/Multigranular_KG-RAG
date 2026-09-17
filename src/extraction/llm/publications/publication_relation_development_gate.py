@@ -40,6 +40,7 @@ from src.extraction.llm.publications.authority_bundle import (
     V014,
     V015,
     V015_SCHEMA012,
+    V015_SCHEMA013,
     is_v015_semantic_family,
 )
 from src.extraction.llm.publications.run_publication_multitarget_node_development import (
@@ -68,6 +69,10 @@ V015_PLAN_PATH = (
 V015_SCHEMA012_PLAN_PATH = (
     PROJECT_ROOT / "data/curation/papers/m2/relation_development_gate/"
     "publication_relation_development_gate_v0.1.5_schema_v0.1.2_plan.json"
+)
+V015_SCHEMA013_PLAN_PATH = (
+    PROJECT_ROOT / "data/curation/papers/m2/relation_development_gate/"
+    "publication_relation_development_gate_v0.1.5_schema_v0.1.3_plan.json"
 )
 CLARIFIED_SOURCE_LOCAL_RELATION_IDS = (
     "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
@@ -312,7 +317,12 @@ def write_relation_development_gate_plan(
     """Write the deterministic prospective plan with one trailing line feed."""
 
     plan = build_relation_development_gate_plan(authority_bundle)
-    path = path or (V015_SCHEMA012_PLAN_PATH if authority_bundle == V015_SCHEMA012 else V015_PLAN_PATH if authority_bundle == V015 else DEFAULT_PLAN_PATH)
+    path = path or (
+        V015_SCHEMA013_PLAN_PATH if authority_bundle is V015_SCHEMA013
+        else V015_SCHEMA012_PLAN_PATH if authority_bundle is V015_SCHEMA012
+        else V015_PLAN_PATH if authority_bundle is V015
+        else DEFAULT_PLAN_PATH
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(canonical_json_file(plan))
     return plan
