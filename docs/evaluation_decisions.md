@@ -3,8 +3,8 @@
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts — Intrinsic Evaluation Strategy**
 
 **Purpose.** This document records the evaluation design for Study 2: which metrics are
-computed, at which points in KG construction, how the three-LLM robustness analysis is
-structured, and how the schema-agnostic comparison against Microsoft GraphRAG is framed.
+computed, at which points in KG construction, and how structural comparison against
+Microsoft GraphRAG is framed.
 It is a decisions record (rationale + table skeletons) intended as direct input to the
 manuscript's evaluation section, and as the contract for the metrics-computation script.
 
@@ -14,6 +14,17 @@ justification status: anchored (a verified source exists, e.g. MINE in the propo
 by explicit reasoning rather than citation). Citations are NOT invented here; placeholders
 mark where literature support must be added. This doubles as a checklist of what still
 needs grounding.
+
+## Current accepted architecture
+
+The authoritative Study 2 evaluation architecture is the frozen amendment at
+[`study2_evaluation_protocol_amendment_v0.1.md`](study2_evaluation_protocol_amendment_v0.1.md).
+It governs this decisions record wherever historical design text conflicts with it. The
+current architecture is: bounded, model-blind **Human Core N=5**; an independent
+**reliability subset N=2**; a later **pooled human-adjudicated reference**; a separate
+**model-blind completeness audit**; a **SciERC external IE anchor**; and **GraphRAG for
+structural comparison only**. Historical three-LLM, broad-gold-standard, and paired
+per-model GraphRAG designs below are retained as design history, not current authority.
 
 ---
 
@@ -52,7 +63,7 @@ point of the internal trajectory and the operand of the external comparison.
 
 **Scope boundary (important for honest claims).** Density and richness measure *how much
 structure*, not *how correct* it is. A denser graph is not automatically a better one.
-Correctness is established separately by the gold-standard component (Precision/Recall/F1)
+Correctness evidence is established separately under the amended human-reference components
 and logical soundness through the formal HermiT validation gate. The schema-agnostic
 comparison supports a claim of *structural richness*, which—combined with correctness
 and consistency evidence—supports the overall claim of a faithful, rich representation.
@@ -141,18 +152,14 @@ encodes UTF-8, and computes lowercase SHA-256. Individual excluded IDs are not p
   from proposal):* computed **globally and per entity type**, to separate intended
   multiplicity (e.g. versioned datasets) from undesirable duplication.
 
-### 2.3 Gold-standard metrics — deferred (framework only)
+### 2.3 Human-reference metrics — amended, not yet confirmatory
 
-Precision, Recall, F1, and a **fact-recoverability** measure (whether extracted triples
-suffice to reconstruct core scientific assertions — problem–method–result chains, dataset
-lineage, code–documentation links — without generative inference). These require a manually
-annotated gold standard (stratified subset, ≥2 annotators, adjudication, inter-annotator
-agreement as upper bound). *Decision:* the gold-standard protocol is a separate sub-design,
-documented elsewhere; this document only records that these metrics exist, are measured
-**once on the extraction output** (not as a trajectory), and apply mainly to the LLM layer
-(deterministic extraction is correct-by-construction w.r.t. source fields).
-`[CITE-NEEDED: standard IE evaluation (P/R/F1) reference; inter-annotator agreement
-measure, e.g. the specific agreement coefficient chosen.]`
+Precision, Recall, F1, and fact recoverability remain prospective only under the amended
+Human Core matching contract. They are not claims against a broad “gold standard.” Human
+Core N=5 and the N=2 reliability subset are frozen bounded procedures; pooled
+human-adjudicated reference, model-blind completeness audit, and SciERC external IE anchor
+have separate pending contracts. See the amendment rather than this document for their
+boundaries and status.
 
 ### 2.4 Ontology validation — partially done
 
@@ -180,9 +187,9 @@ The construction pipeline stages and their measurement points are cumulative:
 | | after +GitHub det. | density, richness | | no |
 | | after +Hub det. | density, richness | | no |
 | | after +Papers det. | density, richness | | no |
-| | after LLM layer added | density, richness | ratio "before alignment" | **yes — ×3 models** |
-| Alignment (consolidation) | after semantic alignment | density, richness | ratio "after alignment" | yes — ×3 models |
-| Assembly | after graph assembly | density, richness | ratio "after assembly" | yes — ×3 models |
+| | after Publication semantic layer added | density, richness | ratio "before alignment" | governed by the amended evaluation architecture |
+| Alignment (consolidation) | after semantic alignment | density, richness | ratio "after alignment" | governed by the amended evaluation architecture |
+| Assembly | after graph assembly | density, richness | ratio "after assembly" | governed by the amended evaluation architecture |
 
 Thus “+ GitHub” means the concatenated HydroShare and GitHub mention graphs, not GitHub in
 isolation. Module-only diagnostics may be computed for quality control, but they are stored
@@ -194,11 +201,9 @@ dominated by low-degree or attribute-sparse entity classes can lower a global av
 still increasing graph coverage and total represented information. Global values must
 therefore be interpreted together with node and edge counts and per-class diagnostics.
 
-*Reading the table:* the deterministic-only points have no model dimension (no LLM
-involved). The model dimension (×3) appears only from the LLM layer onward, because only
-the LLM-produced portion of the graph varies by model; the deterministic portion, the
-ontology, the consolidation logic, and assembly are model-invariant. This keeps the matrix
-manageable: it is "the LLM-dependent points × 3," not "everything × 3."
+*Historical note — superseded:* the previous ×3 model matrix is not a current requirement.
+Any model-sensitive evaluation must follow the amended Human Core, pooled-reference, and
+completeness-audit boundaries.
 
 *Decision (argued):* the three proposal-mandated consolidation-ratio points (before/after
 alignment, after assembly) are the coarse trajectory; the per-source structural points are
@@ -214,7 +219,11 @@ component.)
 
 ---
 
-## 4. The three-LLM robustness analysis
+## 4. Historical three-LLM robustness analysis — superseded
+
+This section preserves the earlier design rationale only. It is superseded by the current
+accepted architecture above and must not be used to require three LLMs, select a model, or
+define a correctness baseline.
 
 **Models (confirmed):** `gpt-oss-120b`, `qwen3.6-27b`, `gpt-5.5-2026-04-23`.
 `[VERIFY: confirm these exact identifiers at experiment time — model names version
@@ -249,12 +258,9 @@ lab OpenAI-credit item).
 
 ## 5. External comparison vs. Microsoft GraphRAG
 
-**Design (confirmed): paired, per-model.** GraphRAG is run with *each* model, and the
-ontology-guided pipeline is run with *each* model, and comparison is **within each model**:
-GraphRAG-with-model-M vs. ours-with-model-M. This controls for the model: any difference is
-attributable to the *approach* (ontology-guided vs. schema-agnostic), not the model — and
-it yields two robustness arguments at once (our advantage holds across models; our metrics
-are stable across models).
+**Current authority:** GraphRAG is a structural-only comparator under the amendment. It is
+not a human-reference, semantic-correctness, or model-robustness baseline. The earlier
+paired per-model design is superseded.
 
 **What is compared.** The two schema-agnostic metrics only (information density, relational
 richness), on the **final assembled** ontology-guided KG vs. GraphRAG's KG, both over the
@@ -276,16 +282,12 @@ both Multigranular KG variants for consistency.
 
 ### Table skeleton — schema-agnostic comparison (Purpose 2)
 
-| Model | Information density — GraphRAG KG | Information density — Multi-granular KG | Relational richness — GraphRAG KG | Relational richness — Multi-granular KG |
+| Evaluation state | Information density — GraphRAG KG | Information density — Multi-granular KG | Relational richness — GraphRAG KG | Relational richness — Multi-granular KG |
 |---|---|---|---|---|
-| gpt-oss-120b | | | | |
-| qwen3.6-27b | | | | |
-| gpt-5.5-2026-04-23 | | | | |
+| final assembled same-corpus graphs | | | | |
 
-*Reading:* each row fixes the model; compare GraphRAG vs. Multi-granular within the row
-(approach effect, model held constant). Read down our columns to see stability across
-models. "Multi-granular KG" = the final assembled KG. `[VERIFY: confirm GraphRAG's exact
-configuration/version used.]`
+*Reading:* “Multi-granular KG” is the final assembled KG. The comparison supports only
+structural interpretation. `[VERIFY: confirm GraphRAG's exact configuration/version used.]`
 
 ---
 
@@ -320,7 +322,8 @@ Uses the same rows and columns as Table A.
 | + Hub (det.) | | | | | | | | |
 | + Papers (det.) | | | | | | | | |
 
-For the LLM-onward rows, this table is instantiated **once per model** (×3), per §4.
+The historical per-model instantiation is superseded; use the amendment for any
+model-sensitive evaluation design.
 
 ### 6.2 Consolidation ratio — global and per entity type (Purpose 1)
 
@@ -333,11 +336,11 @@ For the LLM-onward rows, this table is instantiated **once per model** (×3), pe
 Per-type columns separate intended multiplicity (e.g. versioned datasets) from undesirable
 duplication.
 
-### 6.3 Gold-standard (deferred — framework only)
+### 6.3 Human-reference (amended — framework only)
 
 | Layer / source | Precision | Recall | F1 | Fact recoverability |
 |---|---|---|---|---|
-| (to be defined with the gold-standard protocol) | | | | |
+| Human Core / pooled reference procedure, when its matching contract is frozen | | | | |
 
 ---
 
@@ -348,25 +351,22 @@ duplication.
   point. GitHub alone is retained only as a module diagnostic.
 - **As construction proceeds:** materialize the next cumulative snapshot and re-run the
   same evaluator after each added source and each consolidation stage (the fine trajectory).
-- **Later (requires LLM layer):** the model dimension (×3), the before/after-alignment
-  consolidation ratios.
-- **Later (requires gold standard):** Precision/Recall/F1, fact recoverability.
+- **Later (requires amended contracts):** pooled-reference scoring, model-blind
+  completeness audit, Human Core P/R/F1, fact recoverability, and SciERC external IE
+  anchoring.
 - **Later (requires GraphRAG runs):** the §5 comparison.
 
 ---
 
 ## 8. Open items / pending decisions
 
-- `[CITE-NEEDED]` items above: MINE [97] verification; GraphRAG reference; IE-metrics and
-  inter-annotator-agreement references; multi-model-robustness rationale reference.
-- Confirm exact model identifiers at experiment time (§4).
+- `[CITE-NEEDED]` items above: MINE [97] verification; GraphRAG reference; and IE-metrics
+  references appropriate to the amended architecture.
 - Confirm GraphRAG configuration/version and that its run uses the same corpus (§5).
 - Preserve the ratified global and class-specific administrative/identifier exclusion
   policy for information density (§2.1) and apply it identically to both KGs.
 - Preserve the frozen Multigranular KG file-inventory class policy and endpoint-derived
   edge filtering as a supporting sensitivity analysis; do not claim symmetric GraphRAG
   filtering without a pre-defined common cross-schema identification protocol.
-- Decide whether the "Multi-granular KG" in the GraphRAG comparison is strictly the
-  assembled state (recommended) — confirm.
-- Budget and ordering for the ×3 (and GraphRAG ×3) runs, with the advisor.
-- Gold-standard protocol: separate design (annotators, stratification, adjudication).
+- Freeze the pending matching, pooled-reference, completeness-audit, SciERC, and production
+  acceptance procedures before their results are used for confirmatory claims.
