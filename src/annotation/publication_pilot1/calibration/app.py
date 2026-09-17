@@ -170,16 +170,25 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
     namespace = "synthetic" if args.mode == "synthetic" else (human_core_session_namespace(args.annotation_session_id) if args.mode in {"human-core", "human-core-supplemental", "human-core-reliability"} else "calibration/production")
     runtime = root / "var/publication_pilot1_annotation" / namespace
     state_path = runtime / "sessions" / f"{_safe_component(args.annotation_session_id)}.sqlite3"
+    reliability_authorities: dict[str, object] = {}
+    if args.mode == "human-core-reliability":
+        package_payload = json.loads((root / HUMAN_CORE_RELIABILITY_PACKAGE_RELATIVE).read_text(encoding="utf-8"))
+        reliability_authorities = dict(package_payload["authorities"])
+    def bound_hash(relative: str, authority: str | None = None) -> str:
+        """Use a reliability-package authority hash when bundle mode supplies it."""
+        if authority and authority in reliability_authorities:
+            return str(reliability_authorities[authority]["sha256"])
+        return contracts.hashes.get(relative, sha256_file(root / relative))
     bindings = {
-        "sourceUnitInventoryHash": contracts.hashes["data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl"],
-        "sampleFreezeHash": sha256_file(root / HUMAN_CORE_FREEZE_RELATIVE) if args.mode in {"human-core", "human-core-supplemental", "human-core-reliability"} else contracts.hashes["data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json"],
-        "routingHash": contracts.hashes["data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl"],
-        "routingSchemaHash": contracts.hashes["schemas/publication_pilot1_unit_routing.schema.json"],
-        "targetInventoryHash": contracts.hashes["src/extraction/llm/publications/publication_target_inventory.yaml"],
+        "sourceUnitInventoryHash": bound_hash("data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl"),
+        "sampleFreezeHash": bound_hash(HUMAN_CORE_FREEZE_RELATIVE, "sampleFreeze") if args.mode in {"human-core", "human-core-supplemental", "human-core-reliability"} else contracts.hashes["data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json"],
+        "routingHash": bound_hash("data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl", "unitRouting"),
+        "routingSchemaHash": bound_hash("schemas/publication_pilot1_unit_routing.schema.json"),
+        "targetInventoryHash": bound_hash("src/extraction/llm/publications/publication_target_inventory.yaml", "targetInventory"),
         "annotationHandbookHash": sha256_file(root / ("docs/publication_human_core_reliability_annotation_guide_v0.1.5.md" if args.mode == "human-core-reliability" else ("docs/publication_human_core_expert_annotation_guide.md" if args.mode in {"human-core", "human-core-supplemental"} else "docs/publication_pilot1_annotation_calibration_handbook.md"))),
         "annotationSchemaHash": sha256_file(root / "schemas/publication_pilot1_annotation_record.schema.json"),
         "canonicalDocumentHashesHash": canonical_json_hash(dict(contracts.canonical_document_hashes)),
-        "phaseBArtifactHash": contracts.hashes["data/interim/papers/publication_nodes_edges.json"],
+        "phaseBArtifactHash": bound_hash("data/interim/papers/publication_nodes_edges.json"),
         "annotationMVPBaseCheckpoint": ANNOTATION_MVP_BASE_CHECKPOINT,
     }
     if args.mode in {"human-core", "human-core-supplemental", "human-core-reliability"}:
