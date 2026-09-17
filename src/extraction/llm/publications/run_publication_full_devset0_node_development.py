@@ -87,7 +87,9 @@ from src.extraction.llm.publications.authority_bundle import (  # noqa: E402
     PublicationAuthorityBundle,
     V014,
     V015,
+    REGISTERED_BUNDLES,
     bundle_for_identifier,
+    is_v015_semantic_family,
 )
 from src.extraction.llm.publications.trusted_evidence_metadata_schema import (  # noqa: E402
     TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION,
@@ -515,7 +517,7 @@ def model_authorable_relation_target_ids(authority_bundle: PublicationAuthorityB
         and row.get("pilot_treatment")
         in {"extract_and_evaluate", "extract_and_monitor"}
     ]
-    expected = 27 if authority_bundle == V015 else EXPECTED_MODEL_AUTHORABLE_RELATION_TARGET_COUNT
+    expected = 27 if is_v015_semantic_family(authority_bundle) else EXPECTED_MODEL_AUTHORABLE_RELATION_TARGET_COUNT
     if len(relation_ids) != expected:
         raise ValueError("authority-bundle model-authorable relation universe drifted")
     return relation_ids
@@ -527,7 +529,7 @@ def build_full_semantic_request(binding: Mapping[str, Any], authority_bundle: Pu
     development_id = str(binding["developmentID"])
     relation_ids = model_authorable_relation_target_ids(authority_bundle)
     node_ids = list(binding["eligibleNodeOperationalTargetIDs"])
-    if authority_bundle == V015:
+    if is_v015_semantic_family(authority_bundle):
         node_ids += ["PUB-N-A-DOM03E-AGENTBASEDMODEL", "PUB-N-A-AG02-ORGANIZATION-PROSE"]
     target_ids = node_ids + relation_ids
     request = build_development_request(
@@ -709,9 +711,9 @@ def _preflight_record(
         },
         "providerCompatibilityGate": "PASS",
     }
-    if request.get("authorityBundleID") == V015.identifier:
+    if request.get("authorityBundleID") in {bundle.identifier for bundle in REGISTERED_BUNDLES if is_v015_semantic_family(bundle)}:
         authorities = request["authorities"]
-        record["authorityBundleID"] = V015.identifier
+        record["authorityBundleID"] = request["authorityBundleID"]
         record["ontologyVersion"] = authorities["ontology"]["version"]
         record["candidateSchemaVersion"] = authorities["candidateSchema"]["version"]
         record["targetInventoryVersion"] = authorities["targetInventory"]["version"]
@@ -743,7 +745,7 @@ def prepare_unit(
     )
     effective_binding = deepcopy(dict(binding))
     if full_semantic:
-        if authority_bundle == V015:
+        if is_v015_semantic_family(authority_bundle):
             effective_binding["eligibleNodeOperationalTargetIDs"] = list(binding["eligibleNodeOperationalTargetIDs"]) + ["PUB-N-A-DOM03E-AGENTBASEDMODEL", "PUB-N-A-AG02-ORGANIZATION-PROSE"]
         relation_ids = model_authorable_relation_target_ids(authority_bundle)
         effective_binding["eligibleRelationOperationalTargetIDs"] = relation_ids
@@ -821,14 +823,14 @@ def prepare_all(
             row["providerCompatibilityGate"] == "PASS" for row in rows
         ),
         "allUnitsExposeFortyNodesAndZeroRelations": all(
-            row["exposedNodeTargetCount"] == (42 if full_semantic and authority_bundle == V015 else 40)
+            row["exposedNodeTargetCount"] == (42 if full_semantic and is_v015_semantic_family(authority_bundle) else 40)
             and row["exposedRelationTargetCount"] == 0
             for row in rows
         ),
         "allUnitsExposeExpectedTargets": all(
-            row["exposedNodeTargetCount"] == (42 if full_semantic and authority_bundle == V015 else 40)
+            row["exposedNodeTargetCount"] == (42 if full_semantic and is_v015_semantic_family(authority_bundle) else 40)
             and row["exposedRelationTargetCount"]
-            == ((27 if authority_bundle == V015 else EXPECTED_MODEL_AUTHORABLE_RELATION_TARGET_COUNT) if full_semantic else 0)
+            == ((27 if is_v015_semantic_family(authority_bundle) else EXPECTED_MODEL_AUTHORABLE_RELATION_TARGET_COUNT) if full_semantic else 0)
             for row in rows
         ),
         "aggregateBoundedRequestCanonicalBytes": sum(
@@ -894,6 +896,14 @@ def _reproducibility_record(
         "sourceUnitID": binding["sourceUnitID"],
         "requestID": request["requestID"],
         "requestInputSha256": request["requestInputSha256"],
+        "authorityBundleID": request.get("authorityBundleID"),
+        "authorityBindings": {
+            **dict(request.get("authorities", {})),
+            "prompt": {
+                key: request["prompt"][key]
+                for key in ("path", "version", "sha256")
+            },
+        },
         "providerInputSha256": sha256_bytes(state["providerInput"]),
         "promptVersion": request["prompt"]["version"],
         "promptSha256": request["prompt"]["sha256"],
@@ -1826,7 +1836,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--replay-all", action="store_true")
     parser.add_argument(
         "--authority-bundle",
-        choices=(V014.identifier, V015.identifier),
+        choices=tuple(bundle.identifier for bundle in REGISTERED_BUNDLES),
         help="immutable Publication semantic authority for a full-semantic lifecycle",
     )
     parser.add_argument(

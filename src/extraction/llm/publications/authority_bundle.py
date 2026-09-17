@@ -43,12 +43,31 @@ V015 = PublicationAuthorityBundle(
     PROJECT_ROOT / "docs/publication_evaluation_matching_contract_v0.1.5.md",
     PROJECT_ROOT / "docs/publication_annotation_adjudication_guidelines_v0.1.5.md",
 )
+V015_SCHEMA012 = PublicationAuthorityBundle(
+    "publication-semantic-v0.1.5-schema-v0.1.2",
+    PROJECT_ROOT / "schemas/publication_candidate_output_v0.1.2.json",
+    PROJECT_ROOT / "src/extraction/llm/publications/publication_target_inventory_v0.1.5.yaml",
+    PROJECT_ROOT / "src/extraction/llm/publications/prompts/publication_development_v0.1.8.txt",
+    "publication-development-0.1.8",
+    PROJECT_ROOT / "docs/publication_evidence_validation_contract_v0.1.5_schema_v0.1.2.md",
+    PROJECT_ROOT / "docs/publication_evaluation_matching_contract_v0.1.5_schema_v0.1.2.md",
+    PROJECT_ROOT / "docs/publication_annotation_adjudication_guidelines_v0.1.5.md",
+)
+
+REGISTERED_BUNDLES = (V014, V015, V015_SCHEMA012)
+V015_SEMANTIC_FAMILY = (V015, V015_SCHEMA012)
+
+
+def is_v015_semantic_family(bundle: PublicationAuthorityBundle) -> bool:
+    """Return whether a bundle uses the frozen v0.1.5 target universe."""
+
+    return any(bundle is canonical for canonical in V015_SEMANTIC_FAMILY)
 
 
 def bundle_for_identifier(identifier: str) -> PublicationAuthorityBundle:
     """Return one recognized immutable authority bundle or fail closed."""
 
-    bundles = {V014.identifier: V014, V015.identifier: V015}
+    bundles = {bundle.identifier: bundle for bundle in REGISTERED_BUNDLES}
     try:
         return bundles[identifier]
     except KeyError as exc:

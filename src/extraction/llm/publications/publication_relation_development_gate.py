@@ -39,6 +39,8 @@ from src.extraction.llm.publications.authority_bundle import (
     PublicationAuthorityBundle,
     V014,
     V015,
+    V015_SCHEMA012,
+    is_v015_semantic_family,
 )
 from src.extraction.llm.publications.run_publication_multitarget_node_development import (
     _exposed_targets,
@@ -63,6 +65,10 @@ V015_PLAN_PATH = (
     / "data/curation/papers/m2/relation_development_gate/"
     "publication_relation_development_gate_v0.1.5_plan.json"
 )
+V015_SCHEMA012_PLAN_PATH = (
+    PROJECT_ROOT / "data/curation/papers/m2/relation_development_gate/"
+    "publication_relation_development_gate_v0.1.5_schema_v0.1.2_plan.json"
+)
 CLARIFIED_SOURCE_LOCAL_RELATION_IDS = (
     "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
     "PUB-R-C-P24-MENTIONSDATASET",
@@ -84,7 +90,7 @@ def _relation_rows(authority_bundle: PublicationAuthorityBundle = V014) -> list[
 def _unit_plan(binding: Mapping[str, Any], authority_bundle: PublicationAuthorityBundle = V014) -> dict[str, Any]:
     """Audit one combined request without persisting provider input or calling a model."""
 
-    if authority_bundle == V015:
+    if is_v015_semantic_family(authority_bundle):
         # Exercise the real offline full-semantic preparation path in an ephemeral
         # directory, so this gate cannot drift from a future live request.
         with TemporaryDirectory() as temporary:
@@ -209,10 +215,10 @@ def build_relation_development_gate_plan(
         "providerCalls": 0,
         "modelCallMade": False,
         "costUSD": 0,
-        "ontologyVersion": "0.1.5" if authority_bundle == V015 else "0.1.4",
+        "ontologyVersion": "0.1.5" if is_v015_semantic_family(authority_bundle) else "0.1.4",
         "requestSpecializedSchemaVersion": (
             PROSPECTIVE_ENDPOINT_BINDING_SCHEMA_VERSION
-            if authority_bundle == V015 else TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION
+            if is_v015_semantic_family(authority_bundle) else TRUSTED_EVIDENCE_METADATA_SCHEMA_VERSION
         ),
         "promptVersion": authority_bundle.prompt_version,
         "promptSemanticsChanged": False,
@@ -226,7 +232,7 @@ def build_relation_development_gate_plan(
                 "directOpenDiscoveryTargetCount": 42,
                 "deterministicContextTargetCount": 4,
                 "deferredResolutionTargetCount": 2,
-            } if authority_bundle == V015 else {
+            } if is_v015_semantic_family(authority_bundle) else {
                 "candidateAuthorableNodeTargetCount": 46,
                 "directOpenDiscoveryTargetCount": 40,
                 "deterministicContextTargetCount": 4,
@@ -285,7 +291,7 @@ def build_relation_development_gate_plan(
         ),
         "units": units,
     }
-    if authority_bundle == V015:
+    if is_v015_semantic_family(authority_bundle):
         profile = load_yaml_object(authority_bundle.target_inventory_path)
         record["authorityBundleID"] = authority_bundle.identifier
         record["candidateAuthorableRelationTargetCount"] = 28
@@ -306,7 +312,7 @@ def write_relation_development_gate_plan(
     """Write the deterministic prospective plan with one trailing line feed."""
 
     plan = build_relation_development_gate_plan(authority_bundle)
-    path = path or (V015_PLAN_PATH if authority_bundle == V015 else DEFAULT_PLAN_PATH)
+    path = path or (V015_SCHEMA012_PLAN_PATH if authority_bundle == V015_SCHEMA012 else V015_PLAN_PATH if authority_bundle == V015 else DEFAULT_PLAN_PATH)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(canonical_json_file(plan))
     return plan

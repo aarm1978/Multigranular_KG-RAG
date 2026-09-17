@@ -10,7 +10,10 @@ from unittest.mock import patch
 from collections import Counter
 
 from src.annotation.publication_pilot1.human_core_reference_composition import compose_human_core_reference
-from src.extraction.llm.publications.authority_bundle import V015
+from src.extraction.llm.publications.authority_bundle import (
+    PublicationAuthorityBundle, V014, V015, V015_SCHEMA012,
+    bundle_for_identifier, is_v015_semantic_family,
+)
 from src.extraction.llm.publications.request_builder import load_yaml_object
 from src.extraction.llm.publications.semantic_materializer import materialize_generic_mentions
 from src.extraction.llm.publications.run_publication_full_devset0_node_development import (
@@ -36,6 +39,41 @@ class PublicationV015AuthorityBundleTests(unittest.TestCase):
         self.assertEqual((len(nodes), len(direct), len(relations), len(production)), (48, 42, 28, 27))
         component = next(row for row in production if row["operational_id"] == "PUB-R-C-P34-HASCOMPONENT")
         self.assertEqual(set(component["operational_signatures"][0]["domain"]["classes"]), {"Tool", "ProcessBasedModel", "ConceptualModel", "StatisticalModel", "MLModel", "AgentBasedModel"})
+
+    def test_schema_successor_bundle_is_canonical_and_fail_closed(self) -> None:
+        """Only registered canonical V015-family objects select successor semantics."""
+
+        self.assertIs(bundle_for_identifier(V015_SCHEMA012.identifier), V015_SCHEMA012)
+        self.assertIsNot(V014, V015); self.assertIsNot(V015, V015_SCHEMA012)
+        self.assertTrue(is_v015_semantic_family(V015))
+        self.assertTrue(is_v015_semantic_family(V015_SCHEMA012))
+        clone = PublicationAuthorityBundle(*tuple(V015_SCHEMA012.__dict__.values()))
+        self.assertFalse(is_v015_semantic_family(clone))
+        self.assertTrue(V015.candidate_schema_path.name.endswith("v0.1.1.json"))
+        self.assertTrue(V015_SCHEMA012.candidate_schema_path.name.endswith("v0.1.2.json"))
+        import hashlib
+        self.assertEqual(hashlib.sha256(V015.candidate_schema_path.read_bytes()).hexdigest(), "5c7640e80d4f622fcf55c497235ecf2080ee4d99a45e5eca852fa08a22bab66c")
+        self.assertEqual(hashlib.sha256(V015_SCHEMA012.candidate_schema_path.read_bytes()).hexdigest(), "d0dd8a402c690f62b4981de665d3247ff03e673fe13a489c0ea258a08b6f31cb")
+
+    def test_schema_successor_represents_every_direct_v015_node(self) -> None:
+        """The mechanical 0.1.2 enum successor covers all direct V015 targets."""
+
+        import json
+        old = json.loads(V015.candidate_schema_path.read_text())
+        new = json.loads(V015_SCHEMA012.candidate_schema_path.read_text())
+        old_props = old["$defs"]["candidateNode"]["properties"]
+        new_props = new["$defs"]["candidateNode"]["properties"]
+        self.assertNotIn("Organization", old_props["className"]["enum"])
+        self.assertNotIn("A-AG02", old_props["ontologyClassID"]["enum"])
+        self.assertIn("Organization", new_props["className"]["enum"])
+        self.assertIn("AgentBasedModel", new_props["className"]["enum"])
+        self.assertIn("A-AG02", new_props["ontologyClassID"]["enum"])
+        self.assertIn("A-DOM03e", new_props["ontologyClassID"]["enum"])
+        profile = load_yaml_object(V015.target_inventory_path)
+        for row in profile["node_targets"]:
+            if row.get("emission_mode") == "llm_candidate":
+                self.assertIn(row["formal_classes"][0]["name"], new_props["className"]["enum"])
+                self.assertIn(row["ontology_ids"][0], new_props["ontologyClassID"]["enum"])
 
     def test_organization_mentions_are_pipeline_derived(self) -> None:
         """Organization produces Paper and contained-discourse D-26 edges only after acceptance."""
