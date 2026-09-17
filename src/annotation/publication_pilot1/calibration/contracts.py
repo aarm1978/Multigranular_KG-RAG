@@ -395,6 +395,15 @@ class AnnotationContracts:
 
         return (self.baseline_endpoints_by_unit or {}).get(primary_source_unit_id, {})
 
+    def effective_relation_target(self, source_unit_id: str, target_id: str) -> Mapping[str, Any]:
+        """Return a route-level relation-signature projection when one is supplied."""
+
+        target = dict(self.relation_targets[target_id])
+        signatures = self.routes_by_id[source_unit_id].get("effectiveRelationSignatures", {}).get(target_id)
+        if signatures is not None:
+            target["operational_signatures"] = signatures
+        return target
+
     def source_text(self, source_unit_id: str) -> str:
         """Reconstruct exact text and validate code-point length and UTF-8 hash."""
 
@@ -746,7 +755,10 @@ def _load_human_core_reliability_contracts(root: Path, hashes: Mapping[str, str]
         node_ids, relation_ids = list(row.get("eligibleNodeOperationalTargetIDs", [])), list(row.get("eligibleRelationOperationalTargetIDs", []))
         if set(node_ids) - set(nodes) or set(relation_ids) - set(relations):
             raise AnnotationContractError(f"HUMAN_CORE_RELIABILITY_TARGET_UNKNOWN:{unit_id}")
-        routes[unit_id] = {"sourceUnitID": unit_id, "sourceUnitTextHash": unit["textHash"], "routingStatus": "routed", "routingVersion": ROUTING_VERSION, "eligibleNodeOperationalTargetIDs": node_ids, "eligibleRelationOperationalTargetIDs": relation_ids, "structurallyUnavailableOperationalTargets": []}
+        signatures = row.get("effectiveRelationSignatures", {})
+        if set(signatures) - set(relation_ids):
+            raise AnnotationContractError(f"HUMAN_CORE_RELIABILITY_SIGNATURE_TARGET_UNKNOWN:{unit_id}")
+        routes[unit_id] = {"sourceUnitID": unit_id, "sourceUnitTextHash": unit["textHash"], "routingStatus": "routed", "routingVersion": ROUTING_VERSION, "eligibleNodeOperationalTargetIDs": node_ids, "eligibleRelationOperationalTargetIDs": relation_ids, "originalRoutedScoredRelationOperationalTargetIDs": list(row.get("originalRoutedScoredRelationOperationalTargetIDs", [])), "effectiveRelationSignatures": signatures, "structurallyUnavailableOperationalTargets": []}
     return AnnotationContracts(root, "human-core-reliability", inventory, routes, order_ids, nodes, relations, displays, dict(targets.get("class_expansions", {})), hashes, dict(canonical_hashes), phase_nodes)
 
 

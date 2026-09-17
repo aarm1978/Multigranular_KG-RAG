@@ -48,15 +48,6 @@ def build_package(root: Path) -> dict[str, Any]:
     source_relations = {row["operational_id"]: _ui_target(row, display.get(row["operational_id"], {})) for row in profile["relation_targets"]}
     source_nodes["PUB-N-A-DOM03E-AGENTBASEDMODEL"] = {"operational_id": "PUB-N-A-DOM03E-AGENTBASEDMODEL", "formal_classes": [{"id": "A-DOM03e", "name": "AgentBasedModel"}], "operational_target": "AgentBasedModel", "displayLabel": "AgentBasedModel", "shortDefinition": "Named agent-based simulation model (including ABM).", "boundaryHint": "Do not use for MLModel or an unspecified model; canonical text must support an agent-based model identity.", "direct_instantiation": True, "pilot_treatment": "extract_and_evaluate", "evaluation_mode": "target_level_metrics", "allowed_actions": ["propose_new"]}
     source_nodes["PUB-N-A-AG02-ORGANIZATION-PROSE"] = {"operational_id": "PUB-N-A-AG02-ORGANIZATION-PROSE", "formal_classes": [{"id": "A-AG02", "name": "Organization"}], "operational_target": "Organization", "displayLabel": "Organization (publication prose)", "shortDefinition": "Evidence-backed organization occurrence in publication prose.", "boundaryHint": "Create the Organization node when supported. Do not manually annotate generic D-26 Paper → mentions → Organization; that edge is pipeline-derived.", "direct_instantiation": True, "pilot_treatment": "extract_and_evaluate", "evaluation_mode": "target_level_metrics", "allowed_actions": ["propose_new"]}
-    for target_id in DELTA_RELATIONS - {"PUB-R-C-P34-HASCOMPONENT"}:
-        row = source_relations[target_id]
-        signatures = list(row["operational_signatures"])
-        signature = dict(signatures[0]); domain, range_ = dict(signature["domain"]), dict(signature["range"])
-        if target_id == "PUB-R-C-P27-HASPARAMETER":
-            domain["classes"] = list(domain["classes"]) + ["AgentBasedModel"]
-        else:
-            range_["classes"] = list(range_["classes"]) + ["AgentBasedModel"]
-        signature["domain"], signature["range"] = domain, range_; row["operational_signatures"] = [signature]
     source_relations["PUB-R-C-P34-HASCOMPONENT"] = {"operational_id": "PUB-R-C-P34-HASCOMPONENT", "operational_relation": "hasComponent", "displayLabel": "hasComponent", "shortDefinition": "Explicit model/tool composition in publication prose.", "boundaryHint": "Never infer composition from co-occurrence; Tool or ComputationalModel endpoints only.", "raw_operational_signature": "Tool/ComputationalModel → Tool/ComputationalModel", "operational_signatures": [{"domain": {"classes": ["Tool", "ProcessBasedModel", "ConceptualModel", "StatisticalModel", "MLModel", "AgentBasedModel"], "match": "one_of_or_concrete_subclass_of", "ontology_parent": "ComputationalModel"}, "range": {"classes": ["Tool", "ProcessBasedModel", "ConceptualModel", "StatisticalModel", "MLModel", "AgentBasedModel"], "match": "one_of_or_concrete_subclass_of", "ontology_parent": "ComputationalModel"}}], "pilot_treatment": "extract_and_evaluate", "evaluation_mode": "target_level_metrics", "allowed_actions": ["propose_edge"]}
     units = []
     all_nodes: set[str] = set(); all_relations: set[str] = set()
@@ -64,8 +55,23 @@ def build_package(root: Path) -> dict[str, Any]:
         original_nodes = set(selected[unit_id]["routedScoredNodeOperationalTargetIDs"])
         original_relations = set(selected[unit_id]["routedScoredRelationOperationalTargetIDs"])
         node_ids, relation_ids = sorted(original_nodes | DELTA_NODES), sorted(original_relations | DELTA_RELATIONS)
+        effective_signatures = {}
+        for target_id in DELTA_RELATIONS - {"PUB-R-C-P34-HASCOMPONENT"}:
+            signature = dict(source_relations[target_id]["operational_signatures"][0])
+            domain, range_ = dict(signature["domain"]), dict(signature["range"])
+            changed = domain if target_id == "PUB-R-C-P27-HASPARAMETER" else range_
+            changed["classes"] = (list(changed["classes"]) + ["AgentBasedModel"]) if target_id in original_relations else ["AgentBasedModel"]
+            if target_id not in original_relations:
+                changed["match"] = "exact"
+                changed.pop("ontology_parent", None)
+            if target_id == "PUB-R-C-P27-HASPARAMETER":
+                signature["domain"] = changed
+            else:
+                signature["range"] = changed
+            effective_signatures[target_id] = [signature]
+        effective_signatures["PUB-R-C-P34-HASCOMPONENT"] = source_relations["PUB-R-C-P34-HASCOMPONENT"]["operational_signatures"]
         all_nodes.update(node_ids); all_relations.update(relation_ids)
-        units.append({"sourceUnitID": unit_id, "sourceUnitTextHash": selected[unit_id]["sourceUnitTextHash"], "originalRoutedScoredNodeOperationalTargetIDs": sorted(original_nodes), "originalRoutedScoredRelationOperationalTargetIDs": sorted(original_relations), "v015DeltaNodeOperationalTargetIDs": sorted(DELTA_NODES), "v015DeltaRelationOperationalTargetIDs": sorted(DELTA_RELATIONS), "eligibleNodeOperationalTargetIDs": node_ids, "eligibleRelationOperationalTargetIDs": relation_ids})
+        units.append({"sourceUnitID": unit_id, "sourceUnitTextHash": selected[unit_id]["sourceUnitTextHash"], "originalRoutedScoredNodeOperationalTargetIDs": sorted(original_nodes), "originalRoutedScoredRelationOperationalTargetIDs": sorted(original_relations), "v015DeltaNodeOperationalTargetIDs": sorted(DELTA_NODES), "v015DeltaRelationOperationalTargetIDs": sorted(DELTA_RELATIONS), "eligibleNodeOperationalTargetIDs": node_ids, "eligibleRelationOperationalTargetIDs": relation_ids, "effectiveRelationSignatures": effective_signatures})
     paths = {"ontologySpec": root / "src/ontology/ontology_spec.yaml", "ontologyOwl": root / "src/ontology/ciroh_ontology.owl", "guide": root / GUIDE_RELATIVE, "sampleFreeze": freeze_path, "targetInventory": root / "src/extraction/llm/publications/publication_target_inventory.yaml", "unitRouting": root / "data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl"}
     return {"packageDefinitionVersion": "0.1.5.0", "packageIdentity": "publication-human-core-gold-n2-reliability-v015", "status": "ready_for_independent_annotator_2", "session": {"annotationSessionID": "HUMAN_CORE_N2_RELIABILITY_V015", "annotatorID": "HUMAN_CORE_RELIABILITY_ANNOTATOR_2", "mode": "human-core-reliability", "stateNamespace": "human-core/reliability-annotator-2"}, "authorities": {key: {"path": str(path.relative_to(root)), "sha256": _sha(path), **({"version": "0.1.5"} if key in {"ontologySpec", "ontologyOwl"} else ({"version": "0.1.5"} if key == "guide" else {}))} for key, path in paths.items()}, "independence": {"fromScratch": True, "forbiddenInputs": ["primary annotations", "supplemental annotations", "baseline nodes", "adjudications", "provider or model output"], "noBaselineEndpointProjection": True}, "organizationBoundary": "Publication-prose Organization is human-annotated as a node. Generic D-26 Paper -> mentions -> Organization is pipeline-derived and MUST NOT be manually annotated; its absence from the human record is expected.", "routing": {"units": units}, "coverage": {"consolidatedNodeTargetCount": len(all_nodes), "consolidatedRelationTargetCount": len(all_relations)}, "targets": {"class_expansions": {**profile["class_expansions"], "ComputationalModel": ["ProcessBasedModel", "ConceptualModel", "StatisticalModel", "MLModel", "AgentBasedModel"]}, "node_targets": [source_nodes[key] for key in sorted(all_nodes)], "relation_targets": [source_relations[key] for key in sorted(all_relations)]}}
 

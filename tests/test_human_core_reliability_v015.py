@@ -15,6 +15,7 @@ from src.annotation.publication_pilot1.calibration import (
     metadata_versions,
 )
 from src.annotation.publication_pilot1.calibration.app import build_service
+from src.annotation.publication_pilot1.calibration.service import AnnotationService
 from src.annotation.publication_pilot1.calibration.contracts import (
     AnnotationContractError,
     HUMAN_CORE_RELIABILITY_PACKAGE_RELATIVE,
@@ -72,6 +73,33 @@ class HumanCoreReliabilityV015Tests(unittest.TestCase):
         boundary = self.package["organizationBoundary"]
         self.assertIn("human-annotated as a node", boundary)
         self.assertIn("MUST NOT be manually annotated", boundary)
+
+    def test_effective_relation_signatures_match_original_plus_exact_delta_per_unit(self) -> None:
+        expected_delta_only = {
+            EXPECTED_IDS[0]: {"PUB-R-C-P13-USESMODEL-METHOD-BRANCH", "PUB-R-C-P14-APPLIESTO", "PUB-R-C-P23-MENTIONSMODEL"},
+            EXPECTED_IDS[1]: {"PUB-R-C-P13-USESMODEL-METHOD-BRANCH", "PUB-R-C-P14-APPLIESTO", "PUB-R-C-P23-MENTIONSMODEL", "PUB-R-C-P26-EVALUATES"},
+        }
+        affected = DELTA_RELATIONS - {"PUB-R-C-P34-HASCOMPONENT"}
+        for unit_id in EXPECTED_IDS:
+            original = set(self.contracts.routes_by_id[unit_id]["originalRoutedScoredRelationOperationalTargetIDs"])
+            for target_id in affected:
+                signature = self.contracts.effective_relation_target(unit_id, target_id)["operational_signatures"][0]
+                changed = signature["domain"] if target_id == "PUB-R-C-P27-HASPARAMETER" else signature["range"]
+                if target_id in expected_delta_only[unit_id]:
+                    self.assertEqual(changed, {"classes": ["AgentBasedModel"], "match": "exact"})
+                else:
+                    self.assertIn(target_id, original)
+                    self.assertEqual(changed["classes"][-1], "AgentBasedModel")
+            component = self.contracts.effective_relation_target(unit_id, "PUB-R-C-P34-HASCOMPONENT")["operational_signatures"][0]
+            self.assertEqual(component["domain"]["classes"], ["Tool", "ProcessBasedModel", "ConceptualModel", "StatisticalModel", "MLModel", "AgentBasedModel"])
+            self.assertEqual(component["range"]["classes"], component["domain"]["classes"])
+
+    def test_ui_uses_the_same_route_level_relation_projection(self) -> None:
+        service = AnnotationService.__new__(AnnotationService)
+        service.contracts = self.contracts
+        target_id = "PUB-R-C-P26-EVALUATES"
+        shown = service._display_target(target_id, relation=True, source_unit_id=EXPECTED_IDS[1])
+        self.assertEqual(shown["signatures"], self.contracts.effective_relation_target(EXPECTED_IDS[1], target_id)["operational_signatures"])
 
     def test_application_rejects_another_annotator_identity(self) -> None:
         with self.assertRaisesRegex(AnnotationContractError, "HUMAN_CORE_RELIABILITY_IDENTITY_MISMATCH"):

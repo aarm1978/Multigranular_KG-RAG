@@ -527,7 +527,7 @@ def validate_annotation(
         target_endpoint, target_class, target_external = _endpoint(
             raw.get("targetEndpointID"), node_classes, node_artifact_scopes, deterministic, unit["canonicalArtifactID"]
         )
-        relation = contracts.relation_targets[str(target_id)]
+        relation = contracts.effective_relation_target(source_unit_id, str(target_id))
         if not any(
             _endpoint_matches(source_class, signature["domain"], contracts.class_expansions)
             and _endpoint_matches(target_class, signature["range"], contracts.class_expansions)

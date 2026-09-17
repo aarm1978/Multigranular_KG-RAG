@@ -49,6 +49,150 @@
   "routing": {
     "units": [
       {
+        "effectiveRelationSignatures": {
+          "PUB-R-C-P13-USESMODEL-METHOD-BRANCH": [
+            {
+              "domain": {
+                "classes": [
+                  "Method"
+                ],
+                "match": "exact"
+              },
+              "range": {
+                "classes": [
+                  "AgentBasedModel"
+                ],
+                "match": "exact"
+              }
+            }
+          ],
+          "PUB-R-C-P13-USESMODEL-PAPER-BRANCH": [
+            {
+              "domain": {
+                "classes": [
+                  "Paper"
+                ],
+                "match": "exact"
+              },
+              "range": {
+                "classes": [
+                  "ProcessBasedModel",
+                  "ConceptualModel",
+                  "StatisticalModel",
+                  "MLModel",
+                  "AgentBasedModel"
+                ],
+                "match": "concrete_subclass_of",
+                "ontology_parent": "ComputationalModel"
+              }
+            }
+          ],
+          "PUB-R-C-P14-APPLIESTO": [
+            {
+              "domain": {
+                "classes": [
+                  "Method"
+                ],
+                "match": "exact"
+              },
+              "range": {
+                "classes": [
+                  "AgentBasedModel"
+                ],
+                "match": "exact"
+              }
+            }
+          ],
+          "PUB-R-C-P23-MENTIONSMODEL": [
+            {
+              "domain": {
+                "classes": [
+                  "Paper"
+                ],
+                "match": "exact"
+              },
+              "range": {
+                "classes": [
+                  "AgentBasedModel"
+                ],
+                "match": "exact"
+              }
+            }
+          ],
+          "PUB-R-C-P26-EVALUATES": [
+            {
+              "domain": {
+                "classes": [
+                  "EvaluationMetric"
+                ],
+                "match": "exact"
+              },
+              "range": {
+                "classes": [
+                  "Method",
+                  "ProcessBasedModel",
+                  "ConceptualModel",
+                  "StatisticalModel",
+                  "MLModel",
+                  "AgentBasedModel"
+                ],
+                "match": "one_of_or_concrete_subclass_of",
+                "ontology_parent": "ComputationalModel"
+              }
+            }
+          ],
+          "PUB-R-C-P27-HASPARAMETER": [
+            {
+              "domain": {
+                "classes": [
+                  "Method",
+                  "Experiment",
+                  "ProcessBasedModel",
+                  "ConceptualModel",
+                  "StatisticalModel",
+                  "MLModel",
+                  "AgentBasedModel"
+                ],
+                "match": "one_of_or_concrete_subclass_of",
+                "ontology_parent": "ComputationalModel"
+              },
+              "range": {
+                "classes": [
+                  "Parameter"
+                ],
+                "match": "exact"
+              }
+            }
+          ],
+          "PUB-R-C-P34-HASCOMPONENT": [
+            {
+              "domain": {
+                "classes": [
+                  "Tool",
+                  "ProcessBasedModel",
+                  "ConceptualModel",
+                  "StatisticalModel",
+                  "MLModel",
+                  "AgentBasedModel"
+                ],
+                "match": "one_of_or_concrete_subclass_of",
+                "ontology_parent": "ComputationalModel"
+              },
+              "range": {
+                "classes": [
+                  "Tool",
+                  "ProcessBasedModel",
+                  "ConceptualModel",
+                  "StatisticalModel",
+                  "MLModel",
+                  "AgentBasedModel"
+                ],
+                "match": "one_of_or_concrete_subclass_of",
+                "ontology_parent": "ComputationalModel"
+              }
+            }
+          ]
+        },
         "eligibleNodeOperationalTargetIDs": [
           "PUB-N-A-AG02-ORGANIZATION-PROSE",
           "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
@@ -122,6 +266,144 @@
         ]
       },
       {
+        "effectiveRelationSignatures": {
+          "PUB-R-C-P13-USESMODEL-METHOD-BRANCH": [
+            {
+              "domain": {
+                "classes": [
+                  "Method"
+                ],
+                "match": "exact"
+              },
+              "range": {
+                "classes": [
+                  "AgentBasedModel"
+                ],
+                "match": "exact"
+              }
+            }
+          ],
+          "PUB-R-C-P13-USESMODEL-PAPER-BRANCH": [
+            {
+              "domain": {
+                "classes": [
+                  "Paper"
+                ],
+                "match": "exact"
+              },
+              "range": {
+                "classes": [
+                  "ProcessBasedModel",
+                  "ConceptualModel",
+                  "StatisticalModel",
+                  "MLModel",
+                  "AgentBasedModel"
+                ],
+                "match": "concrete_subclass_of",
+                "ontology_parent": "ComputationalModel"
+              }
+            }
+          ],
+          "PUB-R-C-P14-APPLIESTO": [
+            {
+              "domain": {
+                "classes": [
+                  "Method"
+                ],
+                "match": "exact"
+              },
+              "range": {
+                "classes": [
+                  "AgentBasedModel"
+                ],
+                "match": "exact"
+              }
+            }
+          ],
+          "PUB-R-C-P23-MENTIONSMODEL": [
+            {
+              "domain": {
+                "classes": [
+                  "Paper"
+                ],
+                "match": "exact"
+              },
+              "range": {
+                "classes": [
+                  "AgentBasedModel"
+                ],
+                "match": "exact"
+              }
+            }
+          ],
+          "PUB-R-C-P26-EVALUATES": [
+            {
+              "domain": {
+                "classes": [
+                  "EvaluationMetric"
+                ],
+                "match": "exact"
+              },
+              "range": {
+                "classes": [
+                  "AgentBasedModel"
+                ],
+                "match": "exact"
+              }
+            }
+          ],
+          "PUB-R-C-P27-HASPARAMETER": [
+            {
+              "domain": {
+                "classes": [
+                  "Method",
+                  "Experiment",
+                  "ProcessBasedModel",
+                  "ConceptualModel",
+                  "StatisticalModel",
+                  "MLModel",
+                  "AgentBasedModel"
+                ],
+                "match": "one_of_or_concrete_subclass_of",
+                "ontology_parent": "ComputationalModel"
+              },
+              "range": {
+                "classes": [
+                  "Parameter"
+                ],
+                "match": "exact"
+              }
+            }
+          ],
+          "PUB-R-C-P34-HASCOMPONENT": [
+            {
+              "domain": {
+                "classes": [
+                  "Tool",
+                  "ProcessBasedModel",
+                  "ConceptualModel",
+                  "StatisticalModel",
+                  "MLModel",
+                  "AgentBasedModel"
+                ],
+                "match": "one_of_or_concrete_subclass_of",
+                "ontology_parent": "ComputationalModel"
+              },
+              "range": {
+                "classes": [
+                  "Tool",
+                  "ProcessBasedModel",
+                  "ConceptualModel",
+                  "StatisticalModel",
+                  "MLModel",
+                  "AgentBasedModel"
+                ],
+                "match": "one_of_or_concrete_subclass_of",
+                "ontology_parent": "ComputationalModel"
+              }
+            }
+          ]
+        },
         "eligibleNodeOperationalTargetIDs": [
           "PUB-N-A-AG02-ORGANIZATION-PROSE",
           "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
@@ -1121,8 +1403,7 @@
                 "ProcessBasedModel",
                 "ConceptualModel",
                 "StatisticalModel",
-                "MLModel",
-                "AgentBasedModel"
+                "MLModel"
               ],
               "match": "concrete_subclass_of",
               "ontology_parent": "ComputationalModel"
@@ -1187,8 +1468,7 @@
                 "ProcessBasedModel",
                 "ConceptualModel",
                 "StatisticalModel",
-                "MLModel",
-                "AgentBasedModel"
+                "MLModel"
               ],
               "match": "concrete_subclass_of",
               "ontology_parent": "ComputationalModel"
@@ -1249,8 +1529,7 @@
                 "ProcessBasedModel",
                 "ConceptualModel",
                 "StatisticalModel",
-                "MLModel",
-                "AgentBasedModel"
+                "MLModel"
               ],
               "match": "concrete_subclass_of",
               "ontology_parent": "ComputationalModel"
@@ -1603,8 +1882,7 @@
                 "ProcessBasedModel",
                 "ConceptualModel",
                 "StatisticalModel",
-                "MLModel",
-                "AgentBasedModel"
+                "MLModel"
               ],
               "match": "concrete_subclass_of",
               "ontology_parent": "ComputationalModel"
@@ -1721,8 +1999,7 @@
                 "ProcessBasedModel",
                 "ConceptualModel",
                 "StatisticalModel",
-                "MLModel",
-                "AgentBasedModel"
+                "MLModel"
               ],
               "match": "one_of_or_concrete_subclass_of",
               "ontology_parent": "ComputationalModel"
@@ -1780,8 +2057,7 @@
                 "ProcessBasedModel",
                 "ConceptualModel",
                 "StatisticalModel",
-                "MLModel",
-                "AgentBasedModel"
+                "MLModel"
               ],
               "match": "one_of_or_concrete_subclass_of",
               "ontology_parent": "ComputationalModel"

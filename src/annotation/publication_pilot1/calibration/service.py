@@ -88,11 +88,11 @@ class AnnotationService:
 
         self.contracts, self.store, self.export_dir = contracts, store, export_dir.resolve()
 
-    def _display_target(self, target_id: str, *, relation: bool) -> dict[str, Any]:
+    def _display_target(self, target_id: str, *, relation: bool, source_unit_id: str | None = None) -> dict[str, Any]:
         """Return concise annotator-facing guidance for an effective target."""
 
         display = self.contracts.displays[target_id]
-        target = self.contracts.relation_targets[target_id] if relation else self.contracts.node_targets[target_id]
+        target = self.contracts.effective_relation_target(source_unit_id, target_id) if relation and source_unit_id else (self.contracts.relation_targets[target_id] if relation else self.contracts.node_targets[target_id])
         value = {
             "operationalTargetID": target_id, "displayLabel": display["displayLabel"],
             "shortDefinition": display["shortDefinition"], "boundaryHint": display["boundaryHint"],
@@ -232,7 +232,7 @@ class AnnotationService:
         if record_open and not self.store.timing_events(source_unit_id):
             self.store.log_timing(source_unit_id, str(unit["textHash"]), "unit_opened")
         node_targets = [self._display_target(target_id, relation=False) for target_id in route["eligibleNodeOperationalTargetIDs"]]
-        relation_targets = [self._display_target(target_id, relation=True) for target_id in route["eligibleRelationOperationalTargetIDs"]]
+        relation_targets = [self._display_target(target_id, relation=True, source_unit_id=source_unit_id) for target_id in route["eligibleRelationOperationalTargetIDs"]]
         exposed_ids = self.store.exposed_context_ids(source_unit_id)
         context_units = []
         for context_id in self.contracts.authorized_context_ids(source_unit_id, exposed_ids):
