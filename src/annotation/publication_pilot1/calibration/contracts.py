@@ -598,7 +598,12 @@ def load_annotation_contracts(root: Path, *, mode: str = "synthetic", activation
     """Load synthetic defaults or guarded production-calibration metadata."""
 
     root = root.resolve()
-    hashes = verify_protected_hashes(root)
+    bundle_manifest = root / "RELIABILITY_BUNDLE_MANIFEST.json"
+    if mode == "human-core-reliability" and bundle_manifest.is_file():
+        payload = json.loads(bundle_manifest.read_text(encoding="utf-8"))
+        hashes = {relative: sha256_file(root / relative) for relative in payload["runtimeHashPaths"]}
+    else:
+        hashes = verify_protected_hashes(root)
     if mode == "synthetic":
         return _synthetic_contracts(root, hashes)
     if mode not in {"calibration", "human-core", "human-core-supplemental", "human-core-reliability"}:
@@ -731,7 +736,8 @@ def _load_human_core_reliability_contracts(root: Path, hashes: Mapping[str, str]
             raise AnnotationContractError(f"HUMAN_CORE_RELIABILITY_AUTHORITY_HASH_MISMATCH:{key}")
     if authorities.get("ontologySpec", {}).get("version") != "0.1.5" or authorities.get("ontologyOwl", {}).get("version") != "0.1.5":
         raise AnnotationContractError("HUMAN_CORE_RELIABILITY_ONTOLOGY_AUTHORITY_MISMATCH")
-    freeze = json.loads((root / HUMAN_CORE_FREEZE_RELATIVE).read_text(encoding="utf-8"))
+    freeze_relative = authorities.get("sampleFreeze", {}).get("path", HUMAN_CORE_FREEZE_RELATIVE)
+    freeze = json.loads((root / str(freeze_relative)).read_text(encoding="utf-8"))
     expected_ids = tuple(freeze.get("reliabilitySubset", {}).get("sourceUnitIDs", []))
     routes_payload = package.get("routing", {}).get("units", [])
     order_ids = tuple(str(row.get("sourceUnitID", "")) for row in routes_payload)
