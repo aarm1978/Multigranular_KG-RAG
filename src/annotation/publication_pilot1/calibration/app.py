@@ -18,11 +18,12 @@ from .contracts import (
     canonical_json_hash,
     HUMAN_CORE_FREEZE_RELATIVE,
     HUMAN_CORE_PRIMARY_ANNOTATOR_ID,
+    HUMAN_CORE_RELIABILITY_PACKAGE_RELATIVE,
     HUMAN_CORE_SUPPLEMENTAL_PACKAGE_RELATIVE,
     load_annotation_contracts,
     verify_production_activation,
 )
-from . import HUMAN_CORE_PRIMARY_SESSION_ID, HUMAN_CORE_SUPPLEMENTAL_SESSION_ID, human_core_session_namespace
+from . import HUMAN_CORE_PRIMARY_SESSION_ID, HUMAN_CORE_RELIABILITY_SESSION_ID, HUMAN_CORE_SUPPLEMENTAL_SESSION_ID, human_core_session_namespace
 from .service import AnnotationService
 from .store import AnnotationStore
 
@@ -79,7 +80,7 @@ def make_handler(service: AnnotationService) -> type[BaseHTTPRequestHandler]:
                 if parsed.path == "/api/bootstrap":
                     self._json(HTTPStatus.OK, service.bootstrap()); return
                 if parsed.path == "/handbook":
-                    handbook = "docs/publication_human_core_supplemental_annotation_addendum_v0.1.5.md" if service.contracts.mode == "human-core-supplemental" else ("docs/publication_human_core_expert_annotation_guide.md" if service.contracts.mode == "human-core" else "docs/publication_pilot1_annotation_calibration_handbook.md")
+                    handbook = "docs/publication_human_core_reliability_annotation_guide_v0.1.5.md" if service.contracts.mode == "human-core-reliability" else ("docs/publication_human_core_supplemental_annotation_addendum_v0.1.5.md" if service.contracts.mode == "human-core-supplemental" else ("docs/publication_human_core_expert_annotation_guide.md" if service.contracts.mode == "human-core" else "docs/publication_pilot1_annotation_calibration_handbook.md"))
                     body = (service.contracts.root / handbook).read_bytes()
                     self.send_response(HTTPStatus.OK)
                     self.send_header("Content-Type", "text/markdown; charset=utf-8")
@@ -147,13 +148,13 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
     """Validate contracts and activation before creating mutable state."""
 
     root = repository_root()
-    if args.mode in {"human-core", "human-core-supplemental"}:
-        expected_annotator = HUMAN_CORE_PRIMARY_ANNOTATOR_ID
-        expected_session = HUMAN_CORE_PRIMARY_SESSION_ID if args.mode == "human-core" else HUMAN_CORE_SUPPLEMENTAL_SESSION_ID
+    if args.mode in {"human-core", "human-core-supplemental", "human-core-reliability"}:
+        expected_annotator = "HUMAN_CORE_RELIABILITY_ANNOTATOR_2" if args.mode == "human-core-reliability" else HUMAN_CORE_PRIMARY_ANNOTATOR_ID
+        expected_session = HUMAN_CORE_PRIMARY_SESSION_ID if args.mode == "human-core" else (HUMAN_CORE_SUPPLEMENTAL_SESSION_ID if args.mode == "human-core-supplemental" else HUMAN_CORE_RELIABILITY_SESSION_ID)
         if args.annotator_id != expected_annotator:
-            raise AnnotationContractError("HUMAN_CORE_PRIMARY_IDENTITY_MISMATCH" if args.mode == "human-core" else "HUMAN_CORE_SUPPLEMENTAL_IDENTITY_MISMATCH")
+            raise AnnotationContractError("HUMAN_CORE_RELIABILITY_IDENTITY_MISMATCH" if args.mode == "human-core-reliability" else ("HUMAN_CORE_PRIMARY_IDENTITY_MISMATCH" if args.mode == "human-core" else "HUMAN_CORE_SUPPLEMENTAL_IDENTITY_MISMATCH"))
         if args.annotation_session_id != expected_session:
-            raise AnnotationContractError("HUMAN_CORE_PRIMARY_IDENTITY_MISMATCH" if args.mode == "human-core" else "HUMAN_CORE_SUPPLEMENTAL_IDENTITY_MISMATCH")
+            raise AnnotationContractError("HUMAN_CORE_RELIABILITY_IDENTITY_MISMATCH" if args.mode == "human-core-reliability" else ("HUMAN_CORE_PRIMARY_IDENTITY_MISMATCH" if args.mode == "human-core" else "HUMAN_CORE_SUPPLEMENTAL_IDENTITY_MISMATCH"))
         try:
             human_core_session_namespace(args.annotation_session_id)
         except ValueError as exc:
@@ -166,25 +167,25 @@ def build_service(args: argparse.Namespace) -> AnnotationService:
             activation, root, annotator_id=args.annotator_id,
             annotation_session_id=args.annotation_session_id,
         )
-    namespace = "synthetic" if args.mode == "synthetic" else (human_core_session_namespace(args.annotation_session_id) if args.mode in {"human-core", "human-core-supplemental"} else "calibration/production")
+    namespace = "synthetic" if args.mode == "synthetic" else (human_core_session_namespace(args.annotation_session_id) if args.mode in {"human-core", "human-core-supplemental", "human-core-reliability"} else "calibration/production")
     runtime = root / "var/publication_pilot1_annotation" / namespace
     state_path = runtime / "sessions" / f"{_safe_component(args.annotation_session_id)}.sqlite3"
     bindings = {
         "sourceUnitInventoryHash": contracts.hashes["data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl"],
-        "sampleFreezeHash": sha256_file(root / HUMAN_CORE_FREEZE_RELATIVE) if args.mode in {"human-core", "human-core-supplemental"} else contracts.hashes["data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json"],
+        "sampleFreezeHash": sha256_file(root / HUMAN_CORE_FREEZE_RELATIVE) if args.mode in {"human-core", "human-core-supplemental", "human-core-reliability"} else contracts.hashes["data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json"],
         "routingHash": contracts.hashes["data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl"],
         "routingSchemaHash": contracts.hashes["schemas/publication_pilot1_unit_routing.schema.json"],
         "targetInventoryHash": contracts.hashes["src/extraction/llm/publications/publication_target_inventory.yaml"],
-        "annotationHandbookHash": sha256_file(root / ("docs/publication_human_core_expert_annotation_guide.md" if args.mode in {"human-core", "human-core-supplemental"} else "docs/publication_pilot1_annotation_calibration_handbook.md")),
+        "annotationHandbookHash": sha256_file(root / ("docs/publication_human_core_reliability_annotation_guide_v0.1.5.md" if args.mode == "human-core-reliability" else ("docs/publication_human_core_expert_annotation_guide.md" if args.mode in {"human-core", "human-core-supplemental"} else "docs/publication_pilot1_annotation_calibration_handbook.md"))),
         "annotationSchemaHash": sha256_file(root / "schemas/publication_pilot1_annotation_record.schema.json"),
         "canonicalDocumentHashesHash": canonical_json_hash(dict(contracts.canonical_document_hashes)),
         "phaseBArtifactHash": contracts.hashes["data/interim/papers/publication_nodes_edges.json"],
         "annotationMVPBaseCheckpoint": ANNOTATION_MVP_BASE_CHECKPOINT,
     }
-    if args.mode in {"human-core", "human-core-supplemental"}:
-        package_relative = HUMAN_CORE_SUPPLEMENTAL_PACKAGE_RELATIVE if args.mode == "human-core-supplemental" else "data/curation/papers/m2/human_core_gold/publication_human_core_primary_annotation_package_v1.1.json"
+    if args.mode in {"human-core", "human-core-supplemental", "human-core-reliability"}:
+        package_relative = HUMAN_CORE_RELIABILITY_PACKAGE_RELATIVE if args.mode == "human-core-reliability" else (HUMAN_CORE_SUPPLEMENTAL_PACKAGE_RELATIVE if args.mode == "human-core-supplemental" else "data/curation/papers/m2/human_core_gold/publication_human_core_primary_annotation_package_v1.1.json")
         package = json.loads((root / package_relative).read_text(encoding="utf-8"))
-        guide = package["authorities"]["guide"] if args.mode == "human-core-supplemental" else package["guide"]
+        guide = package["authorities"]["guide"] if args.mode in {"human-core-supplemental", "human-core-reliability"} else package["guide"]
         bindings["guideAuthorityVersion"] = str(guide["version"])
         bindings["guideAuthorityHash"] = str(guide["sha256"])
         if args.mode == "human-core-supplemental":
@@ -205,7 +206,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse explicit identity and guarded mode options."""
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("synthetic", "calibration", "human-core", "human-core-supplemental"), default="synthetic")
+    parser.add_argument("--mode", choices=("synthetic", "calibration", "human-core", "human-core-supplemental", "human-core-reliability"), default="synthetic")
     parser.add_argument("--annotation-session-id", required=True)
     parser.add_argument("--annotator-id", required=True)
     parser.add_argument("--activation-file", help="Required exact local JSON binding for calibration mode")

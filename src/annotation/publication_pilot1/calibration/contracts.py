@@ -24,6 +24,7 @@ from . import (
     HANDBOOK_VERSION,
     HUMAN_CORE_PRIMARY_ANNOTATOR_ID,
     HUMAN_CORE_PRIMARY_SESSION_ID,
+    HUMAN_CORE_RELIABILITY_SESSION_ID,
     HUMAN_CORE_SUPPLEMENTAL_SESSION_ID,
     INTERFACE_VERSION,
     ROUTING_VERSION,
@@ -38,6 +39,7 @@ ANNOTATION_MVP_BASE_CHECKPOINT = "a67c5f3d70a3f4a71f79561646572781eeae89b4"
 ACTIVATION_SCHEMA_VERSION = "0.1.0"
 HUMAN_CORE_FREEZE_RELATIVE = "data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json"
 HUMAN_CORE_SUPPLEMENTAL_PACKAGE_RELATIVE = "data/curation/papers/m2/human_core_gold/publication_human_core_supplemental_annotation_package_v0.1.5.json"
+HUMAN_CORE_RELIABILITY_PACKAGE_RELATIVE = "data/curation/papers/m2/human_core_gold/publication_human_core_reliability_annotation_package_v0.1.5.json"
 
 LEGACY_ONTOLOGY_0_1_3_PROTECTED_HASHES = {
     "data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl": "7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e",
@@ -590,12 +592,14 @@ def load_annotation_contracts(root: Path, *, mode: str = "synthetic", activation
     hashes = verify_protected_hashes(root)
     if mode == "synthetic":
         return _synthetic_contracts(root, hashes)
-    if mode not in {"calibration", "human-core", "human-core-supplemental"}:
+    if mode not in {"calibration", "human-core", "human-core-supplemental", "human-core-reliability"}:
         raise AnnotationContractError(f"ANNOTATION_MODE_UNKNOWN:{mode}")
     if mode == "human-core":
         return _load_human_core_contracts(root, hashes)
     if mode == "human-core-supplemental":
         return _load_human_core_supplemental_contracts(root, hashes)
+    if mode == "human-core-reliability":
+        return _load_human_core_reliability_contracts(root, hashes)
     verify_production_activation(activation_path, root)
     manifest = json.loads((root / "data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json").read_text(encoding="utf-8"))
     order_ids = tuple(manifest["calibrationSourceUnitIDs"])
@@ -695,6 +699,55 @@ def _load_human_core_contracts(root: Path, hashes: Mapping[str, str]) -> Annotat
         validate_effective_route(route, unit, deferred_ids)
         routes[unit_id] = route
     return AnnotationContracts(root, "human-core", inventory, routes, order_ids, nodes, relations, _display_index(root), expansions, hashes, dict(canonical_hashes), phase_nodes)
+
+
+def _load_human_core_reliability_contracts(root: Path, hashes: Mapping[str, str]) -> AnnotationContracts:
+    """Load the independent N=2 v0.1.5 package without any primary projection."""
+
+    package_path = root / HUMAN_CORE_RELIABILITY_PACKAGE_RELATIVE
+    try:
+        package = json.loads(package_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise AnnotationContractError("HUMAN_CORE_RELIABILITY_PACKAGE_INVALID") from exc
+    if package.get("packageIdentity") != "publication-human-core-gold-n2-reliability-v015":
+        raise AnnotationContractError("HUMAN_CORE_RELIABILITY_PACKAGE_IDENTITY_MISMATCH")
+    session = package.get("session", {})
+    if session.get("annotationSessionID") != HUMAN_CORE_RELIABILITY_SESSION_ID or session.get("mode") != "human-core-reliability":
+        raise AnnotationContractError("HUMAN_CORE_RELIABILITY_SESSION_ID_MISMATCH")
+    authorities = package.get("authorities", {})
+    for key in ("ontologySpec", "ontologyOwl", "guide", "sampleFreeze", "targetInventory", "unitRouting"):
+        authority = authorities.get(key, {})
+        relative, expected = authority.get("path"), authority.get("sha256")
+        if not isinstance(relative, str) or not isinstance(expected, str) or sha256_file(root / relative) != expected:
+            raise AnnotationContractError(f"HUMAN_CORE_RELIABILITY_AUTHORITY_HASH_MISMATCH:{key}")
+    if authorities.get("ontologySpec", {}).get("version") != "0.1.5" or authorities.get("ontologyOwl", {}).get("version") != "0.1.5":
+        raise AnnotationContractError("HUMAN_CORE_RELIABILITY_ONTOLOGY_AUTHORITY_MISMATCH")
+    freeze = json.loads((root / HUMAN_CORE_FREEZE_RELATIVE).read_text(encoding="utf-8"))
+    expected_ids = tuple(freeze.get("reliabilitySubset", {}).get("sourceUnitIDs", []))
+    routes_payload = package.get("routing", {}).get("units", [])
+    order_ids = tuple(str(row.get("sourceUnitID", "")) for row in routes_payload)
+    if order_ids != expected_ids or len(order_ids) != 2 or len(set(order_ids)) != 2:
+        raise AnnotationContractError("HUMAN_CORE_RELIABILITY_UNIT_IDENTITY_MISMATCH")
+    inventory = _jsonl_index(root / "data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl", omit_source_text=True)
+    source_manifest = json.loads((root / "data/curation/papers/pilot1/publication_pilot1_source_unit_manifest.json").read_text(encoding="utf-8"))
+    canonical_hashes = source_manifest.get("canonicalDocumentHashes", {})
+    if not isinstance(canonical_hashes, Mapping):
+        raise AnnotationContractError("ANNOTATION_CANONICAL_DOCUMENT_HASHES_INVALID")
+    phase_nodes = _phase_b_nodes(root, str(source_manifest.get("phaseBArtifactHash", "")))
+    targets = package.get("targets", {})
+    nodes = {str(row["operational_id"]): dict(row) for row in targets.get("node_targets", [])}
+    relations = {str(row["operational_id"]): dict(row) for row in targets.get("relation_targets", [])}
+    displays = {target_id: {"displayLabel": row["displayLabel"], "shortDefinition": row["shortDefinition"], "boundaryHint": row["boundaryHint"], "displayGroup": "human_core_reliability_v015"} for target_id, row in {**nodes, **relations}.items()}
+    routes: dict[str, Mapping[str, Any]] = {}
+    for row in routes_payload:
+        unit_id = str(row["sourceUnitID"]); unit = inventory.get(unit_id)
+        if unit is None or row.get("sourceUnitTextHash") != unit.get("textHash"):
+            raise AnnotationContractError(f"HUMAN_CORE_RELIABILITY_SOURCE_HASH_DRIFT:{unit_id}")
+        node_ids, relation_ids = list(row.get("eligibleNodeOperationalTargetIDs", [])), list(row.get("eligibleRelationOperationalTargetIDs", []))
+        if set(node_ids) - set(nodes) or set(relation_ids) - set(relations):
+            raise AnnotationContractError(f"HUMAN_CORE_RELIABILITY_TARGET_UNKNOWN:{unit_id}")
+        routes[unit_id] = {"sourceUnitID": unit_id, "sourceUnitTextHash": unit["textHash"], "routingStatus": "routed", "routingVersion": ROUTING_VERSION, "eligibleNodeOperationalTargetIDs": node_ids, "eligibleRelationOperationalTargetIDs": relation_ids, "structurallyUnavailableOperationalTargets": []}
+    return AnnotationContracts(root, "human-core-reliability", inventory, routes, order_ids, nodes, relations, displays, dict(targets.get("class_expansions", {})), hashes, dict(canonical_hashes), phase_nodes)
 
 
 def _load_human_core_supplemental_contracts(root: Path, hashes: Mapping[str, str]) -> AnnotationContracts:

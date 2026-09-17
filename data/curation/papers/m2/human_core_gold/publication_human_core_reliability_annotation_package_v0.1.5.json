@@ -1,0 +1,1962 @@
+{
+  "authorities": {
+    "guide": {
+      "path": "docs/publication_human_core_reliability_annotation_guide_v0.1.5.md",
+      "sha256": "b8ad6e2a6adf5c226fba3e6d32388e67b3527135563afc523b2806e3ad201eaa",
+      "version": "0.1.5"
+    },
+    "ontologyOwl": {
+      "path": "src/ontology/ciroh_ontology.owl",
+      "sha256": "ce5f6d3d8ac926dc8ff872c9a36066758a86068b6681417bf7edc6aaeccf1e71",
+      "version": "0.1.5"
+    },
+    "ontologySpec": {
+      "path": "src/ontology/ontology_spec.yaml",
+      "sha256": "eac8ec2e0eeec380d05e75c804dc386e9e8aaf8f443b79e20a25a163e513efc5",
+      "version": "0.1.5"
+    },
+    "sampleFreeze": {
+      "path": "data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json",
+      "sha256": "0005a1c37f3eb7597651a7bee898098a0cd71e29c15464c36a06dffe19b486e0"
+    },
+    "targetInventory": {
+      "path": "src/extraction/llm/publications/publication_target_inventory.yaml",
+      "sha256": "6401c15b861c2362b67e03d56acd4a7304964f595d706311fd4f149eb69b3a5e"
+    },
+    "unitRouting": {
+      "path": "data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl",
+      "sha256": "66725306608139ccf3647ac7fd4a9fc150df67426498b6e3e7408320cb8c4a1f"
+    }
+  },
+  "coverage": {
+    "consolidatedNodeTargetCount": 19,
+    "consolidatedRelationTargetCount": 17
+  },
+  "independence": {
+    "forbiddenInputs": [
+      "primary annotations",
+      "supplemental annotations",
+      "baseline nodes",
+      "adjudications",
+      "provider or model output"
+    ],
+    "fromScratch": true,
+    "noBaselineEndpointProjection": true
+  },
+  "organizationBoundary": "Publication-prose Organization is human-annotated as a node. Generic D-26 Paper -> mentions -> Organization is pipeline-derived and MUST NOT be manually annotated; its absence from the human record is expected.",
+  "packageDefinitionVersion": "0.1.5.0",
+  "packageIdentity": "publication-human-core-gold-n2-reliability-v015",
+  "routing": {
+    "units": [
+      {
+        "eligibleNodeOperationalTargetIDs": [
+          "PUB-N-A-AG02-ORGANIZATION-PROSE",
+          "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+          "PUB-N-A-DOM03D-MLMODEL",
+          "PUB-N-A-DOM03E-AGENTBASEDMODEL",
+          "PUB-N-A-DOM04-VARIABLE",
+          "PUB-N-A-DOM07A-WATERSHED",
+          "PUB-N-A-DOM08-NAMEDPLACE",
+          "PUB-N-A-DOM11-EVALUATIONMETRIC",
+          "PUB-N-A-DOM12-PARAMETER",
+          "PUB-N-A-P13-METHOD",
+          "PUB-N-A-P16-FINDING",
+          "PUB-N-A-P19-LIMITATION",
+          "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
+          "PUB-N-A-P26-DATADESCRIPTION"
+        ],
+        "eligibleRelationOperationalTargetIDs": [
+          "PUB-R-C-P07-PRODUCES",
+          "PUB-R-C-P13-USESMODEL-METHOD-BRANCH",
+          "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+          "PUB-R-C-P14-APPLIESTO",
+          "PUB-R-C-P16-MENTIONSVARIABLE",
+          "PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH",
+          "PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH",
+          "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
+          "PUB-R-C-P23-MENTIONSMODEL",
+          "PUB-R-C-P25-REPORTSMETRIC",
+          "PUB-R-C-P26-EVALUATES",
+          "PUB-R-C-P27-HASPARAMETER",
+          "PUB-R-C-P34-HASCOMPONENT"
+        ],
+        "originalRoutedScoredNodeOperationalTargetIDs": [
+          "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+          "PUB-N-A-DOM03D-MLMODEL",
+          "PUB-N-A-DOM04-VARIABLE",
+          "PUB-N-A-DOM07A-WATERSHED",
+          "PUB-N-A-DOM08-NAMEDPLACE",
+          "PUB-N-A-DOM11-EVALUATIONMETRIC",
+          "PUB-N-A-DOM12-PARAMETER",
+          "PUB-N-A-P13-METHOD",
+          "PUB-N-A-P16-FINDING",
+          "PUB-N-A-P19-LIMITATION",
+          "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
+          "PUB-N-A-P26-DATADESCRIPTION"
+        ],
+        "originalRoutedScoredRelationOperationalTargetIDs": [
+          "PUB-R-C-P07-PRODUCES",
+          "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+          "PUB-R-C-P16-MENTIONSVARIABLE",
+          "PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH",
+          "PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH",
+          "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
+          "PUB-R-C-P25-REPORTSMETRIC",
+          "PUB-R-C-P26-EVALUATES",
+          "PUB-R-C-P27-HASPARAMETER"
+        ],
+        "sourceUnitID": "pub:34:sec:0015:unit:0001",
+        "sourceUnitTextHash": "8ca2a5e10a7d94bb5b6a0b7ceb4ceca36ed733922a37ac7e3d43f6ffc0b582bf",
+        "v015DeltaNodeOperationalTargetIDs": [
+          "PUB-N-A-AG02-ORGANIZATION-PROSE",
+          "PUB-N-A-DOM03E-AGENTBASEDMODEL"
+        ],
+        "v015DeltaRelationOperationalTargetIDs": [
+          "PUB-R-C-P13-USESMODEL-METHOD-BRANCH",
+          "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+          "PUB-R-C-P14-APPLIESTO",
+          "PUB-R-C-P23-MENTIONSMODEL",
+          "PUB-R-C-P26-EVALUATES",
+          "PUB-R-C-P27-HASPARAMETER",
+          "PUB-R-C-P34-HASCOMPONENT"
+        ]
+      },
+      {
+        "eligibleNodeOperationalTargetIDs": [
+          "PUB-N-A-AG02-ORGANIZATION-PROSE",
+          "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
+          "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+          "PUB-N-A-DOM03E-AGENTBASEDMODEL",
+          "PUB-N-A-DOM04-VARIABLE",
+          "PUB-N-A-DOM11-EVALUATIONMETRIC",
+          "PUB-N-A-DOM12-PARAMETER",
+          "PUB-N-A-P07-RESEARCHPROBLEM",
+          "PUB-N-A-P09-RESEARCHGOAL",
+          "PUB-N-A-P13-METHOD",
+          "PUB-N-A-P14-EXPERIMENT",
+          "PUB-N-A-P21-CONTRIBUTION",
+          "PUB-N-A-P26-DATADESCRIPTION"
+        ],
+        "eligibleRelationOperationalTargetIDs": [
+          "PUB-R-C-P06-RESOLVES",
+          "PUB-R-C-P13-USESMODEL-METHOD-BRANCH",
+          "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+          "PUB-R-C-P14-APPLIESTO",
+          "PUB-R-C-P15-USESTOOL",
+          "PUB-R-C-P16-MENTIONSVARIABLE",
+          "PUB-R-C-P23-MENTIONSMODEL",
+          "PUB-R-C-P25-REPORTSMETRIC",
+          "PUB-R-C-P26-EVALUATES",
+          "PUB-R-C-P27-HASPARAMETER",
+          "PUB-R-C-P31-MENTIONSTOOL",
+          "PUB-R-C-P33-HASCODEREPOSITORY",
+          "PUB-R-C-P34-HASCOMPONENT"
+        ],
+        "originalRoutedScoredNodeOperationalTargetIDs": [
+          "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
+          "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+          "PUB-N-A-DOM04-VARIABLE",
+          "PUB-N-A-DOM11-EVALUATIONMETRIC",
+          "PUB-N-A-DOM12-PARAMETER",
+          "PUB-N-A-P07-RESEARCHPROBLEM",
+          "PUB-N-A-P09-RESEARCHGOAL",
+          "PUB-N-A-P13-METHOD",
+          "PUB-N-A-P14-EXPERIMENT",
+          "PUB-N-A-P21-CONTRIBUTION",
+          "PUB-N-A-P26-DATADESCRIPTION"
+        ],
+        "originalRoutedScoredRelationOperationalTargetIDs": [
+          "PUB-R-C-P06-RESOLVES",
+          "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+          "PUB-R-C-P15-USESTOOL",
+          "PUB-R-C-P16-MENTIONSVARIABLE",
+          "PUB-R-C-P25-REPORTSMETRIC",
+          "PUB-R-C-P27-HASPARAMETER",
+          "PUB-R-C-P31-MENTIONSTOOL",
+          "PUB-R-C-P33-HASCODEREPOSITORY"
+        ],
+        "sourceUnitID": "pub:79:sec:0004:unit:0001",
+        "sourceUnitTextHash": "3599ea744e6184a414f135b707eec0785deffd566d565e73166d95dddef505c8",
+        "v015DeltaNodeOperationalTargetIDs": [
+          "PUB-N-A-AG02-ORGANIZATION-PROSE",
+          "PUB-N-A-DOM03E-AGENTBASEDMODEL"
+        ],
+        "v015DeltaRelationOperationalTargetIDs": [
+          "PUB-R-C-P13-USESMODEL-METHOD-BRANCH",
+          "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+          "PUB-R-C-P14-APPLIESTO",
+          "PUB-R-C-P23-MENTIONSMODEL",
+          "PUB-R-C-P26-EVALUATES",
+          "PUB-R-C-P27-HASPARAMETER",
+          "PUB-R-C-P34-HASCOMPONENT"
+        ]
+      }
+    ]
+  },
+  "session": {
+    "annotationSessionID": "HUMAN_CORE_N2_RELIABILITY_V015",
+    "annotatorID": "HUMAN_CORE_RELIABILITY_ANNOTATOR_2",
+    "mode": "human-core-reliability",
+    "stateNamespace": "human-core/reliability-annotator-2"
+  },
+  "status": "ready_for_independent_annotator_2",
+  "targets": {
+    "class_expansions": {
+      "ComputationalModel": [
+        "ProcessBasedModel",
+        "ConceptualModel",
+        "StatisticalModel",
+        "MLModel",
+        "AgentBasedModel"
+      ],
+      "HydrologicFeature": [
+        "Watershed",
+        "RiverReach",
+        "Gauge",
+        "WaterBody",
+        "Aquifer",
+        "VPU"
+      ],
+      "Place": [
+        "HydrologicFeature",
+        "NamedPlace"
+      ],
+      "SoftwareEntity": [
+        "Tool",
+        "ComputationalModel"
+      ],
+      "accepted_discourse_node": [
+        "Background",
+        "Theme",
+        "ResearchProblem",
+        "ResearchQuestion",
+        "ResearchGoal",
+        "ResearchSignificance",
+        "Definition",
+        "TheoreticalBasis",
+        "Method",
+        "Experiment",
+        "Examples",
+        "Finding",
+        "Discussion",
+        "RelatedResearch",
+        "Limitation",
+        "Conclusion",
+        "Contribution",
+        "FutureWork",
+        "Hypothesis",
+        "Claim",
+        "DataDescription"
+      ]
+    },
+    "node_targets": [
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundaryHint": "Create the Organization node when supported. Do not manually annotate generic D-26 Paper \u2192 mentions \u2192 Organization; that edge is pipeline-derived.",
+        "direct_instantiation": true,
+        "displayLabel": "Organization (publication prose)",
+        "evaluation_mode": "target_level_metrics",
+        "formal_classes": [
+          {
+            "id": "A-AG02",
+            "name": "Organization"
+          }
+        ],
+        "operational_id": "PUB-N-A-AG02-ORGANIZATION-PROSE",
+        "operational_target": "Organization",
+        "pilot_treatment": "extract_and_evaluate",
+        "shortDefinition": "Evidence-backed organization occurrence in publication prose."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "A system that represents or predicts a scientific process may instead be a model.",
+        "boundaryHint": "A system that represents or predicts a scientific process may instead be a model.",
+        "direct_instantiation": true,
+        "displayLabel": "Tool \u2014 new from publication prose",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-DOM02",
+            "iri": "ciroh:Tool",
+            "kind": "domain",
+            "name": "Tool",
+            "parent": "ciroh:SoftwareEntity",
+            "status": "S"
+          }
+        ],
+        "kind": "domain",
+        "ontology_ids": [
+          "A-DOM02"
+        ],
+        "operational_id": "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
+        "operational_target": "Tool \u2014 new from publication prose",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Software application, platform, package, or system used or mentioned in the paper.",
+        "production_responsibility": "llm",
+        "row": 35,
+        "shortDefinition": "Software application, platform, package, or system used or mentioned in the paper."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Exclude the method applied to the model and auxiliary software used to run it.",
+        "boundaryHint": "Exclude the method applied to the model and auxiliary software used to run it.",
+        "direct_instantiation": true,
+        "displayLabel": "ProcessBasedModel",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-DOM03a",
+            "iri": "ciroh:ProcessBasedModel",
+            "kind": "domain",
+            "name": "ProcessBasedModel",
+            "parent": "ciroh:ComputationalModel",
+            "status": "S"
+          }
+        ],
+        "kind": "domain",
+        "observation_refs": [
+          "OBS-PUB-009"
+        ],
+        "ontology_ids": [
+          "A-DOM03a"
+        ],
+        "operational_id": "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+        "operational_target": "ProcessBasedModel",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Named computational model explicitly representing physical, hydrologic, hydraulic, or environmental processes.",
+        "production_responsibility": "llm",
+        "row": 36,
+        "shortDefinition": "Named computational model explicitly representing physical, hydrologic, hydraulic, or environmental processes."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Training procedure is Method; optimization procedure may be Algorithm.",
+        "boundaryHint": "Training procedure is Method; optimization procedure may be Algorithm.",
+        "direct_instantiation": true,
+        "displayLabel": "MLModel",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-DOM03d",
+            "iri": "ciroh:MLModel",
+            "kind": "domain",
+            "name": "MLModel",
+            "note": "aka DataDrivenModel",
+            "parent": "ciroh:ComputationalModel",
+            "status": "S"
+          }
+        ],
+        "kind": "domain",
+        "observation_refs": [
+          "OBS-PUB-009"
+        ],
+        "ontology_ids": [
+          "A-DOM03d"
+        ],
+        "operational_id": "PUB-N-A-DOM03D-MLMODEL",
+        "operational_target": "MLModel",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Data-driven model or trained architecture used, proposed, compared, or evaluated by the current study.",
+        "production_responsibility": "llm",
+        "row": 39,
+        "shortDefinition": "Data-driven model or trained architecture used, proposed, compared, or evaluated by the current study."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundaryHint": "Do not use for MLModel or an unspecified model; canonical text must support an agent-based model identity.",
+        "direct_instantiation": true,
+        "displayLabel": "AgentBasedModel",
+        "evaluation_mode": "target_level_metrics",
+        "formal_classes": [
+          {
+            "id": "A-DOM03e",
+            "name": "AgentBasedModel"
+          }
+        ],
+        "operational_id": "PUB-N-A-DOM03E-AGENTBASEDMODEL",
+        "operational_target": "AgentBasedModel",
+        "pilot_treatment": "extract_and_evaluate",
+        "shortDefinition": "Named agent-based simulation model (including ABM)."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Exclude broad concepts, metrics, parameters, units, and variables appearing only incidentally in prior work.",
+        "boundaryHint": "Exclude broad concepts, metrics, parameters, units, and variables appearing only incidentally in prior work.",
+        "direct_instantiation": true,
+        "displayLabel": "Variable",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-DOM04",
+            "iri": "schema:variableMeasured",
+            "kind": "domain",
+            "name": "Variable",
+            "note": "CF Standard Names; measurable quantity (vs Concept)",
+            "status": "E"
+          }
+        ],
+        "kind": "domain",
+        "observation_refs": [
+          "OBS-PUB-007"
+        ],
+        "ontology_ids": [
+          "A-DOM04"
+        ],
+        "operational_id": "PUB-N-A-DOM04-VARIABLE",
+        "operational_target": "Variable",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Study-relevant measurable, observed, predicted, derived, or analyzed quantity or characteristic.",
+        "production_responsibility": "llm",
+        "row": 43,
+        "shortDefinition": "Study-relevant measurable, observed, predicted, derived, or analyzed quantity or characteristic."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "A river is RiverReach; an administrative region is NamedPlace.",
+        "boundaryHint": "A river is RiverReach; an administrative region is NamedPlace.",
+        "direct_instantiation": true,
+        "displayLabel": "Watershed",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "hybrid",
+            "id": "A-DOM07a",
+            "iri": "ciroh:Watershed",
+            "kind": "domain",
+            "name": "Watershed",
+            "note": "aka HydrologicUnit (HUC); geoconnex ref/hu*",
+            "parent": "ciroh:HydrologicFeature",
+            "status": "S",
+            "status_note": "S/E"
+          }
+        ],
+        "kind": "hydrologic feature",
+        "ontology_ids": [
+          "A-DOM07a"
+        ],
+        "operational_id": "PUB-N-A-DOM07A-WATERSHED",
+        "operational_target": "Watershed",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Basin, catchment, watershed, subbasin, or drainage-defined hydrologic unit relevant to the study.",
+        "production_responsibility": "llm",
+        "row": 53,
+        "shortDefinition": "Basin, catchment, watershed, subbasin, or drainage-defined hydrologic unit relevant to the study."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Exclude affiliations, publisher locations, bibliography-only places, and incidental toponyms.",
+        "boundaryHint": "Exclude affiliations, publisher locations, bibliography-only places, and incidental toponyms.",
+        "direct_instantiation": true,
+        "displayLabel": "NamedPlace",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-DOM08",
+            "iri": "ciroh:NamedPlace",
+            "kind": "domain",
+            "name": "NamedPlace",
+            "note": "NOT CIROH domain \u2014 admin places; GeoNames >= 2.2.1",
+            "parent": "schema:Place",
+            "status": "E"
+          }
+        ],
+        "kind": "place",
+        "ontology_ids": [
+          "A-DOM08"
+        ],
+        "operational_id": "PUB-N-A-DOM08-NAMEDPLACE",
+        "operational_target": "NamedPlace",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Study-relevant named geographic area that is not better classified as a hydrologic feature.",
+        "production_responsibility": "llm",
+        "row": 59,
+        "shortDefinition": "Study-relevant named geographic area that is not better classified as a hydrologic feature."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Do not merge same-named metrics across different models, experiments, conditions, or values.",
+        "boundaryHint": "Do not merge same-named metrics across different models, experiments, conditions, or values.",
+        "direct_instantiation": true,
+        "displayLabel": "EvaluationMetric",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "attributes": [
+              {
+                "name": "value",
+                "note": "schema:PropertyValue",
+                "type": "string"
+              }
+            ],
+            "extraction": "llm",
+            "id": "A-DOM11",
+            "iri": "ciroh:EvaluationMetric",
+            "kind": "domain",
+            "name": "EvaluationMetric",
+            "note": "aka PerformanceMetric; value as schema:PropertyValue",
+            "status": "S"
+          }
+        ],
+        "identity_policy": {
+          "distinguish_by": [
+            "owner",
+            "experiment",
+            "condition",
+            "version",
+            "value"
+          ],
+          "preserve_exact_source_strings": [
+            "value",
+            "range",
+            "operator",
+            "interval",
+            "unit"
+          ],
+          "scope": "contextual_occurrence"
+        },
+        "kind": "domain",
+        "observation_refs": [
+          "OBS-PUB-010"
+        ],
+        "ontology_ids": [
+          "A-DOM11"
+        ],
+        "operational_id": "PUB-N-A-DOM11-EVALUATIONMETRIC",
+        "operational_target": "EvaluationMetric",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Contextual metric occurrence used to evaluate a model or method, optionally with an explicit value.",
+        "production_responsibility": "llm",
+        "row": 41,
+        "shortDefinition": "Contextual metric occurrence used to evaluate a model or method, optionally with an explicit value."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Variable is observed/predicted; EvaluationMetric evaluates performance. Preserve value/range as exact strings.",
+        "boundaryHint": "Variable is observed/predicted; EvaluationMetric evaluates performance. Preserve value/range as exact strings.",
+        "direct_instantiation": true,
+        "displayLabel": "Parameter",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "attributes": [
+              {
+                "name": "range",
+                "type": "string"
+              },
+              {
+                "name": "value",
+                "type": "string"
+              },
+              {
+                "name": "calibrationStatus",
+                "type": "enum",
+                "values": [
+                  "calibrated",
+                  "default"
+                ]
+              }
+            ],
+            "extraction": "hybrid",
+            "id": "A-DOM12",
+            "iri": "ciroh:Parameter",
+            "kind": "domain",
+            "name": "Parameter",
+            "status": "S",
+            "status_note": "E at paper level"
+          }
+        ],
+        "identity_policy": {
+          "distinguish_by": [
+            "owner",
+            "configuration",
+            "range",
+            "value"
+          ],
+          "preserve_exact_source_strings": [
+            "value",
+            "range",
+            "operator",
+            "interval",
+            "unit"
+          ],
+          "scope": "contextual_occurrence"
+        },
+        "kind": "domain",
+        "observation_refs": [
+          "OBS-PUB-011"
+        ],
+        "ontology_ids": [
+          "A-DOM12"
+        ],
+        "operational_id": "PUB-N-A-DOM12-PARAMETER",
+        "operational_target": "Parameter",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Contextual value, coefficient, threshold, or configuration controlling a model, method, algorithm, or experiment.",
+        "production_responsibility": "llm",
+        "row": 42,
+        "shortDefinition": "Contextual value, coefficient, threshold, or configuration controlling a model, method, algorithm, or experiment."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Exclude general importance, study limitations, and objectives.",
+        "boundaryHint": "Exclude general importance, study limitations, and objectives.",
+        "direct_instantiation": true,
+        "displayLabel": "ResearchProblem",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-P07",
+            "iri": "deo:ProblemStatement",
+            "kind": "discourse",
+            "name": "ResearchProblem",
+            "status": "S"
+          }
+        ],
+        "kind": "discourse",
+        "ontology_ids": [
+          "A-P07"
+        ],
+        "operational_id": "PUB-N-A-P07-RESEARCHPROBLEM",
+        "operational_target": "ResearchProblem",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Explicit gap, deficiency, uncertainty, unresolved challenge, or problem addressed by the current study.",
+        "production_responsibility": "llm",
+        "row": 15,
+        "shortDefinition": "Explicit gap, deficiency, uncertainty, unresolved challenge, or problem addressed by the current study."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Exclude goals of simulated agents, cited studies, software components, and future recommendations.",
+        "boundaryHint": "Exclude goals of simulated agents, cited studies, software components, and future recommendations.",
+        "direct_instantiation": true,
+        "displayLabel": "ResearchGoal",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-P09",
+            "iri": "deo:Motivation",
+            "kind": "discourse",
+            "name": "ResearchGoal",
+            "status": "S"
+          }
+        ],
+        "kind": "discourse",
+        "ontology_ids": [
+          "A-P09"
+        ],
+        "operational_id": "PUB-N-A-P09-RESEARCHGOAL",
+        "operational_target": "ResearchGoal",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Explicit aim, objective, or intended scientific action of the current paper.",
+        "production_responsibility": "llm",
+        "row": 17,
+        "shortDefinition": "Explicit aim, objective, or intended scientific action of the current paper."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "A named reusable entity may instead be an Algorithm, Tool, or concrete model; the applied activity remains Method.",
+        "boundaryHint": "A named reusable entity may instead be an Algorithm, Tool, or concrete model; the applied activity remains Method.",
+        "direct_instantiation": true,
+        "displayLabel": "Method",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-P13",
+            "iri": "deo:Methods",
+            "kind": "discourse",
+            "name": "Method",
+            "status": "S"
+          }
+        ],
+        "kind": "discourse",
+        "ontology_ids": [
+          "A-P13"
+        ],
+        "operational_id": "PUB-N-A-P13-METHOD",
+        "operational_target": "Method",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Technique, procedure, or applied approach used to perform part of the current study.",
+        "production_responsibility": "llm",
+        "row": 21,
+        "shortDefinition": "Technique, procedure, or applied approach used to perform part of the current study."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Exclude a single technique, a data description, or an illustrative example without evaluation.",
+        "boundaryHint": "Exclude a single technique, a data description, or an illustrative example without evaluation.",
+        "direct_instantiation": true,
+        "displayLabel": "Experiment",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-P14",
+            "iri": "ciroh:Experiment",
+            "kind": "discourse",
+            "name": "Experiment",
+            "note": "PEO",
+            "status": "S"
+          }
+        ],
+        "kind": "discourse",
+        "ontology_ids": [
+          "A-P14"
+        ],
+        "operational_id": "PUB-N-A-P14-EXPERIMENT",
+        "operational_target": "Experiment",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Delimited empirical or computational test combining data, methods/models, conditions, and evaluation.",
+        "production_responsibility": "llm",
+        "row": 22,
+        "shortDefinition": "Delimited empirical or computational test combining data, methods/models, conditions, and evaluation."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Exclude goals, expectations, recommendations, and findings attributed only to cited work.",
+        "boundaryHint": "Exclude goals, expectations, recommendations, and findings attributed only to cited work.",
+        "direct_instantiation": true,
+        "displayLabel": "Finding",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-P16",
+            "iri": "deo:Results",
+            "kind": "discourse",
+            "name": "Finding",
+            "note": "aka Result",
+            "status": "S"
+          }
+        ],
+        "kind": "discourse",
+        "ontology_ids": [
+          "A-P16"
+        ],
+        "operational_id": "PUB-N-A-P16-FINDING",
+        "operational_target": "Finding",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Empirical, computational, analytical, qualitative, negative, or null result produced by the current study.",
+        "production_responsibility": "llm",
+        "row": 24,
+        "shortDefinition": "Empirical, computational, analytical, qualitative, negative, or null result produced by the current study."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "ResearchProblem predates and motivates the study; FutureWork proposes a later action.",
+        "boundaryHint": "ResearchProblem predates and motivates the study; FutureWork proposes a later action.",
+        "direct_instantiation": true,
+        "displayLabel": "Limitation",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-P19",
+            "iri": "ciroh:Limitation",
+            "kind": "discourse",
+            "name": "Limitation",
+            "note": "PEO Discussion-Limitation",
+            "status": "S"
+          }
+        ],
+        "kind": "discourse",
+        "ontology_ids": [
+          "A-P19"
+        ],
+        "operational_id": "PUB-N-A-P19-LIMITATION",
+        "operational_target": "Limitation",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Explicit constraint, weakness, uncertainty, or boundary of the current study, method, experiment, data, or finding.",
+        "production_responsibility": "llm",
+        "row": 27,
+        "shortDefinition": "Explicit constraint, weakness, uncertainty, or boundary of the current study, method, experiment, data, or finding."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "ResearchGoal is intended action; ResearchSignificance is why the contribution matters.",
+        "boundaryHint": "ResearchGoal is intended action; ResearchSignificance is why the contribution matters.",
+        "direct_instantiation": true,
+        "displayLabel": "Contribution",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-P21",
+            "iri": "deo:Contribution",
+            "kind": "discourse",
+            "name": "Contribution",
+            "note": "!= Significance",
+            "status": "S"
+          }
+        ],
+        "kind": "discourse",
+        "ontology_ids": [
+          "A-P21"
+        ],
+        "operational_id": "PUB-N-A-P21-CONTRIBUTION",
+        "operational_target": "Contribution",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "What the study claims to have added to knowledge, evidence, method, infrastructure, or practice.",
+        "production_responsibility": "llm",
+        "row": 29,
+        "shortDefinition": "What the study claims to have added to knowledge, evidence, method, infrastructure, or practice."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Preserve source-scoped identity and version wording; do not promote by name alone.",
+        "boundaryHint": "Preserve source-scoped identity and version wording; do not promote by name alone.",
+        "direct_instantiation": true,
+        "displayLabel": "DatasetMention \u2014 new from prose",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "hybrid",
+            "id": "A-P25",
+            "iri": "ciroh:DatasetMention",
+            "kind": "domain",
+            "name": "DatasetMention",
+            "note": "DataCite",
+            "status": "S"
+          }
+        ],
+        "kind": "domain",
+        "ontology_ids": [
+          "A-P25"
+        ],
+        "operational_id": "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
+        "operational_target": "DatasetMention \u2014 new from prose",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Dataset named or described in publication prose without sufficient exact identity for DatasetResource.",
+        "production_responsibility": "llm",
+        "row": 46,
+        "shortDefinition": "Dataset named or described in publication prose without sufficient exact identity for DatasetResource."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "DatasetMention identifies a dataset; DataDescription explains its characteristics.",
+        "boundaryHint": "DatasetMention identifies a dataset; DataDescription explains its characteristics.",
+        "direct_instantiation": true,
+        "displayLabel": "DataDescription",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-P26",
+            "iri": "deo:Data",
+            "kind": "discourse",
+            "name": "DataDescription",
+            "note": "PEO Data",
+            "status": "S"
+          }
+        ],
+        "kind": "discourse",
+        "ontology_ids": [
+          "A-P26"
+        ],
+        "operational_id": "PUB-N-A-P26-DATADESCRIPTION",
+        "operational_target": "DataDescription",
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Atomic description of data origin, period, coverage, sample, resolution, variables, partition, or composition.",
+        "production_responsibility": "llm",
+        "row": 33,
+        "shortDefinition": "Atomic description of data origin, period, coverage, sample, resolution, variables, partition, or composition."
+      }
+    ],
+    "relation_targets": [
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Do not infer from co-occurrence; operational meaning is 'addresses', not necessarily complete solution.",
+        "boundaryHint": "Do not infer from co-occurrence; operational meaning is 'addresses', not necessarily complete solution.",
+        "displayLabel": "resolves",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "domain": [
+              "Method",
+              "Contribution",
+              "ResearchQuestion"
+            ],
+            "id": "C-P06",
+            "name": "resolves",
+            "note": "PEO resolves/leads_to; aka addresses",
+            "range": "ResearchProblem",
+            "status": "S",
+            "type": "intra"
+          }
+        ],
+        "ontology_ids": [
+          "C-P06"
+        ],
+        "operational_id": "PUB-R-C-P06-RESOLVES",
+        "operational_relation": "resolves",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Method",
+                "Contribution",
+                "ResearchQuestion"
+              ],
+              "match": "one_of"
+            },
+            "range": {
+              "classes": [
+                "ResearchProblem"
+              ],
+              "match": "exact"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Explicitly addresses, responds to, fills, or resolves the stated problem.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Method/Contribution/ResearchQuestion \u2192 ResearchProblem",
+        "row": 10,
+        "shortDefinition": "Explicitly addresses, responds to, fills, or resolves the stated problem."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Prefer Experiment\u2192Finding when the result belongs to a combined experimental configuration.",
+        "boundaryHint": "Prefer Experiment\u2192Finding when the result belongs to a combined experimental configuration.",
+        "displayLabel": "produces",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "domain": [
+              "Method",
+              "Experiment"
+            ],
+            "id": "C-P07",
+            "name": "produces",
+            "note": "PEO produces, SAO",
+            "range": "Finding",
+            "status": "S",
+            "type": "intra"
+          }
+        ],
+        "ontology_ids": [
+          "C-P07"
+        ],
+        "operational_id": "PUB-R-C-P07-PRODUCES",
+        "operational_relation": "produces",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Method",
+                "Experiment"
+              ],
+              "match": "one_of"
+            },
+            "range": {
+              "classes": [
+                "Finding"
+              ],
+              "match": "exact"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Edge evidence explicitly links the procedure/test to the result.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Method/Experiment \u2192 Finding",
+        "row": 11,
+        "shortDefinition": "Edge evidence explicitly links the procedure/test to the result."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Distinguish from appliesTo, where the model is the object of the operation.",
+        "boundaryHint": "Distinguish from appliesTo, where the model is the object of the operation.",
+        "displayLabel": "usesModel \u2014 Method branch",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "pooled_metrics_and_case_analysis",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "consol": true,
+            "domain": [
+              "Paper",
+              "Method"
+            ],
+            "id": "C-P13",
+            "name": "usesModel",
+            "note": "PEO uses",
+            "range": "ComputationalModel",
+            "status": "S",
+            "type": [
+              "cross",
+              "same"
+            ]
+          }
+        ],
+        "observation_refs": [
+          "OBS-PUB-005",
+          "OBS-PUB-009",
+          "OBS-PUB-024"
+        ],
+        "ontology_ids": [
+          "C-P13"
+        ],
+        "operational_id": "PUB-R-C-P13-USESMODEL-METHOD-BRANCH",
+        "operational_relation": "usesModel \u2014 Method branch",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Method"
+              ],
+              "match": "exact"
+            },
+            "range": {
+              "classes": [
+                "ProcessBasedModel",
+                "ConceptualModel",
+                "StatisticalModel",
+                "MLModel",
+                "AgentBasedModel"
+              ],
+              "match": "concrete_subclass_of",
+              "ontology_parent": "ComputationalModel"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_monitor",
+        "positive_criterion": "Model functions as a component or resource of the Method.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Method \u2192 ComputationalModel subtype",
+        "row": 20,
+        "shortDefinition": "Model functions as a component or resource of the Method."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Use takes precedence over mentionsModel for the same pair.",
+        "boundaryHint": "Use takes precedence over mentionsModel for the same pair.",
+        "displayLabel": "usesModel \u2014 Paper branch",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "consol": true,
+            "domain": [
+              "Paper",
+              "Method"
+            ],
+            "id": "C-P13",
+            "name": "usesModel",
+            "note": "PEO uses",
+            "range": "ComputationalModel",
+            "status": "S",
+            "type": [
+              "cross",
+              "same"
+            ]
+          }
+        ],
+        "observation_refs": [
+          "OBS-PUB-009",
+          "OBS-PUB-024"
+        ],
+        "ontology_ids": [
+          "C-P13"
+        ],
+        "operational_id": "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+        "operational_relation": "usesModel \u2014 Paper branch",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Paper"
+              ],
+              "match": "exact"
+            },
+            "range": {
+              "classes": [
+                "ProcessBasedModel",
+                "ConceptualModel",
+                "StatisticalModel",
+                "MLModel",
+                "AgentBasedModel"
+              ],
+              "match": "concrete_subclass_of",
+              "ontology_parent": "ComputationalModel"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Model was trained, executed, calibrated, compared, evaluated, or otherwise used in the current study.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Paper \u2192 ComputationalModel subtype",
+        "row": 19,
+        "shortDefinition": "Model was trained, executed, calibrated, compared, evaluated, or otherwise used in the current study."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Do not emit both usesModel and appliesTo unless two roles are explicitly supported.",
+        "boundaryHint": "Do not emit both usesModel and appliesTo unless two roles are explicitly supported.",
+        "displayLabel": "appliesTo",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "domain": "Method",
+            "id": "C-P14",
+            "name": "appliesTo",
+            "note": "Model/Method discriminant",
+            "range": "ComputationalModel",
+            "status": "S",
+            "type": [
+              "intra",
+              "cross"
+            ]
+          }
+        ],
+        "observation_refs": [
+          "OBS-PUB-005",
+          "OBS-PUB-009"
+        ],
+        "ontology_ids": [
+          "C-P14"
+        ],
+        "operational_id": "PUB-R-C-P14-APPLIESTO",
+        "operational_relation": "appliesTo",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Method"
+              ],
+              "match": "exact"
+            },
+            "range": {
+              "classes": [
+                "ProcessBasedModel",
+                "ConceptualModel",
+                "StatisticalModel",
+                "MLModel",
+                "AgentBasedModel"
+              ],
+              "match": "concrete_subclass_of",
+              "ontology_parent": "ComputationalModel"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Method is applied to, configures, analyzes, explains, calibrates, or evaluates the model.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Method \u2192 ComputationalModel subtype",
+        "row": 21,
+        "shortDefinition": "Method is applied to, configures, analyzes, explains, calibrates, or evaluates the model."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Use takes precedence over mentionsTool.",
+        "boundaryHint": "Use takes precedence over mentionsTool.",
+        "displayLabel": "usesTool",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "consol": true,
+            "domain": "Paper",
+            "id": "C-P15",
+            "name": "usesTool",
+            "range": "Tool",
+            "status": "S",
+            "type": [
+              "cross",
+              "same"
+            ]
+          }
+        ],
+        "observation_refs": [
+          "OBS-PUB-024"
+        ],
+        "ontology_ids": [
+          "C-P15"
+        ],
+        "operational_id": "PUB-R-C-P15-USESTOOL",
+        "operational_relation": "usesTool",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Paper"
+              ],
+              "match": "exact"
+            },
+            "range": {
+              "classes": [
+                "Tool"
+              ],
+              "match": "exact"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Tool was actually employed in the current study.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Paper \u2192 Tool",
+        "row": 22,
+        "shortDefinition": "Tool was actually employed in the current study."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Prefer DataDescription as source when it locally contains the evidence.",
+        "boundaryHint": "Prefer DataDescription as source when it locally contains the evidence.",
+        "displayLabel": "mentionsVariable",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "consol": true,
+            "domain": [
+              "Paper",
+              "DataDescription"
+            ],
+            "id": "C-P16",
+            "name": "mentionsVariable",
+            "range": "Variable",
+            "status": "E",
+            "type": [
+              "cross",
+              "same"
+            ]
+          }
+        ],
+        "observation_refs": [
+          "OBS-PUB-007"
+        ],
+        "ontology_ids": [
+          "C-P16"
+        ],
+        "operational_id": "PUB-R-C-P16-MENTIONSVARIABLE",
+        "operational_relation": "mentionsVariable",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Paper",
+                "DataDescription"
+              ],
+              "match": "one_of"
+            },
+            "range": {
+              "classes": [
+                "Variable"
+              ],
+              "match": "exact"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Variable is relevant to the current study and explicitly observed, predicted, modeled, derived, or analyzed.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Paper/DataDescription \u2192 Variable",
+        "row": 23,
+        "shortDefinition": "Variable is relevant to the current study and explicitly observed, predicted, modeled, derived, or analyzed."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Do not use for affiliations or incidental locations.",
+        "boundaryHint": "Do not use for affiliations or incidental locations.",
+        "displayLabel": "studiesFeature \u2014 Paper branch",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "consol": true,
+            "domain": [
+              "Paper",
+              "Method"
+            ],
+            "id": "C-P17",
+            "name": "studiesFeature",
+            "range": "HydrologicFeature",
+            "status": "S",
+            "type": [
+              "cross",
+              "same"
+            ]
+          }
+        ],
+        "ontology_ids": [
+          "C-P17"
+        ],
+        "operational_id": "PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH",
+        "operational_relation": "studiesFeature \u2014 Paper branch",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Paper"
+              ],
+              "match": "exact"
+            },
+            "range": {
+              "classes": [
+                "Watershed",
+                "RiverReach",
+                "Gauge",
+                "WaterBody",
+                "Aquifer",
+                "VPU"
+              ],
+              "match": "concrete_subclass_of",
+              "ontology_parent": "HydrologicFeature"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Feature is a study object, domain, or hydrologic unit of analysis.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Paper \u2192 concrete HydrologicFeature",
+        "row": 24,
+        "shortDefinition": "Feature is a study object, domain, or hydrologic unit of analysis."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Use studiesFeature for watersheds, rivers, gauges, water bodies, aquifers, and VPUs.",
+        "boundaryHint": "Use studiesFeature for watersheds, rivers, gauges, water bodies, aquifers, and VPUs.",
+        "displayLabel": "studiesPlace \u2014 Paper branch",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "domain": [
+              "Paper",
+              "Method"
+            ],
+            "id": "C-P18",
+            "name": "studiesPlace",
+            "range": "NamedPlace",
+            "status": "E",
+            "type": [
+              "cross",
+              "same"
+            ]
+          }
+        ],
+        "ontology_ids": [
+          "C-P18"
+        ],
+        "operational_id": "PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH",
+        "operational_relation": "studiesPlace \u2014 Paper branch",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Paper"
+              ],
+              "match": "exact"
+            },
+            "range": {
+              "classes": [
+                "NamedPlace"
+              ],
+              "match": "exact"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "NamedPlace is a study area, model domain, data coverage area, or result location.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Paper \u2192 NamedPlace",
+        "row": 26,
+        "shortDefinition": "NamedPlace is a study area, model domain, data coverage area, or result location."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Use takes precedence over mentionsDataset; may coexist with referencesDataset.",
+        "boundaryHint": "Use takes precedence over mentionsDataset; may coexist with referencesDataset.",
+        "displayLabel": "usesDataset \u2014 new prose evidence",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "consol": true,
+            "domain": "Paper",
+            "id": "C-P20",
+            "maps_to": "D-01",
+            "name": "usesDataset",
+            "range": [
+              "DatasetMention",
+              "DatasetResource"
+            ],
+            "status": "S",
+            "type": "cross"
+          }
+        ],
+        "observation_refs": [
+          "OBS-PUB-024"
+        ],
+        "ontology_ids": [
+          "C-P20"
+        ],
+        "operational_id": "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
+        "operational_relation": "usesDataset \u2014 new prose evidence",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Paper"
+              ],
+              "match": "exact"
+            },
+            "range": {
+              "classes": [
+                "DatasetMention",
+                "DatasetResource"
+              ],
+              "match": "one_of"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Dataset was actually used for training, testing, forcing, analysis, observation, or benchmarking.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Paper \u2192 DatasetMention/DatasetResource",
+        "row": 30,
+        "shortDefinition": "Dataset was actually used for training, testing, forcing, analysis, observation, or benchmarking."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Do not retain alongside usesModel for the same pair.",
+        "boundaryHint": "Do not retain alongside usesModel for the same pair.",
+        "displayLabel": "mentionsModel",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "consol": true,
+            "domain": "Paper",
+            "id": "C-P23",
+            "name": "mentionsModel",
+            "note": "mentioned, NOT used; != C-P13",
+            "range": "ComputationalModel",
+            "status": "S",
+            "type": [
+              "cross",
+              "same"
+            ]
+          }
+        ],
+        "observation_refs": [
+          "OBS-PUB-009",
+          "OBS-PUB-024"
+        ],
+        "ontology_ids": [
+          "C-P23"
+        ],
+        "operational_id": "PUB-R-C-P23-MENTIONSMODEL",
+        "operational_relation": "mentionsModel",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Paper"
+              ],
+              "match": "exact"
+            },
+            "range": {
+              "classes": [
+                "ProcessBasedModel",
+                "ConceptualModel",
+                "StatisticalModel",
+                "MLModel",
+                "AgentBasedModel"
+              ],
+              "match": "concrete_subclass_of",
+              "ontology_parent": "ComputationalModel"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Model appears in background, related work, definition, comparison context, or future work without proof of use.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Paper \u2192 ComputationalModel subtype",
+        "row": 33,
+        "shortDefinition": "Model appears in background, related work, definition, comparison context, or future work without proof of use."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Metric and endpoint must be contextually aligned, especially in tables.",
+        "boundaryHint": "Metric and endpoint must be contextually aligned, especially in tables.",
+        "displayLabel": "reportsMetric",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "consol": true,
+            "domain": [
+              "Finding",
+              "Experiment"
+            ],
+            "id": "C-P25",
+            "name": "reportsMetric",
+            "range": "EvaluationMetric",
+            "status": "S",
+            "type": "intra"
+          }
+        ],
+        "observation_refs": [
+          "OBS-PUB-010"
+        ],
+        "ontology_ids": [
+          "C-P25"
+        ],
+        "operational_id": "PUB-R-C-P25-REPORTSMETRIC",
+        "operational_relation": "reportsMetric",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Finding",
+                "Experiment"
+              ],
+              "match": "one_of"
+            },
+            "range": {
+              "classes": [
+                "EvaluationMetric"
+              ],
+              "match": "exact"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Metric occurrence is explicitly reported by the Finding or Experiment.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Finding/Experiment \u2192 EvaluationMetric",
+        "row": 35,
+        "shortDefinition": "Metric occurrence is explicitly reported by the Finding or Experiment."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Textual proximity alone is insufficient.",
+        "boundaryHint": "Textual proximity alone is insufficient.",
+        "displayLabel": "evaluates",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "domain": "EvaluationMetric",
+            "id": "C-P26",
+            "name": "evaluates",
+            "range": [
+              "ComputationalModel",
+              "Method"
+            ],
+            "status": "S",
+            "type": "intra"
+          }
+        ],
+        "observation_refs": [
+          "OBS-PUB-010"
+        ],
+        "ontology_ids": [
+          "C-P26"
+        ],
+        "operational_id": "PUB-R-C-P26-EVALUATES",
+        "operational_relation": "evaluates",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "EvaluationMetric"
+              ],
+              "match": "exact"
+            },
+            "range": {
+              "classes": [
+                "Method",
+                "ProcessBasedModel",
+                "ConceptualModel",
+                "StatisticalModel",
+                "MLModel",
+                "AgentBasedModel"
+              ],
+              "match": "one_of_or_concrete_subclass_of",
+              "ontology_parent": "ComputationalModel"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Evidence identifies what the metric evaluates.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "EvaluationMetric \u2192 ComputationalModel/Method",
+        "row": 36,
+        "shortDefinition": "Evidence identifies what the metric evaluates."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Do not connect every parameter only to the Paper.",
+        "boundaryHint": "Do not connect every parameter only to the Paper.",
+        "displayLabel": "hasParameter",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "schema:",
+            "consol": true,
+            "domain": [
+              "Method",
+              "Experiment",
+              "ComputationalModel"
+            ],
+            "id": "C-P27",
+            "name": "hasParameter",
+            "range": "Parameter",
+            "status": "S",
+            "status_note": "E paper",
+            "type": "intra"
+          }
+        ],
+        "observation_refs": [
+          "OBS-PUB-011"
+        ],
+        "ontology_ids": [
+          "C-P27"
+        ],
+        "operational_id": "PUB-R-C-P27-HASPARAMETER",
+        "operational_relation": "hasParameter",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Method",
+                "Experiment",
+                "ProcessBasedModel",
+                "ConceptualModel",
+                "StatisticalModel",
+                "MLModel",
+                "AgentBasedModel"
+              ],
+              "match": "one_of_or_concrete_subclass_of",
+              "ontology_parent": "ComputationalModel"
+            },
+            "range": {
+              "classes": [
+                "Parameter"
+              ],
+              "match": "exact"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Evidence identifies the parameter owner or experimental context.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Method/Experiment/ComputationalModel \u2192 Parameter",
+        "row": 37,
+        "shortDefinition": "Evidence identifies the parameter owner or experimental context."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Do not retain alongside usesTool for the same pair.",
+        "boundaryHint": "Do not retain alongside usesTool for the same pair.",
+        "displayLabel": "mentionsTool",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "consol": true,
+            "domain": "Paper",
+            "id": "C-P31",
+            "name": "mentionsTool",
+            "note": "Tool mention without sufficient evidence of use; citation or name occurrence does not imply C-P15 usesTool.",
+            "range": "Tool",
+            "status": "S",
+            "type": [
+              "cross",
+              "same"
+            ]
+          }
+        ],
+        "observation_refs": [
+          "OBS-PUB-024"
+        ],
+        "ontology_ids": [
+          "C-P31"
+        ],
+        "operational_id": "PUB-R-C-P31-MENTIONSTOOL",
+        "operational_relation": "mentionsTool",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Paper"
+              ],
+              "match": "exact"
+            },
+            "range": {
+              "classes": [
+                "Tool"
+              ],
+              "match": "exact"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Tool is mentioned without proof of actual use.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Paper \u2192 Tool",
+        "row": 42,
+        "shortDefinition": "Tool is mentioned without proof of actual use."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Emit only this specific edge; referencesRepository may be derived as its parent property.",
+        "boundaryHint": "Emit only this specific edge; referencesRepository may be derived as its parent property.",
+        "displayLabel": "hasCodeRepository",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "target_level_metrics",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "schema:codeRepository",
+            "consol": true,
+            "domain": "Paper",
+            "id": "C-P33",
+            "maps_to": "D-04",
+            "name": "hasCodeRepository",
+            "note": "Paper-associated implementation repository; a typed subproperty of referencesRepository.",
+            "range": "Repository",
+            "status": "S",
+            "subproperty_of": "referencesRepository",
+            "type": "cross"
+          }
+        ],
+        "observation_refs": [
+          "OBS-PUB-008",
+          "OBS-PUB-023",
+          "OBS-PUB-024"
+        ],
+        "ontology_ids": [
+          "C-P33"
+        ],
+        "operational_id": "PUB-R-C-P33-HASCODEREPOSITORY",
+        "operational_relation": "hasCodeRepository",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Paper"
+              ],
+              "match": "exact"
+            },
+            "range": {
+              "classes": [
+                "Repository"
+              ],
+              "match": "exact"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "positive_criterion": "Explicit evidence that the repository contains code, implementation, scripts, or workflow associated with the study.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Paper \u2192 Repository",
+        "row": 44,
+        "shortDefinition": "Explicit evidence that the repository contains code, implementation, scripts, or workflow associated with the study."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundaryHint": "Never infer composition from co-occurrence; Tool or ComputationalModel endpoints only.",
+        "displayLabel": "hasComponent",
+        "evaluation_mode": "target_level_metrics",
+        "operational_id": "PUB-R-C-P34-HASCOMPONENT",
+        "operational_relation": "hasComponent",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Tool",
+                "ProcessBasedModel",
+                "ConceptualModel",
+                "StatisticalModel",
+                "MLModel",
+                "AgentBasedModel"
+              ],
+              "match": "one_of_or_concrete_subclass_of",
+              "ontology_parent": "ComputationalModel"
+            },
+            "range": {
+              "classes": [
+                "Tool",
+                "ProcessBasedModel",
+                "ConceptualModel",
+                "StatisticalModel",
+                "MLModel",
+                "AgentBasedModel"
+              ],
+              "match": "one_of_or_concrete_subclass_of",
+              "ontology_parent": "ComputationalModel"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_evaluate",
+        "raw_operational_signature": "Tool/ComputationalModel \u2192 Tool/ComputationalModel",
+        "shortDefinition": "Explicit model/tool composition in publication prose."
+      }
+    ]
+  }
+}
