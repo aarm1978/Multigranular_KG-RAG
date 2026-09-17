@@ -31,6 +31,7 @@ def build(root: Path, output: Path)->Path:
         d=output/source; d.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(root/source,d)
     routing=[json.loads(x) for x in (root/"data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl").read_text().splitlines() if x]; routing=[x for x in routing if x["paperID"] in papers]
     rp=output/"data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl"; rp.write_text("\n".join(json.dumps(x,sort_keys=True) for x in routing)+"\n")
+    package=json.loads(pp.read_text()); package["authorities"]["unitRouting"]={"path":"data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl","sha256":sha(rp)}; pp.write_text(json.dumps(package,indent=2,sort_keys=True)+"\n")
     for relative in ("schemas/publication_pilot1_unit_routing.schema.json",):
         d=output/relative; d.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(root/relative,d)
     (output/"requirements.txt").write_text("PyYAML\n")
