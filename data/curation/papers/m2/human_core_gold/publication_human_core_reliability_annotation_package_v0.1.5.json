@@ -546,6 +546,9 @@
             "name": "Organization"
           }
         ],
+        "ontology_ids": [
+          "A-AG02"
+        ],
         "operational_id": "PUB-N-A-AG02-ORGANIZATION-PROSE",
         "operational_target": "Organization",
         "pilot_treatment": "extract_and_evaluate",
@@ -676,6 +679,9 @@
             "id": "A-DOM03e",
             "name": "AgentBasedModel"
           }
+        ],
+        "ontology_ids": [
+          "A-DOM03e"
         ],
         "operational_id": "PUB-N-A-DOM03E-AGENTBASEDMODEL",
         "operational_target": "AgentBasedModel",
@@ -2199,6 +2205,9 @@
         "boundaryHint": "Never infer composition from co-occurrence; Tool or ComputationalModel endpoints only.",
         "displayLabel": "hasComponent",
         "evaluation_mode": "target_level_metrics",
+        "ontology_ids": [
+          "C-P34"
+        ],
         "operational_id": "PUB-R-C-P34-HASCOMPONENT",
         "operational_relation": "hasComponent",
         "operational_signatures": [
