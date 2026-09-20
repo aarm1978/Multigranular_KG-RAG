@@ -39,6 +39,7 @@ def build_package(root: Path) -> dict[str, Any]:
     freeze = json.loads(freeze_path.read_text(encoding="utf-8"))
     reliability_ids = tuple(freeze["reliabilitySubset"]["sourceUnitIDs"])
     selected = {row["sourceUnitID"]: row for row in freeze["selectedUnits"]}
+    routes = {row["sourceUnitID"]: row for row in (json.loads(line) for line in (root / "data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl").read_text(encoding="utf-8").splitlines() if line)}
     if reliability_ids != ("pub:34:sec:0015:unit:0001", "pub:79:sec:0004:unit:0001"):
         raise ValueError("HUMAN_CORE_RELIABILITY_FREEZE_IDENTITY_DRIFT")
     profile = yaml.safe_load((root / "src/extraction/llm/publications/publication_target_inventory.yaml").read_text(encoding="utf-8"))
@@ -53,8 +54,10 @@ def build_package(root: Path) -> dict[str, Any]:
     units = []
     all_nodes: set[str] = set(); all_relations: set[str] = set()
     for unit_id in reliability_ids:
-        original_nodes = set(selected[unit_id]["routedScoredNodeOperationalTargetIDs"])
-        original_relations = set(selected[unit_id]["routedScoredRelationOperationalTargetIDs"])
+        original_nodes = set(routes[unit_id]["eligibleNodeOperationalTargetIDs"])
+        original_relations = set(routes[unit_id]["eligibleRelationOperationalTargetIDs"])
+        scored_nodes = set(selected[unit_id]["routedScoredNodeOperationalTargetIDs"])
+        scored_relations = set(selected[unit_id]["routedScoredRelationOperationalTargetIDs"])
         node_ids, relation_ids = sorted(original_nodes | DELTA_NODES), sorted(original_relations | DELTA_RELATIONS)
         effective_signatures = {}
         for target_id in DELTA_RELATIONS - {"PUB-R-C-P34-HASCOMPONENT"}:
@@ -72,7 +75,7 @@ def build_package(root: Path) -> dict[str, Any]:
             effective_signatures[target_id] = [signature]
         effective_signatures["PUB-R-C-P34-HASCOMPONENT"] = source_relations["PUB-R-C-P34-HASCOMPONENT"]["operational_signatures"]
         all_nodes.update(node_ids); all_relations.update(relation_ids)
-        units.append({"sourceUnitID": unit_id, "sourceUnitTextHash": selected[unit_id]["sourceUnitTextHash"], "originalRoutedScoredNodeOperationalTargetIDs": sorted(original_nodes), "originalRoutedScoredRelationOperationalTargetIDs": sorted(original_relations), "v015DeltaNodeOperationalTargetIDs": sorted(DELTA_NODES), "v015DeltaRelationOperationalTargetIDs": sorted(DELTA_RELATIONS), "eligibleNodeOperationalTargetIDs": node_ids, "eligibleRelationOperationalTargetIDs": relation_ids, "effectiveRelationSignatures": effective_signatures})
+        units.append({"sourceUnitID": unit_id, "sourceUnitTextHash": selected[unit_id]["sourceUnitTextHash"], "originalEligibleNodeOperationalTargetIDs": sorted(original_nodes), "originalEligibleRelationOperationalTargetIDs": sorted(original_relations), "originalRoutedScoredNodeOperationalTargetIDs": sorted(scored_nodes), "originalRoutedScoredRelationOperationalTargetIDs": sorted(scored_relations), "v015DeltaNodeOperationalTargetIDs": sorted(DELTA_NODES), "v015DeltaRelationOperationalTargetIDs": sorted(DELTA_RELATIONS), "eligibleNodeOperationalTargetIDs": node_ids, "eligibleRelationOperationalTargetIDs": relation_ids, "effectiveRelationSignatures": effective_signatures})
     paths = {"ontologySpec": root / "src/ontology/ontology_spec.yaml", "ontologyOwl": root / "src/ontology/ciroh_ontology.owl", "guide": root / GUIDE_RELATIVE, "sampleFreeze": freeze_path, "targetInventory": root / "src/extraction/llm/publications/publication_target_inventory.yaml", "unitRouting": root / "data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl"}
     return {"packageDefinitionVersion": "0.1.5.0", "packageIdentity": "publication-human-core-gold-n2-reliability-v015", "status": "ready_for_independent_annotator_2", "session": {"annotationSessionID": "HUMAN_CORE_N2_RELIABILITY_V015", "annotatorID": "HUMAN_CORE_RELIABILITY_ANNOTATOR_2", "mode": "human-core-reliability", "stateNamespace": "human-core/reliability-annotator-2"}, "authorities": {key: {"path": str(path.relative_to(root)), "sha256": _sha(path), **({"version": "0.1.5"} if key in {"ontologySpec", "ontologyOwl"} else ({"version": "0.1.5"} if key == "guide" else {}))} for key, path in paths.items()}, "independence": {"fromScratch": True, "forbiddenInputs": ["primary annotations", "supplemental annotations", "baseline nodes", "adjudications", "provider or model output"], "noBaselineEndpointProjection": True}, "organizationBoundary": "Publication-prose Organization is human-annotated as a node. Generic D-26 Paper -> mentions -> Organization is pipeline-derived and MUST NOT be manually annotated; its absence from the human record is expected.", "routing": {"units": units}, "coverage": {"consolidatedNodeTargetCount": len(all_nodes), "consolidatedRelationTargetCount": len(all_relations)}, "targets": {"class_expansions": {**profile["class_expansions"], "ComputationalModel": ["ProcessBasedModel", "ConceptualModel", "StatisticalModel", "MLModel", "AgentBasedModel"]}, "node_targets": [source_nodes[key] for key in sorted(all_nodes)], "relation_targets": [source_relations[key] for key in sorted(all_relations)]}}
 

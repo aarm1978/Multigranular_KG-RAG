@@ -44,7 +44,7 @@ class HumanCoreReliabilityV015Tests(unittest.TestCase):
         self.assertEqual(metadata_versions("human-core-reliability"), ("0.1.5", "0.1.5"))
 
     def test_original_delta_and_consolidated_target_unions_are_exact(self) -> None:
-        expected = {EXPECTED_IDS[0]: (12, 9, 14, 13), EXPECTED_IDS[1]: (11, 8, 13, 13)}
+        expected = {EXPECTED_IDS[0]: (12, 9, 17, 15), EXPECTED_IDS[1]: (11, 8, 19, 15)}
         for row in self.package["routing"]["units"]:
             unit_id = row["sourceUnitID"]
             self.assertEqual((len(row["originalRoutedScoredNodeOperationalTargetIDs"]), len(row["originalRoutedScoredRelationOperationalTargetIDs"]), len(row["eligibleNodeOperationalTargetIDs"]), len(row["eligibleRelationOperationalTargetIDs"])), expected[unit_id])

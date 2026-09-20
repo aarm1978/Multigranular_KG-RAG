@@ -29,8 +29,8 @@
     }
   },
   "coverage": {
-    "consolidatedNodeTargetCount": 19,
-    "consolidatedRelationTargetCount": 17
+    "consolidatedNodeTargetCount": 25,
+    "consolidatedRelationTargetCount": 19
   },
   "independence": {
     "forbiddenInputs": [
@@ -199,18 +199,22 @@
           "PUB-N-A-DOM03D-MLMODEL",
           "PUB-N-A-DOM03E-AGENTBASEDMODEL",
           "PUB-N-A-DOM04-VARIABLE",
+          "PUB-N-A-DOM05-CONCEPT",
           "PUB-N-A-DOM07A-WATERSHED",
           "PUB-N-A-DOM08-NAMEDPLACE",
           "PUB-N-A-DOM11-EVALUATIONMETRIC",
           "PUB-N-A-DOM12-PARAMETER",
           "PUB-N-A-P13-METHOD",
           "PUB-N-A-P16-FINDING",
+          "PUB-N-A-P18-RELATEDRESEARCH",
           "PUB-N-A-P19-LIMITATION",
+          "PUB-N-A-P24-CLAIM",
           "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
           "PUB-N-A-P26-DATADESCRIPTION"
         ],
         "eligibleRelationOperationalTargetIDs": [
           "PUB-R-C-P07-PRODUCES",
+          "PUB-R-C-P11-RELATESTO-LOCAL-SEMANTIC-TARGET",
           "PUB-R-C-P13-USESMODEL-METHOD-BRANCH",
           "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
           "PUB-R-C-P14-APPLIESTO",
@@ -222,7 +226,38 @@
           "PUB-R-C-P25-REPORTSMETRIC",
           "PUB-R-C-P26-EVALUATES",
           "PUB-R-C-P27-HASPARAMETER",
+          "PUB-R-C-P30-MENTIONSCONCEPT",
           "PUB-R-C-P34-HASCOMPONENT"
+        ],
+        "originalEligibleNodeOperationalTargetIDs": [
+          "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+          "PUB-N-A-DOM03D-MLMODEL",
+          "PUB-N-A-DOM04-VARIABLE",
+          "PUB-N-A-DOM05-CONCEPT",
+          "PUB-N-A-DOM07A-WATERSHED",
+          "PUB-N-A-DOM08-NAMEDPLACE",
+          "PUB-N-A-DOM11-EVALUATIONMETRIC",
+          "PUB-N-A-DOM12-PARAMETER",
+          "PUB-N-A-P13-METHOD",
+          "PUB-N-A-P16-FINDING",
+          "PUB-N-A-P18-RELATEDRESEARCH",
+          "PUB-N-A-P19-LIMITATION",
+          "PUB-N-A-P24-CLAIM",
+          "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
+          "PUB-N-A-P26-DATADESCRIPTION"
+        ],
+        "originalEligibleRelationOperationalTargetIDs": [
+          "PUB-R-C-P07-PRODUCES",
+          "PUB-R-C-P11-RELATESTO-LOCAL-SEMANTIC-TARGET",
+          "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+          "PUB-R-C-P16-MENTIONSVARIABLE",
+          "PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH",
+          "PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH",
+          "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
+          "PUB-R-C-P25-REPORTSMETRIC",
+          "PUB-R-C-P26-EVALUATES",
+          "PUB-R-C-P27-HASPARAMETER",
+          "PUB-R-C-P30-MENTIONSCONCEPT"
         ],
         "originalRoutedScoredNodeOperationalTargetIDs": [
           "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
@@ -406,21 +441,28 @@
         },
         "eligibleNodeOperationalTargetIDs": [
           "PUB-N-A-AG02-ORGANIZATION-PROSE",
+          "PUB-N-A-C01-REPOSITORY-NAMED-WITHOUT-EXACT-IDENTITY",
           "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
           "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
           "PUB-N-A-DOM03E-AGENTBASEDMODEL",
           "PUB-N-A-DOM04-VARIABLE",
+          "PUB-N-A-DOM05-CONCEPT",
           "PUB-N-A-DOM11-EVALUATIONMETRIC",
           "PUB-N-A-DOM12-PARAMETER",
+          "PUB-N-A-P05-BACKGROUND",
           "PUB-N-A-P07-RESEARCHPROBLEM",
           "PUB-N-A-P09-RESEARCHGOAL",
+          "PUB-N-A-P11-DEFINITION",
           "PUB-N-A-P13-METHOD",
           "PUB-N-A-P14-EXPERIMENT",
+          "PUB-N-A-P18-RELATEDRESEARCH",
           "PUB-N-A-P21-CONTRIBUTION",
+          "PUB-N-A-P24-CLAIM",
           "PUB-N-A-P26-DATADESCRIPTION"
         ],
         "eligibleRelationOperationalTargetIDs": [
           "PUB-R-C-P06-RESOLVES",
+          "PUB-R-C-P11-RELATESTO-LOCAL-SEMANTIC-TARGET",
           "PUB-R-C-P13-USESMODEL-METHOD-BRANCH",
           "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
           "PUB-R-C-P14-APPLIESTO",
@@ -430,9 +472,41 @@
           "PUB-R-C-P25-REPORTSMETRIC",
           "PUB-R-C-P26-EVALUATES",
           "PUB-R-C-P27-HASPARAMETER",
+          "PUB-R-C-P30-MENTIONSCONCEPT",
           "PUB-R-C-P31-MENTIONSTOOL",
           "PUB-R-C-P33-HASCODEREPOSITORY",
           "PUB-R-C-P34-HASCOMPONENT"
+        ],
+        "originalEligibleNodeOperationalTargetIDs": [
+          "PUB-N-A-C01-REPOSITORY-NAMED-WITHOUT-EXACT-IDENTITY",
+          "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
+          "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+          "PUB-N-A-DOM04-VARIABLE",
+          "PUB-N-A-DOM05-CONCEPT",
+          "PUB-N-A-DOM11-EVALUATIONMETRIC",
+          "PUB-N-A-DOM12-PARAMETER",
+          "PUB-N-A-P05-BACKGROUND",
+          "PUB-N-A-P07-RESEARCHPROBLEM",
+          "PUB-N-A-P09-RESEARCHGOAL",
+          "PUB-N-A-P11-DEFINITION",
+          "PUB-N-A-P13-METHOD",
+          "PUB-N-A-P14-EXPERIMENT",
+          "PUB-N-A-P18-RELATEDRESEARCH",
+          "PUB-N-A-P21-CONTRIBUTION",
+          "PUB-N-A-P24-CLAIM",
+          "PUB-N-A-P26-DATADESCRIPTION"
+        ],
+        "originalEligibleRelationOperationalTargetIDs": [
+          "PUB-R-C-P06-RESOLVES",
+          "PUB-R-C-P11-RELATESTO-LOCAL-SEMANTIC-TARGET",
+          "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+          "PUB-R-C-P15-USESTOOL",
+          "PUB-R-C-P16-MENTIONSVARIABLE",
+          "PUB-R-C-P25-REPORTSMETRIC",
+          "PUB-R-C-P27-HASPARAMETER",
+          "PUB-R-C-P30-MENTIONSCONCEPT",
+          "PUB-R-C-P31-MENTIONSTOOL",
+          "PUB-R-C-P33-HASCODEREPOSITORY"
         ],
         "originalRoutedScoredNodeOperationalTargetIDs": [
           "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
@@ -553,6 +627,60 @@
         "operational_target": "Organization",
         "pilot_treatment": "extract_and_evaluate",
         "shortDefinition": "Evidence-backed organization occurrence in publication prose."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Keep a source-scoped provisional candidate; never merge globally by name alone.",
+        "boundaryHint": "Keep a source-scoped provisional candidate; never merge globally by name alone.",
+        "direct_instantiation": true,
+        "displayLabel": "Repository \u2014 named without exact identity",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "pooled_metrics_and_case_analysis",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "attributes": [
+              {
+                "name": "fork",
+                "type": "boolean"
+              },
+              {
+                "name": "commitSHA",
+                "type": "string"
+              }
+            ],
+            "extraction": "hybrid",
+            "id": "A-C01",
+            "iri": "ciroh:Repository",
+            "kind": "artifact",
+            "name": "Repository",
+            "note": "CodeMeta profile; DOAP ref. IRIs; + fork flag, RepositoryPurpose, commitSHA",
+            "status": "S"
+          }
+        ],
+        "identity_policy": {
+          "exact_identifier_required_for_promotion": true,
+          "global_merge_allowed": false,
+          "status": "provisional_source_local"
+        },
+        "kind": "artifact candidate",
+        "observation_refs": [
+          "OBS-PUB-008",
+          "OBS-PUB-015"
+        ],
+        "ontology_ids": [
+          "A-C01"
+        ],
+        "operational_id": "PUB-N-A-C01-REPOSITORY-NAMED-WITHOUT-EXACT-IDENTITY",
+        "operational_target": "Repository \u2014 named without exact identity",
+        "pilot_treatment": "extract_and_monitor",
+        "positive_criterion": "Text clearly refers to a repository but provides no exact canonical identity.",
+        "production_responsibility": "llm",
+        "row": 51,
+        "shortDefinition": "Text clearly refers to a repository but provides no exact canonical identity."
       },
       {
         "allowed_actions": [
@@ -725,6 +853,40 @@
         "production_responsibility": "llm",
         "row": 43,
         "shortDefinition": "Study-relevant measurable, observed, predicted, derived, or analyzed quantity or characteristic."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Avoid generic nouns and indiscriminate terminology extraction; connect through mentionsConcept or authorized relations.",
+        "boundaryHint": "Avoid generic nouns and indiscriminate terminology extraction; connect through mentionsConcept or authorized relations.",
+        "direct_instantiation": true,
+        "displayLabel": "Concept",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "pooled_metrics_and_case_analysis",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-DOM05",
+            "iri": "skos:Concept",
+            "kind": "domain",
+            "name": "Concept",
+            "status": "S"
+          }
+        ],
+        "kind": "domain",
+        "ontology_ids": [
+          "A-DOM05"
+        ],
+        "operational_id": "PUB-N-A-DOM05-CONCEPT",
+        "operational_target": "Concept",
+        "pilot_treatment": "extract_and_monitor",
+        "positive_criterion": "Specific scientific or technical notion substantively discussed and not better represented by another class.",
+        "production_responsibility": "llm",
+        "row": 52,
+        "shortDefinition": "Specific scientific or technical notion substantively discussed and not better represented by another class."
       },
       {
         "allowed_actions": [
@@ -937,6 +1099,40 @@
         "allowed_actions": [
           "propose_new"
         ],
+        "boundary": "Exclude generic introduction text, detailed related work, the research gap, and the study goal.",
+        "boundaryHint": "Exclude generic introduction text, detailed related work, the research gap, and the study goal.",
+        "direct_instantiation": true,
+        "displayLabel": "Background",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "pooled_metrics_and_case_analysis",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-P05",
+            "iri": "deo:Background",
+            "kind": "discourse",
+            "name": "Background",
+            "status": "S"
+          }
+        ],
+        "kind": "discourse",
+        "ontology_ids": [
+          "A-P05"
+        ],
+        "operational_id": "PUB-N-A-P05-BACKGROUND",
+        "operational_target": "Background",
+        "pilot_treatment": "extract_and_monitor",
+        "positive_criterion": "Atomic contextual statement that directly motivates the current study.",
+        "production_responsibility": "llm",
+        "row": 13,
+        "shortDefinition": "Atomic contextual statement that directly motivates the current study."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
         "boundary": "Exclude general importance, study limitations, and objectives.",
         "boundaryHint": "Exclude general importance, study limitations, and objectives.",
         "direct_instantiation": true,
@@ -1000,6 +1196,41 @@
         "production_responsibility": "llm",
         "row": 17,
         "shortDefinition": "Explicit aim, objective, or intended scientific action of the current paper."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Exclude general explanations, procedure descriptions, and formulas without textual interpretation.",
+        "boundaryHint": "Exclude general explanations, procedure descriptions, and formulas without textual interpretation.",
+        "direct_instantiation": true,
+        "displayLabel": "Definition",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "pooled_metrics_and_case_analysis",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-P11",
+            "iri": "ciroh:Definition",
+            "kind": "discourse",
+            "name": "Definition",
+            "note": "PEO",
+            "status": "S"
+          }
+        ],
+        "kind": "discourse",
+        "ontology_ids": [
+          "A-P11"
+        ],
+        "operational_id": "PUB-N-A-P11-DEFINITION",
+        "operational_target": "Definition",
+        "pilot_treatment": "extract_and_monitor",
+        "positive_criterion": "Explicit statement establishing the meaning of a term, measure, method, or concept.",
+        "production_responsibility": "llm",
+        "row": 19,
+        "shortDefinition": "Explicit statement establishing the meaning of a term, measure, method, or concept."
       },
       {
         "allowed_actions": [
@@ -1109,6 +1340,40 @@
         "allowed_actions": [
           "propose_new"
         ],
+        "boundary": "Exclude bare citations and bibliographic records; cited-Paper grounding is a separate protocol.",
+        "boundaryHint": "Exclude bare citations and bibliographic records; cited-Paper grounding is a separate protocol.",
+        "direct_instantiation": true,
+        "displayLabel": "RelatedResearch",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "pooled_metrics_and_case_analysis",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-P18",
+            "iri": "deo:RelatedWork",
+            "kind": "discourse",
+            "name": "RelatedResearch",
+            "status": "S"
+          }
+        ],
+        "kind": "discourse",
+        "ontology_ids": [
+          "A-P18"
+        ],
+        "operational_id": "PUB-N-A-P18-RELATEDRESEARCH",
+        "operational_target": "RelatedResearch",
+        "pilot_treatment": "extract_and_monitor",
+        "positive_criterion": "Substantive description, comparison, or synthesis of prior research.",
+        "production_responsibility": "llm",
+        "row": 26,
+        "shortDefinition": "Substantive description, comparison, or synthesis of prior research."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
         "boundary": "ResearchProblem predates and motivates the study; FutureWork proposes a later action.",
         "boundaryHint": "ResearchProblem predates and motivates the study; FutureWork proposes a later action.",
         "direct_instantiation": true,
@@ -1174,6 +1439,41 @@
         "production_responsibility": "llm",
         "row": 29,
         "shortDefinition": "What the study claims to have added to knowledge, evidence, method, infrastructure, or practice."
+      },
+      {
+        "allowed_actions": [
+          "propose_new"
+        ],
+        "boundary": "Not every declarative sentence is a Claim; avoid duplicate Claim and Conclusion nodes for the same unit.",
+        "boundaryHint": "Not every declarative sentence is a Claim; avoid duplicate Claim and Conclusion nodes for the same unit.",
+        "direct_instantiation": true,
+        "displayLabel": "Claim",
+        "emission_mode": "llm_candidate",
+        "endpoint_usage": "candidate_endpoint",
+        "evaluation_mode": "pooled_metrics_and_case_analysis",
+        "evidence_requirement": "direct_span_required",
+        "formal_classes": [
+          {
+            "extraction": "llm",
+            "id": "A-P24",
+            "iri": "ciroh:Claim",
+            "kind": "discourse",
+            "name": "Claim",
+            "note": "CIROH; SAO/Micropublications",
+            "status": "E"
+          }
+        ],
+        "kind": "discourse",
+        "ontology_ids": [
+          "A-P24"
+        ],
+        "operational_id": "PUB-N-A-P24-CLAIM",
+        "operational_target": "Claim",
+        "pilot_treatment": "extract_and_monitor",
+        "positive_criterion": "Argumentatively important proposition asserted by the authors but not necessarily a direct empirical result.",
+        "production_responsibility": "llm",
+        "row": 32,
+        "shortDefinition": "Argumentatively important proposition asserted by the authors but not necessarily a direct empirical result."
       },
       {
         "allowed_actions": [
@@ -1356,6 +1656,68 @@
         "raw_operational_signature": "Method/Experiment \u2192 Finding",
         "row": 11,
         "shortDefinition": "Edge evidence explicitly links the procedure/test to the result."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Avoid generic thematic co-occurrence.",
+        "boundaryHint": "Avoid generic thematic co-occurrence.",
+        "displayLabel": "relatesTo \u2014 local semantic target",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "pooled_metrics_and_case_analysis",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "ciroh:",
+            "domain": "RelatedResearch",
+            "id": "C-P11",
+            "name": "relatesTo",
+            "note": "PEO elaboration; Paper=stub",
+            "range": [
+              "Method",
+              "TheoreticalBasis",
+              "Concept",
+              "ResearchProblem",
+              "Paper"
+            ],
+            "status": "S",
+            "type": [
+              "intra",
+              "cross"
+            ]
+          }
+        ],
+        "ontology_ids": [
+          "C-P11"
+        ],
+        "operational_id": "PUB-R-C-P11-RELATESTO-LOCAL-SEMANTIC-TARGET",
+        "operational_relation": "relatesTo \u2014 local semantic target",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "RelatedResearch"
+              ],
+              "match": "exact"
+            },
+            "range": {
+              "classes": [
+                "Method",
+                "TheoreticalBasis",
+                "Concept",
+                "ResearchProblem"
+              ],
+              "match": "one_of"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_monitor",
+        "positive_criterion": "Substantive explicit connection to an accepted local target.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "RelatedResearch \u2192 Method/TheoreticalBasis/Concept/ResearchProblem",
+        "row": 15,
+        "shortDefinition": "Substantive explicit connection to an accepted local target."
       },
       {
         "allowed_actions": [
@@ -2082,6 +2444,57 @@
         "raw_operational_signature": "Method/Experiment/ComputationalModel \u2192 Parameter",
         "row": 37,
         "shortDefinition": "Evidence identifies the parameter owner or experimental context."
+      },
+      {
+        "allowed_actions": [
+          "propose_edge"
+        ],
+        "boundary": "Weaker than hasSubject; avoid terminology flooding.",
+        "boundaryHint": "Weaker than hasSubject; avoid terminology flooding.",
+        "displayLabel": "mentionsConcept",
+        "emission_mode": "llm_candidate",
+        "evaluation_mode": "pooled_metrics_and_case_analysis",
+        "evidence_requirement": "edge_specific_span_required",
+        "formal_relations": [
+          {
+            "anchor": "skos:Concept",
+            "consol": true,
+            "domain": "Paper",
+            "id": "C-P30",
+            "name": "mentionsConcept",
+            "note": "Concept expressed in paper content; weaker than C-P03 hasSubject.",
+            "range": "Concept",
+            "status": "S",
+            "type": "intra"
+          }
+        ],
+        "ontology_ids": [
+          "C-P30"
+        ],
+        "operational_id": "PUB-R-C-P30-MENTIONSCONCEPT",
+        "operational_relation": "mentionsConcept",
+        "operational_signatures": [
+          {
+            "domain": {
+              "classes": [
+                "Paper"
+              ],
+              "match": "exact"
+            },
+            "range": {
+              "classes": [
+                "Concept"
+              ],
+              "match": "exact"
+            }
+          }
+        ],
+        "pilot_treatment": "extract_and_monitor",
+        "positive_criterion": "Specific concept is substantively discussed, defined, analyzed, or applied.",
+        "production_responsibility": "llm",
+        "raw_operational_signature": "Paper \u2192 Concept",
+        "row": 41,
+        "shortDefinition": "Specific concept is substantively discussed, defined, analyzed, or applied."
       },
       {
         "allowed_actions": [
