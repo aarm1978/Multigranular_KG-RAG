@@ -1,6 +1,6 @@
 {
   "artifactType": "human_to_human_n2_pre_adjudication_reliability",
-  "artifactVersion": "0.1.0",
+  "artifactVersion": "0.1.1",
   "characterization": {
     "nodes": {
       "exactOntologyClass": {
@@ -22,8 +22,8 @@
       },
       "directionWhenSameRelationType": {
         "denominator": 13,
-        "numerator": 1,
-        "observedAgreement": 0.07692307692307693
+        "numerator": 10,
+        "observedAgreement": 0.7692307692307693
       },
       "exactOntologyRelationType": {
         "denominator": 15,
@@ -117,7 +117,9 @@
       "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|node|node-0031",
       "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|node|node-0032"
     ],
+    "nodeMentionBoundaryDisagreements": 4,
     "nodeOperationalTargetDisagreements": 5,
+    "nodeSupportingEvidenceDisagreements": 26,
     "relationDetectionOnlyA": [
       "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:34:sec:0015:unit:0001|relation|edge-0009",
       "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:34:sec:0015:unit:0001|relation|edge-0010",
@@ -154,31 +156,80 @@
       "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|relation|edge-0010",
       "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|relation|edge-0011"
     ],
+    "relationDirectionDisagreements": 3,
     "relationOperationalTargetDisagreements": 2,
-    "relationTypeDisagreements": 2
+    "relationSpecificEvidenceDisagreements": 2,
+    "relationTypeDisagreements": 2,
+    "sourceEndpointDisagreements": 1,
+    "targetEndpointDisagreements": 3
   },
   "exhaustivePresenceAbsence": {
     "byKind": {
       "node": {
-        "observedAgreement": 0.9130434782608695,
-        "support": 23,
+        "observedAgreement": 0.9259259259259259,
+        "support": 27,
         "table": {
-          "aAbsent_bAbsent": 2,
+          "aAbsent_bAbsent": 4,
           "aAbsent_bPositive": 1,
           "aPositive_bAbsent": 1,
-          "aPositive_bPositive": 19
+          "aPositive_bPositive": 21
         }
       },
       "relation": {
-        "observedAgreement": 0.7647058823529411,
-        "support": 17,
+        "observedAgreement": 0.8333333333333334,
+        "support": 24,
         "table": {
-          "aAbsent_bAbsent": 3,
+          "aAbsent_bAbsent": 10,
           "aAbsent_bPositive": 2,
           "aPositive_bAbsent": 2,
           "aPositive_bPositive": 10
         }
       }
+    },
+    "extractAndMonitorPositiveSet": {
+      "byKind": {
+        "node": {
+          "annotatorACoverage": 0.3888888888888889,
+          "annotatorASupport": 18,
+          "annotatorBCoverage": 0.3684210526315789,
+          "annotatorBSupport": 19,
+          "matchedSupport": 7,
+          "mentionBoundary": {
+            "boundaryTolerantCount": 7,
+            "boundaryTolerantRate": 1.0,
+            "exactCount": 7,
+            "exactRate": 1.0,
+            "meanF1": 1.0,
+            "support": 7
+          },
+          "supportingEvidence": {
+            "exactCount": 4,
+            "exactRate": 0.5714285714285714,
+            "meanF1": 0.9133870778036389,
+            "meanPrecision": 0.8811299889413894,
+            "meanRecall": 0.9889663182346109,
+            "support": 7
+          },
+          "symmetricPairwiseF1": 0.3783783783783784
+        },
+        "relation": {
+          "annotatorACoverage": 0.4,
+          "annotatorASupport": 5,
+          "annotatorBCoverage": 0.5,
+          "annotatorBSupport": 4,
+          "matchedSupport": 2,
+          "relationEvidence": {
+            "exactCount": 1,
+            "exactRate": 0.5,
+            "meanF1": 0.9383561643835616,
+            "meanPrecision": 0.8902439024390244,
+            "meanRecall": 1.0,
+            "support": 2
+          },
+          "symmetricPairwiseF1": 0.4444444444444444
+        }
+      },
+      "scope": "non-exhaustive positive-set view; absent annotations are not negatives"
     },
     "scope": "routed extract_and_evaluate unit-target decisions only"
   },

@@ -290,16 +290,59 @@ def pair_nodes(left: list[Record], right: list[Record]) -> list[tuple[Record, Re
     return pairs
 
 
-def _endpoint_match(a: dict[str, Any], b: dict[str, Any], node_pairs: set[tuple[str, str]]) -> bool:
-    """Determine endpoint occurrence correspondence only for assignment preference."""
-    if a.get("referenceType") == b.get("referenceType") == "deterministic_node":
-        return a.get("referenceID") == b.get("referenceID") and a.get("artifactID") == b.get("artifactID")
-    return (a.get("referenceID"), b.get("referenceID")) in node_pairs
+def _node_index(records: Iterable[Record]) -> dict[tuple[str, str, str, str, str], Record]:
+    """Index nodes by their fully qualified annotation provenance, never bare IDs."""
+    index: dict[tuple[str, str, str, str, str], Record] = {}
+    for record in records:
+        if record.kind == "node":
+            index[(record.role, record.partition, record.session, record.unit, record.value["candidateID"])] = record
+    return index
+
+
+def _endpoint_identity(relation: Record, endpoint: dict[str, Any], nodes: dict[tuple[str, str, str, str, str], Record]) -> tuple[str, str, str | None]:
+    """Resolve an endpoint to immutable deterministic or qualified node identity."""
+    if endpoint.get("referenceType") == "deterministic_node":
+        reference, artifact = endpoint.get("referenceID"), endpoint.get("artifactID")
+        if not isinstance(reference, str) or not isinstance(artifact, str):
+            raise AuthorityError("deterministic endpoint lacks exact identity provenance")
+        return ("deterministic", reference, artifact)
+    if endpoint.get("referenceType") == "candidate_node":
+        reference = endpoint.get("referenceID")
+        key = (relation.role, relation.partition, relation.session, relation.unit, reference)
+        node = nodes.get(key)
+        if node is None:
+            raise AuthorityError("candidate endpoint cannot be resolved within its frozen partition provenance")
+        return ("node", node.key, None)
+    raise AuthorityError("unsupported endpoint reference type")
+
+
+def _endpoint_match(left: tuple[str, str, str | None], right: tuple[str, str, str | None], node_pairs: set[tuple[str, str]]) -> bool:
+    """Evaluate endpoint occurrence correspondence from qualified identities."""
+    if left[0] == right[0] == "deterministic":
+        return left == right
+    return left[0] == right[0] == "node" and (left[1], right[1]) in node_pairs
+
+
+def _endpoint_correspondence(left: Record, right: Record, nodes: dict[tuple[str, str, str, str, str], Record], node_pairs: set[tuple[str, str]]) -> dict[str, Any]:
+    """Compute unordered and directed endpoint correspondence for one relation pair."""
+    ls = _endpoint_identity(left, left.value["source"], nodes)
+    lt = _endpoint_identity(left, left.value["target"], nodes)
+    rs = _endpoint_identity(right, right.value["source"], nodes)
+    rt = _endpoint_identity(right, right.value["target"], nodes)
+    source, target = _endpoint_match(ls, rs, node_pairs), _endpoint_match(lt, rt, node_pairs)
+    reverse_source, reverse_target = _endpoint_match(ls, rt, node_pairs), _endpoint_match(lt, rs, node_pairs)
+    return {
+        "source": source,
+        "target": target,
+        "unorderedCount": max(int(source) + int(target), int(reverse_source) + int(reverse_target)),
+        "direction": source and target,
+    }
 
 
 def pair_relations(left: list[Record], right: list[Record], node_pairs: list[tuple[Record, Record, dict[str, Any]]]) -> list[tuple[Record, Record, dict[str, Any]]]:
     """Pair relations solely through relation-evidence eligibility and stated preferences."""
-    node_lookup = {(a.value["candidateID"], b.value["candidateID"]) for a, b, _ in node_pairs}
+    node_lookup = {(a.key, b.key) for a, b, _ in node_pairs}
+    nodes = _node_index(left + right)
     pairs: list[tuple[Record, Record, dict[str, Any]]] = []
     for unit in N2_UNITS:
         a, b = [x for x in left if x.kind == "relation" and x.unit == unit], [x for x in right if x.kind == "relation" and x.unit == unit]
@@ -308,7 +351,7 @@ def pair_relations(left: list[Record], right: list[Record], node_pairs: list[tup
             for j, y in enumerate(b):
                 measure = _evidence_metrics(x, y)
                 if measure["f1"] >= .80 and measure["precision"] >= .70 and measure["recall"] >= .70:
-                    endpoints = int(_endpoint_match(x.value["source"], y.value["source"], node_lookup)) + int(_endpoint_match(x.value["target"], y.value["target"], node_lookup))
+                    endpoints = _endpoint_correspondence(x, y, nodes, node_lookup)["unorderedCount"]
                     boundary = 0
                     for xid in x.value["evidenceSpanIDs"]:
                         for yid in y.value["evidenceSpanIDs"]:
@@ -337,37 +380,59 @@ def _detection(a: list[Record], b: list[Record], pairs: list[tuple[Record, Recor
     return summary
 
 
-def _characterization(node_pairs: list[tuple[Record, Record, dict[str, Any]]], relation_pairs: list[tuple[Record, Record, dict[str, Any]]]) -> dict[str, Any]:
+def _characterization(node_pairs: list[tuple[Record, Record, dict[str, Any]]], relation_pairs: list[tuple[Record, Record, dict[str, Any]]], records: list[Record]) -> dict[str, Any]:
     """Report characterization agreement without feeding it back into matching."""
     def rate(values: Iterable[bool]) -> dict[str, Any]:
         rows = list(values); return {"numerator": sum(rows), "denominator": len(rows), "observedAgreement": None if not rows else sum(rows)/len(rows)}
-    lookup = {(a.value["candidateID"], b.value["candidateID"]) for a,b,_ in node_pairs}
-    def endpoint(a: dict[str, Any], b: dict[str, Any]) -> bool: return _endpoint_match(a, b, lookup)
-    return {"nodes": {"exactOntologyClass": rate(a.value.get("ontologyClassID") == b.value.get("ontologyClassID") for a,b,_ in node_pairs), "exactOperationalTarget": rate(a.value.get("operationalTargetID") == b.value.get("operationalTargetID") for a,b,_ in node_pairs)}, "relations": {"exactOntologyRelationType": rate(a.value.get("ontologyRelationID") == b.value.get("ontologyRelationID") for a,b,_ in relation_pairs), "exactOperationalTarget": rate(a.value.get("operationalRelationID") == b.value.get("operationalRelationID") for a,b,_ in relation_pairs), "directionWhenSameRelationType": rate(a.value.get("source") == b.value.get("source") and a.value.get("target") == b.value.get("target") for a,b,_ in relation_pairs if a.value.get("ontologyRelationID") == b.value.get("ontologyRelationID")), "sourceEndpoint": rate(endpoint(a.value["source"],b.value["source"]) for a,b,_ in relation_pairs), "targetEndpoint": rate(endpoint(a.value["target"],b.value["target"]) for a,b,_ in relation_pairs), "bothEndpoints": rate(endpoint(a.value["source"],b.value["source"]) and endpoint(a.value["target"],b.value["target"]) for a,b,_ in relation_pairs)}}
+    lookup = {(a.key, b.key) for a,b,_ in node_pairs}
+    nodes = _node_index(records)
+    endpoint_views = {(a.key, b.key): _endpoint_correspondence(a, b, nodes, lookup) for a,b,_ in relation_pairs}
+    def endpoints(a: Record, b: Record) -> dict[str, Any]: return endpoint_views[a.key, b.key]
+    return {"nodes": {"exactOntologyClass": rate(a.value.get("ontologyClassID") == b.value.get("ontologyClassID") for a,b,_ in node_pairs), "exactOperationalTarget": rate(a.value.get("operationalTargetID") == b.value.get("operationalTargetID") for a,b,_ in node_pairs)}, "relations": {"exactOntologyRelationType": rate(a.value.get("ontologyRelationID") == b.value.get("ontologyRelationID") for a,b,_ in relation_pairs), "exactOperationalTarget": rate(a.value.get("operationalRelationID") == b.value.get("operationalRelationID") for a,b,_ in relation_pairs), "directionWhenSameRelationType": rate(endpoints(a,b)["direction"] for a,b,_ in relation_pairs if a.value.get("ontologyRelationID") == b.value.get("ontologyRelationID")), "sourceEndpoint": rate(endpoints(a,b)["source"] for a,b,_ in relation_pairs), "targetEndpoint": rate(endpoints(a,b)["target"] for a,b,_ in relation_pairs), "bothEndpoints": rate(endpoints(a,b)["source"] and endpoints(a,b)["target"] for a,b,_ in relation_pairs)}}
+
+
+def _composed_target_states(records: list[Record], role: str, unit: str) -> tuple[dict[str, str], dict[str, str]]:
+    """Compose partition-preserved target states into an A/B unit decision view."""
+    selected = [record for record in records if record.role == role and record.unit == unit]
+    if not selected:
+        raise AuthorityError("missing frozen routed target state for an N=2 annotator")
+    treatments: dict[str, str] = {}
+    states: dict[str, list[str]] = defaultdict(list)
+    for record in selected:
+        for target, treatment in record.treatments.items():
+            prior = treatments.setdefault(target, treatment)
+            if prior != treatment:
+                raise AuthorityError(f"conflicting frozen treatment: {unit} {target}")
+        for target, state in record.target_states.items():
+            states[target].append(state)
+    composed: dict[str, str] = {}
+    for target, values in states.items():
+        if "reviewed_positive" in values:
+            composed[target] = "reviewed_positive"
+        elif all(value == "reviewed_no_positive" for value in values):
+            composed[target] = "reviewed_no_positive"
+        elif all(value == "monitored_review_complete" for value in values):
+            composed[target] = "monitored_review_complete"
+        else:
+            raise AuthorityError(f"uncomposable frozen target states: {unit} {target}")
+    return treatments, composed
 
 
 def _presence_absence(a: list[Record], b: list[Record]) -> dict[str, Any]:
-    """Build the exhaustive routed extract-and-evaluate unit-target 2x2 tables."""
-    by_role_unit: dict[tuple[str, str], Record] = {}
-    for record in a + b:
-        by_role_unit.setdefault((record.role, record.unit), record)
+    """Build exhaustive tables and separate non-exhaustive monitor positive-set views."""
     rows: dict[str, list[tuple[bool, bool]]] = {"node": [], "relation": []}
     for unit in N2_UNITS:
-        ar, br = by_role_unit.get(("annotator_a", unit)), by_role_unit.get(("annotator_b", unit))
-        if ar is None or br is None:
-            raise AuthorityError("missing frozen routed target state for an N=2 annotator")
-        # Presence/absence requires an exhaustive decision from both peers.  A
-        # target exposed only to one frozen annotation is not silently treated
-        # as an absence on the other side.
-        targets = set(ar.treatments) & set(br.treatments)
+        atreatments, astates = _composed_target_states(a, "annotator_a", unit)
+        btreatments, bstates = _composed_target_states(b, "annotator_b", unit)
+        targets = set(atreatments) & set(btreatments)
         for target in sorted(targets):
-            at, bt = ar.treatments.get(target), br.treatments.get(target)
-            if at != "extract_and_evaluate" or bt != "extract_and_evaluate":
-                continue
-            if target not in ar.target_states or target not in br.target_states:
+            at, bt = atreatments[target], btreatments[target]
+            if target not in astates or target not in bstates:
                 raise AuthorityError(f"missing target state: {unit} {target}")
             kind = "relation" if target.startswith("PUB-R-") else "node"
-            rows[kind].append((ar.target_states[target] == "reviewed_positive", br.target_states[target] == "reviewed_positive"))
+            if at != "extract_and_evaluate" or bt != "extract_and_evaluate":
+                continue
+            rows[kind].append((astates[target] == "reviewed_positive", bstates[target] == "reviewed_positive"))
     output: dict[str, Any] = {}
     for kind, values in rows.items():
         table = {"aPositive_bPositive": sum(x and y for x,y in values), "aPositive_bAbsent": sum(x and not y for x,y in values), "aAbsent_bPositive": sum(not x and y for x,y in values), "aAbsent_bAbsent": sum(not x and not y for x,y in values)}
@@ -381,8 +446,18 @@ def compute(root: Path = PROJECT_ROOT) -> dict[str, Any]:
     node_pairs = pair_nodes(a, b)
     relation_pairs = pair_relations(a, b, node_pairs)
     node_summary, relation_summary = _detection(a,b,node_pairs,"node"), _detection(a,b,relation_pairs,"relation")
-    diagnostics = {"nodeDetectionOnlyA": sorted(x.key for x in a if x.kind == "node" and x.key not in {p[0].key for p in node_pairs}), "nodeDetectionOnlyB": sorted(x.key for x in b if x.kind == "node" and x.key not in {p[1].key for p in node_pairs}), "relationDetectionOnlyA": sorted(x.key for x in a if x.kind == "relation" and x.key not in {p[0].key for p in relation_pairs}), "relationDetectionOnlyB": sorted(x.key for x in b if x.kind == "relation" and x.key not in {p[1].key for p in relation_pairs}), "nodeClassDisagreements": sum(x.value.get("ontologyClassID") != y.value.get("ontologyClassID") for x,y,_ in node_pairs), "nodeOperationalTargetDisagreements": sum(x.value.get("operationalTargetID") != y.value.get("operationalTargetID") for x,y,_ in node_pairs), "relationTypeDisagreements": sum(x.value.get("ontologyRelationID") != y.value.get("ontologyRelationID") for x,y,_ in relation_pairs), "relationOperationalTargetDisagreements": sum(x.value.get("operationalRelationID") != y.value.get("operationalRelationID") for x,y,_ in relation_pairs)}
-    return {"artifactType": "human_to_human_n2_pre_adjudication_reliability", "artifactVersion": "0.1.0", "matchingContract": "docs/publication_human_core_amended_matching_contract_v0.1.md", "scope": "frozen N=2 only; descriptive pre-adjudication; no PASS/FAIL or acceptance logic", "sourceUnitIDs": list(N2_UNITS), "frozenInputs": provenance, "nodeDetection": node_summary, "relationDetection": relation_summary, "characterization": _characterization(node_pairs, relation_pairs), "exhaustivePresenceAbsence": _presence_absence(a,b), "disagreementDiagnostics": diagnostics, "pairings": {"nodes": [{"annotatorAKey":x.key,"annotatorBKey":y.key,"mentionSpan":m} for x,y,m in node_pairs], "relations": [{"annotatorAKey":x.key,"annotatorBKey":y.key,"relationEvidence":m} for x,y,m in relation_pairs]}}
+    characterization = _characterization(node_pairs, relation_pairs, a + b)
+    endpoint_views = _characterization(node_pairs, relation_pairs, a + b)["relations"]
+    diagnostics = {"nodeDetectionOnlyA": sorted(x.key for x in a if x.kind == "node" and x.key not in {p[0].key for p in node_pairs}), "nodeDetectionOnlyB": sorted(x.key for x in b if x.kind == "node" and x.key not in {p[1].key for p in node_pairs}), "relationDetectionOnlyA": sorted(x.key for x in a if x.kind == "relation" and x.key not in {p[0].key for p in relation_pairs}), "relationDetectionOnlyB": sorted(x.key for x in b if x.kind == "relation" and x.key not in {p[1].key for p in relation_pairs}), "nodeClassDisagreements": sum(x.value.get("ontologyClassID") != y.value.get("ontologyClassID") for x,y,_ in node_pairs), "nodeOperationalTargetDisagreements": sum(x.value.get("operationalTargetID") != y.value.get("operationalTargetID") for x,y,_ in node_pairs), "nodeMentionBoundaryDisagreements": sum(not m["exact"] for _,_,m in node_pairs), "nodeSupportingEvidenceDisagreements": sum(not _evidence_metrics(x,y)["exact"] for x,y,_ in node_pairs), "relationTypeDisagreements": sum(x.value.get("ontologyRelationID") != y.value.get("ontologyRelationID") for x,y,_ in relation_pairs), "relationOperationalTargetDisagreements": sum(x.value.get("operationalRelationID") != y.value.get("operationalRelationID") for x,y,_ in relation_pairs), "relationDirectionDisagreements": endpoint_views["directionWhenSameRelationType"]["denominator"] - endpoint_views["directionWhenSameRelationType"]["numerator"], "sourceEndpointDisagreements": endpoint_views["sourceEndpoint"]["denominator"] - endpoint_views["sourceEndpoint"]["numerator"], "targetEndpointDisagreements": endpoint_views["targetEndpoint"]["denominator"] - endpoint_views["targetEndpoint"]["numerator"], "relationSpecificEvidenceDisagreements": sum(not m["exact"] for _,_,m in relation_pairs)}
+    presence = _presence_absence(a,b)
+    monitor: dict[str, Any] = {}
+    for kind, pairs in (("node", node_pairs), ("relation", relation_pairs)):
+        a_positive = [record for record in a if record.kind == kind and record.treatments.get(record.value.get("operationalTargetID") or record.value.get("operationalRelationID")) == "extract_and_monitor"]
+        b_positive = [record for record in b if record.kind == kind and record.treatments.get(record.value.get("operationalTargetID") or record.value.get("operationalRelationID")) == "extract_and_monitor"]
+        monitor_pairs = [pair for pair in pairs if pair[0] in a_positive and pair[1] in b_positive]
+        monitor[kind] = _detection(a_positive, b_positive, monitor_pairs, kind)
+    presence["extractAndMonitorPositiveSet"] = {"scope": "non-exhaustive positive-set view; absent annotations are not negatives", "byKind": monitor}
+    return {"artifactType": "human_to_human_n2_pre_adjudication_reliability", "artifactVersion": "0.1.1", "matchingContract": "docs/publication_human_core_amended_matching_contract_v0.1.md", "scope": "frozen N=2 only; descriptive pre-adjudication; no PASS/FAIL or acceptance logic", "sourceUnitIDs": list(N2_UNITS), "frozenInputs": provenance, "nodeDetection": node_summary, "relationDetection": relation_summary, "characterization": characterization, "exhaustivePresenceAbsence": presence, "disagreementDiagnostics": diagnostics, "pairings": {"nodes": [{"annotatorAKey":x.key,"annotatorBKey":y.key,"mentionSpan":m} for x,y,m in node_pairs], "relations": [{"annotatorAKey":x.key,"annotatorBKey":y.key,"relationEvidence":m} for x,y,m in relation_pairs]}}
 
 
 def render_report(result: dict[str, Any]) -> str:
@@ -391,8 +466,9 @@ def render_report(result: dict[str, Any]) -> str:
     nt, rt = n["mentionBoundary"], r["relationEvidence"]
     ne = n["supportingEvidence"]
     p = result["exhaustivePresenceAbsence"]["byKind"]
+    monitor = result["exhaustivePresenceAbsence"]["extractAndMonitorPositiveSet"]["byKind"]
     direction = c["relations"]["directionWhenSameRelationType"]
-    return "\n".join(("# Human-to-Human N=2 Pre-Adjudication Reliability", "", "This is a deterministic descriptive comparison under the frozen amended matching contract. It contains no adjudication, annotation modification, reliability gate, PASS/FAIL result, or production-acceptance inference.", "", "## Detection and evidence", "", f"- Nodes: A={n['annotatorASupport']}, B={n['annotatorBSupport']}, matched={n['matchedSupport']}, A coverage={n['annotatorACoverage']:.6f}, B coverage={n['annotatorBCoverage']:.6f}, symmetric pairwise F1={n['symmetricPairwiseF1']:.6f}.", f"- Node mention boundaries: exact={nt['exactCount']}/{nt['support']} ({nt['exactRate']:.6f}); tolerant={nt['boundaryTolerantCount']}/{nt['support']}; mean F1={nt['meanF1']:.6f}.", f"- Node supporting evidence: exact={ne['exactCount']}/{ne['support']} ({ne['exactRate']:.6f}); mean P/R/F1={ne['meanPrecision']:.6f}/{ne['meanRecall']:.6f}/{ne['meanF1']:.6f}.", f"- Relations: A={r['annotatorASupport']}, B={r['annotatorBSupport']}, matched={r['matchedSupport']}, A coverage={r['annotatorACoverage']:.6f}, B coverage={r['annotatorBCoverage']:.6f}, symmetric pairwise F1={r['symmetricPairwiseF1']:.6f}.", f"- Relation evidence: exact={rt['exactCount']}/{rt['support']} ({rt['exactRate']:.6f}); mean P/R/F1={rt['meanPrecision']:.6f}/{rt['meanRecall']:.6f}/{rt['meanF1']:.6f}.", "", "## Characterization and exhaustive presence/absence", "", f"- Nodes: class={c['nodes']['exactOntologyClass']['numerator']}/{c['nodes']['exactOntologyClass']['denominator']}; operational target={c['nodes']['exactOperationalTarget']['numerator']}/{c['nodes']['exactOperationalTarget']['denominator']}.", f"- Relations: type={c['relations']['exactOntologyRelationType']['numerator']}/{c['relations']['exactOntologyRelationType']['denominator']}; target={c['relations']['exactOperationalTarget']['numerator']}/{c['relations']['exactOperationalTarget']['denominator']}; direction (same type)={direction['numerator']}/{direction['denominator']}; source endpoint={c['relations']['sourceEndpoint']['numerator']}/{c['relations']['sourceEndpoint']['denominator']}; target endpoint={c['relations']['targetEndpoint']['numerator']}/{c['relations']['targetEndpoint']['denominator']}; both={c['relations']['bothEndpoints']['numerator']}/{c['relations']['bothEndpoints']['denominator']}.", f"- Exhaustive node table (++,+−,−+,−−)={p['node']['table']['aPositive_bPositive']},{p['node']['table']['aPositive_bAbsent']},{p['node']['table']['aAbsent_bPositive']},{p['node']['table']['aAbsent_bAbsent']} (n={p['node']['support']}; observed agreement={p['node']['observedAgreement']:.6f}).", f"- Exhaustive relation table (++,+−,−+,−−)={p['relation']['table']['aPositive_bPositive']},{p['relation']['table']['aPositive_bAbsent']},{p['relation']['table']['aAbsent_bPositive']},{p['relation']['table']['aAbsent_bAbsent']} (n={p['relation']['support']}; observed agreement={p['relation']['observedAgreement']:.6f}).", "", "## Permitted disagreement diagnostics", "", f"- Detection-only: nodes A={len(d['nodeDetectionOnlyA'])}, B={len(d['nodeDetectionOnlyB'])}; relations A={len(d['relationDetectionOnlyA'])}, B={len(d['relationDetectionOnlyB'])}.", f"- Characterization: node class={d['nodeClassDisagreements']}, node operational target={d['nodeOperationalTargetDisagreements']}, relation type={d['relationTypeDisagreements']}, relation operational target={d['relationOperationalTargetDisagreements']}.", "", "The accompanying JSON artifact carries pairing keys, boundary/evidence summaries, and raw diagnostic keys for deterministic reproduction.", ""))
+    return "\n".join(("# Human-to-Human N=2 Pre-Adjudication Reliability", "", "This is a deterministic descriptive comparison under the frozen amended matching contract. It contains no adjudication, annotation modification, reliability gate, PASS/FAIL result, or production-acceptance inference.", "", "## Detection and evidence", "", f"- Nodes: A={n['annotatorASupport']}, B={n['annotatorBSupport']}, matched={n['matchedSupport']}, A coverage={n['annotatorACoverage']:.6f}, B coverage={n['annotatorBCoverage']:.6f}, symmetric pairwise F1={n['symmetricPairwiseF1']:.6f}.", f"- Node mention boundaries: exact={nt['exactCount']}/{nt['support']} ({nt['exactRate']:.6f}); tolerant={nt['boundaryTolerantCount']}/{nt['support']}; mean F1={nt['meanF1']:.6f}.", f"- Node supporting evidence: exact={ne['exactCount']}/{ne['support']} ({ne['exactRate']:.6f}); mean P/R/F1={ne['meanPrecision']:.6f}/{ne['meanRecall']:.6f}/{ne['meanF1']:.6f}.", f"- Relations: A={r['annotatorASupport']}, B={r['annotatorBSupport']}, matched={r['matchedSupport']}, A coverage={r['annotatorACoverage']:.6f}, B coverage={r['annotatorBCoverage']:.6f}, symmetric pairwise F1={r['symmetricPairwiseF1']:.6f}.", f"- Relation evidence: exact={rt['exactCount']}/{rt['support']} ({rt['exactRate']:.6f}); mean P/R/F1={rt['meanPrecision']:.6f}/{rt['meanRecall']:.6f}/{rt['meanF1']:.6f}.", "", "## Characterization and exhaustive presence/absence", "", f"- Nodes: class={c['nodes']['exactOntologyClass']['numerator']}/{c['nodes']['exactOntologyClass']['denominator']}; operational target={c['nodes']['exactOperationalTarget']['numerator']}/{c['nodes']['exactOperationalTarget']['denominator']}.", f"- Relations: type={c['relations']['exactOntologyRelationType']['numerator']}/{c['relations']['exactOntologyRelationType']['denominator']}; target={c['relations']['exactOperationalTarget']['numerator']}/{c['relations']['exactOperationalTarget']['denominator']}; direction (same type)={direction['numerator']}/{direction['denominator']}; source endpoint={c['relations']['sourceEndpoint']['numerator']}/{c['relations']['sourceEndpoint']['denominator']}; target endpoint={c['relations']['targetEndpoint']['numerator']}/{c['relations']['targetEndpoint']['denominator']}; both={c['relations']['bothEndpoints']['numerator']}/{c['relations']['bothEndpoints']['denominator']}.", f"- Exhaustive node table (++,+−,−+,−−)={p['node']['table']['aPositive_bPositive']},{p['node']['table']['aPositive_bAbsent']},{p['node']['table']['aAbsent_bPositive']},{p['node']['table']['aAbsent_bAbsent']} (n={p['node']['support']}; observed agreement={p['node']['observedAgreement']:.6f}).", f"- Exhaustive relation table (++,+−,−+,−−)={p['relation']['table']['aPositive_bPositive']},{p['relation']['table']['aPositive_bAbsent']},{p['relation']['table']['aAbsent_bPositive']},{p['relation']['table']['aAbsent_bAbsent']} (n={p['relation']['support']}; observed agreement={p['relation']['observedAgreement']:.6f}).", f"- Monitor positive-set only (non-exhaustive): nodes A/B/shared={monitor['node']['annotatorASupport']}/{monitor['node']['annotatorBSupport']}/{monitor['node']['matchedSupport']}; relations A/B/shared={monitor['relation']['annotatorASupport']}/{monitor['relation']['annotatorBSupport']}/{monitor['relation']['matchedSupport']}. No monitor absence enters a 2x2 table.", "", "## Permitted disagreement diagnostics", "", f"- Detection-only: nodes A={len(d['nodeDetectionOnlyA'])}, B={len(d['nodeDetectionOnlyB'])}; relations A={len(d['relationDetectionOnlyA'])}, B={len(d['relationDetectionOnlyB'])}.", f"- Nodes: class={d['nodeClassDisagreements']}, operational target={d['nodeOperationalTargetDisagreements']}, mention boundary={d['nodeMentionBoundaryDisagreements']}, supporting evidence={d['nodeSupportingEvidenceDisagreements']}.", f"- Relations: type={d['relationTypeDisagreements']}, operational target={d['relationOperationalTargetDisagreements']}, direction={d['relationDirectionDisagreements']}, source endpoint={d['sourceEndpointDisagreements']}, target endpoint={d['targetEndpointDisagreements']}, relation evidence={d['relationSpecificEvidenceDisagreements']}.", "", "The accompanying JSON artifact carries pairing keys, boundary/evidence summaries, and raw diagnostic keys for deterministic reproduction.", ""))
 
 
 def main() -> None:
