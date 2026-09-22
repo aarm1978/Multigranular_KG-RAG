@@ -1,6 +1,6 @@
 # Study 2 Evaluation Protocol Amendment v0.1
 
-**Status:** prospective amendment; effective while Human Core primary annotation is beginning
+**Status:** active prospective amendment; Human Core procedure in force; amended matching contract frozen 2026-09-21
 
 **Scope:** Study 2 Publication semantic-extraction evaluation architecture
 
@@ -38,7 +38,7 @@ scope and reliability controls over an unsupported claim of broad, exhaustive hu
 | Relatively large stratified human gold | Frozen N=5 Human Core, selected prospectively and model-blind before semantic inspection |
 | At least two annotators per artifact | Researcher/task expert is the primary annotator; independent annotation is predeclared for a two-unit reliability subset |
 | IAA plus adjudication across the planned gold | Reliability is limited to the predeclared subset; pooled human adjudication is a separate, pending reference component |
-| Entity and relation P/R/F1 against the planned broad gold | P/R/F1 depend on a pending amended Human Core matching contract; production acceptance remains a separate pending policy, and Human Core does not claim representation of all 11 primary publications |
+| Entity and relation P/R/F1 against the planned broad gold | P/R/F1 are governed by the frozen amended Human Core matching contract; production acceptance remains a separate pending policy, and Human Core does not claim representation of all 11 primary publications |
 
 ## 3. Rejected shortcut: LLM consensus is not gold
 
@@ -123,17 +123,17 @@ completeness-audit procedures remain pending:
 | --- | --- | --- |
 | Human Core N=5 selection, five publications, 5/5 strata, and 19-node/16-relation routed coverage | **FROZEN** | Prospective, model-blind selection before semantic inspection |
 | Primary annotator role, canonical-source/model-blind annotation, routed `extract_and_evaluate` exhaustiveness, and two-unit reliability subset | **FROZEN** | Bounded Human Core procedure only |
-| Amended Human Core matching contract | **PENDING — not frozen** | Defines the correspondence and aggregation required for Human Core P/R/F1; it does not alter historical Pilot 1 contracts |
+| Amended Human Core matching contract | **FROZEN — 2026-09-21** | `docs/publication_human_core_amended_matching_contract_v0.1.md`; governs N=2 pre-adjudication reliability and N=5 Human Core P/R/F1 without altering historical Pilot 1 contracts |
 | Pooled contributors, deduplication, and adjudication procedure | **PENDING — not frozen** | Defines the pooled human-adjudicated reference |
 | Completeness-audit design and statistic | **PENDING — not frozen** | Must remain model-blind |
 | SciERC contract | **PENDING — not frozen** | Defines the external IE anchor and permitted claims |
 | Production acceptance policy | **PENDING — not frozen** | Separate from Human Core P/R/F1 scoring and does not follow automatically from Human Core annotation |
 
 Pending components must be specified prospectively before their respective results are
-used for production acceptance or confirmatory claims. P/R/F1 may not be computed as a
-confirmatory Human Core result until the amended matching contract is frozen; production
-acceptance additionally requires its separate pending policy. This amendment does not
-silently freeze any pending procedure.
+used for production acceptance or confirmatory claims. The amended Human Core matching
+contract is now frozen and is the required authority for N=2 pre-adjudication reliability
+and N=5 Human Core P/R/F1. Production acceptance still requires its separate pending
+policy. This amendment does not silently freeze any other pending procedure.
 
 ## 7. Operational interpretation
 
