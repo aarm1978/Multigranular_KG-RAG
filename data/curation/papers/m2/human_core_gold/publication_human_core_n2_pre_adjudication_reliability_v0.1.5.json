@@ -1,6 +1,49 @@
 {
+  "allPositiveDetection": {
+    "nodes": {
+      "annotatorACoverage": 0.5205479452054794,
+      "annotatorASupport": 73,
+      "annotatorBCoverage": 0.5671641791044776,
+      "annotatorBSupport": 67,
+      "matchedSupport": 38,
+      "mentionBoundary": {
+        "boundaryTolerantCount": 38,
+        "boundaryTolerantRate": 1.0,
+        "exactCount": 34,
+        "exactRate": 0.8947368421052632,
+        "meanF1": 0.9910528416575333,
+        "support": 38
+      },
+      "supportingEvidence": {
+        "exactCount": 12,
+        "exactRate": 0.3157894736842105,
+        "meanF1": 0.8227651716759514,
+        "meanPrecision": 0.7953739015189607,
+        "meanRecall": 0.9453112084991879,
+        "support": 38
+      },
+      "symmetricPairwiseF1": 0.5428571428571428
+    },
+    "relations": {
+      "annotatorACoverage": 0.5,
+      "annotatorASupport": 30,
+      "annotatorBCoverage": 0.46875,
+      "annotatorBSupport": 32,
+      "matchedSupport": 15,
+      "relationEvidence": {
+        "exactCount": 13,
+        "exactRate": 0.8666666666666667,
+        "meanF1": 0.9825702956020187,
+        "meanPrecision": 0.9691808825602707,
+        "meanRecall": 1.0,
+        "support": 15
+      },
+      "symmetricPairwiseF1": 0.4838709677419355
+    },
+    "scope": "optional descriptive view; not the primary exhaustive reliability result"
+  },
   "artifactType": "human_to_human_n2_pre_adjudication_reliability",
-  "artifactVersion": "0.1.1",
+  "artifactVersion": "0.1.2",
   "characterization": {
     "nodes": {
       "exactOntologyClass": {
@@ -233,6 +276,90 @@
     },
     "scope": "routed extract_and_evaluate unit-target decisions only"
   },
+  "extractAndEvaluateDetection": {
+    "node": {
+      "annotatorACoverage": 0.509090909090909,
+      "annotatorASupport": 55,
+      "annotatorBCoverage": 0.5833333333333334,
+      "annotatorBSupport": 48,
+      "matchedSupport": 28,
+      "mentionBoundary": {
+        "boundaryTolerantCount": 28,
+        "boundaryTolerantRate": 1.0,
+        "exactCount": 25,
+        "exactRate": 0.8928571428571429,
+        "meanF1": 0.988483994379835,
+        "support": 28
+      },
+      "supportingEvidence": {
+        "exactCount": 7,
+        "exactRate": 0.25,
+        "meanF1": 0.795983383750005,
+        "meanPrecision": 0.7724392262546708,
+        "meanRecall": 0.931198322181877,
+        "support": 28
+      },
+      "symmetricPairwiseF1": 0.5436893203883495
+    },
+    "relation": {
+      "annotatorACoverage": 0.52,
+      "annotatorASupport": 25,
+      "annotatorBCoverage": 0.4642857142857143,
+      "annotatorBSupport": 28,
+      "matchedSupport": 13,
+      "relationEvidence": {
+        "exactCount": 12,
+        "exactRate": 0.9230769230769231,
+        "meanF1": 0.9893724696356275,
+        "meanPrecision": 0.9813250333481547,
+        "meanRecall": 1.0,
+        "support": 13
+      },
+      "symmetricPairwiseF1": 0.49056603773584906
+    }
+  },
+  "extractAndMonitorPositiveSet": {
+    "node": {
+      "annotatorACoverage": 0.3888888888888889,
+      "annotatorASupport": 18,
+      "annotatorBCoverage": 0.3684210526315789,
+      "annotatorBSupport": 19,
+      "matchedSupport": 7,
+      "mentionBoundary": {
+        "boundaryTolerantCount": 7,
+        "boundaryTolerantRate": 1.0,
+        "exactCount": 7,
+        "exactRate": 1.0,
+        "meanF1": 1.0,
+        "support": 7
+      },
+      "supportingEvidence": {
+        "exactCount": 4,
+        "exactRate": 0.5714285714285714,
+        "meanF1": 0.9133870778036389,
+        "meanPrecision": 0.8811299889413894,
+        "meanRecall": 0.9889663182346109,
+        "support": 7
+      },
+      "symmetricPairwiseF1": 0.3783783783783784
+    },
+    "relation": {
+      "annotatorACoverage": 0.4,
+      "annotatorASupport": 5,
+      "annotatorBCoverage": 0.5,
+      "annotatorBSupport": 4,
+      "matchedSupport": 2,
+      "relationEvidence": {
+        "exactCount": 1,
+        "exactRate": 0.5,
+        "meanF1": 0.9383561643835616,
+        "meanPrecision": 0.8902439024390244,
+        "meanRecall": 1.0,
+        "support": 2
+      },
+      "symmetricPairwiseF1": 0.4444444444444444
+    }
+  },
   "frozenInputs": {
     "annotatorAComposite": "data/curation/papers/m2/human_core_gold/publication_human_core_annotator_a_n2_composite_view_v0.1.5.json",
     "annotatorBPreservation": "data/curation/papers/m2/human_core_gold/publication_human_core_reliability_annotation_preservation_v0.1.5.json",
@@ -241,28 +368,28 @@
   },
   "matchingContract": "docs/publication_human_core_amended_matching_contract_v0.1.md",
   "nodeDetection": {
-    "annotatorACoverage": 0.5205479452054794,
-    "annotatorASupport": 73,
-    "annotatorBCoverage": 0.5671641791044776,
-    "annotatorBSupport": 67,
-    "matchedSupport": 38,
+    "annotatorACoverage": 0.509090909090909,
+    "annotatorASupport": 55,
+    "annotatorBCoverage": 0.5833333333333334,
+    "annotatorBSupport": 48,
+    "matchedSupport": 28,
     "mentionBoundary": {
-      "boundaryTolerantCount": 38,
+      "boundaryTolerantCount": 28,
       "boundaryTolerantRate": 1.0,
-      "exactCount": 34,
-      "exactRate": 0.8947368421052632,
-      "meanF1": 0.9910528416575333,
-      "support": 38
+      "exactCount": 25,
+      "exactRate": 0.8928571428571429,
+      "meanF1": 0.988483994379835,
+      "support": 28
     },
     "supportingEvidence": {
-      "exactCount": 12,
-      "exactRate": 0.3157894736842105,
-      "meanF1": 0.8227651716759514,
-      "meanPrecision": 0.7953739015189607,
-      "meanRecall": 0.9453112084991879,
-      "support": 38
+      "exactCount": 7,
+      "exactRate": 0.25,
+      "meanF1": 0.795983383750005,
+      "meanPrecision": 0.7724392262546708,
+      "meanRecall": 0.931198322181877,
+      "support": 28
     },
-    "symmetricPairwiseF1": 0.5428571428571428
+    "symmetricPairwiseF1": 0.5436893203883495
   },
   "pairings": {
     "nodes": [
@@ -839,20 +966,20 @@
     ]
   },
   "relationDetection": {
-    "annotatorACoverage": 0.5,
-    "annotatorASupport": 30,
-    "annotatorBCoverage": 0.46875,
-    "annotatorBSupport": 32,
-    "matchedSupport": 15,
+    "annotatorACoverage": 0.52,
+    "annotatorASupport": 25,
+    "annotatorBCoverage": 0.4642857142857143,
+    "annotatorBSupport": 28,
+    "matchedSupport": 13,
     "relationEvidence": {
-      "exactCount": 13,
-      "exactRate": 0.8666666666666667,
-      "meanF1": 0.9825702956020187,
-      "meanPrecision": 0.9691808825602707,
+      "exactCount": 12,
+      "exactRate": 0.9230769230769231,
+      "meanF1": 0.9893724696356275,
+      "meanPrecision": 0.9813250333481547,
       "meanRecall": 1.0,
-      "support": 15
+      "support": 13
     },
-    "symmetricPairwiseF1": 0.4838709677419355
+    "symmetricPairwiseF1": 0.49056603773584906
   },
   "scope": "frozen N=2 only; descriptive pre-adjudication; no PASS/FAIL or acceptance logic",
   "sourceUnitIDs": [

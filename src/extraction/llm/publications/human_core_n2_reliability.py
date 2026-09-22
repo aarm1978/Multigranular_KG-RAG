@@ -221,6 +221,15 @@ def _evidence_metrics(left: Record, right: Record) -> dict[str, float | bool]:
     return {"precision": precision, "recall": recall, "f1": f1, "exact": a == b}
 
 
+def _has_qualifying_evidence_correspondence(left: Record, right: Record) -> bool:
+    """Return whether any relation-specific evidence-span pair qualifies normally."""
+    return any(
+        span_metrics(left.evidence[left_id], right.evidence[right_id])["qualifies"]
+        for left_id in left.value["evidenceSpanIDs"]
+        for right_id in right.value["evidenceSpanIDs"]
+    )
+
+
 def _best_assignment(left: list[Record], right: list[Record], edges: dict[tuple[int, int], tuple[Any, ...]]) -> list[tuple[int, int]]:
     """Return the contract-ordered maximum one-to-one assignment for one unit."""
     if not edges:
@@ -350,7 +359,7 @@ def pair_relations(left: list[Record], right: list[Record], node_pairs: list[tup
         for i, x in enumerate(a):
             for j, y in enumerate(b):
                 measure = _evidence_metrics(x, y)
-                if measure["f1"] >= .80 and measure["precision"] >= .70 and measure["recall"] >= .70:
+                if _has_qualifying_evidence_correspondence(x, y):
                     endpoints = _endpoint_correspondence(x, y, nodes, node_lookup)["unorderedCount"]
                     boundary = 0
                     for xid in x.value["evidenceSpanIDs"]:
@@ -445,19 +454,27 @@ def compute(root: Path = PROJECT_ROOT) -> dict[str, Any]:
     a, b, provenance = load_frozen_inputs(root)
     node_pairs = pair_nodes(a, b)
     relation_pairs = pair_relations(a, b, node_pairs)
-    node_summary, relation_summary = _detection(a,b,node_pairs,"node"), _detection(a,b,relation_pairs,"relation")
+    def treatment(record: Record) -> str | None:
+        target = record.value.get("operationalTargetID") or record.value.get("operationalRelationID")
+        return record.treatments.get(target)
+    all_node_summary, all_relation_summary = _detection(a,b,node_pairs,"node"), _detection(a,b,relation_pairs,"relation")
+    evaluate: dict[str, Any] = {}
+    monitor: dict[str, Any] = {}
+    for kind, pairs in (("node", node_pairs), ("relation", relation_pairs)):
+        a_evaluate = [record for record in a if record.kind == kind and treatment(record) == "extract_and_evaluate"]
+        b_evaluate = [record for record in b if record.kind == kind and treatment(record) == "extract_and_evaluate"]
+        evaluate_pairs = [pair for pair in pairs if treatment(pair[0]) == treatment(pair[1]) == "extract_and_evaluate"]
+        evaluate[kind] = _detection(a_evaluate, b_evaluate, evaluate_pairs, kind)
+        a_positive = [record for record in a if record.kind == kind and treatment(record) == "extract_and_monitor"]
+        b_positive = [record for record in b if record.kind == kind and treatment(record) == "extract_and_monitor"]
+        monitor_pairs = [pair for pair in pairs if treatment(pair[0]) == treatment(pair[1]) == "extract_and_monitor"]
+        monitor[kind] = _detection(a_positive, b_positive, monitor_pairs, kind)
     characterization = _characterization(node_pairs, relation_pairs, a + b)
     endpoint_views = _characterization(node_pairs, relation_pairs, a + b)["relations"]
     diagnostics = {"nodeDetectionOnlyA": sorted(x.key for x in a if x.kind == "node" and x.key not in {p[0].key for p in node_pairs}), "nodeDetectionOnlyB": sorted(x.key for x in b if x.kind == "node" and x.key not in {p[1].key for p in node_pairs}), "relationDetectionOnlyA": sorted(x.key for x in a if x.kind == "relation" and x.key not in {p[0].key for p in relation_pairs}), "relationDetectionOnlyB": sorted(x.key for x in b if x.kind == "relation" and x.key not in {p[1].key for p in relation_pairs}), "nodeClassDisagreements": sum(x.value.get("ontologyClassID") != y.value.get("ontologyClassID") for x,y,_ in node_pairs), "nodeOperationalTargetDisagreements": sum(x.value.get("operationalTargetID") != y.value.get("operationalTargetID") for x,y,_ in node_pairs), "nodeMentionBoundaryDisagreements": sum(not m["exact"] for _,_,m in node_pairs), "nodeSupportingEvidenceDisagreements": sum(not _evidence_metrics(x,y)["exact"] for x,y,_ in node_pairs), "relationTypeDisagreements": sum(x.value.get("ontologyRelationID") != y.value.get("ontologyRelationID") for x,y,_ in relation_pairs), "relationOperationalTargetDisagreements": sum(x.value.get("operationalRelationID") != y.value.get("operationalRelationID") for x,y,_ in relation_pairs), "relationDirectionDisagreements": endpoint_views["directionWhenSameRelationType"]["denominator"] - endpoint_views["directionWhenSameRelationType"]["numerator"], "sourceEndpointDisagreements": endpoint_views["sourceEndpoint"]["denominator"] - endpoint_views["sourceEndpoint"]["numerator"], "targetEndpointDisagreements": endpoint_views["targetEndpoint"]["denominator"] - endpoint_views["targetEndpoint"]["numerator"], "relationSpecificEvidenceDisagreements": sum(not m["exact"] for _,_,m in relation_pairs)}
     presence = _presence_absence(a,b)
-    monitor: dict[str, Any] = {}
-    for kind, pairs in (("node", node_pairs), ("relation", relation_pairs)):
-        a_positive = [record for record in a if record.kind == kind and record.treatments.get(record.value.get("operationalTargetID") or record.value.get("operationalRelationID")) == "extract_and_monitor"]
-        b_positive = [record for record in b if record.kind == kind and record.treatments.get(record.value.get("operationalTargetID") or record.value.get("operationalRelationID")) == "extract_and_monitor"]
-        monitor_pairs = [pair for pair in pairs if pair[0] in a_positive and pair[1] in b_positive]
-        monitor[kind] = _detection(a_positive, b_positive, monitor_pairs, kind)
     presence["extractAndMonitorPositiveSet"] = {"scope": "non-exhaustive positive-set view; absent annotations are not negatives", "byKind": monitor}
-    return {"artifactType": "human_to_human_n2_pre_adjudication_reliability", "artifactVersion": "0.1.1", "matchingContract": "docs/publication_human_core_amended_matching_contract_v0.1.md", "scope": "frozen N=2 only; descriptive pre-adjudication; no PASS/FAIL or acceptance logic", "sourceUnitIDs": list(N2_UNITS), "frozenInputs": provenance, "nodeDetection": node_summary, "relationDetection": relation_summary, "characterization": characterization, "exhaustivePresenceAbsence": presence, "disagreementDiagnostics": diagnostics, "pairings": {"nodes": [{"annotatorAKey":x.key,"annotatorBKey":y.key,"mentionSpan":m} for x,y,m in node_pairs], "relations": [{"annotatorAKey":x.key,"annotatorBKey":y.key,"relationEvidence":m} for x,y,m in relation_pairs]}}
+    return {"artifactType": "human_to_human_n2_pre_adjudication_reliability", "artifactVersion": "0.1.2", "matchingContract": "docs/publication_human_core_amended_matching_contract_v0.1.md", "scope": "frozen N=2 only; descriptive pre-adjudication; no PASS/FAIL or acceptance logic", "sourceUnitIDs": list(N2_UNITS), "frozenInputs": provenance, "nodeDetection": evaluate["node"], "relationDetection": evaluate["relation"], "extractAndEvaluateDetection": evaluate, "extractAndMonitorPositiveSet": monitor, "allPositiveDetection": {"scope": "optional descriptive view; not the primary exhaustive reliability result", "nodes": all_node_summary, "relations": all_relation_summary}, "characterization": characterization, "exhaustivePresenceAbsence": presence, "disagreementDiagnostics": diagnostics, "pairings": {"nodes": [{"annotatorAKey":x.key,"annotatorBKey":y.key,"mentionSpan":m} for x,y,m in node_pairs], "relations": [{"annotatorAKey":x.key,"annotatorBKey":y.key,"relationEvidence":m} for x,y,m in relation_pairs]}}
 
 
 def render_report(result: dict[str, Any]) -> str:

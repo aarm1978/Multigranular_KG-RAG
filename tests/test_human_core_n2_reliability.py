@@ -12,6 +12,7 @@ from src.extraction.llm.publications.human_core_n2_reliability import (
     _node_index,
     compute,
     pair_nodes,
+    pair_relations,
     span_metrics,
 )
 
@@ -101,6 +102,23 @@ class HumanCoreN2ReliabilityTests(unittest.TestCase):
         result = compute()["exhaustivePresenceAbsence"]
         self.assertIn("extractAndMonitorPositiveSet", result)
         self.assertEqual(result["extractAndMonitorPositiveSet"]["scope"], "non-exhaustive positive-set view; absent annotations are not negatives")
+
+    def test_primary_detection_is_extract_and_evaluate_not_all_positive(self) -> None:
+        result = compute()
+        self.assertEqual(result["nodeDetection"], result["extractAndEvaluateDetection"]["node"])
+        self.assertEqual(result["relationDetection"], result["extractAndEvaluateDetection"]["relation"])
+        self.assertNotEqual(result["nodeDetection"]["annotatorASupport"], result["allPositiveDetection"]["nodes"]["annotatorASupport"])
+
+    def test_relation_pairing_accepts_shared_qualifying_span_with_extra_evidence(self) -> None:
+        a1, a2 = node("a1", 0, 10, "A"), node("a2", 20, 30, "A")
+        b1 = node("b1", 0, 10, "A", role="annotator_b", partition="reliabilityV015", session="b")
+        b2 = node("b2", 20, 30, "A", role="annotator_b", partition="reliabilityV015", session="b")
+        ar = relation("ar", "a1", "a2", role="annotator_a", partition="primaryV014", session="session")
+        br = relation("br", "b1", "b2", role="annotator_b", partition="reliabilityV015", session="b")
+        br.evidence["evidence-2"] = {"startOffsetInUnit": 20, "endOffsetInUnit": 30, "sourceUnitID": UNIT, "sourceArtifactID": ARTIFACT}
+        br.value["evidenceSpanIDs"].append("evidence-2")
+        pairs = pair_relations([a1, a2, ar], [b1, b2, br], [(a1, b1, {}), (a2, b2, {})])
+        self.assertEqual([(left.key, right.key) for left, right, _ in pairs], [(ar.key, br.key)])
 
 
 if __name__ == "__main__":

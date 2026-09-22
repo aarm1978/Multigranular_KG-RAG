@@ -4,11 +4,11 @@ This is a deterministic descriptive comparison under the frozen amended matching
 
 ## Detection and evidence
 
-- Nodes: A=73, B=67, matched=38, A coverage=0.520548, B coverage=0.567164, symmetric pairwise F1=0.542857.
-- Node mention boundaries: exact=34/38 (0.894737); tolerant=38/38; mean F1=0.991053.
-- Node supporting evidence: exact=12/38 (0.315789); mean P/R/F1=0.795374/0.945311/0.822765.
-- Relations: A=30, B=32, matched=15, A coverage=0.500000, B coverage=0.468750, symmetric pairwise F1=0.483871.
-- Relation evidence: exact=13/15 (0.866667); mean P/R/F1=0.969181/1.000000/0.982570.
+- Nodes: A=55, B=48, matched=28, A coverage=0.509091, B coverage=0.583333, symmetric pairwise F1=0.543689.
+- Node mention boundaries: exact=25/28 (0.892857); tolerant=28/28; mean F1=0.988484.
+- Node supporting evidence: exact=7/28 (0.250000); mean P/R/F1=0.772439/0.931198/0.795983.
+- Relations: A=25, B=28, matched=13, A coverage=0.520000, B coverage=0.464286, symmetric pairwise F1=0.490566.
+- Relation evidence: exact=12/13 (0.923077); mean P/R/F1=0.981325/1.000000/0.989372.
 
 ## Characterization and exhaustive presence/absence
 

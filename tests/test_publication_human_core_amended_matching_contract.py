@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import unittest
+import re
 from pathlib import Path
 
 
@@ -18,6 +19,8 @@ class HumanCoreAmendedMatchingContractTests(unittest.TestCase):
         cls.contract = CONTRACT.read_text(encoding="utf-8")
         cls.amendment = AMENDMENT.read_text(encoding="utf-8")
         cls.pilot_successor = PILOT_SUCCESSOR.read_text(encoding="utf-8")
+        cls.normalized_contract = re.sub(r"\s+", " ", cls.contract)
+        cls.normalized_successor = re.sub(r"\s+", " ", cls.pilot_successor)
 
     def test_contract_is_frozen_and_pre_adjudication(self) -> None:
         self.assertIn("**Status:** FINAL AND FROZEN", self.contract)
@@ -30,21 +33,21 @@ class HumanCoreAmendedMatchingContractTests(unittest.TestCase):
         self.assertIn("occurrence/contextual identities are compatible", self.contract)
         self.assertIn(
             "Class, ontology class ID, operational target ID, and label similarity are ignored",
-            self.contract,
+            self.normalized_contract,
         )
 
     def test_relation_detection_keeps_endpoints_out_of_eligibility(self) -> None:
         self.assertIn(
             "selected endpoints are ignored as hard eligibility conditions",
-            self.contract,
+            self.normalized_contract,
         )
         self.assertIn(
             "Evidence overlap admits a relation pair to a proposition-assignment component; it does not by itself declare",
-            self.contract,
+            self.normalized_contract,
         )
         self.assertIn(
             "greater unordered endpoint-occurrence correspondence",
-            self.contract,
+            self.normalized_contract,
         )
         endpoint_pos = self.contract.index("greater unordered endpoint-occurrence correspondence")
         generic_span_pos = self.contract.index("greater relation-specific evidence-set F1")
@@ -58,11 +61,11 @@ class HumanCoreAmendedMatchingContractTests(unittest.TestCase):
     def test_distributed_evidence_does_not_create_retrospective_joint_gate(self) -> None:
         self.assertIn(
             "do not automatically mean that every span or source unit is jointly required",
-            self.contract,
+            self.normalized_contract,
         )
         self.assertIn(
             "No joint-evidence obligation may be inferred retrospectively from distributedEvidenceReason alone",
-            self.contract,
+            self.normalized_contract,
         )
 
     def test_tie_breaks_require_fully_qualified_provenance(self) -> None:
@@ -83,11 +86,11 @@ class HumanCoreAmendedMatchingContractTests(unittest.TestCase):
         self.assertIn("publication_human_core_amended_matching_contract_v0.1.md", self.amendment)
         self.assertIn(
             "historical Publication Pilot 1 compatibility successor",
-            self.pilot_successor,
+            self.normalized_successor,
         )
         self.assertIn(
             "does not govern the amended Human Core reliability analysis",
-            self.pilot_successor,
+            self.normalized_successor,
         )
 
 
