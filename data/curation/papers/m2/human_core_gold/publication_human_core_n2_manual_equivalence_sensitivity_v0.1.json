@@ -1,0 +1,241 @@
+{
+  "approvedAdditionalEquivalences": {
+    "extractAndEvaluate": {
+      "nodes": [
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|node|node-0001",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|node|node-0011",
+          "caseID": "N01",
+          "reviewCategory": "same assertion / boundary variation",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|node|node-0002",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|node|node-0012",
+          "caseID": "N02",
+          "reviewCategory": "same assertion / boundary variation",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|node|node-0007",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|node|node-0015",
+          "caseID": "N03",
+          "reviewCategory": "same assertion / boundary variation",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|node|node-0004",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|node|node-0016",
+          "caseID": "N04",
+          "reviewCategory": "same assertion / boundary variation",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|node|node-0005",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|node|node-0017",
+          "caseID": "N05",
+          "reviewCategory": "same assertion / boundary variation",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|node|node-0016",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|node|node-0008",
+          "caseID": "N06",
+          "reviewCategory": "same assertion / boundary variation",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|node|node-0012",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|node|node-0019",
+          "caseID": "N07",
+          "reviewCategory": "same assertion / boundary variation",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:34:sec:0015:unit:0001|node|node-0025",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:34:sec:0015:unit:0001|node|node-0022",
+          "caseID": "N08",
+          "reviewCategory": "same assertion / boundary variation",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:34:sec:0015:unit:0001|node|node-0031",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:34:sec:0015:unit:0001|node|node-0014",
+          "caseID": "N09",
+          "reviewCategory": "same assertion / boundary variation",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|node|node-0022",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|node|node-0001",
+          "caseID": "N10",
+          "reviewCategory": "same assertion / boundary variation",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:34:sec:0015:unit:0001|node|node-0020",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:34:sec:0015:unit:0001|node|node-0010",
+          "caseID": "N11",
+          "reviewCategory": "same occurrence / characterization disagreement",
+          "treatment": "extract_and_evaluate"
+        }
+      ],
+      "relations": [
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:34:sec:0015:unit:0001|relation|edge-0010",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:34:sec:0015:unit:0001|relation|edge-0009",
+          "caseID": "R01",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:34:sec:0015:unit:0001|relation|edge-0011",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:34:sec:0015:unit:0001|relation|edge-0007",
+          "caseID": "R02",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:34:sec:0015:unit:0001|relation|edge-0012",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:34:sec:0015:unit:0001|relation|edge-0008",
+          "caseID": "R03",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:34:sec:0015:unit:0001|relation|edge-0013",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:34:sec:0015:unit:0001|relation|edge-0002",
+          "caseID": "R04",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:34:sec:0015:unit:0001|relation|edge-0009",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:34:sec:0015:unit:0001|relation|edge-0011",
+          "caseID": "R05",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|relation|edge-0001",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|relation|edge-0004",
+          "caseID": "R06",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|relation|edge-0002",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|relation|edge-0003",
+          "caseID": "R07",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|relation|edge-0003",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|relation|edge-0005",
+          "caseID": "R08",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|relation|edge-0004",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|relation|edge-0006",
+          "caseID": "R09",
+          "treatment": "extract_and_evaluate"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|relation|edge-0005",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|relation|edge-0007",
+          "caseID": "R10",
+          "treatment": "extract_and_evaluate"
+        }
+      ]
+    },
+    "extractAndMonitor": {
+      "nodes": [
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:34:sec:0015:unit:0001|node|node-0023",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:34:sec:0015:unit:0001|node|node-0026",
+          "caseID": "M01",
+          "reviewCategory": "same assertion / boundary variation",
+          "treatment": "extract_and_monitor"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:34:sec:0015:unit:0001|node|node-0024",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:34:sec:0015:unit:0001|node|node-0027",
+          "caseID": "M02",
+          "reviewCategory": "same assertion / boundary variation",
+          "treatment": "extract_and_monitor"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|node|node-0033",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|node|node-0028",
+          "caseID": "M03",
+          "reviewCategory": "same assertion / boundary variation",
+          "treatment": "extract_and_monitor"
+        },
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|node|node-0034",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|node|node-0029",
+          "caseID": "M04",
+          "reviewCategory": "same assertion / boundary variation",
+          "treatment": "extract_and_monitor"
+        }
+      ],
+      "relations": [
+        {
+          "annotatorAKey": "human|annotator_a|primaryV014|HUMAN_CORE_N5_PRIMARY_V1|pub:79:sec:0004:unit:0001|relation|edge-0014",
+          "annotatorBKey": "human|annotator_b|reliabilityV015|HUMAN_CORE_N2_RELIABILITY_V015|pub:79:sec:0004:unit:0001|relation|edge-0001",
+          "caseID": "MR01",
+          "treatment": "extract_and_monitor"
+        }
+      ]
+    }
+  },
+  "approvedPositiveEquivalenceCaseCount": 26,
+  "artifactType": "human_to_human_n2_manual_equivalence_sensitivity",
+  "artifactVersion": "0.1.0",
+  "derivedSensitivity": {
+    "extractAndEvaluate": {
+      "nodes": {
+        "annotatorASupport": 55,
+        "annotatorBSupport": 48,
+        "approvedAdditionalEquivalences": 11,
+        "primaryDeterministicMatchedSupport": 28,
+        "sensitivityMatchedSupport": 39,
+        "symmetricPairwiseF1": 0.7572815533980582
+      },
+      "relations": {
+        "annotatorASupport": 25,
+        "annotatorBSupport": 28,
+        "approvedAdditionalEquivalences": 10,
+        "primaryDeterministicMatchedSupport": 13,
+        "sensitivityMatchedSupport": 23,
+        "symmetricPairwiseF1": 0.8679245283018868
+      }
+    },
+    "extractAndMonitor": {
+      "nodes": {
+        "annotatorASupport": 18,
+        "annotatorBSupport": 19,
+        "approvedAdditionalEquivalences": 4,
+        "primaryDeterministicMatchedSupport": 7,
+        "sensitivityMatchedSupport": 11,
+        "symmetricPairwiseF1": 0.5945945945945946
+      },
+      "relations": {
+        "annotatorASupport": 5,
+        "annotatorBSupport": 4,
+        "approvedAdditionalEquivalences": 1,
+        "primaryDeterministicMatchedSupport": 2,
+        "sensitivityMatchedSupport": 3,
+        "symmetricPairwiseF1": 0.6666666666666666
+      }
+    }
+  },
+  "historicalPrimaryFinalizationCheckpoint": "cce912f3d30a0925deb6db858eb1b5961f942285",
+  "primaryFrozenDeterministicReliability": {
+    "path": "data/curation/papers/m2/human_core_gold/publication_human_core_n2_pre_adjudication_reliability_v0.1.5.json",
+    "sha256": "e65787c02073907631efbc996e658e6abce2114d39524d6a1c794bbac2ac5eea"
+  },
+  "scope": {
+    "noNegativeCaseInventoryClaimed": true,
+    "notAdjudication": true,
+    "notExhaustiveDiscrepancyClassification": true,
+    "notReplacementForDeterministicReliability": true,
+    "positiveResearcherReviewedEquivalenceDecisionsOnly": true,
+    "secondarySensitivityAnalysis": true
+  }
+}
