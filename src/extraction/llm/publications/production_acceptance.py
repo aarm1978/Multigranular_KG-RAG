@@ -16,7 +16,7 @@ from src.extraction.llm.publications.request_builder import PROJECT_ROOT, canoni
 
 
 POLICY_ID = "publication-production-acceptance-policy"
-POLICY_VERSION = "0.1.0-draft.2"
+POLICY_VERSION = "0.1.0"
 CONTROLLER_VERSION = "publication-production-attempt-controller/0.1.0"
 PROJECTION_VERSION = "publication-accepted-semantic-projection/0.1.0"
 SIDECAR_VERSION = "publication-unresolved-identity-sidecar/0.1.0"

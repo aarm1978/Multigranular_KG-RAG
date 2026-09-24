@@ -3,10 +3,11 @@
 **Project:** Dissertation CS — Study 2
 **Workstream:** Publication semantic extraction
 **Policy ID:** `publication-production-acceptance-policy`
-**Policy version:** `0.1.0-draft.2`
-**Status:** **APPROVED FOR IMPLEMENTATION — NOT FROZEN**
+**Policy version:** `0.1.0`
+**Status:** **FROZEN**
 **Date:** 2026-09-24
 **Roadmap milestone:** Step 4 — Publication Production Acceptance Policy
+**Accepted implementation checkpoint:** `daa867b3d6ba414e1ebf3b1b8b4391bb5b990585`
 
 ---
 
@@ -536,7 +537,8 @@ This policy may be frozen only after:
    checkpoint; a separate versioned freeze record binds the exact policy SHA-256 and
    closure-test result.
 
-Until those conditions are met, this document remains **APPROVED FOR IMPLEMENTATION / NOT FROZEN**.
+This policy is **FROZEN** at the accepted implementation checkpoint above. Its exact
+content hash and closure-test result are bound by the separate versioned freeze record.
 
 ---
 
