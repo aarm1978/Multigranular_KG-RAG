@@ -4,7 +4,7 @@
 **Workstream:** Publication semantic extraction
 **Policy ID:** `publication-production-acceptance-policy`
 **Policy version:** `0.1.0-draft.2`
-**Status:** **DRAFT — NOT FROZEN**
+**Status:** **APPROVED FOR IMPLEMENTATION — NOT FROZEN**
 **Date:** 2026-09-24
 **Roadmap milestone:** Step 4 — Publication Production Acceptance Policy
 
@@ -522,13 +522,13 @@ This policy may be frozen only after:
 6. no Human Core, pooled-reference, SciERC, or LLM-judge data are consumed by the production acceptance implementation;
 7. the policy artifact itself records its final hash/version and the accepted implementation checkpoint.
 
-Until those conditions are met, this document remains **DRAFT / NOT FROZEN**.
+Until those conditions are met, this document remains **APPROVED FOR IMPLEMENTATION / NOT FROZEN**.
 
 ---
 
 ## 17. Intended next implementation boundary
 
-After researcher approval of this draft, Codex should implement only the smallest Step 4 increment necessary to:
+Following researcher approval, Codex should implement only the smallest Step 4 increment necessary to:
 
 1. encode this production acceptance policy without changing V1–V12 semantics;
 2. implement the bounded technical retry rule;
