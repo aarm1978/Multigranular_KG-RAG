@@ -28,7 +28,18 @@ IMMUTABLE_ATTEMPT_FIELDS = (
     "requestedModel",
     "reasoningEffort",
     "maxOutputTokens",
+    "modelAuthorableSchemaSha256",
+    "provider",
+    "toolConfiguration",
+    "store",
 )
+RETRY_ELIGIBLE_PROCESSING_CODES = frozenset({
+    "INVALID_JSON",
+    "TIMEOUT",
+    "API_ERROR",
+    "TRUNCATED_RESPONSE",
+    "TOKEN_LIMIT",
+})
 
 
 class ProductionAcceptanceError(ValueError):
@@ -49,14 +60,16 @@ def _hash_record(value: dict[str, Any], field: str) -> dict[str, Any]:
 def _attempt_identity(attempt: Mapping[str, Any]) -> dict[str, Any]:
     """Return the immutable provider configuration identity for one attempt."""
 
+    string_fields = set(IMMUTABLE_ATTEMPT_FIELDS) - {"maxOutputTokens", "store"}
     missing = [
         field
-        for field in IMMUTABLE_ATTEMPT_FIELDS
-        if field != "maxOutputTokens"
-        and (not isinstance(attempt.get(field), str) or not attempt[field])
+        for field in string_fields
+        if not isinstance(attempt.get(field), str) or not attempt[field]
     ]
     if not isinstance(attempt.get("maxOutputTokens"), int):
         missing.append("maxOutputTokens")
+    if not isinstance(attempt.get("store"), bool):
+        missing.append("store")
     if missing:
         raise ProductionAcceptanceError(f"attempt lacks immutable identity fields: {', '.join(sorted(set(missing)))}")
     return {field: attempt[field] for field in IMMUTABLE_ATTEMPT_FIELDS}
@@ -73,6 +86,16 @@ def _is_processable(attempt: Mapping[str, Any]) -> bool:
     return isinstance(parser, Mapping) and parser.get("parseStatus") == "parsed"
 
 
+def _retry_processing_code(attempt: Mapping[str, Any]) -> str | None:
+    """Return a retry-eligible failure code, otherwise ``None`` fail-closed."""
+
+    parser = attempt.get("parserResult")
+    if not isinstance(parser, Mapping) or parser.get("parseStatus") == "parsed":
+        return None
+    code = parser.get("processingCode")
+    return str(code) if code in RETRY_ELIGIBLE_PROCESSING_CODES else None
+
+
 def run_attempt_controller(run_attempt: AttemptRunner) -> dict[str, Any]:
     """Run one initial attempt and at most one technical retry.
 
@@ -87,7 +110,7 @@ def run_attempt_controller(run_attempt: AttemptRunner) -> dict[str, Any]:
         raise ProductionAcceptanceError("initial attempt must declare attemptNumber 1")
     identity = _attempt_identity(first)
     attempts.append(first)
-    if not _is_processable(first):
+    if not _is_processable(first) and _retry_processing_code(first) is not None:
         second = deepcopy(dict(run_attempt(2)))
         if second.get("attemptNumber") != 2:
             raise ProductionAcceptanceError("technical retry must declare attemptNumber 2")
@@ -104,7 +127,11 @@ def run_attempt_controller(run_attempt: AttemptRunner) -> dict[str, Any]:
         "attempts": attempts,
         "selectedAttemptNumber": selected.get("attemptNumber") if selected else None,
         "selectionDisposition": (
-            "first_processable_response_selected" if selected else "retry_exhausted_processing_failure"
+            "first_processable_response_selected"
+            if selected
+            else "retry_exhausted_processing_failure"
+            if len(attempts) == 2
+            else "terminal_non_retry_eligible_processing_failure"
         ),
     }
     return _hash_record(result, "attemptSelectionHash")

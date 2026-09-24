@@ -262,7 +262,7 @@ The production policy MUST NOT synthesize missing candidates, missing abstention
 
 Processing failures are distinct from semantic outputs.
 
-Examples recognized by the current validation path include:
+Processing-failure codes include:
 
 - `INVALID_JSON`;
 - `TIMEOUT`;
@@ -270,6 +270,8 @@ Examples recognized by the current validation path include:
 - `TRUNCATED_RESPONSE`;
 - `TOKEN_LIMIT`;
 - `RETRY_EXHAUSTED`.
+- `ENDPOINT_BINDING_FAILED`;
+- `EVIDENCE_BINDING_FAILED`.
 
 A processing failure is not:
 
@@ -287,7 +289,17 @@ for a maximum of **two provider attempts per request**.
 
 ### 8.2 Retry eligibility
 
-A technical retry MAY occur only when the prior attempt produced no processable semantic response because of a processing failure.
+A technical retry MAY occur only when the prior attempt produced no processable semantic response with one of these retry-eligible processing codes:
+
+- `INVALID_JSON`;
+- `TIMEOUT`;
+- `API_ERROR`;
+- `TRUNCATED_RESPONSE`; or
+- `TOKEN_LIMIT`.
+
+`RETRY_EXHAUSTED` is terminal. `ENDPOINT_BINDING_FAILED` and
+`EVIDENCE_BINDING_FAILED` remain explicit processing failures, but are not retry
+eligible and MUST NOT trigger another provider sample.
 
 The retry MUST use the same immutable:
 
@@ -520,7 +532,9 @@ This policy may be frozen only after:
    - authorized abstention;
    - processing failure;
 6. no Human Core, pooled-reference, SciERC, or LLM-judge data are consumed by the production acceptance implementation;
-7. the policy artifact itself records its final hash/version and the accepted implementation checkpoint.
+7. the final policy artifact records its final version and the accepted implementation
+   checkpoint; a separate versioned freeze record binds the exact policy SHA-256 and
+   closure-test result.
 
 Until those conditions are met, this document remains **APPROVED FOR IMPLEMENTATION / NOT FROZEN**.
 
