@@ -3,7 +3,7 @@
 **Project:** Dissertation CS — Study 2  
 **Workstream:** Publication semantic extraction and evaluation  
 **Authority ID:** `publication-step5-evaluation-authority`  
-**Authority version:** `0.1.0-draft.2`  
+**Authority version:** `0.1.0-draft.3`  
 **Status:** **DRAFT — NOT FROZEN**  
 **Date:** 2026-09-25  
 **Roadmap milestone:** Step 5 — Remaining Publication Evaluation Contracts
