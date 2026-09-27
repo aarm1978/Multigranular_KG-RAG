@@ -2116,6 +2116,7 @@ of its tracked JSON file.
 | Role/exposure ledger schema | `data/curation/papers/m2/step5_freeze/publication_step5_role_exposure_ledger_schema_v0.1.0.json` | `4458d62c5492bc3938e06c7d4360adb682114c9f23fa1187f035e87028574191` | `c42fc3020e56e626c2e372c626ccbc63bb427bb171d1c5174886c6b7c9ff4b00` |
 | SciERC source/split | `data/curation/papers/m2/step5_freeze/scierc_external_anchor_source_freeze_v0.1.0.json` | `10be1f68f8ef675ad28396b2541045df173dc413558dcaeb9b4ce9a0eae41c21` | `47869e3c724ed3eee35319dd860ac7b0e032deed0b1d4d5a27da52dac8018f7c` |
 | SciERC adapter/configuration | `data/curation/papers/m2/step5_freeze/scierc_external_anchor_adapter_freeze_v0.1.0.json` | `2f861607264c48d0faba9fb40d55da20a3141ec578e30e2327c655aa6e41a640` | `d68cba4baf3c40cc90297fce51fa1f5458cacd73305dbd38908ef48b2fff5016` |
+| Section 17.7 deterministic controls validation | `data/curation/papers/m2/step5_freeze/publication_step5_deterministic_controls_validation_v0.1.0.json` | `4f570917be0142e3f370a8bb3806c7a4868677be91e647f6fe67a8e420bcb430` | `25a58f55ba026d4e924110ffea5a7dd0240a41a0711e12b2ed4f61ef81f8a7ca` |
 
 ### 15.8.2 Complementary N=6 selection and proof
 
@@ -2208,6 +2209,16 @@ with reasoning effort `medium`, requires document-global zero-based inclusive to
 spans from official processed JSON, requires same-document extracted endpoints, and
 permits one complete official test execution only after adapter freeze. It remains
 prospective and records no SciERC execution.
+
+### 15.8.7 Section 17.7 deterministic controls validation
+
+The fixture-only, no-network validation artifact records PASS evidence for every
+Section 17.7 control. It binds the approved methodological draft
+(`0.1.0-draft.3`, SHA-256
+`e1d3d3b5e544fe2116cc6958835577499e525da07d4eb1f0213b86b7511a9596`),
+the frozen Step 4 acceptance record, and its accepted implementation hash. It records
+zero provider/model calls and does not create a pooled reference, human judgment,
+completeness-audit result, or SciERC result.
 <!-- END accepted-freeze-time-bindings-cb08720 -->
 ---
 
@@ -2468,10 +2479,11 @@ C1 outputs, pooled judgments, audit results, and SciERC test results are future 
 <!-- BEGIN accepted-current-freeze-gate-state-cb08720 -->
 ## 17.11 Current freeze-gate state
 
-The deterministic Section 15 materialization and incorporation requirements are
-recorded in Section 15.8 at commit `cb08720226a312b5036d1d7fe3ab818eb1110376`.
-This authority remains **DRAFT — NOT FROZEN** pending the final researcher review
-and explicit approval required by Section 17.10. Step 6 is not authorized.
+The deterministic Section 15 materialization and Sections 17.1–17.9 validation and
+incorporation requirements are satisfied, including the Section 17.7 controls recorded
+in Section 15.8.7. This authority remains **DRAFT — NOT FROZEN** pending the final
+researcher review and explicit approval required by Section 17.10. Step 6 is not
+authorized.
 <!-- END accepted-current-freeze-gate-state-cb08720 -->
 ---
 
