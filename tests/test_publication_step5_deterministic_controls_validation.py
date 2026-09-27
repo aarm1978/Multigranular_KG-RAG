@@ -13,6 +13,7 @@ from src.extraction.llm.publications.step5_deterministic_controls_validation imp
     build_validation_artifact,
     c1_provenance_key,
     materialize,
+    pre_dedup_eligible,
     select_representative,
 )
 
@@ -38,6 +39,16 @@ class Step5DeterministicControlsValidationTests(unittest.TestCase):
             c1_provenance_key({**provenance, "requestID": ""})
         with self.assertRaisesRegex(DeterministicControlsError, "NON_UNIQUE_PROVENANCE_KEY"):
             select_representative([provenance, dict(provenance)])
+
+    def test_atomicity_violation_overrides_possible_local_duplicate(self) -> None:
+        """Section 7.3 atomicity ineligibility has precedence for mixed findings."""
+
+        mixed = {
+            "treatment": "extract_and_evaluate",
+            "candidateValidationStatus": "needs_review",
+            "findingCodes": ["POSSIBLE_LOCAL_DUPLICATE", "ATOMICITY_VIOLATION"],
+        }
+        self.assertFalse(pre_dedup_eligible(mixed))
 
     def test_materialization_is_idempotent(self) -> None:
         """A temporary artifact path reproduces byte-identical deterministic evidence."""

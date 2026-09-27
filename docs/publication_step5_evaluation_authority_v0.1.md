@@ -2116,7 +2116,7 @@ of its tracked JSON file.
 | Role/exposure ledger schema | `data/curation/papers/m2/step5_freeze/publication_step5_role_exposure_ledger_schema_v0.1.0.json` | `4458d62c5492bc3938e06c7d4360adb682114c9f23fa1187f035e87028574191` | `c42fc3020e56e626c2e372c626ccbc63bb427bb171d1c5174886c6b7c9ff4b00` |
 | SciERC source/split | `data/curation/papers/m2/step5_freeze/scierc_external_anchor_source_freeze_v0.1.0.json` | `10be1f68f8ef675ad28396b2541045df173dc413558dcaeb9b4ce9a0eae41c21` | `47869e3c724ed3eee35319dd860ac7b0e032deed0b1d4d5a27da52dac8018f7c` |
 | SciERC adapter/configuration | `data/curation/papers/m2/step5_freeze/scierc_external_anchor_adapter_freeze_v0.1.0.json` | `2f861607264c48d0faba9fb40d55da20a3141ec578e30e2327c655aa6e41a640` | `d68cba4baf3c40cc90297fce51fa1f5458cacd73305dbd38908ef48b2fff5016` |
-| Section 17.7 deterministic controls validation | `data/curation/papers/m2/step5_freeze/publication_step5_deterministic_controls_validation_v0.1.0.json` | `4f570917be0142e3f370a8bb3806c7a4868677be91e647f6fe67a8e420bcb430` | `25a58f55ba026d4e924110ffea5a7dd0240a41a0711e12b2ed4f61ef81f8a7ca` |
+| Section 17.7 deterministic controls validation | `data/curation/papers/m2/step5_freeze/publication_step5_deterministic_controls_validation_v0.1.0.json` | `e45602eefd56e02862446aeb2221a35fb25fe576c1b9aa80dbd4f463793e7919` | `29f2a35a3046c370fe6d12d0c4a42500a545e5591465187bd4bbc52789594b86` |
 
 ### 15.8.2 Complementary N=6 selection and proof
 

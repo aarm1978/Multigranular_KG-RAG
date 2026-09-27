@@ -71,6 +71,8 @@ def pre_dedup_eligible(candidate: Mapping[str, Any]) -> bool:
         return False
     status = candidate.get("candidateValidationStatus")
     codes = set(candidate.get("findingCodes", []))
+    if "ATOMICITY_VIOLATION" in codes:
+        return False
     return status == "validated" or (
         status == "needs_review" and "POSSIBLE_LOCAL_DUPLICATE" in codes
     )
@@ -177,6 +179,7 @@ def build_validation_artifact() -> dict[str, Any]:
 
     duplicate = {"treatment": "extract_and_evaluate", "candidateValidationStatus": "needs_review", "findingCodes": ["POSSIBLE_LOCAL_DUPLICATE"]}
     atomicity = {"treatment": "extract_and_evaluate", "candidateValidationStatus": "needs_review", "findingCodes": ["ATOMICITY_VIOLATION"]}
+    mixed_codes = {"treatment": "extract_and_evaluate", "candidateValidationStatus": "needs_review", "findingCodes": ["POSSIBLE_LOCAL_DUPLICATE", "ATOMICITY_VIOLATION"]}
     monitor = {"treatment": "extract_and_monitor", "candidateValidationStatus": "validated", "findingCodes": []}
     base = {"sourceArtifactID": "paper-A", "recordType": "candidate_node", "operationalTargetID": "N1", "action": "link_existing", "existingNodeID": "node:1", "attributes": {"role": "method"}}
     link_left, link_right = dict(base), dict(base)
@@ -201,9 +204,9 @@ def build_validation_artifact() -> dict[str, Any]:
     freeze_before = _sha256_file(STEP4_FREEZE_PATH)
     implementation_before = _sha256_file(STEP4_IMPLEMENTATION_PATH)
     checks = [
-        _check("17.7.01", "5B candidate eligibility is reproducible from governed fields/status/code.", pre_dedup_eligible(duplicate) and not pre_dedup_eligible(atomicity), {"possibleLocalDuplicateEligible": True, "atomicityViolationEligible": False}),
+        _check("17.7.01", "5B candidate eligibility is reproducible from governed fields/status/code.", pre_dedup_eligible(duplicate) and not pre_dedup_eligible(atomicity) and not pre_dedup_eligible(mixed_codes), {"possibleLocalDuplicateEligible": True, "atomicityViolationEligible": False, "mixedPossibleLocalDuplicateAndAtomicityViolationEligible": False}),
         _check("17.7.02", "POSSIBLE_LOCAL_DUPLICATE enters the pre-dedup layer.", pre_dedup_eligible(duplicate), {"fixture": duplicate}),
-        _check("17.7.03", "ATOMICITY_VIOLATION does not enter the pre-dedup layer.", not pre_dedup_eligible(atomicity), {"fixture": atomicity}),
+        _check("17.7.03", "ATOMICITY_VIOLATION does not enter the pre-dedup layer.", not pre_dedup_eligible(atomicity) and not pre_dedup_eligible(mixed_codes), {"atomicityOnlyFixture": atomicity, "mixedCodeFixture": mixed_codes, "mixedCodeEligible": False}),
         _check("17.7.04", "monitor-only candidates cannot enter the pooled reference.", not pre_dedup_eligible(monitor), {"fixture": monitor}),
         _check("17.7.05", "5C auto-dedup uses only the three enumerated authority classes.", auto_dedup_authorized(AUTO_DEDUP_AUTHORITIES[0], {**link_left, "validatorLineage": "exact_local_identity"}, {**link_right, "validatorLineage": "exact_local_identity"}) and auto_dedup_authorized(AUTO_DEDUP_AUTHORITIES[1], link_left, link_right) and auto_dedup_authorized(AUTO_DEDUP_AUTHORITIES[2], relation, dict(relation)) and not auto_dedup_authorized("label_equality", link_left, link_right), {"authorizedClasses": list(AUTO_DEDUP_AUTHORITIES), "rejectedClass": "label_equality"}),
         _check("17.7.06", "label equality alone cannot merge propose_new.", not auto_dedup_authorized(AUTO_DEDUP_AUTHORITIES[1], {**link_left, "action": "propose_new", "existingNodeID": None, "label": "same"}, {**link_right, "action": "propose_new", "existingNodeID": None, "label": "same"}), {"sameLabel": "same", "action": "propose_new", "autoMerge": False}),
