@@ -9,13 +9,29 @@ from pathlib import Path
 from unittest.mock import patch
 
 from src.extraction.llm.publications.production_runner import (
-    DEFAULT_LIVE_ROOT, MAX_OUTPUT_TOKENS, _prepared_request, _targets, derive_production_preflight, execute_with_provider_fixture, main, recover_timeout_request,
+    DEFAULT_LIVE_ROOT, MAX_OUTPUT_TOKENS, _prepared_request, _targets, build_production_downstream_validation_view, derive_production_preflight, execute_with_provider_fixture, main, recover_timeout_request, replay_production_downstream,
 )
 from src.extraction.llm.publications.openai_provider import OpenAIProviderError, _http_post_json
 from src.extraction.llm.publications.step5_freeze_materialization import _inputs
 
 
 class ProductionRunnerTests(unittest.TestCase):
+    @staticmethod
+    def _metadata() -> dict:
+        return {"returnedModel": "gpt-5.6-sol", "createdAt": "2026-09-28T00:00:00Z", "inputTokens": 10, "outputTokens": 20, "retryCount": 0, "usage": {"total_tokens": 30}}
+
+    def test_downstream_view_preserves_identity_and_maps_scope_only_for_validation(self) -> None:
+        inventory, routing = _inputs(); prepared = _prepared_request("pub:276:sec:0019:unit:0001", inventory, routing)
+        original = prepared["request"]; body = json.dumps(prepared["body"], sort_keys=True).encode()
+        view = build_production_downstream_validation_view(original, self._metadata(), 1)
+        self.assertEqual(view["requestID"], original["requestID"])
+        self.assertEqual(view["requestInputSha256"], original["requestInputSha256"])
+        self.assertEqual(view["requestScope"], "section_context")
+        self.assertEqual(original["requestScope"], "complete_section")
+        self.assertEqual(view["offlineResponseMetadata"]["generationParameters"]["maxOutputTokens"], 32768)
+        self.assertEqual(body, json.dumps(prepared["body"], sort_keys=True).encode())
+        changed = dict(original); changed["includedCompleteSection"] = False
+        with self.assertRaises(ValueError): build_production_downstream_validation_view(changed, self._metadata(), 1)
     def test_monitor_targets_are_selected_via_frozen_target_authority(self) -> None:
         """Monitor membership is target metadata, never a substring of an ID."""
         from src.extraction.llm.publications.authority_bundle import V015_SCHEMA013
@@ -79,13 +95,54 @@ class ProductionRunnerTests(unittest.TestCase):
         inventory, routing = _inputs()
         prepared = _prepared_request("pub:276:sec:0019:unit:0001", inventory, routing)
         payload = {"candidateNodes": [], "candidateEdges": [], "evidenceSpans": [], "abstentions": [], "deferredRecords": []}
-        detailed = {"rawOutput": json.dumps(payload).encode("utf-8"), "providerResponse": {"id": "resp-fixture", "status": "completed"}, "providerMetadata": {"responseID": "resp-fixture", "returnedModel": "gpt-5.6-sol"}}
+        detailed = {"rawOutput": json.dumps(payload).encode("utf-8"), "providerResponse": {"id": "resp-fixture", "status": "completed"}, "providerMetadata": {"responseID": "resp-fixture", **self._metadata()}}
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             execute_with_provider_fixture(prepared, lambda _body, _budget: detailed, artifact_root=root)
             attempt = root / "attempt-01"
             for name in ("provider_request.json", "provider_response.json", "provider_metadata.json", "raw_model_output.json", "lifecycle.json", "parser_result.json", "validation_results.json", "usable_pipeline_output.json"):
                 self.assertTrue((attempt / name).exists(), name)
+
+    def test_detailed_future_path_uses_authentic_metadata_validation_view(self) -> None:
+        inventory, routing = _inputs(); prepared = _prepared_request("pub:276:sec:0019:unit:0001", inventory, routing)
+        payload = json.dumps({"candidateNodes": [], "candidateEdges": [], "evidenceSpans": [], "abstentions": [], "deferredRecords": []}).encode()
+        with patch("src.extraction.llm.publications.production_runner._downstream", return_value=({"parseStatus": "parsed", "parsedEnvelope": {}}, None, {"envelopeStatus": "valid"}, {"candidateNodes": [], "candidateEdges": []})) as downstream:
+            execute_with_provider_fixture(prepared, lambda _b, _n: {"rawOutput": payload, "providerMetadata": self._metadata()})
+        request = downstream.call_args.args[1]
+        self.assertEqual(request["requestScope"], "section_context")
+        self.assertEqual(request["requestInputSha256"], prepared["request"]["requestInputSha256"])
+
+    def test_replay_is_offline_and_append_only(self) -> None:
+        source_root = DEFAULT_LIVE_ROOT
+        request_id = next(path.parent.name for path in source_root.glob("requests/*/attempt_selection.json") if json.loads(path.read_text()).get("selectedAttemptNumber") == 1)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); shutil.copy2(source_root / "publication_c1_run_manifest.json", root / "publication_c1_run_manifest.json")
+            source = source_root / "requests" / request_id; target = root / "requests" / request_id; shutil.copytree(source, target)
+            originals = {str(path.relative_to(target)): path.read_bytes() for path in target.rglob("*") if path.is_file() and "downstream-replay-v0.1.0" not in path.parts}
+            with patch("src.extraction.llm.publications.production_runner.load_openai_api_key", side_effect=self.fail):
+                report = replay_production_downstream(root)
+            self.assertEqual(report["providerModelCalls"], 0)
+            self.assertEqual(originals, {str(path.relative_to(target)): path.read_bytes() for path in target.rglob("*") if path.is_file() and "downstream-replay-v0.1.0" not in path.parts})
+            self.assertTrue((target / "downstream-replay-v0.1.0" / "provenance.json").exists())
+
+    def test_replay_skips_terminal_binding_failures_and_preserves_timeout_selection(self) -> None:
+        source_root = DEFAULT_LIVE_ROOT
+        terminal = [path for path in source_root.glob("requests/*/attempt_selection.json") if json.loads(path.read_text()).get("selectedAttemptNumber") is None]
+        self.assertEqual(len(terminal), 8)
+        timeout_selection = source_root / "requests" / "publication-c1-request-9d725039aaeef06d1a46" / "attempt_selection.json"
+        timeout_before = timeout_selection.read_bytes()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); shutil.copy2(source_root / "publication_c1_run_manifest.json", root / "publication_c1_run_manifest.json")
+            for source in terminal:
+                target = root / "requests" / source.parent.name; target.mkdir(parents=True)
+                shutil.copy2(source, target / "attempt_selection.json")
+            before = {path: path.read_bytes() for path in root.glob("requests/*/attempt_selection.json")}
+            with patch("src.extraction.llm.publications.production_runner.load_openai_api_key", side_effect=self.fail):
+                report = replay_production_downstream(root)
+            self.assertEqual(report["preservedTerminalEvidenceBindingFailures"], 8)
+            self.assertEqual(before, {path: path.read_bytes() for path in root.glob("requests/*/attempt_selection.json")})
+        self.assertEqual(timeout_before, timeout_selection.read_bytes())
+        self.assertEqual(json.loads(timeout_before)["selectedAttemptNumber"], 2)
 
     def test_cli_requires_explicit_live_flag(self) -> None:
         with patch("src.extraction.llm.publications.production_runner.materialize_run_manifest", return_value={"manifestSha256": "fixture"}) as materialize, patch("src.extraction.llm.publications.production_runner.execute_live_run") as execute:
