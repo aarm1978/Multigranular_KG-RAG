@@ -1,213 +1,83 @@
-"""Offline preflight and injectable execution seam for frozen Publication C1.
-
-This module deliberately does not load credentials or call a provider.  It derives the
-complete production request population from the frozen sampling universe and routing
-authorities, and leaves dispatch to an explicitly supplied callable at Step 6B.
-"""
-
+"""Offline Step 6A C1 production preflight; provider dispatch is injected only."""
 from __future__ import annotations
-
 from copy import deepcopy
 import json
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
-from src.extraction.llm.publications.openai_provider import (
-    PROVIDER_NAME, REASONING_EFFORT, REQUESTED_MODEL, STORE, build_provider_input,
-    build_responses_api_request,
-)
-from src.extraction.llm.publications.production_acceptance import (
-    derive_accepted_semantic_projection, derive_unresolved_identity_sidecar,
-    run_attempt_controller,
-)
+from src.extraction.llm.publications.authority_bundle import V015_SCHEMA013
+from src.extraction.llm.publications.openai_provider import PROVIDER_NAME, REASONING_EFFORT, REQUESTED_MODEL, STORE, build_provider_input, build_responses_api_request
+from src.extraction.llm.publications.production_acceptance import derive_accepted_semantic_projection, derive_unresolved_identity_sidecar, run_attempt_controller
+from src.extraction.llm.publications.prospective_endpoint_binding_schema import derive_prospective_endpoint_binding_schema
 from src.extraction.llm.publications.prospective_evidence_binding_schema import derive_prospective_evidence_binding_schema
 from src.extraction.llm.publications.request_builder import PROJECT_ROOT, canonical_json, load_yaml_object, sha256_bytes
-from src.extraction.llm.publications.run_publication_full_devset0_node_development import _downstream
-from src.extraction.llm.publications.step5_freeze_materialization import _inputs, _request_for, _scored_target_ids
+from src.extraction.llm.publications.run_publication_full_devset0_node_development import _downstream, _write_durable_canonical
+from src.extraction.llm.publications.step5_freeze_materialization import _inputs
 
+RUNNER_VERSION="publication-production-runner/0.1.1"; MAX_OUTPUT_TOKENS=32768; CONTEXT_BUDGET=1017232
+_SCHEMA_CACHE: dict[tuple[str,...], dict[str,Any]] = {}
+HUMAN_CORE_PATH=PROJECT_ROOT/"data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json"
+N6_ENVELOPES_PATH=PROJECT_ROOT/"data/curation/papers/m2/step5_freeze/publication_pool_n6_c1_evaluation_envelopes_freeze_v0.1.1.json"
+class ProductionPreflightError(ValueError): """Frozen production authority drift."""
 
-RUNNER_VERSION = "publication-production-runner/0.1.0"
-MAX_OUTPUT_TOKENS = 32768
-SAMPLING_PATH = PROJECT_ROOT / "data/curation/papers/m2/human_core_sampling_analysis/publication_human_core_sampling_analysis_v0.1.0.json"
-HUMAN_CORE_PATH = PROJECT_ROOT / "data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json"
-N6_ENVELOPES_PATH = PROJECT_ROOT / "data/curation/papers/m2/step5_freeze/publication_pool_n6_c1_evaluation_envelopes_freeze_v0.1.1.json"
-
-
-class ProductionPreflightError(ValueError):
-    """Raised when a frozen production authority cannot be reproduced exactly."""
-
-
-def _load(path: Path) -> dict[str, Any]:
-    """Load one required frozen JSON mapping."""
-
-    value = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(value, dict):
-        raise ProductionPreflightError(f"authority is not a JSON object: {path}")
+def _load(path:Path)->dict[str,Any]:
+    value=json.loads(path.read_text());
+    if not isinstance(value,dict): raise ProductionPreflightError(f"not object: {path}")
     return value
-
-
-def _context_units(unit: Mapping[str, Any], inventory: Mapping[str, Mapping[str, Any]]) -> list[Mapping[str, Any]]:
-    """Return the frozen complete-section eligible context in stable order."""
-
-    return sorted(
-        (candidate for candidate in inventory.values() if candidate["sectionID"] == unit["sectionID"]
-         and candidate["sourceUnitID"] != unit["sourceUnitID"] and candidate.get("eligibility") == "eligible"),
-        key=lambda candidate: str(candidate["sourceUnitID"]),
-    )
-
-
-def _prepared_request(unit_id: str, inventory: Mapping[str, Mapping[str, Any]], routing: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
-    """Build one authoritative routed extract-and-evaluate C1 request, offline."""
-
-    unit, route = inventory.get(unit_id), routing.get(unit_id)
-    if unit is None or route is None:
-        raise ProductionPreflightError(f"missing frozen source/routing row: {unit_id}")
-    try:
-        request, prepared = _request_for(unit, route, _context_units(unit, inventory))
-    except KeyError as exc:
-        # The established freeze helper specializes a relation transport schema.
-        # Build the equally governed node-only variant from its request template.
-        if exc.args != ("edgeEndpoint",):
-            raise
-        template_unit = inventory["pub:276:sec:0019:unit:0001"]
-        template_route = routing["pub:276:sec:0019:unit:0001"]
-        request, _ = _request_for(template_unit, template_route, [])
-        request = deepcopy(request)
-        node_ids, relation_ids = _scored_target_ids()
-        target_ids = sorted((set(route["eligibleNodeOperationalTargetIDs"]) & node_ids) |
-                            (set(route["eligibleRelationOperationalTargetIDs"]) & relation_ids))
-        profile = load_yaml_object(PROJECT_ROOT / "src/extraction/llm/publications/publication_target_inventory_v0.1.5.yaml")
-        definitions = {str(row["operational_id"]): dict(row) for row in [*profile["node_targets"], *profile["relation_targets"]]}
-        request.update({"sourcePublicationID": str(unit["paperID"]), "sourceArtifactID": unit["canonicalArtifactID"],
-                        "primarySourceUnitID": unit["sourceUnitID"], "contextSourceUnitIDs": [], "contextUnits": [],
-                        "sourceUnit": dict(unit), "eligibleOperationalTargetIDs": target_ids,
-                        "targetDefinitions": [definitions[target_id] for target_id in target_ids],
-                        "deterministicEndpoints": [{"nodeID": unit["canonicalArtifactID"], "className": "Paper", "artifactID": unit["canonicalArtifactID"]}],
-                        "runID": f"publication-step5-c1-evaluation/0.1.1/{unit['sourceUnitID']}"})
-        prepared = {}
-    # The frozen helper intentionally omits downstream-only identities.  They are
-    # not provider-input fields, so attaching them after its exact body construction
-    # preserves every frozen N=6 body hash.
-    request = deepcopy(request)
-    request["offlineResponseMetadata"] = {
-        "provider": PROVIDER_NAME, "modelName": REQUESTED_MODEL, "modelVersion": None,
-        "generationParameters": {"maxOutputTokens": MAX_OUTPUT_TOKENS}, "tokenUsage": {},
-        "costUSD": None, "retryCount": 0, "responseCreatedAt": None,
-    }
-    request["requestID"] = f"publication-c1-request-{sha256_bytes(canonical_json(request))[:20]}"
-    request["requestInputSha256"] = sha256_bytes(canonical_json(request))
-    # Node-only routed units have no edgeEndpoint definition.  Their specialized
-    # transport schema is the existing evidence-binding schema; edge binding below
-    # remains a no-op because such a payload cannot contain an edge.
-    if not any(str(value).startswith("PUB-R-") for value in request["eligibleOperationalTargetIDs"]):
-        schema = derive_prospective_evidence_binding_schema(request)
-        provider_input = build_provider_input(request)
-        body = build_responses_api_request(provider_input, model_authorable_schema=schema, max_output_tokens=MAX_OUTPUT_TOKENS)
-        prepared = {"schema": schema, "body": body, "bodyBytes": canonical_json(body)}
-    body = prepared["body"]
-    if body.get("max_output_tokens") != MAX_OUTPUT_TOKENS:
-        raise ProductionPreflightError("provider body did not receive explicit 32768 max_output_tokens")
-    return {"request": request, "schema": prepared["schema"], "providerInput": build_provider_input(request), "body": body}
-
-
-def _envelope_view(prepared: Mapping[str, Any]) -> dict[str, Any]:
-    """Return the fields whose values are frozen by the N=6 C1 envelope authority."""
-
-    request, body, schema = prepared["request"], prepared["body"], prepared["schema"]
-    return {
-        "primarySourceUnitID": request["primarySourceUnitID"],
-        "contextSourceUnitIDs": request["contextSourceUnitIDs"],
-        "routedExtractAndEvaluateTargetIDs": request["eligibleOperationalTargetIDs"],
-        "maxOutputTokens": body["max_output_tokens"],
-        "requestEnvelopeSha256": sha256_bytes(canonical_json({key: request[key] for key in (
-            "authorityBundleID", "runID", "primarySourceUnitID", "contextSourceUnitIDs", "requestScope",
-            "includedCompleteSection", "eligibleOperationalTargetIDs", "prompt")})),
-        "providerRequestBodySha256": sha256_bytes(canonical_json(body)),
-        "modelAuthorableSchemaSha256": sha256_bytes(canonical_json(schema)),
-    }
-
-
-def derive_production_preflight() -> dict[str, Any]:
-    """Derive all authorized C1 requests and verify frozen N=5/N=6 memberships."""
-
-    sampling, human_core, frozen_n6 = _load(SAMPLING_PATH), _load(HUMAN_CORE_PATH), _load(N6_ENVELOPES_PATH)
-    universe = sampling.get("eligibleUniverse", {})
-    ids = universe.get("sourceUnitIDs")
-    if not isinstance(ids, list) or not ids or len(ids) != len(set(ids)):
-        raise ProductionPreflightError("frozen eligible production population is missing or non-unique")
-    inventory, routing = _inputs()
-    node_ids, relation_ids = _scored_target_ids()
-    if set(universe.get("routedScoredNodeOperationalTargetIDs", [])) != node_ids or set(universe.get("routedScoredRelationOperationalTargetIDs", [])) != relation_ids:
-        raise ProductionPreflightError("sampling and frozen routed-target authority disagree")
-    n5 = sorted(str(row["sourceUnitID"]) for row in human_core.get("selectedUnits", []))
-    n6_rows = frozen_n6.get("envelopes", [])
-    n6 = sorted(str(row["primarySourceUnitID"]) for row in n6_rows)
-    population_ids = sorted(map(str, ids))
-    if len(n5) != 5 or len(n6) != 6 or set(n5) & set(n6) or not (set(n5) | set(n6)) <= set(population_ids):
-        raise ProductionPreflightError("frozen Human Core/N=6 membership is not a disjoint production subset")
-    frozen_by_id = {str(row["primarySourceUnitID"]): row for row in n6_rows}
-    reproduction: list[dict[str, Any]] = []
-    for unit_id in n6:
-        actual, expected = _envelope_view(_prepared_request(unit_id, inventory, routing)), frozen_by_id.get(unit_id)
-        if expected is None:
-            raise ProductionPreflightError(f"missing frozen N=6 envelope: {unit_id}")
-        fields = tuple(actual)
-        matched = all(actual[field] == expected.get(field) for field in fields)
-        reproduction.append({"primarySourceUnitID": unit_id, "matched": matched, "fields": fields,
-                             "publication46SameSectionContext": actual["contextSourceUnitIDs"] if unit_id == "pub:46:sec:0006:unit:0001" else None})
-    if not all(row["matched"] for row in reproduction):
-        raise ProductionPreflightError("one or more production requests drift from frozen Step 5 envelopes")
-    if next(row for row in reproduction if row["primarySourceUnitID"] == "pub:46:sec:0006:unit:0001")["publication46SameSectionContext"] != ["pub:46:sec:0006:unit:0002"]:
-        raise ProductionPreflightError("Publication 46 same-section context binding drifted")
-    records = []
-    for unit_id in population_ids:
-        unit, route = inventory[unit_id], routing[unit_id]
-        target_ids = sorted((set(route["eligibleNodeOperationalTargetIDs"]) & node_ids) |
-                            (set(route["eligibleRelationOperationalTargetIDs"]) & relation_ids))
-        request_id = f"publication-c1-request-{sha256_bytes(unit_id.encode('utf-8'))[:20]}"
-        records.append({"primarySourceUnitID": unit_id, "requestID": request_id,
-                        "outputID": f"publication-c1-output-{request_id.rsplit('-', 1)[-1]}",
-                        "requestIdentityBasis": "SHA-256(exact primarySourceUnitID); exact request/body hashes materialize at no-call dispatch preflight",
-                        "contextSourceUnitIDs": [str(row["sourceUnitID"]) for row in _context_units(unit, inventory)],
-                        "routedExtractAndEvaluateTargetIDs": target_ids})
-    return {
-        "runnerVersion": RUNNER_VERSION, "providerModelCalls": 0, "c1Execution": False,
-        "populationAuthority": {"samplingAnalysis": str(SAMPLING_PATH.relative_to(PROJECT_ROOT)), "count": len(records),
-                                "basis": "frozen eligibleUniverse.sourceUnitIDs; frozen source inventory, unit routing, target-family extract_and_evaluate routing, and complete-section context authority"},
-        "productionConfiguration": {"model": REQUESTED_MODEL, "reasoningEffort": REASONING_EFFORT, "maxOutputTokens": MAX_OUTPUT_TOKENS,
-                                    "store": STORE, "tools": "none", "web": False, "externalRetrieval": False},
-        "humanCoreN5PrimarySourceUnitIDs": n5, "complementaryN6PrimarySourceUnitIDs": n6,
-        "n6FrozenEnvelopeReproduction": reproduction, "requests": records,
-        "artifactLayout": {"root": "data/curation/papers/m2/production_c1/<runID>/<requestID>",
-                            "attempts": "attempt-01|attempt-02/{lifecycle,provider_request,provider_response,raw_output,parser,validation,usable_pipeline_output}.json",
-                            "selected": "attempt_selection.json", "acceptedProjection": "accepted_semantic_projection.json",
-                            "unresolvedIdentity": "unresolved_identity_sidecar.json", "terminal": "terminal_processing_failure.json"},
-    }
-
-
-ProviderCall = Callable[[Mapping[str, Any], int], bytes]
-
-
-def execute_with_provider_fixture(prepared: Mapping[str, Any], provider_call: ProviderCall) -> dict[str, Any]:
-    """Exercise the production path with an injected provider only (Step 6B seam).
-
-    The callable receives the exact body and explicit 32768 budget.  This function is
-    intentionally not a CLI and performs no credential lookup or network I/O itself.
-    """
-
-    request, schema, body = prepared["request"], prepared["schema"], prepared["body"]
-    provider_input_hash = sha256_bytes(build_provider_input(request))
-    def one_attempt(number: int) -> dict[str, Any]:
-        raw = provider_call(deepcopy(body), MAX_OUTPUT_TOKENS)
-        parser, _parsed, validation, usable = _downstream(raw, request, endpoint_binding=True, evidence_binding=True)
-        return {"attemptNumber": number, "requestInputSha256": request["requestInputSha256"], "providerInputSha256": provider_input_hash,
-                "authorityBundleID": request["authorityBundleID"], "requestedModel": REQUESTED_MODEL, "reasoningEffort": REASONING_EFFORT,
-                "maxOutputTokens": MAX_OUTPUT_TOKENS, "modelAuthorableSchemaSha256": sha256_bytes(canonical_json(schema)), "provider": PROVIDER_NAME,
-                "toolConfiguration": "none", "store": STORE, "parserResult": parser, "validation": validation, "usablePipelineOutput": usable,
-                "rawOutputSha256": sha256_bytes(raw)}
-    selection = run_attempt_controller(one_attempt)
-    result: dict[str, Any] = {"attemptSelection": selection}
-    if selection["selectedAttemptNumber"] is not None:
-        result["acceptedSemanticProjection"] = derive_accepted_semantic_projection(selection, request)
-        result["unresolvedIdentitySidecar"] = derive_unresolved_identity_sidecar(selection, request)
+def _context(unit:Mapping[str,Any], inv:Mapping[str,Mapping[str,Any]])->list[dict[str,Any]]:
+    return [dict(x) for x in sorted((x for x in inv.values() if x["sectionID"]==unit["sectionID"] and x["sourceUnitID"]!=unit["sourceUnitID"] and x.get("eligibility")=="eligible"),key=lambda x:str(x["sourceUnitID"]))]
+def _targets(route:Mapping[str,Any], rows:Mapping[str,Mapping[str,Any]])->list[str]:
+    routed=[*route["eligibleNodeOperationalTargetIDs"],*route["eligibleRelationOperationalTargetIDs"]]
+    result=sorted({str(x) for x in routed if str(x) in rows and rows[str(x)].get("production_responsibility") in {"llm","hybrid"} and rows[str(x)].get("emission_mode") in {"llm_candidate","resolver_mediated_candidate"} and rows[str(x)].get("pilot_treatment") in {"extract_and_evaluate","extract_and_monitor"}})
+    if not result: raise ProductionPreflightError(f"no production target: {route['sourceUnitID']}")
+    return result
+def _has_targets(route:Mapping[str,Any], rows:Mapping[str,Mapping[str,Any]])->bool:
+    """Check eligibility without treating an excluded source unit as an error."""
+    routed=[*route["eligibleNodeOperationalTargetIDs"],*route["eligibleRelationOperationalTargetIDs"]]
+    return any(str(x) in rows and rows[str(x)].get("production_responsibility") in {"llm","hybrid"} and rows[str(x)].get("emission_mode") in {"llm_candidate","resolver_mediated_candidate"} and rows[str(x)].get("pilot_treatment") in {"extract_and_evaluate","extract_and_monitor"} for x in routed)
+def _authority(profile:Mapping[str,Any])->dict[str,Any]:
+    ont=PROJECT_ROOT/"src/ontology/ontology_spec.yaml"; schema=V015_SCHEMA013.candidate_schema_path
+    return {"candidateSchema":{"path":str(schema.relative_to(PROJECT_ROOT)),"version":"0.1.3","sha256":sha256_bytes(schema.read_bytes())},"targetInventory":{"path":str(V015_SCHEMA013.target_inventory_path.relative_to(PROJECT_ROOT)),"profileID":profile["profile_id"],"version":str(profile["schema_version"]),"sha256":sha256_bytes(V015_SCHEMA013.target_inventory_path.read_bytes())},"ontology":{"path":str(ont.relative_to(PROJECT_ROOT)),"version":"0.1.5","specSha256":sha256_bytes(ont.read_bytes()),"validatedOwlSha256":profile["ontology"]["validated_owl_sha256"]},"sourceUnitContract":{"path":"docs/publication_source_unit_contract.md","version":"0.1.2","sha256":sha256_bytes((PROJECT_ROOT/"docs/publication_source_unit_contract.md").read_bytes())},"evidenceValidationContract":{"path":str(V015_SCHEMA013.evidence_contract_path.relative_to(PROJECT_ROOT)),"sha256":sha256_bytes(V015_SCHEMA013.evidence_contract_path.read_bytes())},"evaluationMatchingContract":{"path":str(V015_SCHEMA013.evaluation_contract_path.relative_to(PROJECT_ROOT)),"sha256":sha256_bytes(V015_SCHEMA013.evaluation_contract_path.read_bytes())}}
+def _prepared_request(unit_id:str,inv:Mapping[str,Mapping[str,Any]],routing:Mapping[str,Mapping[str,Any]],*,frozen_n6:Mapping[str,Any]|None=None)->dict[str,Any]:
+    profile=load_yaml_object(V015_SCHEMA013.target_inventory_path); rows={str(x["operational_id"]):x for x in [*profile["node_targets"],*profile["relation_targets"]]}; unit,route=inv.get(unit_id),routing.get(unit_id)
+    if unit is None or route is None: raise ProductionPreflightError(f"missing unit/routing: {unit_id}")
+    targets=_targets(route,rows); context=_context(unit,inv); prompt=V015_SCHEMA013.prompt_path.read_bytes()
+    if frozen_n6 is not None: targets=list(frozen_n6["routedExtractAndEvaluateTargetIDs"])
+    r={"requestSchemaVersion":"0.1.0","requestBuilderVersion":RUNNER_VERSION,"authorityBundleID":V015_SCHEMA013.identifier,"purpose":"publication_step5_c1_evaluation" if frozen_n6 else "publication_c1_production","runID":f"publication-step5-c1-evaluation/0.1.1/{unit_id}" if frozen_n6 else f"publication-c1-production/0.1.0/{unit_id}","sourcePublicationID":str(unit["paperID"]),"sourceArtifactID":unit["canonicalArtifactID"],"primarySourceUnitID":unit_id,"contextSourceUnitIDs":[x["sourceUnitID"] for x in context],"contextUnits":context,"requestScope":"complete_section","includedCompleteSection":True,"extractionChannel":"open_discovery","eligibleOperationalTargetIDs":targets,"sourceUnit":dict(unit),"deterministicEndpoints":[{"nodeID":unit["canonicalArtifactID"],"className":"Paper","artifactID":unit["canonicalArtifactID"]}],"acceptedLocalCandidateEndpoints":[],"deferredRecords":[],"deferredRecordIDs":[],"targetDefinitions":[dict(rows[x]) for x in targets],"prompt":{"path":str(V015_SCHEMA013.prompt_path.relative_to(PROJECT_ROOT)),"version":V015_SCHEMA013.prompt_version,"sha256":sha256_bytes(prompt),"text":prompt.decode()},"authorities":_authority(profile)}
+    r["requestID"]=f"publication-c1-request-{sha256_bytes(canonical_json(r))[:20]}"; r["offlineResponseMetadata"]={"provider":PROVIDER_NAME,"modelName":REQUESTED_MODEL,"modelVersion":None,"generationParameters":{"maxOutputTokens":MAX_OUTPUT_TOKENS},"tokenUsage":{},"costUSD":None,"retryCount":0,"responseCreatedAt":None}; r["requestInputSha256"]=sha256_bytes(canonical_json(r))
+    schema_key=tuple(targets)
+    if schema_key not in _SCHEMA_CACHE:
+        _SCHEMA_CACHE[schema_key]=derive_prospective_endpoint_binding_schema(r) if any(x.startswith("PUB-R-") for x in targets) else derive_prospective_evidence_binding_schema(r)
+    schema=deepcopy(_SCHEMA_CACHE[schema_key]); provider_input=build_provider_input(r); body=build_responses_api_request(provider_input,model_authorable_schema=schema,max_output_tokens=MAX_OUTPUT_TOKENS)
+    if body["max_output_tokens"]!=MAX_OUTPUT_TOKENS or body["model"]!=REQUESTED_MODEL or body["reasoning"]["effort"]!=REASONING_EFFORT or body["store"] is not STORE or "tools" in body or len(canonical_json(body))>CONTEXT_BUDGET: raise ProductionPreflightError(f"configuration/context drift: {unit_id}")
+    return {"request":r,"schema":schema,"providerInput":provider_input,"body":body}
+def _envelope(p:Mapping[str,Any])->dict[str,Any]:
+    r,b,s=p["request"],p["body"],p["schema"]
+    return {"primarySourceUnitID":r["primarySourceUnitID"],"contextSourceUnitIDs":r["contextSourceUnitIDs"],"routedExtractAndEvaluateTargetIDs":r["eligibleOperationalTargetIDs"],"maxOutputTokens":b["max_output_tokens"],"requestEnvelopeSha256":sha256_bytes(canonical_json({x:r[x] for x in ("authorityBundleID","runID","primarySourceUnitID","contextSourceUnitIDs","requestScope","includedCompleteSection","eligibleOperationalTargetIDs","prompt")})),"providerRequestBodySha256":sha256_bytes(canonical_json(b)),"modelAuthorableSchemaSha256":sha256_bytes(canonical_json(s))}
+def derive_production_preflight()->dict[str,Any]:
+    """Build every primary production request offline; Step 5 constrains N=6 only."""
+    inv,routing=_inputs(); profile=load_yaml_object(V015_SCHEMA013.target_inventory_path); rows={str(x["operational_id"]):x for x in [*profile["node_targets"],*profile["relation_targets"]]}
+    ids=sorted(x["sourceUnitID"] for x in inv.values() if x.get("eligibility")=="eligible" and x.get("recordType") in {"journal_article","book_chapter"} and _has_targets(routing[x["sourceUnitID"]],rows))
+    n5=sorted(str(x["sourceUnitID"]) for x in _load(HUMAN_CORE_PATH)["selectedUnits"]); n6rows=_load(N6_ENVELOPES_PATH)["envelopes"]; n6map={str(x["primarySourceUnitID"]):x for x in n6rows}; n6=sorted(n6map)
+    if not set(n5+n6)<=set(ids): raise ProductionPreflightError("N5/N6 outside primary production population")
+    prepared={x:_prepared_request(x,inv,routing,frozen_n6=n6map.get(x)) for x in ids}
+    checks=[]
+    for x in n6:
+        actual,expected=_envelope(prepared[x]),n6map[x]; checks.append({"primarySourceUnitID":x,"matched":all(actual[k]==expected.get(k) for k in actual),"publication46SameSectionContext":actual["contextSourceUnitIDs"] if x=="pub:46:sec:0006:unit:0001" else None})
+    if not all(x["matched"] for x in checks) or next(x for x in checks if x["primarySourceUnitID"]=="pub:46:sec:0006:unit:0001")["publication46SameSectionContext"]!=["pub:46:sec:0006:unit:0002"]: raise ProductionPreflightError("frozen N=6 envelope reproduction drift")
+    records=[{"primarySourceUnitID":x,"runID":p["request"]["runID"],"requestID":p["request"]["requestID"],"outputID":f"publication-c1-output-{p['request']['requestInputSha256'][:20]}","requestInputSha256":p["request"]["requestInputSha256"],"providerRequestBodySha256":sha256_bytes(canonical_json(p["body"])),"contextSourceUnitIDs":p["request"]["contextSourceUnitIDs"],"productionTargetIDs":p["request"]["eligibleOperationalTargetIDs"]} for x,p in prepared.items()]
+    return {"runnerVersion":RUNNER_VERSION,"providerModelCalls":0,"c1Execution":False,"populationAuthority":{"count":len(records),"basis":"frozen eligible primary source-unit inventory (journal_article/book_chapter), unit routing, v0.1.5 production responsibility/emission authority; excludes nonprimary corrigendum"},"productionTargetRule":"routed targets with production_responsibility llm|hybrid, emission_mode llm_candidate|resolver_mediated_candidate, and pilot_treatment extract_and_evaluate|extract_and_monitor","productionConfiguration":{"model":REQUESTED_MODEL,"reasoningEffort":REASONING_EFFORT,"maxOutputTokens":MAX_OUTPUT_TOKENS,"store":STORE,"tools":"none","web":False,"externalRetrieval":False},"humanCoreN5PrimarySourceUnitIDs":n5,"complementaryN6PrimarySourceUnitIDs":n6,"n6FrozenEnvelopeReproduction":checks,"requests":records,"artifactLayout":{"root":"data/curation/papers/m2/production_c1/<runID>/<requestID>","attempts":"attempt-01|attempt-02/{lifecycle,provider_request,provider_response,raw_output,parser,validation,usable_pipeline_output}.json","selected":"attempt_selection.json","acceptedProjection":"accepted_semantic_projection.json","unresolvedIdentity":"unresolved_identity_sidecar.json","terminal":"terminal_processing_failure.json"}}
+ProviderCall=Callable[[Mapping[str,Any],int],bytes]
+def execute_with_provider_fixture(p:Mapping[str,Any],call:ProviderCall,*,artifact_root:Path|None=None)->dict[str,Any]:
+    """Inject provider behavior through the Step 4 controller with durable attempts."""
+    r,s,b=p["request"],p["schema"],p["body"]; base={"requestInputSha256":r["requestInputSha256"],"providerInputSha256":sha256_bytes(p["providerInput"]),"authorityBundleID":r["authorityBundleID"],"requestedModel":REQUESTED_MODEL,"reasoningEffort":REASONING_EFFORT,"maxOutputTokens":MAX_OUTPUT_TOKENS,"modelAuthorableSchemaSha256":sha256_bytes(canonical_json(s)),"provider":PROVIDER_NAME,"toolConfiguration":"none","store":STORE}
+    def attempt(n:int)->dict[str,Any]:
+        try:
+            raw=call(deepcopy(b),MAX_OUTPUT_TOKENS); parser,_,validation,usable=_downstream(raw,r,endpoint_binding=True,evidence_binding=True); out={**base,"attemptNumber":n,"parserResult":parser,"validation":validation,"usablePipelineOutput":usable,"rawOutputSha256":sha256_bytes(raw)}
+        except Exception as exc: out={**base,"attemptNumber":n,"parserResult":{"parseStatus":"processing_failed","processingCode":"API_ERROR","error":str(exc)},"validation":{"envelopeStatus":"processing_failed","recordResults":[{"recordType":"processing_failure"}]},"usablePipelineOutput":{"candidateNodes":[],"candidateEdges":[]},"providerFailure":{"failureType":type(exc).__name__,"message":str(exc)}}
+        if artifact_root: _write_durable_canonical(artifact_root/f"attempt-{n:02d}"/"lifecycle.json",out); _write_durable_canonical(artifact_root/f"attempt-{n:02d}"/"provider_request.json",b)
+        return out
+    selection=run_attempt_controller(attempt); result={"attemptSelection":selection}
+    if artifact_root: _write_durable_canonical(artifact_root/"attempt_selection.json",selection)
+    if selection["selectedAttemptNumber"] is not None: result["acceptedSemanticProjection"]=derive_accepted_semantic_projection(selection,r); result["unresolvedIdentitySidecar"]=derive_unresolved_identity_sidecar(selection,r)
     return result
