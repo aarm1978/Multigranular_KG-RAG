@@ -21,6 +21,7 @@ HUMAN_CORE_PATH=PROJECT_ROOT/"data/curation/papers/m2/human_core_gold/publicatio
 N6_ENVELOPES_PATH=PROJECT_ROOT/"data/curation/papers/m2/step5_freeze/publication_pool_n6_c1_evaluation_envelopes_freeze_v0.1.1.json"
 STEP6A_CHECKPOINT="879745a06b3e412a16a2506c873e719c7210199f"
 DEFAULT_LIVE_ROOT=PROJECT_ROOT/"var/publication_c1_production"
+TIMEOUT_RECOVERY={"publication-c1-request-9d725039aaeef06d1a46":{"requestInputSha256":"262e87f6f7d847b7b63f9b987282f38c522396ed879f43168533c280c0ac8a37","providerRequestBodySha256":"0a4ad33159a8b4de528866ec765e24d460829b49ecc54f1b3fd25970b55816ae"}}
 class ProductionPreflightError(ValueError): """Frozen production authority drift."""
 
 def _load(path:Path)->dict[str,Any]:
@@ -71,7 +72,7 @@ def derive_production_preflight()->dict[str,Any]:
     records=[{"primarySourceUnitID":x,"runID":p["request"]["runID"],"requestID":p["request"]["requestID"],"outputID":f"publication-c1-output-{p['request']['requestInputSha256'][:20]}","requestInputSha256":p["request"]["requestInputSha256"],"providerRequestBodySha256":sha256_bytes(canonical_json(p["body"])),"contextSourceUnitIDs":p["request"]["contextSourceUnitIDs"],"productionTargetIDs":p["request"]["eligibleOperationalTargetIDs"]} for x,p in prepared.items()]
     return {"runnerVersion":RUNNER_VERSION,"providerModelCalls":0,"c1Execution":False,"populationAuthority":{"count":len(records),"basis":"frozen eligible primary source-unit inventory (journal_article/book_chapter), unit routing, v0.1.5 production responsibility/emission authority; excludes nonprimary corrigendum"},"productionTargetRule":"routed targets with production_responsibility llm|hybrid, emission_mode llm_candidate|resolver_mediated_candidate, and pilot_treatment extract_and_evaluate|extract_and_monitor","productionConfiguration":{"model":REQUESTED_MODEL,"reasoningEffort":REASONING_EFFORT,"maxOutputTokens":MAX_OUTPUT_TOKENS,"store":STORE,"tools":"none","web":False,"externalRetrieval":False},"humanCoreN5PrimarySourceUnitIDs":n5,"complementaryN6PrimarySourceUnitIDs":n6,"n6FrozenEnvelopeReproduction":checks,"requests":records,"artifactLayout":{"root":"data/curation/papers/m2/production_c1/<runID>/<requestID>","attempts":"attempt-01|attempt-02/{lifecycle,provider_request,provider_response,raw_output,parser,validation,usable_pipeline_output}.json","selected":"attempt_selection.json","acceptedProjection":"accepted_semantic_projection.json","unresolvedIdentity":"unresolved_identity_sidecar.json","terminal":"terminal_processing_failure.json"}}
 ProviderCall=Callable[[Mapping[str,Any],int],Union[bytes,Mapping[str,Any]]]
-def execute_with_provider_fixture(p:Mapping[str,Any],call:ProviderCall,*,artifact_root:Path|None=None)->dict[str,Any]:
+def execute_with_provider_fixture(p:Mapping[str,Any],call:ProviderCall,*,artifact_root:Path|None=None,initial_attempt:Mapping[str,Any]|None=None)->dict[str,Any]:
     """Inject a detailed provider fixture through the frozen Step 4 controller.
 
     Only provider transport exceptions become retryable API_ERROR records.  Parser,
@@ -81,6 +82,7 @@ def execute_with_provider_fixture(p:Mapping[str,Any],call:ProviderCall,*,artifac
     def persist(path:Path,value:Mapping[str,Any])->None:
         if artifact_root is not None: _write_durable_canonical(path,value)
     def attempt(n:int)->dict[str,Any]:
+        if n==1 and initial_attempt is not None: return deepcopy(dict(initial_attempt))
         root=(artifact_root/f"attempt-{n:02d}") if artifact_root is not None else None
         if root is not None:
             persist(root/"provider_request.json",b)
@@ -117,6 +119,32 @@ def execute_with_provider_fixture(p:Mapping[str,Any],call:ProviderCall,*,artifac
         result["acceptedSemanticProjection"]=derive_accepted_semantic_projection(selection,r); result["unresolvedIdentitySidecar"]=derive_unresolved_identity_sidecar(selection,r)
         if artifact_root: persist(artifact_root/"accepted_semantic_projection.json",result["acceptedSemanticProjection"]); persist(artifact_root/"unresolved_identity_sidecar.json",result["unresolvedIdentitySidecar"])
     return result
+
+def recover_timeout_request(request_id: str, root: Path=DEFAULT_LIVE_ROOT, *, provider_call: ProviderCall|None=None) -> dict[str, Any]:
+    """Recover the one researcher-attested ambiguous socket timeout as attempt two."""
+    expected=TIMEOUT_RECOVERY.get(request_id)
+    if expected is None: raise ProductionPreflightError("unsupported timeout recovery request")
+    manifest=_load(root/"publication_c1_run_manifest.json")
+    matching=[row for row in manifest.get("requests",[]) if row.get("requestID")==request_id]
+    if len(matching)!=1: raise ProductionPreflightError("request is absent or non-unique in frozen manifest")
+    record=matching[0]; request_root=root/"requests"/request_id; attempt_root=request_root/"attempt-01"
+    required={"provider_request.json","lifecycle.json"}; forbidden={"provider_response.json","provider_metadata.json","raw_model_output.json","parser_result.json","validation_results.json","usable_pipeline_output.json","parsed_candidate.json"}
+    if not attempt_root.is_dir() or any(not (attempt_root/name).is_file() for name in required) or any((attempt_root/name).exists() for name in forbidden) or (request_root/"attempt_selection.json").exists() or (request_root/"attempt-02").exists(): raise ProductionPreflightError("ambiguous recovery artifact state")
+    provider_body=_load(attempt_root/"provider_request.json"); lifecycle=_load(attempt_root/"lifecycle.json")
+    if sha256_bytes(canonical_json(provider_body))!=expected["providerRequestBodySha256"] or record.get("requestInputSha256")!=expected["requestInputSha256"]: raise ProductionPreflightError("attested timeout identities drift")
+    inv,routing=_inputs(); n6={row["primarySourceUnitID"]:row for row in _load(N6_ENVELOPES_PATH)["envelopes"]}; prepared=_prepared_request(record["primarySourceUnitID"],inv,routing,frozen_n6=n6.get(record["primarySourceUnitID"]))
+    base={"requestInputSha256":prepared["request"]["requestInputSha256"],"providerInputSha256":sha256_bytes(prepared["providerInput"]),"authorityBundleID":prepared["request"]["authorityBundleID"],"requestedModel":REQUESTED_MODEL,"reasoningEffort":REASONING_EFFORT,"maxOutputTokens":MAX_OUTPUT_TOKENS,"modelAuthorableSchemaSha256":sha256_bytes(canonical_json(prepared["schema"])),"provider":PROVIDER_NAME,"toolConfiguration":"none","store":STORE}
+    if prepared["request"]["requestInputSha256"]!=record["requestInputSha256"] or provider_body!=prepared["body"] or lifecycle.get("status")!="initiated" or lifecycle.get("semanticResponseProduced") is not False or any(lifecycle.get(k)!=v for k,v in base.items()): raise ProductionPreflightError("persisted attempt identity/lifecycle drift")
+    provenance={"artifactType":"publication_c1_timeout_recovery_provenance","requestID":request_id,"attemptNumber":1,"exceptionType":"socket.timeout","message":"The read operation timed out","transportTimeoutSeconds":180,"providerResponseObserved":False,"remoteProviderProcessingStatus":"unknown","disposition":"retry_eligible_transport_failure","authorizedNextAttempt":2}
+    _write_immutable(request_root/"attempt-01-timeout-recovery-provenance.json",provenance)
+    reconstructed={**base,"attemptNumber":1,"status":"reconstructed_transport_failure","parserResult":{"parseStatus":"processing_failed","processingCode":"API_ERROR","error":"socket.timeout: The read operation timed out"},"validation":{"envelopeStatus":"processing_failed","recordResults":[{"recordType":"processing_failure"}]},"usablePipelineOutput":{"candidateNodes":[],"candidateEdges":[]},"recoveryProvenanceSha256":sha256_bytes(canonical_json(provenance))}
+    if provider_call is None:
+        api_key=load_openai_api_key()
+        def provider_call(body: Mapping[str,Any], budget:int)->Mapping[str,Any]:
+            if body!=prepared["body"] or budget!=MAX_OUTPUT_TOKENS: raise ProductionPreflightError("recovery dispatch drift")
+            raw,metadata,response=call_openai_responses_detailed(api_key,prepared["providerInput"],model_authorable_schema=prepared["schema"],max_output_tokens=MAX_OUTPUT_TOKENS)
+            return {"rawOutput":raw,"providerResponse":response,"providerMetadata":metadata}
+    return execute_with_provider_fixture(prepared,provider_call,artifact_root=request_root,initial_attempt=reconstructed)
 
 def _write_immutable(path: Path, value: Mapping[str, Any]) -> None:
     """Write canonical deterministic state once, failing closed on byte drift."""
@@ -161,9 +189,11 @@ def execute_live_run(root: Path=DEFAULT_LIVE_ROOT) -> dict[str, Any]:
 
 def main(argv: list[str]|None=None) -> int:
     """Materialize only by default; live calls require explicit researcher opt-in."""
-    parser=argparse.ArgumentParser(); parser.add_argument("--root",type=Path,default=DEFAULT_LIVE_ROOT); parser.add_argument("--execute-live",action="store_true")
+    parser=argparse.ArgumentParser(); parser.add_argument("--root",type=Path,default=DEFAULT_LIVE_ROOT); parser.add_argument("--execute-live",action="store_true"); parser.add_argument("--recover-timeout-request")
     args=parser.parse_args(argv)
-    if args.execute_live: print(execute_live_run(args.root))
+    if args.recover_timeout_request and not args.execute_live: parser.error("--recover-timeout-request requires --execute-live")
+    if args.recover_timeout_request: print(recover_timeout_request(args.recover_timeout_request,args.root))
+    elif args.execute_live: print(execute_live_run(args.root))
     else: print({"manifestSha256":materialize_run_manifest(args.root)["manifestSha256"],"liveExecution":False})
     return 0
 

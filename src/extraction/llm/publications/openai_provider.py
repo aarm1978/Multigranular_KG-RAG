@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import socket
 import time
 from typing import Any, Callable, Mapping
 from urllib.parse import quote
@@ -228,7 +229,7 @@ def _http_post_json(api_key: str, body: Mapping[str, Any]) -> dict[str, Any]:
             "requestHeadersPreserved": False,
         }
         raise OpenAIHTTPError(diagnostic) from None
-    except (URLError, TimeoutError):
+    except (URLError, TimeoutError, socket.timeout):
         raise OpenAIProviderError("OpenAI API transport error") from None
     except (UnicodeDecodeError, json.JSONDecodeError):
         raise OpenAIProviderError("OpenAI API returned an invalid JSON response") from None
@@ -252,7 +253,7 @@ def _http_get_response_json(api_key: str, response_id: str) -> dict[str, Any]:
         raise OpenAIProviderError(
             f"OpenAI background retrieval HTTP error ({exc.code})"
         ) from None
-    except (URLError, TimeoutError):
+    except (URLError, TimeoutError, socket.timeout):
         raise OpenAIProviderError("OpenAI background retrieval transport error") from None
     except (UnicodeDecodeError, json.JSONDecodeError):
         raise OpenAIProviderError(

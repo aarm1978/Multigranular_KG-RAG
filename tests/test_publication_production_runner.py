@@ -1,15 +1,17 @@
 """Focused offline readiness checks for the Step 6A Production runner."""
 
 import json
+import socket
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 from src.extraction.llm.publications.production_runner import (
-    MAX_OUTPUT_TOKENS, _prepared_request, _targets, derive_production_preflight, execute_with_provider_fixture, main,
+    DEFAULT_LIVE_ROOT, MAX_OUTPUT_TOKENS, _prepared_request, _targets, derive_production_preflight, execute_with_provider_fixture, main, recover_timeout_request,
 )
-from src.extraction.llm.publications.openai_provider import OpenAIProviderError
+from src.extraction.llm.publications.openai_provider import OpenAIProviderError, _http_post_json
 from src.extraction.llm.publications.step5_freeze_materialization import _inputs
 
 
@@ -90,6 +92,42 @@ class ProductionRunnerTests(unittest.TestCase):
             self.assertEqual(main([]), 0)
             materialize.assert_called_once()
             execute.assert_not_called()
+
+    def test_socket_timeout_is_provider_error(self) -> None:
+        with patch("src.extraction.llm.publications.openai_provider.urlopen", side_effect=socket.timeout("The read operation timed out")):
+            with self.assertRaises(OpenAIProviderError):
+                _http_post_json("fixture-key", {"model": "gpt-5.6-sol"})
+
+    def test_timeout_recovery_preserves_attempt_one_and_only_dispatches_two(self) -> None:
+        request_id = "publication-c1-request-9d725039aaeef06d1a46"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shutil.copy2(DEFAULT_LIVE_ROOT / "publication_c1_run_manifest.json", root / "publication_c1_run_manifest.json")
+            source = DEFAULT_LIVE_ROOT / "requests" / request_id / "attempt-01"
+            target = root / "requests" / request_id / "attempt-01"; target.parent.mkdir(parents=True)
+            shutil.copytree(source, target)
+            before = {path.name: path.read_bytes() for path in target.iterdir()}
+            inventory, routing = _inputs(); prepared = _prepared_request("pub:54:sec:0022:unit:0001", inventory, routing)
+            payload = {"candidateNodes": [], "candidateEdges": [], "evidenceSpans": [], "abstentions": [], "deferredRecords": []}; calls=[]
+            with patch("src.extraction.llm.publications.production_runner._prepared_request", return_value=prepared):
+                result = recover_timeout_request(request_id, root, provider_call=lambda body, budget: calls.append((body, budget)) or json.dumps(payload).encode())
+            self.assertEqual(len(calls), 1)
+            self.assertEqual(calls[0][1], 32768)
+            self.assertEqual(result["attemptSelection"]["selectedAttemptNumber"], 2)
+            self.assertEqual(before, {path.name: path.read_bytes() for path in target.iterdir()})
+            self.assertTrue((root / "requests" / request_id / "attempt-02" / "lifecycle.json").exists())
+
+    def test_timeout_recovery_hash_drift_fails_closed_and_live_flag_is_required(self) -> None:
+        request_id = "publication-c1-request-9d725039aaeef06d1a46"
+        with self.assertRaises(SystemExit):
+            main(["--recover-timeout-request", request_id])
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shutil.copy2(DEFAULT_LIVE_ROOT / "publication_c1_run_manifest.json", root / "publication_c1_run_manifest.json")
+            source = DEFAULT_LIVE_ROOT / "requests" / request_id / "attempt-01"; target = root / "requests" / request_id / "attempt-01"; target.parent.mkdir(parents=True); shutil.copytree(source, target)
+            lifecycle = json.loads((target / "lifecycle.json").read_text()); lifecycle["requestInputSha256"] = "drift"; (target / "lifecycle.json").write_text(json.dumps(lifecycle))
+            with self.assertRaisesRegex(ValueError, "drift"):
+                recover_timeout_request(request_id, root, provider_call=lambda _body, _budget: self.fail("must not dispatch"))
 
 
 if __name__ == "__main__":
