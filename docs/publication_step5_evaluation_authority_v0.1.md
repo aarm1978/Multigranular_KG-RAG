@@ -4,8 +4,8 @@
 **Workstream:** Publication semantic extraction and evaluation  
 **Authority ID:** `publication-step5-evaluation-authority`  
 **Authority version:** `0.1.0`  
-**Status:** **DRAFT — NOT FROZEN**  
-**Date:** 2026-09-25  
+**Status:** **FROZEN**  
+**Date:** 2026-09-27  
 **Roadmap milestone:** Step 5 — Remaining Publication Evaluation Contracts
 
 ---
@@ -2346,109 +2346,109 @@ Report:
 
 # 17. Step 5 Freeze Gate
 
-Step 5 MUST remain:
+Step 5 remained:
 
 ```text
 DRAFT — NOT FROZEN
 ```
 
-until all conditions below are satisfied.
+until all conditions below were satisfied on 2026-09-27.
 
 ## 17.1 Initial researcher methodological approval
 
-- [ ] Researcher confirms that the DRAFT faithfully represents accepted Sections 5A–5G.
-- [ ] No methodological alternative is being reopened.
-- [ ] No unresolved methodological contradiction remains.
-- [ ] No result-derived rule has been introduced.
+- [x] Researcher confirms that the DRAFT faithfully represents accepted Sections 5A–5G.
+- [x] No methodological alternative is being reopened.
+- [x] No unresolved methodological contradiction remains.
+- [x] No result-derived rule has been introduced.
 
 This approval authorizes deterministic freeze-time materialization/validation only. It does not freeze Step 5 and does not authorize Step 6 provider execution.
 
 ## 17.2 Upstream-authority binding
 
-- [ ] Current frozen ontology authority is bound.
-- [ ] Current target authority is bound.
-- [ ] Source-unit/request-context authority is bound.
-- [ ] Candidate/provider/prompt authorities required for future C1 are bound.
-- [ ] V1–V12 validation authority is bound.
-- [ ] Human Core amended matching authority is bound without extending its formal scope.
-- [ ] Production Acceptance Policy v0.1.0 is bound.
-- [ ] Human Core sampling-analysis authority is bound.
+- [x] Current frozen ontology authority is bound.
+- [x] Current target authority is bound.
+- [x] Source-unit/request-context authority is bound.
+- [x] Candidate/provider/prompt authorities required for future C1 are bound.
+- [x] V1–V12 validation authority is bound.
+- [x] Human Core amended matching authority is bound without extending its formal scope.
+- [x] Production Acceptance Policy v0.1.0 is bound.
+- [x] Human Core sampling-analysis authority is bound.
 
 ## 17.3 N=6 deterministic freeze-time materialization
 
-- [ ] Deterministic N=6 selection is reproduced from the approved model-blind rule.
-- [ ] Exact six `primarySourceUnitID` values are materialized.
-- [ ] One selected unit comes from each of `18`, `276`, `37`, `46`, `54`, `87`.
-- [ ] 19/19 scored node targets are covered.
-- [ ] 16/16 scored relation targets are covered.
-- [ ] 5/5 sampling strata are covered.
-- [ ] All frozen exclusions are honored.
-- [ ] Minimax routed-target exposure rule is verified.
-- [ ] Total-exposure tie-break is verified.
-- [ ] Lexical final tie-break is verified where applicable.
+- [x] Deterministic N=6 selection is reproduced from the approved model-blind rule.
+- [x] Exact six `primarySourceUnitID` values are materialized.
+- [x] One selected unit comes from each of `18`, `276`, `37`, `46`, `54`, `87`.
+- [x] 19/19 scored node targets are covered.
+- [x] 16/16 scored relation targets are covered.
+- [x] 5/5 sampling strata are covered.
+- [x] All frozen exclusions are honored.
+- [x] Minimax routed-target exposure rule is verified.
+- [x] Total-exposure tie-break is verified.
+- [x] Lexical final tie-break is verified where applicable.
 
 ## 17.4 C1 evaluation-envelope freeze-time materialization
 
-- [ ] Exact future C1 primary-request/evaluation envelopes for the six selected units are materialized prospectively.
-- [ ] Authorized context units are bound.
-- [ ] Routed `extract_and_evaluate` scope is bound.
-- [ ] Source/context hashes are bound.
-- [ ] Model/prompt/provider/configuration authorities are bound.
-- [ ] No screening expectations are injected as semantic hints.
-- [ ] No provider/model call has been made as part of freeze-time materialization.
+- [x] Exact future C1 primary-request/evaluation envelopes for the six selected units are materialized prospectively.
+- [x] Authorized context units are bound.
+- [x] Routed `extract_and_evaluate` scope is bound.
+- [x] Source/context hashes are bound.
+- [x] Model/prompt/provider/configuration authorities are bound.
+- [x] No screening expectations are injected as semantic hints.
+- [x] No provider/model call has been made as part of freeze-time materialization.
 
 ## 17.5 Two-unit second-review freeze-time materialization
 
-- [ ] The Section 6.6 selector namespace/version is recorded exactly.
-- [ ] Six canonical hash inputs are materialized.
-- [ ] Six SHA-256 digests are materialized.
-- [ ] Full ranking is reproducibly materialized.
-- [ ] Lexical collision tie-break is implemented.
-- [ ] Exact two selected `primarySourceUnitID` values are bound.
+- [x] The Section 6.6 selector namespace/version is recorded exactly.
+- [x] Six canonical hash inputs are materialized.
+- [x] Six SHA-256 digests are materialized.
+- [x] Full ranking is reproducibly materialized.
+- [x] Lexical collision tie-break is implemented.
+- [x] Exact two selected `primarySourceUnitID` values are bound.
 
 ## 17.6 Human-role and information-flow controls
 
-- [ ] Role/exposure ledger schema and eligibility semantics are frozen.
-- [ ] Auditor-exposure prohibition is enforceable.
-- [ ] Incidental-observation isolation is specified operationally.
-- [ ] Blinded projection is defined by an explicit field whitelist or equivalently fail-closed projection.
-- [ ] `adjudication_unresolved` remains distinct from `insufficient_evidence_to_decide`.
+- [x] Role/exposure ledger schema and eligibility semantics are frozen.
+- [x] Auditor-exposure prohibition is enforceable.
+- [x] Incidental-observation isolation is specified operationally.
+- [x] Blinded projection is defined by an explicit field whitelist or equivalently fail-closed projection.
+- [x] `adjudication_unresolved` remains distinct from `insufficient_evidence_to_decide`.
 
 ## 17.7 Deterministic pooled-reference controls
 
 Focused deterministic validation MUST demonstrate that:
 
-- [ ] 5B candidate eligibility is reproducible from governed fields/status/code.
-- [ ] `POSSIBLE_LOCAL_DUPLICATE` enters the pre-dedup layer.
-- [ ] `ATOMICITY_VIOLATION` does not.
-- [ ] monitor-only candidates cannot enter the pooled reference.
-- [ ] 5C auto-dedup uses only the three enumerated authority classes.
-- [ ] label equality alone cannot merge `propose_new`.
-- [ ] cross-paper candidates cannot auto-merge.
-- [ ] evidence occurrences are preserved after assertion deduplication.
-- [ ] stronger-role supersession evidence is not silently promoted.
-- [ ] the Section 8.7 fully qualified C1 provenance key is constructible under the governed production provenance contract.
-- [ ] the Section 8.7 representative selection is deterministic and fails closed on missing/non-unique provenance.
-- [ ] blinded projection excludes all prohibited system-provenance fields.
-- [ ] opaque IDs do not encode hidden status.
-- [ ] audit statistics reproduce the Section 11 formulas.
-- [ ] `audit_unresolved` is excluded from saturation denominators.
-- [ ] no Step 5 procedure mutates the frozen Step 4 production projection.
+- [x] 5B candidate eligibility is reproducible from governed fields/status/code.
+- [x] `POSSIBLE_LOCAL_DUPLICATE` enters the pre-dedup layer.
+- [x] `ATOMICITY_VIOLATION` does not.
+- [x] monitor-only candidates cannot enter the pooled reference.
+- [x] 5C auto-dedup uses only the three enumerated authority classes.
+- [x] label equality alone cannot merge `propose_new`.
+- [x] cross-paper candidates cannot auto-merge.
+- [x] evidence occurrences are preserved after assertion deduplication.
+- [x] stronger-role supersession evidence is not silently promoted.
+- [x] the Section 8.7 fully qualified C1 provenance key is constructible under the governed production provenance contract.
+- [x] the Section 8.7 representative selection is deterministic and fails closed on missing/non-unique provenance.
+- [x] blinded projection excludes all prohibited system-provenance fields.
+- [x] opaque IDs do not encode hidden status.
+- [x] audit statistics reproduce the Section 11 formulas.
+- [x] `audit_unresolved` is excluded from saturation denominators.
+- [x] no Step 5 procedure mutates the frozen Step 4 production projection.
 
 ## 17.8 SciERC freeze-time binding
 
 Before Step 5 closes:
 
-- [ ] exact official benchmark release/split authority is bound;
-- [ ] native label serialization is bound;
-- [ ] adapter is limited to the approved thin-adapter boundary;
-- [ ] underlying base LLM is bound and exactly matches C1;
-- [ ] schema-independent inference/reasoning settings are bound and exactly match C1;
-- [ ] coreference remains excluded;
-- [ ] no CIROH↔SciERC ontology mapping is introduced;
-- [ ] mechanical smoke testing is separated from performance optimization;
-- [ ] official test execution policy is frozen;
-- [ ] the stop rule is operationally preserved.
+- [x] exact official benchmark release/split authority is bound;
+- [x] native label serialization is bound;
+- [x] adapter is limited to the approved thin-adapter boundary;
+- [x] underlying base LLM is bound and exactly matches C1;
+- [x] schema-independent inference/reasoning settings are bound and exactly match C1;
+- [x] coreference remains excluded;
+- [x] no CIROH↔SciERC ontology mapping is introduced;
+- [x] mechanical smoke testing is separated from performance optimization;
+- [x] official test execution policy is frozen;
+- [x] the stop rule is operationally preserved.
 
 SciERC execution results are **not** required to declare Step 5 methodology frozen.
 
@@ -2456,34 +2456,34 @@ SciERC execution results are **not** required to declare Step 5 methodology froz
 
 Before final researcher approval:
 
-- [ ] exact N=6 IDs are incorporated into the final authority/freeze record;
-- [ ] exact C1 evaluation-envelope identifiers/hashes are incorporated;
-- [ ] exact two-unit second-review IDs and selector digests/ranking are incorporated;
-- [ ] exact relevant upstream versions/hashes are incorporated;
-- [ ] exact SciERC benchmark-source and adapter/configuration bindings are incorporated;
-- [ ] all freeze-time artifact hashes are recorded.
+- [x] exact N=6 IDs are incorporated into the final authority/freeze record;
+- [x] exact C1 evaluation-envelope identifiers/hashes are incorporated;
+- [x] exact two-unit second-review IDs and selector digests/ranking are incorporated;
+- [x] exact relevant upstream versions/hashes are incorporated;
+- [x] exact SciERC benchmark-source and adapter/configuration bindings are incorporated;
+- [x] all freeze-time artifact hashes are recorded.
 
 ## 17.10 Final researcher approval and closure
 
 Only after Sections 17.1–17.9 pass:
 
-- [ ] Researcher reviews the fully bound authority.
-- [ ] Researcher explicitly approves the final authority.
-- [ ] Authority status changes from `DRAFT — NOT FROZEN` to `FROZEN`.
-- [ ] A versioned Step 5 freeze record is materialized.
-- [ ] Step 5 is declared `FROZEN/CLOSED`.
-- [ ] Only then may Step 6 production execution begin.
+- [x] Researcher reviews the fully bound authority.
+- [x] Researcher explicitly approves the final authority.
+- [x] Authority status changes from `DRAFT — NOT FROZEN` to `FROZEN`.
+- [x] A versioned Step 5 freeze record is materialized.
+- [x] Step 5 is declared `FROZEN/CLOSED`.
+- [x] Only then may Step 6 production execution begin.
 
 C1 outputs, pooled judgments, audit results, and SciERC test results are future execution artifacts and MUST NOT be prerequisites for Step 5 closure.
 
 <!-- BEGIN accepted-current-freeze-gate-state-cb08720 -->
 ## 17.11 Current freeze-gate state
 
-The deterministic Section 15 materialization and Sections 17.1–17.9 validation and
-incorporation requirements are satisfied, including the Section 17.7 controls recorded
-in Section 15.8.7. This authority remains **DRAFT — NOT FROZEN** pending the final
-researcher review and explicit approval required by Section 17.10. Step 6 is not
-authorized.
+The deterministic Section 15 materialization and Sections 17.1–17.10 validation,
+incorporation, and final researcher approval requirements are satisfied. The researcher
+approved pre-freeze checkpoint is
+`859e510de829d62028dbfca50d6a6b4e32f27e31`. Step 5 is **FROZEN/CLOSED**. Step 6 C1
+production execution is the next authorized milestone and has not been executed.
 <!-- END accepted-current-freeze-gate-state-cb08720 -->
 ---
 
@@ -2515,13 +2515,13 @@ Mechanical implementation fixes that do not change semantic eligibility, human j
 
 ---
 
-# 19. Draft Acceptance Statement
+# 19. Frozen Acceptance Statement
 
-This document is currently:
+This document is:
 
-> **DRAFT — NOT FROZEN**
+> **FROZEN/CLOSED**
 
-The intended closure sequence is:
+The completed closure sequence is:
 
 ```text
 researcher approval of this DRAFT
@@ -2534,10 +2534,10 @@ final researcher approval
     →
 Step 5 authority FROZEN/CLOSED
     →
-Step 6 execution
+Step 6 authorized, not executed
 ```
 
-Freezing this authority will not itself:
+This freeze did not itself:
 
 - execute C1;
 - create pooled human judgments;
@@ -2545,4 +2545,4 @@ Freezing this authority will not itself:
 - compare audit findings to the pooled reference; or
 - run SciERC.
 
-Those are future executions governed by the frozen Step 5 authority.
+Those remain future executions governed by the frozen Step 5 authority.
