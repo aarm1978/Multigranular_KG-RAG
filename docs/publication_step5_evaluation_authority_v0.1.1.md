@@ -4,7 +4,7 @@
 **Workstream:** Publication semantic extraction and evaluation  
 **Authority ID:** `publication-step5-evaluation-authority`  
 **Authority version:** `0.1.1`  
-**Status:** **DRAFT — NOT FROZEN**  
+**Status:** **FROZEN/CLOSED**
 **Date:** 2026-09-27  
 **Roadmap milestone:** Step 5 — Remaining Publication Evaluation Contracts
 
@@ -2379,13 +2379,13 @@ Report:
 
 # 17. Step 5 Freeze Gate
 
-Step 5 MUST remain:
+Step 5 is now:
 
 ```text
-DRAFT — NOT FROZEN
+FROZEN/CLOSED
 ```
 
-until all conditions below are satisfied.
+until all conditions below were satisfied on 2026-09-27.
 
 ## 17.1 Initial researcher methodological approval
 
@@ -2500,21 +2500,22 @@ Before final researcher approval:
 
 Only after Sections 17.1–17.9 pass:
 
-- [ ] Researcher reviews the fully bound authority.
-- [ ] Researcher explicitly approves the final authority.
-- [ ] Authority status changes from `DRAFT — NOT FROZEN` to `FROZEN`.
-- [ ] A versioned Step 5 freeze record is materialized.
-- [ ] Step 5 is declared `FROZEN/CLOSED`.
-- [ ] Only then may Step 6 production execution begin.
+- [x] Researcher reviews the fully bound authority.
+- [x] Researcher explicitly approves the final authority.
+- [x] Authority status changes from `DRAFT — NOT FROZEN` to `FROZEN/CLOSED`.
+- [x] A versioned Step 5 freeze record is materialized.
+- [x] Step 5 is declared `FROZEN/CLOSED`.
+- [x] Only then may Step 6 production execution begin.
 
 C1 outputs, pooled judgments, audit results, and SciERC test results are future execution artifacts and MUST NOT be prerequisites for Step 5 closure.
 
 <!-- BEGIN accepted-current-freeze-gate-state-cb08720 -->
 ## 17.11 Current freeze-gate state
 
-The corrected deterministic Section 15.8.8 materialization and Sections 17.1–17.9
-requirements are satisfied. This v0.1.1 authority remains **DRAFT — NOT FROZEN** pending
-final researcher approval under Section 17.10. Step 6 is not authorized.
+The corrected deterministic Section 15.8.8 materialization and Sections 17.1–17.10
+requirements are satisfied. The researcher-approved pre-freeze checkpoint is
+`4d9085f4a2057ac6d9cf0e294548c99cf4684c60`. Step 5 v0.1.1 is **FROZEN/CLOSED**.
+Step 6 is **AUTHORIZED — NOT EXECUTED**.
 <!-- END accepted-current-freeze-gate-state-cb08720 -->
 ---
 
@@ -2546,13 +2547,13 @@ Mechanical implementation fixes that do not change semantic eligibility, human j
 
 ---
 
-# 19. Draft Acceptance Statement
+# 19. Frozen Acceptance Statement
 
-This document is currently:
+This document is:
 
-> **DRAFT — NOT FROZEN**
+> **FROZEN/CLOSED**
 
-The intended closure sequence is:
+The completed closure sequence is:
 
 ```text
 researcher approval of this DRAFT
@@ -2565,10 +2566,10 @@ final researcher approval
     →
 Step 5 authority FROZEN/CLOSED
     →
-Step 6 execution
+Step 6 authorized, not executed
 ```
 
-Freezing this authority will not itself:
+This freeze did not itself:
 
 - execute C1;
 - create pooled human judgments;
@@ -2576,4 +2577,4 @@ Freezing this authority will not itself:
 - compare audit findings to the pooled reference; or
 - run SciERC.
 
-Those are future executions governed by the frozen Step 5 authority.
+Those remain future executions governed by the frozen Step 5 authority.
