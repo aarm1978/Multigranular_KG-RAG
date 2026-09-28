@@ -71,4 +71,8 @@ Results are append-only in each request's `canonical-semantic-replay-v1.0.0/`.
 The root namespace contains an aggregate report and before/after-verified hash
 inventory of all original artifacts, including prior replay and selections. Raw
 and provider artifacts are read directly from original attempts. No semantic or
-gold-correctness claim or Step 6C freeze follows from this technical replay.
+gold-correctness claim follows from this technical replay. Step 6C closure is
+separately bound by
+`data/curation/papers/m2/publication_step6c_canonical_c1_freeze_v1.0.0.json`;
+its tracked prediction, lifecycle, and result-index artifacts are the authoritative
+autonomous C1 realization for Step 7 and later Publication KG construction.
