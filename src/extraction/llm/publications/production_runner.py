@@ -4,7 +4,7 @@ from copy import deepcopy
 import argparse
 import json
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Union
 
 from src.extraction.llm.publications.authority_bundle import V015_SCHEMA013
 from src.extraction.llm.publications.openai_provider import OpenAIProviderError, OpenAIHTTPError, OpenAIProviderResponseError, PROVIDER_NAME, REASONING_EFFORT, REQUESTED_MODEL, STORE, build_provider_input, build_responses_api_request, call_openai_responses_detailed, load_openai_api_key
@@ -70,7 +70,7 @@ def derive_production_preflight()->dict[str,Any]:
     if not all(x["matched"] for x in checks) or next(x for x in checks if x["primarySourceUnitID"]=="pub:46:sec:0006:unit:0001")["publication46SameSectionContext"]!=["pub:46:sec:0006:unit:0002"]: raise ProductionPreflightError("frozen N=6 envelope reproduction drift")
     records=[{"primarySourceUnitID":x,"runID":p["request"]["runID"],"requestID":p["request"]["requestID"],"outputID":f"publication-c1-output-{p['request']['requestInputSha256'][:20]}","requestInputSha256":p["request"]["requestInputSha256"],"providerRequestBodySha256":sha256_bytes(canonical_json(p["body"])),"contextSourceUnitIDs":p["request"]["contextSourceUnitIDs"],"productionTargetIDs":p["request"]["eligibleOperationalTargetIDs"]} for x,p in prepared.items()]
     return {"runnerVersion":RUNNER_VERSION,"providerModelCalls":0,"c1Execution":False,"populationAuthority":{"count":len(records),"basis":"frozen eligible primary source-unit inventory (journal_article/book_chapter), unit routing, v0.1.5 production responsibility/emission authority; excludes nonprimary corrigendum"},"productionTargetRule":"routed targets with production_responsibility llm|hybrid, emission_mode llm_candidate|resolver_mediated_candidate, and pilot_treatment extract_and_evaluate|extract_and_monitor","productionConfiguration":{"model":REQUESTED_MODEL,"reasoningEffort":REASONING_EFFORT,"maxOutputTokens":MAX_OUTPUT_TOKENS,"store":STORE,"tools":"none","web":False,"externalRetrieval":False},"humanCoreN5PrimarySourceUnitIDs":n5,"complementaryN6PrimarySourceUnitIDs":n6,"n6FrozenEnvelopeReproduction":checks,"requests":records,"artifactLayout":{"root":"data/curation/papers/m2/production_c1/<runID>/<requestID>","attempts":"attempt-01|attempt-02/{lifecycle,provider_request,provider_response,raw_output,parser,validation,usable_pipeline_output}.json","selected":"attempt_selection.json","acceptedProjection":"accepted_semantic_projection.json","unresolvedIdentity":"unresolved_identity_sidecar.json","terminal":"terminal_processing_failure.json"}}
-ProviderCall=Callable[[Mapping[str,Any],int],bytes|Mapping[str,Any]]
+ProviderCall=Callable[[Mapping[str,Any],int],Union[bytes,Mapping[str,Any]]]
 def execute_with_provider_fixture(p:Mapping[str,Any],call:ProviderCall,*,artifact_root:Path|None=None)->dict[str,Any]:
     """Inject a detailed provider fixture through the frozen Step 4 controller.
 
