@@ -11,10 +11,10 @@ from typing import Any, Mapping
 from src.extraction.llm.publications.authority_bundle import V015_SCHEMA013
 from src.extraction.llm.publications.request_builder import canonical_json, canonical_json_file, load_json_object, sha256_bytes
 from src.extraction.llm.publications.run_publication_full_devset0_node_development import (
-    _downstream,
     load_c0_bindings,
     prepare_unit,
 )
+from src.extraction.llm.publications.publication_semantic_pipeline import semantic_attempt
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
@@ -89,7 +89,7 @@ def audit_unit(development_id: str, *, preserved_root: Path = PRESERVED_SCHEMA01
             full_semantic=True,
             authority_bundle=V015_SCHEMA013,
         )
-        parser, _parsed, validation, usable = _downstream(
+        parser, _parsed, validation, usable = semantic_attempt(
             preserved["rawOutput"].read_bytes(),
             state["request"],
             endpoint_binding=True,

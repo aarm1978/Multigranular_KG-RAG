@@ -87,7 +87,7 @@ class ProductionRunnerTests(unittest.TestCase):
     def test_deterministic_downstream_exception_does_not_retry(self) -> None:
         inventory, routing = _inputs()
         prepared = _prepared_request("pub:276:sec:0019:unit:0001", inventory, routing)
-        with patch("src.extraction.llm.publications.production_runner._downstream", side_effect=AssertionError("binding defect")):
+        with patch("src.extraction.llm.publications.production_runner.semantic_pipeline.semantic_attempt", side_effect=AssertionError("binding defect")):
             with self.assertRaisesRegex(AssertionError, "binding defect"):
                 execute_with_provider_fixture(prepared, lambda _body, _budget: b"{}")
 
@@ -106,10 +106,12 @@ class ProductionRunnerTests(unittest.TestCase):
     def test_detailed_future_path_uses_authentic_metadata_validation_view(self) -> None:
         inventory, routing = _inputs(); prepared = _prepared_request("pub:276:sec:0019:unit:0001", inventory, routing)
         payload = json.dumps({"candidateNodes": [], "candidateEdges": [], "evidenceSpans": [], "abstentions": [], "deferredRecords": []}).encode()
-        with patch("src.extraction.llm.publications.production_runner._downstream", return_value=({"parseStatus": "parsed", "parsedEnvelope": {}}, None, {"envelopeStatus": "valid"}, {"candidateNodes": [], "candidateEdges": []})) as downstream:
+        with patch("src.extraction.llm.publications.production_runner.semantic_pipeline.semantic_attempt", return_value=({"parseStatus": "parsed", "parsedEnvelope": {}}, None, {"envelopeStatus": "valid"}, {"candidateNodes": [], "candidateEdges": []})) as downstream:
             execute_with_provider_fixture(prepared, lambda _b, _n: {"rawOutput": payload, "providerMetadata": self._metadata()})
         request = downstream.call_args.args[1]
-        self.assertEqual(request["requestScope"], "section_context")
+        self.assertEqual(request["requestScope"], "complete_section")
+        self.assertEqual(downstream.call_args.kwargs["provider_metadata"], self._metadata())
+        self.assertIs(downstream.call_args.kwargs["production"], True)
         self.assertEqual(request["requestInputSha256"], prepared["request"]["requestInputSha256"])
 
     def test_replay_is_offline_and_append_only(self) -> None:
@@ -128,7 +130,7 @@ class ProductionRunnerTests(unittest.TestCase):
     def test_replay_skips_terminal_binding_failures_and_preserves_timeout_selection(self) -> None:
         source_root = DEFAULT_LIVE_ROOT
         terminal = [path for path in source_root.glob("requests/*/attempt_selection.json") if json.loads(path.read_text()).get("selectedAttemptNumber") is None]
-        self.assertEqual(len(terminal), 8)
+        self.assertEqual(len(terminal), 10)
         timeout_selection = source_root / "requests" / "publication-c1-request-9d725039aaeef06d1a46" / "attempt_selection.json"
         timeout_before = timeout_selection.read_bytes()
         with tempfile.TemporaryDirectory() as directory:
@@ -139,7 +141,7 @@ class ProductionRunnerTests(unittest.TestCase):
             before = {path: path.read_bytes() for path in root.glob("requests/*/attempt_selection.json")}
             with patch("src.extraction.llm.publications.production_runner.load_openai_api_key", side_effect=self.fail):
                 report = replay_production_downstream(root)
-            self.assertEqual(report["preservedTerminalEvidenceBindingFailures"], 8)
+            self.assertEqual(report["preservedTerminalEvidenceBindingFailures"], 10)
             self.assertEqual(before, {path: path.read_bytes() for path in root.glob("requests/*/attempt_selection.json")})
         self.assertEqual(timeout_before, timeout_selection.read_bytes())
         self.assertEqual(json.loads(timeout_before)["selectedAttemptNumber"], 2)

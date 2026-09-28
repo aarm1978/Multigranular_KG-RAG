@@ -13,7 +13,8 @@ from src.extraction.llm.publications.production_acceptance import derive_accepte
 from src.extraction.llm.publications.prospective_endpoint_binding_schema import derive_prospective_endpoint_binding_schema
 from src.extraction.llm.publications.prospective_evidence_binding_schema import derive_prospective_evidence_binding_schema
 from src.extraction.llm.publications.request_builder import PROJECT_ROOT, canonical_json, load_yaml_object, sha256_bytes
-from src.extraction.llm.publications.run_publication_full_devset0_node_development import _downstream, _write_durable_canonical, _write_exact
+from src.extraction.llm.publications import publication_semantic_pipeline as semantic_pipeline
+from src.extraction.llm.publications.publication_artifacts import write_durable_canonical as _write_durable_canonical, write_exact as _write_exact
 from src.extraction.llm.publications.step5_freeze_materialization import _inputs
 
 RUNNER_VERSION="publication-production-runner/0.1.1"; MAX_OUTPUT_TOKENS=32768; CONTEXT_BUDGET=1017232
@@ -61,40 +62,8 @@ def _envelope(p:Mapping[str,Any])->dict[str,Any]:
     return {"primarySourceUnitID":r["primarySourceUnitID"],"contextSourceUnitIDs":r["contextSourceUnitIDs"],"routedExtractAndEvaluateTargetIDs":r["eligibleOperationalTargetIDs"],"maxOutputTokens":b["max_output_tokens"],"requestEnvelopeSha256":sha256_bytes(canonical_json({x:r[x] for x in ("authorityBundleID","runID","primarySourceUnitID","contextSourceUnitIDs","requestScope","includedCompleteSection","eligibleOperationalTargetIDs","prompt")})),"providerRequestBodySha256":sha256_bytes(canonical_json(b)),"modelAuthorableSchemaSha256":sha256_bytes(canonical_json(s))}
 
 def build_production_downstream_validation_view(request: Mapping[str, Any], provider_metadata: Mapping[str, Any], selected_attempt_number: int) -> dict[str, Any]:
-    """Bind authentic response facts for validation without changing provider identity.
-
-    ``complete_section`` is the frozen production-input context mode.  Candidate
-    validation calls that same mode ``section_context``; this view is deliberately
-    downstream-only and is never used to construct or hash a provider request.
-    """
-    if request.get("requestScope") != "complete_section" or request.get("includedCompleteSection") is not True:
-        raise ProductionPreflightError("production scope compatibility mapping is not authorized")
-    if not isinstance(selected_attempt_number, int) or selected_attempt_number < 1:
-        raise ProductionPreflightError("downstream validation requires an attempt number")
-    required = ("returnedModel", "createdAt", "inputTokens", "outputTokens", "retryCount")
-    if any(key not in provider_metadata for key in required):
-        raise ProductionPreflightError("authentic provider metadata is incomplete")
-    usage = provider_metadata.get("usage")
-    if not isinstance(usage, Mapping):
-        raise ProductionPreflightError("authentic provider token usage is incomplete")
-    view = deepcopy(dict(request))
-    view["requestScope"] = "section_context"
-    view["offlineResponseMetadata"] = {
-        "provider": PROVIDER_NAME,
-        "modelName": REQUESTED_MODEL,
-        "modelVersion": provider_metadata["returnedModel"],
-        "generationParameters": {"temperature": None, "topP": None, "seed": None, "maxOutputTokens": MAX_OUTPUT_TOKENS, "responseFormat": "structured_json"},
-        "tokenUsage": {"inputTokens": provider_metadata["inputTokens"], "outputTokens": provider_metadata["outputTokens"], "totalTokens": usage.get("total_tokens")},
-        "costUSD": None,
-        "retryCount": provider_metadata["retryCount"],
-        "responseCreatedAt": provider_metadata["createdAt"],
-    }
-    # This is provenance for the validator only; the original input hash remains
-    # the immutable frozen production request identity.
-    view["downstreamCompatibilityProjection"] = {"projectionVersion": "production-downstream-metadata-binding/0.1.0", "scopeCompatibility": "complete_section -> section_context", "selectedAttemptNumber": selected_attempt_number, "providerMetadataSha256": sha256_bytes(canonical_json(provider_metadata)), "providerRequestMutated": False}
-    if view["requestID"] != request["requestID"] or view["requestInputSha256"] != request["requestInputSha256"]:
-        raise ProductionPreflightError("downstream projection changed immutable request identity")
-    return view
+    """Compatibility API delegating to the canonical metadata binding owner."""
+    return semantic_pipeline.bind_response_metadata(request, provider_metadata, production=True, attempt_number=selected_attempt_number)
 def derive_production_preflight()->dict[str,Any]:
     """Build every primary production request offline; Step 5 constrains N=6 only."""
     inv,routing=_inputs(); profile=load_yaml_object(V015_SCHEMA013.target_inventory_path); rows={str(x["operational_id"]):x for x in [*profile["node_targets"],*profile["relation_targets"]]}
@@ -144,8 +113,7 @@ def execute_with_provider_fixture(p:Mapping[str,Any],call:ProviderCall,*,artifac
             _write_exact(root/"raw_model_output.json",raw)
             if isinstance(provider_response,Mapping): persist(root/"provider_response.json",provider_response)
             if isinstance(provider_metadata,Mapping): persist(root/"provider_metadata.json",provider_metadata)
-        validation_request=(build_production_downstream_validation_view(r,provider_metadata,n) if isinstance(provider_metadata,Mapping) else r)
-        parser,parsed,validation,usable=_downstream(raw,validation_request,endpoint_binding=True,evidence_binding=True)
+        parser,parsed,validation,usable=semantic_pipeline.semantic_attempt(raw,r,provider_metadata=provider_metadata,production=True,attempt_number=n)
         out={**base,"attemptNumber":n,"status":"processed","parserResult":parser,"validation":validation,"usablePipelineOutput":usable,"rawOutputSha256":sha256_bytes(raw),"providerResponseSha256":sha256_bytes(canonical_json(provider_response)) if isinstance(provider_response,Mapping) else None,"providerMetadataSha256":sha256_bytes(canonical_json(provider_metadata)) if isinstance(provider_metadata,Mapping) else None}
         if root is not None:
             persist(root/"parser_result.json",parser); persist(root/"validation_results.json",validation); persist(root/"usable_pipeline_output.json",usable); persist(root/"lifecycle.json",out)
@@ -259,7 +227,7 @@ def replay_production_downstream(root: Path=DEFAULT_LIVE_ROOT) -> dict[str, Any]
             usable_counts["nonempty" if usable.get("candidateNodes") or usable.get("candidateEdges") else "empty"] += 1; findings.update(_validation_finding_counts(validation))
             continue
         view = build_production_downstream_validation_view(prepared["request"], metadata, selected_number)
-        parser, parsed, validation, usable = _downstream(raw, view, endpoint_binding=True, evidence_binding=True)
+        parser, parsed, validation, usable = semantic_pipeline.semantic_attempt(raw, view, isolate_failures=False)
         replay_selection = run_attempt_controller(lambda number: _replay_attempt(selection, number, parser, validation, usable, raw_sha, metadata_sha))
         if replay_selection.get("selectedAttemptNumber") != selected_number or replay_selection.get("selectionDisposition") != selection.get("selectionDisposition") or [x.get("attemptNumber") for x in replay_selection["attempts"]] != [x.get("attemptNumber") for x in selection.get("attempts", [])]: raise ProductionPreflightError("replay would change frozen Step 4 attempt selection")
         original_validation = _load(attempt_root/"validation_results.json")
@@ -298,7 +266,15 @@ def execute_live_run(root: Path=DEFAULT_LIVE_ROOT) -> dict[str, Any]:
 def main(argv: list[str]|None=None) -> int:
     """Materialize only by default; live calls require explicit researcher opt-in."""
     parser=argparse.ArgumentParser(); parser.add_argument("--root",type=Path,default=DEFAULT_LIVE_ROOT); parser.add_argument("--execute-live",action="store_true"); parser.add_argument("--recover-timeout-request"); parser.add_argument("--replay-production-downstream",action="store_true")
+    parser.add_argument("--replay-canonical-semantics", action="store_true")
     args=parser.parse_args(argv)
+    if args.replay_canonical_semantics:
+        if args.execute_live or args.recover_timeout_request or args.replay_production_downstream:
+            parser.error("canonical replay is an exclusive offline action")
+        from src.extraction.llm.publications.canonical_production_replay import replay_all
+        report = replay_all(args.root)
+        print({key: value for key, value in report.items() if key != "terminalRecoveryDetails"})
+        return 0
     if args.recover_timeout_request and not args.execute_live: parser.error("--recover-timeout-request requires --execute-live")
     if args.replay_production_downstream and (args.execute_live or args.recover_timeout_request): parser.error("--replay-production-downstream is offline-only")
     if args.replay_production_downstream: print(replay_production_downstream(args.root))

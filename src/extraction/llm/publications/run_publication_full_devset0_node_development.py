@@ -27,6 +27,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[4]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from src.extraction.llm.publications import publication_semantic_pipeline as semantic_pipeline
+
 from src.extraction.llm.publications.candidate_validation import (  # noqa: E402
     VALIDATION_CONTRACT_VERSION,
     VALIDATOR_VERSION,
@@ -64,7 +66,6 @@ from src.extraction.llm.publications.openai_provider import (  # noqa: E402
     OpenAIProviderResponseError,
     ResponseRetrieveTransport,
     Transport,
-    bind_live_response_metadata,
     build_provider_input,
     build_responses_api_request,
     call_openai_background_responses_detailed,
@@ -154,6 +155,9 @@ def _downstream(
     evidence_binding: bool = False,
 ) -> tuple[dict[str, Any], bytes | None, dict[str, Any], dict[str, Any]]:
     """Parse, bind trusted endpoint/evidence fields, then run unchanged validation."""
+
+    if request.get("authorityBundleID") == "publication-semantic-v0.1.5-schema-v0.1.3":
+        return semantic_pipeline.semantic_attempt(raw_output, request, endpoint_binding=endpoint_binding, evidence_binding=evidence_binding)
 
     parser_result = parse_recorded_response(raw_output, request)
     if endpoint_binding and parser_result.get("parseStatus") == "parsed":
@@ -1152,7 +1156,7 @@ def run_live_unit(
         _write_canonical(paths["attempt"], attempt)
         raise
     response["retryCount"] = 0
-    request = bind_live_response_metadata(
+    request = semantic_pipeline.bind_response_metadata(
         state["request"], response, max_output_tokens=C1B_MAX_OUTPUT_TOKENS
     )
     if (build_provider_input(request) if full_semantic else build_coordinate_guided_provider_input(request, state["guide"])) != state["providerInput"]:

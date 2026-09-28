@@ -393,30 +393,9 @@ def bind_live_response_metadata(
 ) -> dict[str, Any]:
     """Bind actual live provider metadata into a copy of the trusted M1 request."""
 
-    bound = deepcopy(dict(request))
-    bound["offlineResponseMetadata"] = {
-        "provider": PROVIDER_NAME,
-        "modelName": REQUESTED_MODEL,
-        "modelVersion": response_record["returnedModel"],
-        "generationParameters": {
-            "temperature": None,
-            "topP": None,
-            "seed": None,
-            "maxOutputTokens": max_output_tokens,
-            "responseFormat": "structured_json",
-        },
-        "tokenUsage": {
-            "inputTokens": response_record["inputTokens"],
-            "outputTokens": response_record["outputTokens"],
-            "totalTokens": response_record["usage"].get("total_tokens"),
-        },
-        "costUSD": None,
-        "retryCount": response_record["retryCount"],
-        "responseCreatedAt": response_record["createdAt"],
-    }
-    bound.pop("requestInputSha256", None)
-    bound["requestInputSha256"] = sha256_bytes(canonical_json(bound))
-    return bound
+    # Keep the historical public API while sharing the prospective metadata owner.
+    from .publication_semantic_pipeline import bind_response_metadata
+    return bind_response_metadata(request, response_record, max_output_tokens=max_output_tokens)
 
 
 Transport = Callable[[str, Mapping[str, Any]], dict[str, Any]]
