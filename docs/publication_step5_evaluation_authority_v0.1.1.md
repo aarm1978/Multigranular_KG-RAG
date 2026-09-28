@@ -2224,7 +2224,8 @@ completeness-audit result, or SciERC result.
 
 Version `0.1.1` corrects only the deterministic pre-Step-6 N=6 optimization and its
 dependent prospective bindings. The v0.1.0 authority and artifacts remain historical
-records and are not rewritten. The corrected optimization enumerated `23885` qualifying
+records and are not rewritten. The corrected optimization uses the frozen 210-unit eligible
+universe and enumerated `7045` qualifying
 one-per-paper combinations; its unique optimum has maximum routed scored-target exposure
 `15` and total exposure `57`. The exact selected primary source units are:
 
@@ -2237,10 +2238,10 @@ one-per-paper combinations; its unique optimum has maximum routed scored-target 
 
 | Corrected artifact | Path | Declared artifact SHA-256 | Tracked-file SHA-256 |
 | --- | --- | --- | --- |
-| N=6 selection | `data/curation/papers/m2/step5_freeze/publication_pool_n6_selection_freeze_v0.1.1.json` | `391402f4a41d6aacba3eb9dd3d304b9a2539533f15809cbc45c162a2a2b91346` | `1193efddde338ff3039fa4e3fe8e180546d5916ff291d1b7d5fd81aae2d90722` |
-| C1 envelopes | `data/curation/papers/m2/step5_freeze/publication_pool_n6_c1_evaluation_envelopes_freeze_v0.1.1.json` | `8572437b08cae82af5d5f62eec56acb3b475d05564694d5bb471e79ef03220b6` | `e7746592253f1faec47d9740542329ccb95368c04fe12fb7c2327ef0ead59e15` |
-| Second-review subset | `data/curation/papers/m2/step5_freeze/publication_pool_secondary_review_subset_freeze_v0.1.1.json` | `d39d27d6edbe66d6fbab3272c68f485c069530e85f4937df6ab0edab2da14cd6` | `4723e9ed43c6bf6fe0935c63adb61e093a75df5f19dd6a5548c3dc216d84a2ed` |
-| SciERC adapter/configuration | `data/curation/papers/m2/step5_freeze/scierc_external_anchor_adapter_freeze_v0.1.1.json` | `6dfa3222adac1275254c10763cf6f782a524df4dc996df7d174117c293d7690d` | `328a0e8d81809e16a0e63cddac57587809f2f410a6492b336883479a484faf0c` |
+| N=6 selection | `data/curation/papers/m2/step5_freeze/publication_pool_n6_selection_freeze_v0.1.1.json` | `653a4e01548759dd49594676e8fa8ee3383b8a5244544b615243b787999579f8` | `dd223f47ee33d9546dd5915965ab3864030cca074afee8810fa82d0db34d7189` |
+| C1 envelopes | `data/curation/papers/m2/step5_freeze/publication_pool_n6_c1_evaluation_envelopes_freeze_v0.1.1.json` | `67fb851d688e74e6766e89db6fb230ed1dd3ff211535f1a3fb751e21c6867a9d` | `6c687df5f562435a9052ee16464458a72bfc7f34399605b834852b613e4922b4` |
+| Second-review subset | `data/curation/papers/m2/step5_freeze/publication_pool_secondary_review_subset_freeze_v0.1.1.json` | `2c9371f1893367f89f667aa9e871c970638d33b93e0d7f3f63dfbbf9d08a87e2` | `b0ab52ab15c91a58a082c2ef6c33f0e4954e82292a86fb0f7cc2852097824b24` |
+| SciERC adapter/configuration | `data/curation/papers/m2/step5_freeze/scierc_external_anchor_adapter_freeze_v0.1.1.json` | `34d25d905b1266741ae9c0092c9e38911f10561740a2e727ed058a68a810d963` | `a9fbb9f40fe0b14e790ff3de2ea6d0369f412b6d804c8b6c7f8e8c64685efc4a` |
 
 The corrected envelopes retain `gpt-5.6-sol`, reasoning effort `medium`, and
 `maxOutputTokens` `32768`. Five selected sections are singleton complete sections.

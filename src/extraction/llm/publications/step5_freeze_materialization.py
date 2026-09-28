@@ -35,6 +35,7 @@ from src.extraction.llm.publications.request_builder import (
 
 FREEZE_VERSION = "0.1.1"
 FREEZE_ROOT = PROJECT_ROOT / "data/curation/papers/m2/step5_freeze"
+SAMPLING_ANALYSIS_PATH = PROJECT_ROOT / "data/curation/papers/m2/human_core_sampling_analysis/publication_human_core_sampling_analysis_v0.1.0.json"
 REMAINING_PAPER_IDS = ("18", "276", "37", "46", "54", "87")
 SECOND_REVIEW_NAMESPACE = "publication-step5-pooled-second-review-selector-v0.1.0"
 CONTEXT_POLICY_NAME = "complete_section_when_budget_allows"
@@ -122,16 +123,22 @@ def _optimized_selection_ids(
 ) -> tuple[tuple[str, ...], dict[str, int]]:
     """Solve the frozen N=6 lexicographic minimax optimization from governed inputs."""
 
-    node_ids, relation_ids = _scored_target_ids()
+    sampling_analysis = json.loads(SAMPLING_ANALYSIS_PATH.read_text(encoding="utf-8"))
+    eligible_universe = sampling_analysis.get("eligibleUniverse")
+    if not isinstance(eligible_universe, Mapping) or not isinstance(eligible_universe.get("sourceUnitIDs"), list):
+        raise Step5FreezeError("N6_OPTIMIZATION_ELIGIBLE_UNIVERSE_MISSING")
+    eligible_source_unit_ids = {str(value) for value in eligible_universe["sourceUnitIDs"]}
+    node_ids = {str(value) for value in eligible_universe["routedScoredNodeOperationalTargetIDs"]}
+    relation_ids = {str(value) for value in eligible_universe["routedScoredRelationOperationalTargetIDs"]}
     node_index = {value: index for index, value in enumerate(sorted(node_ids))}
     relation_index = {value: index for index, value in enumerate(sorted(relation_ids))}
-    stratum_ids = sorted({stratum for route in routing.values() for stratum in route["likelySamplingStrata"]})
+    stratum_ids = sorted(str(value) for value in eligible_universe["samplingStrata"])
     stratum_index = {value: index for index, value in enumerate(stratum_ids)}
     by_paper: dict[str, list[tuple[str, int, int, int, int]]] = {paper_id: [] for paper_id in REMAINING_PAPER_IDS}
     for source_unit_id, route in routing.items():
         unit = inventory.get(source_unit_id)
         paper_id = str(route.get("paperID"))
-        if paper_id not in by_paper or unit is None or not unit.get("requestEligible") or unit.get("eligibility") != "eligible" or route.get("routingStatus") != "routed":
+        if paper_id not in by_paper or source_unit_id not in eligible_source_unit_ids or unit is None:
             continue
         node_mask = sum(1 << node_index[value] for value in route["eligibleNodeOperationalTargetIDs"] if value in node_index)
         relation_mask = sum(1 << relation_index[value] for value in route["eligibleRelationOperationalTargetIDs"] if value in relation_index)
@@ -163,6 +170,7 @@ def _optimized_selection_ids(
     minimum = min((maximum, total, lexical_ids) for maximum, total, _, lexical_ids in qualifying)
     optimum_count = sum(count for maximum, total, count, _ in qualifying if (maximum, total) == minimum[:2])
     return minimum[2], {
+        "eligibleUniverseSourceUnitCount": len(eligible_source_unit_ids),
         "eligibleCombinationCount": sum(count for _, _, count, _ in qualifying),
         "minimumMaximumPerUnitRoutedScoredTargetExposure": minimum[0],
         "minimumTotalRoutedScoredTargetExposure": minimum[1],

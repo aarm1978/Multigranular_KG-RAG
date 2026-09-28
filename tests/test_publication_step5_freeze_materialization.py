@@ -27,7 +27,8 @@ class Step5FreezeMaterializationTests(unittest.TestCase):
             "pub:54:sec:0019:unit:0001", "pub:87:sec:0007:unit:0001",
         ))
         self.assertEqual(proof, {
-            "eligibleCombinationCount": 23885,
+            "eligibleUniverseSourceUnitCount": 210,
+            "eligibleCombinationCount": 7045,
             "minimumMaximumPerUnitRoutedScoredTargetExposure": 15,
             "minimumTotalRoutedScoredTargetExposure": 57,
             "optimumCombinationCount": 1,
