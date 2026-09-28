@@ -113,6 +113,7 @@ def provider_input_projection(request: Mapping[str, Any]) -> dict[str, Any]:
         "sourceArtifactID": request["sourceArtifactID"],
         "primarySourceUnitID": request["primarySourceUnitID"],
         "contextSourceUnitIDs": list(request["contextSourceUnitIDs"]),
+        "contextUnits": list(request.get("contextUnits", [])),
         "requestScope": request["requestScope"],
         "includedCompleteSection": request["includedCompleteSection"],
         "extractionChannel": request["extractionChannel"],

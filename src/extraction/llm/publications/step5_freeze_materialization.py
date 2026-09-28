@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -32,16 +33,8 @@ from src.extraction.llm.publications.request_builder import (
 )
 
 
-FREEZE_VERSION = "0.1.0"
+FREEZE_VERSION = "0.1.1"
 FREEZE_ROOT = PROJECT_ROOT / "data/curation/papers/m2/step5_freeze"
-SELECTION_IDS = (
-    "pub:18:sec:0002:unit:0001",
-    "pub:276:sec:0004:unit:0001",
-    "pub:37:sec:0016:unit:0001",
-    "pub:46:sec:0030:unit:0001",
-    "pub:54:sec:0019:unit:0001",
-    "pub:87:sec:0007:unit:0001",
-)
 REMAINING_PAPER_IDS = ("18", "276", "37", "46", "54", "87")
 SECOND_REVIEW_NAMESPACE = "publication-step5-pooled-second-review-selector-v0.1.0"
 CONTEXT_POLICY_NAME = "complete_section_when_budget_allows"
@@ -118,13 +111,81 @@ def _inputs() -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
     return inventory, routing
 
 
+def _popcount(value: int) -> int:
+    """Return the number of set bits without relying on a Python-version-specific API."""
+
+    return bin(value).count("1")
+
+
+def _optimized_selection_ids(
+    inventory: Mapping[str, Mapping[str, Any]], routing: Mapping[str, Mapping[str, Any]]
+) -> tuple[tuple[str, ...], dict[str, int]]:
+    """Solve the frozen N=6 lexicographic minimax optimization from governed inputs."""
+
+    node_ids, relation_ids = _scored_target_ids()
+    node_index = {value: index for index, value in enumerate(sorted(node_ids))}
+    relation_index = {value: index for index, value in enumerate(sorted(relation_ids))}
+    stratum_ids = sorted({stratum for route in routing.values() for stratum in route["likelySamplingStrata"]})
+    stratum_index = {value: index for index, value in enumerate(stratum_ids)}
+    by_paper: dict[str, list[tuple[str, int, int, int, int]]] = {paper_id: [] for paper_id in REMAINING_PAPER_IDS}
+    for source_unit_id, route in routing.items():
+        unit = inventory.get(source_unit_id)
+        paper_id = str(route.get("paperID"))
+        if paper_id not in by_paper or unit is None or not unit.get("requestEligible") or unit.get("eligibility") != "eligible" or route.get("routingStatus") != "routed":
+            continue
+        node_mask = sum(1 << node_index[value] for value in route["eligibleNodeOperationalTargetIDs"] if value in node_index)
+        relation_mask = sum(1 << relation_index[value] for value in route["eligibleRelationOperationalTargetIDs"] if value in relation_index)
+        stratum_mask = sum(1 << stratum_index[value] for value in route["likelySamplingStrata"] if value in stratum_index)
+        by_paper[paper_id].append((source_unit_id, node_mask, relation_mask, stratum_mask, _popcount(node_mask) + _popcount(relation_mask)))
+    if any(not by_paper[paper_id] for paper_id in REMAINING_PAPER_IDS):
+        raise Step5FreezeError("N6_OPTIMIZATION_ELIGIBLE_PAPER_EMPTY")
+    for rows in by_paper.values():
+        rows.sort()
+    states: dict[tuple[int, int, int, int, int], tuple[int, tuple[str, ...]]] = {(0, 0, 0, 0, 0): (1, ())}
+    for paper_id in REMAINING_PAPER_IDS:
+        next_states: dict[tuple[int, int, int, int, int], tuple[int, tuple[str, ...]]] = {}
+        for (node_mask, relation_mask, stratum_mask, maximum, total), (count, lexical_ids) in states.items():
+            for source_unit_id, candidate_nodes, candidate_relations, candidate_strata, exposure in by_paper[paper_id]:
+                key = (node_mask | candidate_nodes, relation_mask | candidate_relations, stratum_mask | candidate_strata, max(maximum, exposure), total + exposure)
+                previous = next_states.get(key)
+                candidate_lexical_ids = lexical_ids + (source_unit_id,)
+                if previous is None:
+                    next_states[key] = (count, candidate_lexical_ids)
+                else:
+                    next_states[key] = (previous[0] + count, min(previous[1], candidate_lexical_ids))
+        states = next_states
+    full_nodes = (1 << len(node_ids)) - 1
+    full_relations = (1 << len(relation_ids)) - 1
+    full_strata = (1 << len(stratum_ids)) - 1
+    qualifying = [(maximum, total, count, lexical_ids) for (nodes, relations, strata, maximum, total), (count, lexical_ids) in states.items() if nodes == full_nodes and relations == full_relations and strata == full_strata]
+    if not qualifying:
+        raise Step5FreezeError("N6_OPTIMIZATION_NO_QUALIFYING_COMBINATION")
+    minimum = min((maximum, total, lexical_ids) for maximum, total, _, lexical_ids in qualifying)
+    optimum_count = sum(count for maximum, total, count, _ in qualifying if (maximum, total) == minimum[:2])
+    return minimum[2], {
+        "eligibleCombinationCount": sum(count for _, _, count, _ in qualifying),
+        "minimumMaximumPerUnitRoutedScoredTargetExposure": minimum[0],
+        "minimumTotalRoutedScoredTargetExposure": minimum[1],
+        "optimumCombinationCount": optimum_count,
+    }
+
+
+@lru_cache(maxsize=1)
+def _optimized_selection() -> tuple[tuple[str, ...], dict[str, int]]:
+    """Cache one immutable-input optimization result within a materialization process."""
+
+    inventory, routing = _inputs()
+    return _optimized_selection_ids(inventory, routing)
+
+
 def _selection() -> dict[str, Any]:
-    """Bind the already-approved deterministic N=6 result to frozen source metadata."""
+    """Materialize the N=6 result from the frozen lexicographic minimax rule."""
 
     inventory, routing = _inputs()
     node_ids, relation_ids = _scored_target_ids()
+    selected_ids, optimization = _optimized_selection()
     selected: list[dict[str, Any]] = []
-    for source_unit_id in SELECTION_IDS:
+    for source_unit_id in selected_ids:
         unit, route = inventory.get(source_unit_id), routing.get(source_unit_id)
         if unit is None or route is None:
             raise Step5FreezeError(f"SELECTION_SOURCE_MISSING:{source_unit_id}")
@@ -150,16 +211,19 @@ def _selection() -> dict[str, Any]:
         "artifactType": "publication_pool_n6_selection_freeze",
         "artifactVersion": FREEZE_VERSION,
         "status": "freeze_time_materialization_not_step5_closure",
-        "selectionProvenance": "researcher-approved deterministic result reused without semantic re-audit",
+        "selectionProvenance": "derived directly from frozen eligible population, routing, coverage, minimax, total-exposure, and lexical tie-break authorities",
         "samplingAnalysis": {"path": str(sampling.relative_to(PROJECT_ROOT)), "sha256": _sha256_file(sampling)},
         "remainingPaperIDs": list(REMAINING_PAPER_IDS),
         "hardConstraintProof": {"onePrimaryUnitPerRemainingPaper": True, "routedScoredNodeCoverage": f"{len(nodes)}/{len(node_ids)}", "routedScoredRelationCoverage": f"{len(relations)}/{len(relation_ids)}", "samplingStratumCoverage": f"{len(strata)}/5", "frozenExclusionsHonored": True},
-        "tieBreakerResult": {"maximumPerUnitRoutedScoredTargetExposure": 15, "totalRoutedScoredTargetExposure": 59, "finalTieBreaker": "lexical sourceUnitID tuple", "selectionIDs": list(SELECTION_IDS)},
+        "optimizationProof": optimization,
+        "tieBreakerResult": {"maximumPerUnitRoutedScoredTargetExposure": optimization["minimumMaximumPerUnitRoutedScoredTargetExposure"], "totalRoutedScoredTargetExposure": optimization["minimumTotalRoutedScoredTargetExposure"], "finalTieBreaker": "lexical sourceUnitID tuple", "selectionIDs": list(selected_ids)},
         "selectedUnits": selected,
     })
 
 
-def _request_for(unit: Mapping[str, Any], route: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+def _request_for(
+    unit: Mapping[str, Any], route: Mapping[str, Any], context_units: list[Mapping[str, Any]]
+) -> tuple[dict[str, Any], dict[str, Any]]:
     """Build one bounded, no-dispatch C1 envelope request and its exact API body."""
 
     node_ids, relation_ids = _scored_target_ids()
@@ -181,7 +245,7 @@ def _request_for(unit: Mapping[str, Any], route: Mapping[str, Any]) -> tuple[dic
         "authorityBundleID": V015_SCHEMA013.identifier, "purpose": "publication_step5_c1_evaluation",
         "runID": f"publication-step5-c1-evaluation/{FREEZE_VERSION}/{unit['sourceUnitID']}",
         "sourcePublicationID": str(unit["paperID"]), "sourceArtifactID": unit["canonicalArtifactID"],
-        "primarySourceUnitID": unit["sourceUnitID"], "contextSourceUnitIDs": [],
+        "primarySourceUnitID": unit["sourceUnitID"], "contextSourceUnitIDs": [str(row["sourceUnitID"]) for row in context_units], "contextUnits": [dict(row) for row in context_units],
         "requestScope": "complete_section", "includedCompleteSection": True, "extractionChannel": "open_discovery",
         "eligibleOperationalTargetIDs": target_ids, "sourceUnit": dict(unit),
         "deterministicEndpoints": [{"nodeID": unit["canonicalArtifactID"], "className": "Paper", "artifactID": unit["canonicalArtifactID"]}],
@@ -212,9 +276,14 @@ def _envelopes(selection: Mapping[str, Any]) -> dict[str, Any]:
     inventory, routing = _inputs()
     rows: list[dict[str, Any]] = []
     common_authorities: dict[str, Any] | None = None
-    for source_unit_id in SELECTION_IDS:
+    selected_ids = [str(row["primarySourceUnitID"]) for row in selection["selectedUnits"]]
+    for source_unit_id in selected_ids:
         unit, route = inventory[source_unit_id], routing[source_unit_id]
-        request, prepared = _request_for(unit, route)
+        context_units = sorted(
+            [candidate for candidate in inventory.values() if candidate["sectionID"] == unit["sectionID"] and candidate["sourceUnitID"] != source_unit_id and candidate.get("eligibility") == "eligible"],
+            key=lambda candidate: str(candidate["sourceUnitID"]),
+        )
+        request, prepared = _request_for(unit, route, context_units)
         current_authorities = {
             "authorityBundleID": request["authorityBundleID"],
             "prompt": {key: request["prompt"][key] for key in ("path", "version", "sha256")},
@@ -227,9 +296,9 @@ def _envelopes(selection: Mapping[str, Any]) -> dict[str, Any]:
         rows.append({
             "envelopeID": f"publication-step5-c1-envelope-{sha256_bytes(prepared['bodyBytes'])[:20]}",
             "primarySourceUnitID": source_unit_id, "sourceArtifactID": unit["canonicalArtifactID"], "sectionID": unit["sectionID"],
-            "contextSourceUnitIDs": [], "omittedEligibleSourceUnitIDs": [], "includedCompleteSection": True,
+            "contextSourceUnitIDs": list(request["contextSourceUnitIDs"]), "omittedEligibleSourceUnitIDs": [], "includedCompleteSection": True,
             "contextPolicyName": CONTEXT_POLICY_NAME, "contextPolicyVersion": CONTEXT_POLICY_VERSION,
-            "contextSelectionReason": "singleton_primary_section_complete", "modelContextWindowTokens": MODEL_CONTEXT_WINDOW_TOKENS,
+            "contextSelectionReason": "singleton_primary_section_complete" if not context_units else "complete_section_all_eligible_units", "modelContextWindowTokens": MODEL_CONTEXT_WINDOW_TOKENS,
             "maxOutputTokens": MAX_OUTPUT_TOKENS, "modelContextBudgetTokens": MODEL_CONTEXT_BUDGET_TOKENS,
             "estimatedInputTokens": len(prepared["bodyBytes"]), "estimatedInputTokensMethod": ESTIMATED_INPUT_TOKENS_METHOD,
             "estimatedInputTokensInterpretation": "conservative UTF-8 byte upper bound; not exact provider tokenization",
@@ -253,7 +322,7 @@ def _second_review(selection: Mapping[str, Any]) -> dict[str, Any]:
     """Materialize the researcher-approved content-independent second-review subset."""
 
     ranking = []
-    for source_unit_id in SELECTION_IDS:
+    for source_unit_id in [str(row["primarySourceUnitID"]) for row in selection["selectedUnits"]]:
         canonical_input = f"{SECOND_REVIEW_NAMESPACE}|{source_unit_id}"
         ranking.append({"primarySourceUnitID": source_unit_id, "canonicalHashInput": canonical_input, "sha256": hashlib.sha256(canonical_input.encode("utf-8")).hexdigest()})
     ranking.sort(key=lambda row: (row["sha256"], row["primarySourceUnitID"]))
@@ -279,21 +348,18 @@ def _scierc_adapter(envelopes: Mapping[str, Any], source: Mapping[str, Any]) -> 
 
 
 def materialize(output_root: Path = FREEZE_ROOT) -> dict[str, Path]:
-    """Create every Section 15 compact binding artifact without network or providers."""
+    """Create only the corrected, output-dependent v0.1.1 bindings offline."""
 
     selection = _selection()
     envelopes = _envelopes(selection)
     second_review = _second_review(selection)
-    role_exposure = _role_exposure()
-    scierc_source = _scierc_source()
+    scierc_source = json.loads((FREEZE_ROOT / "scierc_external_anchor_source_freeze_v0.1.0.json").read_text(encoding="utf-8"))
     scierc_adapter = _scierc_adapter(envelopes, scierc_source)
     values = {
-        "selection": ("publication_pool_n6_selection_freeze_v0.1.0.json", selection),
-        "envelopes": ("publication_pool_n6_c1_evaluation_envelopes_freeze_v0.1.0.json", envelopes),
-        "second_review": ("publication_pool_secondary_review_subset_freeze_v0.1.0.json", second_review),
-        "role_exposure": ("publication_step5_role_exposure_ledger_schema_v0.1.0.json", role_exposure),
-        "scierc_source": ("scierc_external_anchor_source_freeze_v0.1.0.json", scierc_source),
-        "scierc_adapter": ("scierc_external_anchor_adapter_freeze_v0.1.0.json", scierc_adapter),
+        "selection": ("publication_pool_n6_selection_freeze_v0.1.1.json", selection),
+        "envelopes": ("publication_pool_n6_c1_evaluation_envelopes_freeze_v0.1.1.json", envelopes),
+        "second_review": ("publication_pool_secondary_review_subset_freeze_v0.1.1.json", second_review),
+        "scierc_adapter": ("scierc_external_anchor_adapter_freeze_v0.1.1.json", scierc_adapter),
     }
     return {name: _write(output_root / filename, payload) for name, (filename, payload) in values.items()}
 
