@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from src.extraction.llm.publications.production_runner import (
-    MAX_OUTPUT_TOKENS, _prepared_request, _targets, derive_production_preflight, execute_with_provider_fixture,
+    MAX_OUTPUT_TOKENS, _prepared_request, _targets, derive_production_preflight, execute_with_provider_fixture, main,
 )
 from src.extraction.llm.publications.openai_provider import OpenAIProviderError
 from src.extraction.llm.publications.step5_freeze_materialization import _inputs
@@ -84,6 +84,12 @@ class ProductionRunnerTests(unittest.TestCase):
             attempt = root / "attempt-01"
             for name in ("provider_request.json", "provider_response.json", "provider_metadata.json", "raw_model_output.json", "lifecycle.json", "parser_result.json", "validation_results.json", "usable_pipeline_output.json"):
                 self.assertTrue((attempt / name).exists(), name)
+
+    def test_cli_requires_explicit_live_flag(self) -> None:
+        with patch("src.extraction.llm.publications.production_runner.materialize_run_manifest", return_value={"manifestSha256": "fixture"}) as materialize, patch("src.extraction.llm.publications.production_runner.execute_live_run") as execute:
+            self.assertEqual(main([]), 0)
+            materialize.assert_called_once()
+            execute.assert_not_called()
 
 
 if __name__ == "__main__":

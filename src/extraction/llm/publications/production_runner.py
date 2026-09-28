@@ -1,12 +1,13 @@
 """Offline Step 6A C1 production preflight; provider dispatch is injected only."""
 from __future__ import annotations
 from copy import deepcopy
+import argparse
 import json
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from src.extraction.llm.publications.authority_bundle import V015_SCHEMA013
-from src.extraction.llm.publications.openai_provider import OpenAIProviderError, OpenAIHTTPError, OpenAIProviderResponseError, PROVIDER_NAME, REASONING_EFFORT, REQUESTED_MODEL, STORE, build_provider_input, build_responses_api_request
+from src.extraction.llm.publications.openai_provider import OpenAIProviderError, OpenAIHTTPError, OpenAIProviderResponseError, PROVIDER_NAME, REASONING_EFFORT, REQUESTED_MODEL, STORE, build_provider_input, build_responses_api_request, call_openai_responses_detailed, load_openai_api_key
 from src.extraction.llm.publications.production_acceptance import derive_accepted_semantic_projection, derive_unresolved_identity_sidecar, run_attempt_controller
 from src.extraction.llm.publications.prospective_endpoint_binding_schema import derive_prospective_endpoint_binding_schema
 from src.extraction.llm.publications.prospective_evidence_binding_schema import derive_prospective_evidence_binding_schema
@@ -18,6 +19,8 @@ RUNNER_VERSION="publication-production-runner/0.1.1"; MAX_OUTPUT_TOKENS=32768; C
 _SCHEMA_CACHE: dict[tuple[str,...], dict[str,Any]] = {}
 HUMAN_CORE_PATH=PROJECT_ROOT/"data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json"
 N6_ENVELOPES_PATH=PROJECT_ROOT/"data/curation/papers/m2/step5_freeze/publication_pool_n6_c1_evaluation_envelopes_freeze_v0.1.1.json"
+STEP6A_CHECKPOINT="879745a06b3e412a16a2506c873e719c7210199f"
+DEFAULT_LIVE_ROOT=PROJECT_ROOT/"var/publication_c1_production"
 class ProductionPreflightError(ValueError): """Frozen production authority drift."""
 
 def _load(path:Path)->dict[str,Any]:
@@ -114,3 +117,54 @@ def execute_with_provider_fixture(p:Mapping[str,Any],call:ProviderCall,*,artifac
         result["acceptedSemanticProjection"]=derive_accepted_semantic_projection(selection,r); result["unresolvedIdentitySidecar"]=derive_unresolved_identity_sidecar(selection,r)
         if artifact_root: persist(artifact_root/"accepted_semantic_projection.json",result["acceptedSemanticProjection"]); persist(artifact_root/"unresolved_identity_sidecar.json",result["unresolvedIdentitySidecar"])
     return result
+
+def _write_immutable(path: Path, value: Mapping[str, Any]) -> None:
+    """Write canonical deterministic state once, failing closed on byte drift."""
+    data=canonical_json(value)+b"\n"
+    if path.exists() and path.read_bytes()!=data: raise ProductionPreflightError(f"existing artifact drift: {path}")
+    _write_durable_canonical(path,value)
+
+def materialize_run_manifest(root: Path=DEFAULT_LIVE_ROOT) -> dict[str, Any]:
+    """Build/verify the no-call manifest binding the accepted Step 6A population."""
+    preflight=derive_production_preflight()
+    manifest={"artifactType":"publication_c1_production_run_manifest","manifestVersion":"0.1.0","step6ACheckpoint":STEP6A_CHECKPOINT,"runnerVersion":RUNNER_VERSION,"providerModelCalls":0,"c1Execution":False,"populationCount":len(preflight["requests"]),"requests":preflight["requests"],"productionConfiguration":preflight["productionConfiguration"],"humanCoreN5PrimarySourceUnitIDs":preflight["humanCoreN5PrimarySourceUnitIDs"],"complementaryN6PrimarySourceUnitIDs":preflight["complementaryN6PrimarySourceUnitIDs"],"n6FrozenEnvelopeReproduction":preflight["n6FrozenEnvelopeReproduction"]}
+    manifest["manifestSha256"]=sha256_bytes(canonical_json(manifest)); _write_immutable(root/"publication_c1_run_manifest.json",manifest)
+    return manifest
+
+def _terminal_request(request_root: Path) -> bool:
+    """Return whether a request has a durable terminal controller selection."""
+    selection=request_root/"attempt_selection.json"
+    if not selection.exists(): return False
+    value=_load(selection)
+    return value.get("selectionDisposition") in {"first_processable_response_selected","retry_exhausted_processing_failure","terminal_non_retry_eligible_processing_failure"}
+
+def execute_live_run(root: Path=DEFAULT_LIVE_ROOT) -> dict[str, Any]:
+    """Run the manifest sequentially; callers must opt in through the CLI flag."""
+    manifest=materialize_run_manifest(root)
+    if manifest["populationCount"]!=227: raise ProductionPreflightError("production population count drift")
+    inv,routing=_inputs(); n6={row["primarySourceUnitID"]:row for row in _load(N6_ENVELOPES_PATH)["envelopes"]}; api_key=load_openai_api_key()
+    completed=[]
+    for record in manifest["requests"]:
+        request_root=root/"requests"/record["requestID"]
+        if _terminal_request(request_root): completed.append(record["requestID"]); continue
+        if request_root.exists(): raise ProductionPreflightError(f"ambiguous existing request state requires manual review: {request_root}")
+        prepared=_prepared_request(record["primarySourceUnitID"],inv,routing,frozen_n6=n6.get(record["primarySourceUnitID"]))
+        if prepared["request"]["requestID"]!=record["requestID"] or prepared["request"]["requestInputSha256"]!=record["requestInputSha256"]: raise ProductionPreflightError("manifest request identity drift")
+        def detailed(body: Mapping[str,Any], budget:int) -> Mapping[str,Any]:
+            """Call the established synchronous detailed provider path exactly once."""
+            if body!=prepared["body"] or budget!=MAX_OUTPUT_TOKENS: raise ProductionPreflightError("provider dispatch body/budget drift")
+            raw,metadata,response=call_openai_responses_detailed(api_key,prepared["providerInput"],model_authorable_schema=prepared["schema"],max_output_tokens=MAX_OUTPUT_TOKENS)
+            return {"rawOutput":raw,"providerResponse":response,"providerMetadata":metadata}
+        execute_with_provider_fixture(prepared,detailed,artifact_root=request_root)
+        completed.append(record["requestID"])
+    return {"manifestSha256":manifest["manifestSha256"],"completedRequestCount":len(completed),"populationCount":manifest["populationCount"]}
+
+def main(argv: list[str]|None=None) -> int:
+    """Materialize only by default; live calls require explicit researcher opt-in."""
+    parser=argparse.ArgumentParser(); parser.add_argument("--root",type=Path,default=DEFAULT_LIVE_ROOT); parser.add_argument("--execute-live",action="store_true")
+    args=parser.parse_args(argv)
+    if args.execute_live: print(execute_live_run(args.root))
+    else: print({"manifestSha256":materialize_run_manifest(args.root)["manifestSha256"],"liveExecution":False})
+    return 0
+
+if __name__=="__main__": raise SystemExit(main())
