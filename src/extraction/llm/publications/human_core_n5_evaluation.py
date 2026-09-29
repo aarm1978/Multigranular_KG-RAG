@@ -17,7 +17,7 @@ from typing import Any, Iterable
 
 import yaml
 
-from .human_core_n2_reliability import AuthorityError, _best_assignment
+from .human_core_n2_reliability import AuthorityError
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
@@ -34,8 +34,12 @@ TARGET_INVENTORY_PATH = PROJECT_ROOT / "src/extraction/llm/publications/publicat
 TARGET_INVENTORY_GIT_BLOB = "8a4921d687e93d4e8db879ae2e9c611f07e04bd1"
 FREEZE_PATH = PROJECT_ROOT / "data/curation/papers/m2/publication_step6c_canonical_c1_freeze_v1.0.0.json"
 MATCHING_CONTRACT_PATH = PROJECT_ROOT / "docs/publication_human_core_amended_matching_contract_v0.1.md"
-DEFAULT_OUTPUT = GOLD_ROOT / "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze_v0.1.0.json"
-DEFAULT_REPORT = GOLD_ROOT / "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze_v0.1.0.md"
+V010_OUTPUT = GOLD_ROOT / "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze_v0.1.0.json"
+V010_REPORT = GOLD_ROOT / "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze_v0.1.0.md"
+V010_OUTPUT_SHA256 = "ee77ee845c6c92cbbf0776c46a09b1049d24b6b79d289ab98f90f8de0b2eaaba"
+V010_REPORT_SHA256 = "a07292543dd4eae88edab9a569121cd850ccfcdd738af6c219e3bd76a4998414"
+DEFAULT_OUTPUT = GOLD_ROOT / "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze_v0.1.1.json"
+DEFAULT_REPORT = GOLD_ROOT / "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze_v0.1.1.md"
 
 
 @dataclass(frozen=True)
@@ -188,7 +192,9 @@ def evidence_metrics(left: EvaluationRecord, right: EvaluationRecord) -> dict[st
         for bstart, be in b[scope]
     )
     alen, blen = length(a), length(b)
-    precision, recall = intersection / alen, intersection / blen
+    # Extractor-to-Human-Core mode is asymmetric: prediction coverage is
+    # precision and immutable Human Core coverage is recall.
+    precision, recall = intersection / blen, intersection / alen
     f1 = 0.0 if precision + recall == 0 else 2 * precision * recall / (precision + recall)
     exact_signatures = sorted(_span(item) for item in left.evidence) == sorted(_span(item) for item in right.evidence)
     return {"precision": precision, "recall": recall, "f1": f1, "exact": exact_signatures}
@@ -401,6 +407,101 @@ def _inventory_targets_for_root(root: Path) -> dict[str, dict[str, Any]]:
     return {row["operational_id"]: row for row in rows}
 
 
+def _contract_assignment(
+    left: list[EvaluationRecord],
+    right: list[EvaluationRecord],
+    edges: dict[tuple[int, int], tuple[int, float, int]],
+) -> list[tuple[int, int]]:
+    """Return the N=5 contract-ordered maximum one-to-one assignment.
+
+    The integer objective encodes, in order, maximum cardinality, exact evidence,
+    greater evidence overlap, and smaller boundary difference.  Its final bitset
+    encodes the lexicographically smallest sorted sequence of fully-qualified
+    (reference-key, prediction-key) pairs.  This is deliberately local to Step 7:
+    N=2 reliability retains its frozen assignment implementation unchanged.
+    """
+    if not edges:
+        return []
+    size = max(len(left), len(right))
+    maximum_matches = min(len(left), len(right))
+    scale = 1_000_000
+    ordered_left = sorted(range(len(left)), key=lambda index: left[index].key)
+    ordered_right = sorted(range(len(right)), key=lambda index: right[index].key)
+    ordered_edges = sorted(edges, key=lambda pair: (left[pair[0]].key, right[pair[1]].key))
+    max_boundary = max(-int(values[2]) for values in edges.values())
+    tie_base = 1 << len(ordered_edges)
+    boundary_coefficient = tie_base
+    overlap_coefficient = (maximum_matches * max_boundary + 1) * boundary_coefficient
+    exact_coefficient = (maximum_matches * scale + 1) * overlap_coefficient
+    cardinality_coefficient = (maximum_matches + 1) * exact_coefficient
+    weights = [[0 for _ in range(size)] for _ in range(size)]
+    row_index = {original: sorted_index for sorted_index, original in enumerate(ordered_left)}
+    column_index = {original: sorted_index for sorted_index, original in enumerate(ordered_right)}
+    for rank, (left_index, right_index) in enumerate(ordered_edges):
+        exact, overlap, negative_boundary = edges[left_index, right_index]
+        boundary = -int(negative_boundary)
+        if boundary < 0:
+            raise AuthorityError("assignment edge has an invalid boundary preference")
+        tie_preference = 1 << (len(ordered_edges) - rank - 1)
+        weights[row_index[left_index]][column_index[right_index]] = (
+            cardinality_coefficient
+            + int(exact) * exact_coefficient
+            + round(float(overlap) * scale) * overlap_coefficient
+            + (max_boundary - boundary) * boundary_coefficient
+            + tie_preference
+        )
+
+    # Hungarian algorithm for a square minimum-cost matrix.  Every eligible
+    # assignment has a unique final objective after the bitset tie-break.
+    maximum = max(max(row) for row in weights)
+    u = [0] * (size + 1)
+    v = [0] * (size + 1)
+    p = [0] * (size + 1)
+    way = [0] * (size + 1)
+    for row in range(1, size + 1):
+        p[0] = row
+        column0 = 0
+        minimum = [None] * (size + 1)
+        used = [False] * (size + 1)
+        while True:
+            used[column0] = True
+            current_row = p[column0]
+            delta = None
+            next_column = 0
+            for column in range(1, size + 1):
+                if used[column]:
+                    continue
+                cost = maximum - weights[current_row - 1][column - 1] - u[current_row] - v[column]
+                if minimum[column] is None or cost < minimum[column]:
+                    minimum[column], way[column] = cost, column0
+                if delta is None or minimum[column] < delta:
+                    delta, next_column = minimum[column], column
+            for column in range(size + 1):
+                if used[column]:
+                    u[p[column]] += delta
+                    v[column] -= delta
+                elif minimum[column] is not None:
+                    minimum[column] -= delta
+            column0 = next_column
+            if p[column0] == 0:
+                break
+        while True:
+            previous = way[column0]
+            p[column0] = p[previous]
+            column0 = previous
+            if column0 == 0:
+                break
+    assigned = [
+        (ordered_left[p[column] - 1], ordered_right[column - 1])
+        for column in range(1, size + 1)
+        if p[column]
+        and p[column] <= len(ordered_left)
+        and column <= len(ordered_right)
+        and (ordered_left[p[column] - 1], ordered_right[column - 1]) in edges
+    ]
+    return sorted(assigned, key=lambda pair: (left[pair[0]].key, right[pair[1]].key))
+
+
 def pair_nodes(references: list[EvaluationRecord], predictions: list[EvaluationRecord]) -> list[tuple[EvaluationRecord, EvaluationRecord, dict[str, Any]]]:
     """Assign eligible node pairs one-to-one within unit and operational target."""
     pairs: list[tuple[EvaluationRecord, EvaluationRecord, dict[str, Any]]] = []
@@ -419,7 +520,7 @@ def pair_nodes(references: list[EvaluationRecord], predictions: list[EvaluationR
                 measure = evidence_metrics(reference, prediction)
                 edges[i, j] = (int(measure["exact"]), measure["f1"], -_boundary_difference(reference, prediction))
                 metrics[i, j] = measure
-        for i, j in _best_assignment(left, right, edges):
+        for i, j in _contract_assignment(left, right, edges):
             pairs.append((left[i], right[j], metrics[i, j]))
     return sorted(pairs, key=lambda row: (row[0].key, row[1].key))
 
@@ -500,7 +601,7 @@ def pair_relations(
                 measure = evidence_metrics(reference, prediction)
                 edges[i, j] = (int(measure["exact"]), measure["f1"], -_boundary_difference(reference, prediction))
                 metrics[i, j] = measure
-        for i, j in _best_assignment(left, right, edges):
+        for i, j in _contract_assignment(left, right, edges):
             pairs.append((left[i], right[j], metrics[i, j]))
     return sorted(pairs, key=lambda row: (row[0].key, row[1].key))
 
@@ -590,9 +691,15 @@ def compute(inputs: FrozenInputs) -> dict[str, Any]:
     ]
     return {
         "artifactType": "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze",
-        "artifactVersion": "0.1.0",
+        "artifactVersion": "0.1.1",
         "status": "PRE_FREEZE",
         "execution": "one_time_step_7b_confirmatory_evaluation",
+        "supersedes": {
+            "path": str(V010_OUTPUT.relative_to(PROJECT_ROOT)),
+            "sha256": V010_OUTPUT_SHA256,
+            "artifactVersion": "0.1.0",
+            "reason": "v0.1.0 violated the frozen matching-contract implementation through its final assignment tie-break and asymmetric evidence diagnostic orientation; no frozen input, scoring scope, or semantic record changed",
+        },
         "scope": "exact frozen N=5 routed extract_and_evaluate opportunities only; extract_and_monitor excluded",
         "explicitExclusions": ["Annotator B / N=2 reliability", "extract_and_monitor", "provider/model calls", "semantic repair, inference, normalization, adjudication, or deduplication"],
         "frozenInputs": inputs.provenance,
@@ -631,7 +738,7 @@ def render_report(result: dict[str, Any]) -> str:
     nodes, relations = result["aggregate"]["nodes"], result["aggregate"]["relations"]
     lines = [
         "# Publication Human Core N=5 C1 Confirmatory Evaluation — PRE-FREEZE", "",
-        "This is the one-time Step 7B result under the frozen amended matching contract. It is not a Step 7C freeze or closure record.", "",
+        "This is the contract-corrected v0.1.1 Step 7B result under the frozen amended matching contract. It supersedes v0.1.0 solely because v0.1.0's final assignment tie-break and asymmetric evidence diagnostic orientation violated that contract; no frozen input, scoring scope, or semantic record changed. It is not a Step 7C freeze or closure record.", "",
         "## Aggregate confirmatory metrics", "",
         f"- Nodes: TP={nodes['TP']}, FP={nodes['FP']}, FN={nodes['FN']}, reference support={nodes['referenceSupport']}, prediction support={nodes['predictionSupport']}, micro P/R/F1={value(nodes['precision'])}/{value(nodes['recall'])}/{value(nodes['f1'])}.",
         f"- Relations: TP={relations['TP']}, FP={relations['FP']}, FN={relations['FN']}, reference support={relations['referenceSupport']}, prediction support={relations['predictionSupport']}, micro P/R/F1={value(relations['precision'])}/{value(relations['recall'])}/{value(relations['f1'])}.", "",
@@ -646,13 +753,15 @@ def render_report(result: dict[str, Any]) -> str:
 
 
 def main() -> None:
-    """Execute Step 7B once and materialize its auditable PRE-FREEZE artifacts."""
+    """Materialize the contract-corrected v0.1.1 PRE-FREEZE Step 7B artifacts."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     args = parser.parse_args()
     if args.output.exists() or args.report.exists():
-        raise AuthorityError("Step 7B output already exists; refusing to execute confirmatory evaluation again")
+        raise AuthorityError("Step 7B v0.1.1 output already exists; refusing to materialize it again")
+    if _sha256(V010_OUTPUT) != V010_OUTPUT_SHA256 or _sha256(V010_REPORT) != V010_REPORT_SHA256:
+        raise AuthorityError("v0.1.0 PRE-FREEZE artifacts differ from their preserved byte authorities")
     result = compute(load_frozen_inputs())
     args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     args.report.write_text(render_report(result), encoding="utf-8")
