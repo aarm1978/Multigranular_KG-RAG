@@ -1,0 +1,106 @@
+{
+  "artifactType": "publication_human_core_n5_corrected_evaluation_step7c_closure",
+  "artifactVersion": "1.0.0",
+  "freezeOrClosureRecordCreated": true,
+  "frozenInputs": {
+    "completedSecondaryReview": {
+      "path": "data/curation/papers/m2/human_core_gold/publication_human_core_n5_corrected_evaluation_posthoc_semantic_equivalence_researcher_review_v1.0.0.json",
+      "secondary": true,
+      "sha256": "ef28c77f05b5647c5f15a963902d3b6188946f40675dbce7f2db2584edc2d2af"
+    },
+    "correctedEvaluationRealization": {
+      "artifactSha256": "5aad26c75be98c759dacb14d31878e3c9c678662198b307d305360e3c9515842",
+      "canonicalPredictions": {
+        "byteCount": 797422,
+        "path": "data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_canonical_predictions_v1.0.0.jsonl",
+        "recordCount": 11,
+        "sha256": "e888c4c4c68ede19cb4c65275b96637fd183e64f887d9a649f70e57f98eadb86"
+      },
+      "fileSha256": "6707e288e0333155ea53aca42edf3fa0063e287019e82cf4c63c922eec3f9345",
+      "path": "data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_realization_freeze_v1.0.0.json"
+    },
+    "humanCoreEvaluationView": {
+      "compositeReferenceProjection": {
+        "path": "data/curation/papers/m2/human_core_gold/publication_human_core_v0.1.5_composite_reference_projection.json",
+        "sha256": "6eae66fd043e9b825e5d5e1ad2ef76bd485c2cdee70c31dd3f5377dd106f5d93"
+      },
+      "mode": "read_only_non_destructive_primary_v014_plus_supplemental_v015",
+      "scoringAuthority": {
+        "canonicalPredictions": {
+          "byteCount": 797422,
+          "path": "data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_canonical_predictions_v1.0.0.jsonl",
+          "recordCount": 11,
+          "sha256": "e888c4c4c68ede19cb4c65275b96637fd183e64f887d9a649f70e57f98eadb86"
+        },
+        "matchingContract": "docs/publication_human_core_amended_matching_contract_v0.1.md",
+        "matchingContractSHA256": "12ab089ac87cd26a1dbb133d1a381ea5a97d63eb7b54f2cc447d8d81c35efa56",
+        "predictionAuthority": "corrected_pilot1_evaluation",
+        "primaryExport": {
+          "path": "var/publication_pilot1_annotation/human-core/primary-researcher/exports/HUMAN_CORE_N5_PRIMARY_V1.annotation.json",
+          "sha256": "9d71ae66c3218c4b8be21a3ea10b4015cb5502fce5eaf75f6bb0ac9922bc4e74"
+        },
+        "realizationFreeze": {
+          "artifactSha256": "5aad26c75be98c759dacb14d31878e3c9c678662198b307d305360e3c9515842",
+          "path": "data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_realization_freeze_v1.0.0.json"
+        },
+        "supplementalExport": {
+          "path": "var/publication_pilot1_annotation/human-core/supplemental-researcher/exports/HUMAN_CORE_N5_SUPPLEMENTAL_V015.annotation.json",
+          "sha256": "8d637084d3f14cae958b9a9bbe3acb8c74ca741a2c43a990ec939699266707a2"
+        },
+        "supplementalPackage": {
+          "path": "data/curation/papers/m2/human_core_gold/publication_human_core_supplemental_annotation_package_v0.1.5.json",
+          "sha256": "22d4946f0159361badbb8bf87517368a9d24ffa336d4c3549f3166c45b4334c2"
+        },
+        "targetInventory": {
+          "gitBlobSHA1": "8a4921d687e93d4e8db879ae2e9c611f07e04bd1",
+          "path": "src/extraction/llm/publications/publication_target_inventory_v0.1.5.yaml"
+        },
+        "unitRouting": {
+          "path": "data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl",
+          "sha256": "66725306608139ccf3647ac7fd4a9fc150df67426498b6e3e7408320cb8c4a1f"
+        }
+      }
+    },
+    "matchingContract": {
+      "path": "docs/publication_human_core_amended_matching_contract_v0.1.md",
+      "sha256": "12ab089ac87cd26a1dbb133d1a381ea5a97d63eb7b54f2cc447d8d81c35efa56"
+    },
+    "strictStep7B": {
+      "path": "data/curation/papers/m2/human_core_gold/publication_human_core_n5_corrected_evaluation_step7b_pre_freeze_v1.0.0.json",
+      "primary": true,
+      "sha256": "5d03aa098e0218614a92ea1c096cd1b22a5df2e56973a471fc9aa15eecdad7ca"
+    }
+  },
+  "nextAuthorizedMilestone": "Step 8",
+  "preservation": {
+    "correctedPredictionsModified": false,
+    "historicalC1ArtifactsModified": false,
+    "humanCoreModified": false,
+    "matchingContractModified": false,
+    "secondaryReviewModified": false,
+    "strictStep7BModified": false
+  },
+  "providerModelCalls": 0,
+  "scope": "deterministic Step 7C freeze and closure of corrected Human Core N=5 evaluation; strict Step 7B remains primary and secondary reviewed metrics remain secondary",
+  "secondaryMetricSummary": {
+    "correctedNodePredictionSourceSupportedRate": {
+      "denominator": 109,
+      "numerator": 103
+    },
+    "correctedRelationPredictionSourceSupportedRate": {
+      "denominator": 68,
+      "numerator": 66
+    },
+    "humanCoreNodeSemanticRecovery": {
+      "denominator": 118,
+      "numerator": 64
+    },
+    "humanCoreRelationSemanticRecovery": {
+      "denominator": 61,
+      "numerator": 33
+    }
+  },
+  "status": "FROZEN_CLOSED",
+  "step7CExecuted": true,
+  "step8Executed": false
+}
