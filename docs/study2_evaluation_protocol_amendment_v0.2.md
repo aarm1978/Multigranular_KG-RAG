@@ -1,6 +1,6 @@
 # Study 2 Evaluation Protocol Amendment v0.2
 
-**Status:** **DRAFT — NOT FROZEN**; prospective current architecture
+**Status:** **FROZEN/CLOSED**; prospective current architecture
 **Scope:** Study 2 Publication semantic-extraction evaluation architecture
 
 ## 1. Prospective amendment boundary
@@ -49,6 +49,6 @@ completeness statistic is a current evaluation procedure.
 | --- | --- | --- |
 | Human Core N=5 and N=2 reliability | **FROZEN/CLOSED** | Existing frozen authorities retain control. |
 | Corrected N=6 selection, envelopes, routing, realization, and 2/6 subset | **FROZEN/CLOSED** | Consumed unchanged by future pooled validation. |
-| Pooled validation architecture | **DRAFT — NOT FROZEN** | Requires researcher review before Step 8. |
+| Pooled validation architecture | **FROZEN/CLOSED** | Step 8 execution remains separately authorized. |
 | SciERC corrected adapter binding | **FROZEN/CLOSED** | Separate benchmark-native external anchor. |
 | GraphRAG | Current boundary | Structural comparison only. |

@@ -21,6 +21,7 @@ LIFECYCLE = ROOT / "data/curation/papers/m2/publication_pilot1_corrected_evaluat
 RESULT_INDEX = ROOT / "data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_result_index_v1.0.0.jsonl"
 STEP7C = ROOT / "data/curation/papers/m2/human_core_gold/publication_human_core_n5_corrected_evaluation_step7c_closure_v1.0.0.json"
 DECISIONS = ROOT / "docs/evaluation_decisions.md"
+FREEZE_RECORD = ROOT / "data/curation/papers/m2/publication_step5_evaluation_authority_freeze_v0.1.2.json"
 
 N6_IDS = [
     "pub:18:sec:0002:unit:0001",
@@ -41,11 +42,50 @@ def sha256(path: Path) -> str:
 class PublicationStep5V012ProspectiveAuthorityTests(unittest.TestCase):
     """Ensure the draft binds frozen inputs and omits a live completeness procedure."""
 
-    def test_draft_status_and_frozen_v011_preservation(self) -> None:
-        """The new authority is a draft and leaves v0.1.1's known bytes intact."""
+    def test_frozen_status_and_frozen_v011_preservation(self) -> None:
+        """The approved authority is closed and leaves v0.1.1's known bytes intact."""
 
-        self.assertIn("**Status:** **DRAFT — NOT FROZEN**", AUTHORITY.read_text(encoding="utf-8"))
+        self.assertIn("**Status:** **FROZEN/CLOSED**", AUTHORITY.read_text(encoding="utf-8"))
+        self.assertIn("**Status:** **FROZEN/CLOSED**", AMENDMENT.read_text(encoding="utf-8"))
         self.assertEqual(sha256(V011), "f946b6d9a6cc0928bd575f6eefffaab68d70d905fff9deaae2db1cd984fa83c3")
+
+    def test_freeze_record_binds_finalized_authorities_and_execution_boundary(self) -> None:
+        """The closure record fails closed on authority, binding, or execution drift."""
+
+        record = json.loads(FREEZE_RECORD.read_text(encoding="utf-8"))
+        bindings = record["frozenBindings"]
+        self.assertEqual(record["status"], "frozen_closed")
+        self.assertEqual(record["researcherApprovedCheckpoint"], "0f4b612")
+        self.assertEqual(record["authority"]["sha256"], sha256(AUTHORITY))
+        self.assertEqual(record["amendment"]["sha256"], sha256(AMENDMENT))
+        self.assertEqual(bindings["n6Selection"]["artifactSha256"], "653a4e01548759dd49594676e8fa8ee3383b8a5244544b615243b787999579f8")
+        self.assertEqual(bindings["correctedN6Envelopes"]["artifactSha256"], "ee3b8ec8b1cc931fbcfe03e9659af992d26f6ab6705bebfedd3367d6903d7dce")
+        self.assertEqual(bindings["correctedRouting"]["routingSha256"], "7a43f371ae9d70573082319ae26e2d2294ff58b1e801da23d662e27a4c01ec62")
+        realization = bindings["selectedProcessableStep5N6Realization"]
+        self.assertEqual(realization["executionCohort"], "step5_n6")
+        self.assertEqual(realization["selectedProcessableAttemptCount"], 6)
+        self.assertEqual(realization["realizationArtifactSha256"], "5aad26c75be98c759dacb14d31878e3c9c678662198b307d305360e3c9515842")
+        self.assertEqual(bindings["secondaryReviewSubset"]["artifactSha256"], "2c9371f1893367f89f667aa9e871c970638d33b93e0d7f3f63dfbbf9d08a87e2")
+        self.assertEqual(bindings["scierc"]["adapterArtifactSha256"], "0f68abc78415b0c119ec75340d707dce1a8e0cea0df1e2124d0c5908140c5104")
+        self.assertEqual(bindings["step7CClosure"]["status"], "FROZEN_CLOSED")
+        tracked_bindings = [
+            bindings["n6Selection"],
+            bindings["correctedN6Envelopes"],
+            bindings["correctedRouting"],
+            bindings["secondaryReviewSubset"],
+            bindings["step7CClosure"],
+        ]
+        for binding in tracked_bindings:
+            self.assertEqual(sha256(ROOT / binding["path"]), binding["trackedFileSha256"])
+        for key in ("lifecycleLedger", "resultIndex", "canonicalAcceptedSemanticProjection"):
+            provenance = realization[key]
+            self.assertEqual(sha256(ROOT / provenance["path"]), provenance["sha256"])
+        scierc = bindings["scierc"]
+        self.assertEqual(sha256(ROOT / scierc["adapterPath"]), scierc["adapterTrackedFileSha256"])
+        self.assertEqual(sha256(ROOT / scierc["sourcePath"]), scierc["sourceTrackedFileSha256"])
+        boundary = record["closureExecutionBoundary"]
+        self.assertFalse(boundary["providerModelCallsOccurred"])
+        self.assertFalse(boundary["step8Executed"])
 
     def test_corrected_selected_attempts_and_frozen_bindings(self) -> None:
         """The six selected processable attempts, not only their projection, bind the pool."""

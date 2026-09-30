@@ -3,7 +3,7 @@
 **Project:** Dissertation CS — Study 2
 **Authority ID:** `publication-step5-evaluation-authority`
 **Authority version:** `0.1.2`
-**Status:** **DRAFT — NOT FROZEN**
+**Status:** **FROZEN/CLOSED**
 **Scope:** prospective, unexecuted pooled-evaluation work only
 
 ## 1. Prospective supersession and boundary
