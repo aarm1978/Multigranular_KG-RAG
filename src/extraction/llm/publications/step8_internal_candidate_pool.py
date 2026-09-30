@@ -18,10 +18,10 @@ import yaml
 from src.extraction.llm.publications.request_builder import PROJECT_ROOT, canonical_json, sha256_bytes
 
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 OUTPUT_ROOT = PROJECT_ROOT / "data/curation/papers/m2/publication_step8_internal_candidate_pool"
-POOL_NAME = "publication_step8_internal_pre_review_candidate_pool_v1.0.0.json"
-SUMMARY_NAME = "publication_step8_internal_pre_review_candidate_pool_summary_v1.0.0.json"
+POOL_NAME = "publication_step8_internal_pre_review_candidate_pool_v1.0.1.json"
+SUMMARY_NAME = "publication_step8_internal_pre_review_candidate_pool_summary_v1.0.1.json"
 REALIZATION = PROJECT_ROOT / "data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_realization_freeze_v1.0.0.json"
 PREDICTIONS = PROJECT_ROOT / "data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_canonical_predictions_v1.0.0.jsonl"
 LIFECYCLE = PROJECT_ROOT / "data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_lifecycle_ledger_v1.0.0.jsonl"
@@ -106,46 +106,152 @@ def eligibility_disposition(record: Mapping[str, Any], validation: Mapping[str, 
     return "excluded", "ineligible_lifecycle"
 
 
-def _exact_key(member: Mapping[str, Any]) -> tuple[Any, ...] | None:
-    """Return only an explicitly authorized exact auto-deduplication key."""
+def _lineage_target(member: Mapping[str, Any], codes: set[str]) -> str | None:
+    """Read an exact paired record ID from frozen V10 findings only."""
 
-    candidate = member["candidate"]
-    if member["recordKind"] == "candidate_node" and candidate.get("action") == "link_existing":
-        return ("link_existing", member["sourceArtifactID"], candidate.get("operationalTargetID"), candidate.get("existingNodeID"), canonical_json(candidate.get("attributes", [])))
-    # Authority A is represented only by explicit frozen validator lineage.  Current
-    # selected records carry no such exact-identity marker, so no inferred key exists.
-    return None
+    lineage = member["validationLineage"]
+    matches = [finding for finding in lineage.get("findings", [])
+               if finding.get("stage") == "V10" and finding.get("code") in codes]
+    if not matches:
+        return None
+    targets = {finding.get("expected") for finding in matches}
+    if len(targets) != 1 or not isinstance(next(iter(targets)), str):
+        raise Step8CandidatePoolError("INVALID_VALIDATOR_DUPLICATE_LINEAGE")
+    target = next(iter(targets))
+    if lineage.get("supersededByRecordID") not in (None, target):
+        raise Step8CandidatePoolError("CONFLICTING_VALIDATOR_DUPLICATE_LINEAGE")
+    return target
 
 
-def deduplicate(members: Sequence[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Apply only exact source-local Authority B collapse; retain uncertainty groups."""
+def _merge(values: Sequence[dict[str, Any]], reason: str) -> dict[str, Any]:
+    """Retain one authentic representative and every original evidence membership."""
 
-    keyed: dict[tuple[Any, ...], list[dict[str, Any]]] = defaultdict(list)
-    singles: list[dict[str, Any]] = []
-    groups: list[dict[str, Any]] = []
-    for member in members:
-        if member["eligibilityReason"] == "possible_local_duplicate":
-            singles.append(member)
-            groups.append({"memberCandidateKeys": [member["candidateKey"]]})
+    ordered = sorted(values, key=lambda item: item["candidateKey"])
+    representative = dict(ordered[0])
+    representative["deduplicationDisposition"] = reason if len(ordered) > 1 else "retained_no_auto_deduplication"
+    representative["memberCandidateKeys"] = [item["candidateKey"] for item in ordered]
+    representative["memberValidationLineage"] = {item["candidateKey"]: item["validationLineage"] for item in ordered}
+    representative["normalizationUsedForIdentity"] = False
+    representative["evidenceOccurrences"] = [
+        {**occurrence, "contributingCandidateKey": item["candidateKey"]}
+        for item in ordered for occurrence in item["evidenceOccurrences"]
+    ]
+    return representative
+
+
+def deduplicate(members: Sequence[dict[str, Any]], excluded: Sequence[dict[str, Any]] = ()) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Apply only validator identity, exact linked nodes, and exact relations."""
+
+    by_key = {item["candidateKey"]: item for item in (*members, *excluded)}
+    if len(by_key) != len(members) + len(excluded):
+        raise Step8CandidatePoolError("NON_UNIQUE_CANDIDATE_KEY")
+    parent = {item["candidateKey"]: item["candidateKey"] for item in members}
+
+    def root(key: str) -> str:
+        while parent[key] != key:
+            key = parent[key]
+        return key
+
+    def join(left: str, right: str) -> None:
+        parent[root(right)] = root(left)
+
+    def paired_key(item: Mapping[str, Any], target_id: str) -> str:
+        key = f"{item['requestID']}|{item['recordKind']}|{target_id}"
+        target = by_key.get(key)
+        if target is None or target["sourceArtifactID"] != item["sourceArtifactID"]:
+            raise Step8CandidatePoolError("VALIDATOR_DUPLICATE_TARGET_DRIFT")
+        return key
+
+    # A: a frozen V10 exact-identity finding, never a reconstructed similarity key.
+    attached: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for item in (*members, *excluded):
+        target_id = _lineage_target(item, {"EXACT_DUPLICATE_NODE", "EXACT_DUPLICATE_EDGE", "REPEATED_LOCAL_CANDIDATE_EVIDENCE_MERGED"})
+        if target_id is None:
             continue
-        key = _exact_key(member)
-        (singles if key is None else keyed[key]).append(member)
-    retained = list(singles)
-    for key, values in sorted(keyed.items(), key=lambda item: repr(item[0])):
-        values.sort(key=lambda item: item["candidateKey"])
-        representative = dict(values[0])
-        representative["deduplicationDisposition"] = "collapsed_exact_governed_link_existing" if len(values) > 1 else "retained_no_auto_deduplication"
-        representative["memberCandidateKeys"] = [item["candidateKey"] for item in values]
-        representative["evidenceOccurrences"] = [occurrence for item in values for occurrence in item["evidenceOccurrences"]]
-        retained.append(representative)
-    for item in retained:
-        item.setdefault("deduplicationDisposition", "retained_no_auto_deduplication")
-        item.setdefault("memberCandidateKeys", [item["candidateKey"]])
-    # Group only candidates whose validator lineage actually says POSSIBLE_LOCAL_DUPLICATE.
-    possible = [item for item in members if item["eligibilityReason"] == "possible_local_duplicate"]
-    if possible:
-        groups = [{"duplicateReviewGroupID": "duplicate-review-group-0001", "memberCandidateKeys": sorted(item["candidateKey"] for item in possible), "basis": "frozen_validator_lineage_possible_local_duplicate"}]
-    return sorted(retained, key=lambda item: item["candidateKey"]), groups
+        target_key = paired_key(item, target_id)
+        if item["eligibilityDisposition"] == "eligible" and target_key in parent:
+            join(target_key, item["candidateKey"])
+        elif item["eligibilityReason"] == "superseded" and target_key in parent:
+            attached[target_key].append(item)
+
+    # B: the exact governed existing-node ID and all material node fields.
+    linked: dict[tuple[Any, ...], str] = {}
+    for item in members:
+        candidate = item["candidate"]
+        if item["recordKind"] != "candidate_node" or item["eligibilityReason"] == "possible_local_duplicate" or candidate.get("action") != "link_existing":
+            continue
+        existing = candidate.get("existingNodeID")
+        if not isinstance(existing, str) or not existing:
+            continue
+        key = (item["sourceArtifactID"], candidate.get("operationalTargetID"), existing,
+               canonical_json({field: value for field, value in candidate.items()
+                               if field not in {"candidateID", "evidenceSpanIDs", "label", "normalizedLabelProposal", "deferredRecordID"}}))
+        if key in linked:
+            join(linked[key], item["candidateKey"])
+        else:
+            linked[key] = item["candidateKey"]
+
+    node_map = {item["candidateKey"]: root(item["candidateKey"]) for item in members if item["recordKind"] == "candidate_node"}
+
+    def endpoint(item: Mapping[str, Any], value: Mapping[str, Any]) -> tuple[Any, ...]:
+        reference = value.get("referenceID")
+        if value.get("referenceType") != "candidate_node":
+            return (value.get("referenceType"), value.get("artifactID"), reference)
+        key = f"{item['requestID']}|candidate_node|{reference}"
+        return ("candidate_node", node_map.get(key, key))
+
+    # C: exact relation material fields after the A/B node representative map.
+    relations: dict[tuple[Any, ...], str] = {}
+    for item in members:
+        candidate = item["candidate"]
+        if item["recordKind"] != "candidate_edge" or item["eligibilityReason"] == "possible_local_duplicate":
+            continue
+        if not isinstance(candidate.get("source"), Mapping) or not isinstance(candidate.get("target"), Mapping):
+            continue
+        material = {field: value for field, value in candidate.items()
+                    if field not in {"candidateID", "evidenceSpanIDs", "source", "target", "deferredRecordID"}}
+        key = (item["sourceArtifactID"], canonical_json(material), endpoint(item, candidate["source"]), endpoint(item, candidate["target"]))
+        if key in relations:
+            join(relations[key], item["candidateKey"])
+        else:
+            relations[key] = item["candidateKey"]
+
+    components: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for item in members:
+        components[root(item["candidateKey"])].append(item)
+    retained = []
+    for values in components.values():
+        attachments = [extra for value in values for extra in attached.get(value["candidateKey"], [])]
+        reason = "retained_no_auto_deduplication"
+        if len(values) > 1:
+            reason = "collapsed_exact_governed_relation_identity" if values[0]["recordKind"] == "candidate_edge" else "collapsed_exact_governed_node_identity"
+        merged = _merge(values + attachments, reason)
+        merged["retainedRepresentativeCandidateKey"] = min(value["candidateKey"] for value in values)
+        merged["pooledItemID"] = "pooled-item-" + sha256_bytes(canonical_json(sorted(value["candidateKey"] for value in values)))[:16]
+        retained.append(merged)
+
+    # Uncertain pairs are taken solely from V10 finding links, by source artifact.
+    group_pairs: dict[str, set[tuple[str, str]]] = defaultdict(set)
+    for item in members:
+        if item["eligibilityReason"] != "possible_local_duplicate":
+            continue
+        target_id = _lineage_target(item, {"POSSIBLE_LOCAL_DUPLICATE"})
+        if target_id is None:
+            raise Step8CandidatePoolError("POSSIBLE_DUPLICATE_LINEAGE_ABSENT")
+        target_key = paired_key(item, target_id)
+        if target_key not in parent:
+            raise Step8CandidatePoolError("POSSIBLE_DUPLICATE_TARGET_INELIGIBLE")
+        group_pairs[item["sourceArtifactID"]].add(tuple(sorted((item["candidateKey"], target_key))))
+    groups = []
+    for source, pairs in sorted(group_pairs.items()):
+        for left, right in sorted(pairs):
+            group_id = "duplicate-review-group-" + sha256_bytes(canonical_json((source, left, right)))[:16]
+            groups.append({"duplicateReviewGroupID": group_id, "sourceArtifactID": source,
+                           "memberCandidateKeys": [left, right], "basis": "frozen_validator_lineage_possible_local_duplicate"})
+            for item in retained:
+                if item["retainedRepresentativeCandidateKey"] in (left, right):
+                    item.setdefault("duplicateReviewGroupIDs", []).append(group_id)
+    return sorted(retained, key=lambda item: item["retainedRepresentativeCandidateKey"]), groups
 
 
 def build(source_root: Path = EXECUTION_ROOT) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -177,17 +283,36 @@ def build(source_root: Path = EXECUTION_ROOT) -> tuple[dict[str, Any], dict[str,
         if lifecycle is None or prediction is None or lifecycle.get("selectedAttemptNumber") != index.get("selectedAttemptNumber") or index.get("selectedAttemptNumber") != 1:
             raise Step8CandidatePoolError(f"SELECTED_ATTEMPT_LINEAGE_DRIFT:{request_id}")
         root = source_root / "requests" / request_id / "attempt-01"
-        required = {name: root / name for name in ("raw_model_output.json", "provider_response.json", "parser_result.json", "parsed_candidate.json", "validation_results.json", "lifecycle.json")}
+        required = {name: root / name for name in ("raw_model_output.json", "provider_response.json", "provider_metadata.json", "parser_result.json", "parsed_candidate.json", "validation_results.json", "lifecycle.json")}
         if any(not path.is_file() for path in required.values()):
             raise Step8CandidatePoolError(f"SELECTED_ATTEMPT_PROVENANCE_ABSENT:{request_id}")
         if _hash(required["raw_model_output.json"]) != index.get("rawOutputSha256") or sha256_bytes(canonical_json(_load(required["provider_response.json"]))) != index.get("providerResponseSha256"):
             raise Step8CandidatePoolError(f"SELECTED_PROVIDER_RAW_DRIFT:{request_id}")
         parser, parsed, validation, attempt = (_load(required["parser_result.json"]), _load(required["parsed_candidate.json"]), _load(required["validation_results.json"]), _load(required["lifecycle.json"]))
+        provider_metadata = _load(required["provider_metadata.json"])
         if attempt.get("parserResult") != parser or attempt.get("validation") != validation or parser.get("parseStatus") != "parsed" or validation.get("validationResultsHash") != prediction["acceptedSemanticProjection"].get("validationResultsHash"):
             raise Step8CandidatePoolError(f"PARSER_VALIDATION_LINEAGE_DRIFT:{request_id}")
         envelope = envelope_by_unit[index["primarySourceUnitID"]]
-        if parsed.get("metadata", {}).get("primarySourceUnitID") != index["primarySourceUnitID"] or index.get("contextSourceUnitIDs") != envelope.get("contextSourceUnitIDs"):
+        metadata = parsed.get("metadata", {})
+        projection = prediction["acceptedSemanticProjection"]
+        if (metadata.get("primarySourceUnitID") != index["primarySourceUnitID"]
+                or metadata.get("contextSourceUnitIDs") != index.get("contextSourceUnitIDs")
+                or index.get("contextSourceUnitIDs") != envelope.get("contextSourceUnitIDs")
+                or metadata.get("sourceArtifactID") != envelope.get("sourceArtifactID")):
             raise Step8CandidatePoolError(f"ENVELOPE_SOURCE_SCOPE_DRIFT:{request_id}")
+        provenance = {"runID": metadata.get("runID"), "requestID": request_id,
+                      "outputID": metadata.get("outputID"), "provider": metadata.get("provider"),
+                      "modelName": metadata.get("modelName"), "modelVersion": metadata.get("modelVersion"),
+                      "providerResponseID": provider_metadata.get("responseID"),
+                      "selectedAttemptNumber": index.get("selectedAttemptNumber")}
+        if any(not isinstance(value, str) or not value for key, value in provenance.items() if key != "selectedAttemptNumber"):
+            raise Step8CandidatePoolError(f"C1_PROVENANCE_MAPPING_ABSENT:{request_id}")
+        if (metadata.get("requestID") != request_id or provenance["outputID"] != projection.get("outputID")
+                or provenance["provider"] != attempt.get("provider")
+                or provenance["modelName"] != attempt.get("requestedModel")
+                or provider_metadata.get("returnedModel") != provenance["modelVersion"]
+                or sha256_bytes(canonical_json(provider_metadata)) != index.get("providerMetadataSha256")):
+            raise Step8CandidatePoolError(f"C1_PROVENANCE_MAPPING_DRIFT:{request_id}")
         evidence = {row["evidenceSpanID"]: row for row in parsed.get("evidenceSpans", [])}
         validation_by_id = {row["recordID"]: row for row in validation.get("recordResults", [])}
         for kind, records in (("candidate_node", parsed.get("candidateNodes", [])), ("candidate_edge", parsed.get("candidateEdges", []))):
@@ -202,17 +327,21 @@ def build(source_root: Path = EXECUTION_ROOT) -> tuple[dict[str, Any], dict[str,
                 for evidence_id in candidate.get("evidenceSpanIDs", []):
                     if evidence_id not in evidence:
                         raise Step8CandidatePoolError(f"EVIDENCE_OCCURRENCE_ABSENT:{request_id}:{candidate_id}:{evidence_id}")
+                    if evidence[evidence_id].get("sourceUnitID") not in {index["primarySourceUnitID"], *index["contextSourceUnitIDs"]}:
+                        raise Step8CandidatePoolError(f"EVIDENCE_OUTSIDE_AUTHORIZED_CONTEXT:{request_id}:{candidate_id}:{evidence_id}")
                     occurrences.append({"evidenceSpanID": evidence_id, **evidence[evidence_id]})
                 all_members.append({
                     "candidateKey": f"{request_id}|{kind}|{candidate_id}", "requestID": request_id,
                     "primarySourceUnitID": index["primarySourceUnitID"], "sourceArtifactID": parsed["metadata"]["sourceArtifactID"],
+                    "authorizedContextSourceUnitIDs": index["contextSourceUnitIDs"],
+                    "c1Provenance": provenance,
                     "recordKind": kind, "candidate": candidate, "validationLineage": record_validation,
                     "providerRawSha256": index["rawOutputSha256"], "providerResponseSha256": index["providerResponseSha256"],
                     "parserStatus": parser["parseStatus"], "selectedAttemptNumber": 1,
                     "eligibilityDisposition": disposition, "eligibilityReason": reason, "evidenceOccurrences": occurrences,
                 })
     eligible = [member for member in all_members if member["eligibilityDisposition"] == "eligible"]
-    retained, duplicate_groups = deduplicate(eligible)
+    retained, duplicate_groups = deduplicate(eligible, [item for item in all_members if item["eligibilityDisposition"] == "excluded"])
     pool = {"artifactType": "publication_step8_internal_pre_review_candidate_pool", "artifactVersion": VERSION,
             "executionBoundary": "internal_pre_review_only_no_blinded_package_no_human_judgments_no_positive_reference", "source": {"realization": str(REALIZATION.relative_to(PROJECT_ROOT)), "realizationSha256": EXPECTED_ARTIFACT_HASHES["realization"], "selectedExecutionCohort": "step5_n6", "selectedAttemptCount": 6},
             "candidates": all_members, "retainedPooledItems": retained, "unresolvedDuplicateReviewGroups": duplicate_groups}
