@@ -209,8 +209,7 @@ still increasing graph coverage and total represented information. Global values
 therefore be interpreted together with node and edge counts and per-class diagnostics.
 
 *Historical note — superseded:* the previous ×3 model matrix is not a current requirement.
-Any model-sensitive evaluation must follow the amended Human Core, pooled-reference, and
-completeness-audit boundaries.
+Any future evaluation design must follow the prospective architecture in amendment v0.2.
 
 *Decision (argued):* the three proposal-mandated consolidation-ratio points (before/after
 alignment, after assembly) are the coarse trajectory; the per-source structural points are
@@ -345,10 +344,17 @@ duplication.
 
 ### 6.3 Human-reference (current bounded architecture)
 
+#### Strict Human Core N=5 metrics
+
 | Layer / source | Precision | Recall | F1 | Fact recoverability |
 |---|---|---|---|---|
 | Human Core N=5 (frozen Step 7 closure) | | | | |
-| Complementary N=6 pooled validation (draft; candidate-conditioned) | | | | |
+
+#### Complementary N=6 candidate-conditioned validation
+
+The draft N=6 pooled procedure is a separate candidate-conditioned human-validation
+component. Under v0.1.2 it does not produce Recall, F1, completeness, saturation, or
+missed-reference statistics. No new N=6 quantitative metric is defined here.
 
 ---
 

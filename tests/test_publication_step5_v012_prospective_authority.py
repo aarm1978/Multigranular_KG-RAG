@@ -20,6 +20,7 @@ PREDICTIONS = ROOT / "data/curation/papers/m2/publication_pilot1_corrected_evalu
 LIFECYCLE = ROOT / "data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_lifecycle_ledger_v1.0.0.jsonl"
 RESULT_INDEX = ROOT / "data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_result_index_v1.0.0.jsonl"
 STEP7C = ROOT / "data/curation/papers/m2/human_core_gold/publication_human_core_n5_corrected_evaluation_step7c_closure_v1.0.0.json"
+DECISIONS = ROOT / "docs/evaluation_decisions.md"
 
 N6_IDS = [
     "pub:18:sec:0002:unit:0001",
@@ -103,6 +104,16 @@ class PublicationStep5V012ProspectiveAuthorityTests(unittest.TestCase):
             self.assertNotIn("must " + phrase, amendment)
         self.assertIn("excluded from recall, f1, completeness, saturation", authority)
         self.assertIn("no standalone exhaustive/model-blind completeness procedure", amendment)
+
+    def test_decisions_record_separates_n6_from_human_core_metrics(self) -> None:
+        """The current decisions record keeps N=6 out of the strict metric table."""
+
+        decisions = DECISIONS.read_text(encoding="utf-8")
+        self.assertNotIn("completeness-audit boundaries", decisions)
+        self.assertIn("prospective architecture in amendment v0.2", decisions)
+        self.assertIn("#### Strict Human Core N=5 metrics", decisions)
+        self.assertNotIn("| Complementary N=6 pooled validation", decisions)
+        self.assertIn("does not produce Recall, F1, completeness, saturation, or\nmissed-reference statistics", decisions)
 
 
 if __name__ == "__main__":
