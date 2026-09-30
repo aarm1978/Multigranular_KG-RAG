@@ -17,14 +17,20 @@ needs grounding.
 
 ## Current accepted architecture
 
-The authoritative Study 2 evaluation architecture is the frozen amendment at
-[`study2_evaluation_protocol_amendment_v0.1.md`](study2_evaluation_protocol_amendment_v0.1.md).
-It governs this decisions record wherever historical design text conflicts with it. The
-current architecture is: bounded, model-blind **Human Core N=5**; an independent
-**reliability subset N=2**; a later **pooled human-adjudicated reference**; a separate
-**model-blind completeness audit**; a **SciERC external IE anchor**; and **GraphRAG for
-structural comparison only**. Historical three-LLM, broad-gold-standard, and paired
-per-model GraphRAG designs below are retained as design history, not current authority.
+The authoritative prospective Study 2 evaluation architecture is
+[`study2_evaluation_protocol_amendment_v0.2.md`](study2_evaluation_protocol_amendment_v0.2.md)
+and [`publication_step5_evaluation_authority_v0.1.2.md`](publication_step5_evaluation_authority_v0.1.2.md),
+both **DRAFT — NOT FROZEN** and requiring researcher review before Step 8. It governs this
+decisions record wherever historical design text conflicts with it. The current
+architecture is: bounded, model-blind **Human Core N=5**; independent **reliability
+N=2**; complementary candidate-conditioned **N=6 pooled validation** with optional
+non-exhaustive omission observations; a **SciERC external IE anchor**; and **GraphRAG for
+structural comparison only**. The N=6 candidate source is the frozen corrected
+`step5_n6` cohort, not the historical 227-request C1 realization. No standalone
+exhaustive/model-blind completeness procedure, audit-to-pool matching, saturation,
+missed-reference proportion, or completeness statistic is a current requirement.
+Historical three-LLM, broad-gold-standard, paired per-model GraphRAG, and prior audit
+design text below are retained as design history, not current authority.
 
 ---
 
