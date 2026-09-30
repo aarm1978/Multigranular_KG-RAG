@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from src.extraction.llm.publications import pilot1_evaluation_execution_runner as runner
+from src.extraction.llm.publications.openai_provider import build_responses_api_request
 
 
 EMPTY_PAYLOAD = {
@@ -86,6 +87,42 @@ class Pilot1EvaluationExecutionRunnerTests(unittest.TestCase):
             with self.assertRaisesRegex(runner.Pilot1EvaluationExecutionError, "AMBIGUOUS_INTERRUPTED_REQUEST_STATE"):
                 runner.execute_subset_with_provider_fixture(root, lambda _body, _budget: calls.append(True) or b"{}")
             self.assertEqual(calls, [])
+
+    def test_mocked_live_dispatch_uses_frozen_32768_body_and_reaches_terminal_state(self) -> None:
+        """The explicit live path dispatches only exact reconstructed 32768-token bodies."""
+
+        subset, _manifest = runner.load_frozen_execution_scope()
+        expected_bodies = []
+        for record in subset["requests"]:
+            prepared = runner.prepare_verified_request(record)
+            expected_bodies.append(prepared["body"])
+        dispatched_bodies = []
+
+        def mocked_live_call(_api_key, input_bytes, *, model_authorable_schema, max_output_tokens):
+            self.assertEqual(max_output_tokens, 32768)
+            dispatched_bodies.append(build_responses_api_request(
+                input_bytes,
+                model_authorable_schema=model_authorable_schema,
+                max_output_tokens=max_output_tokens,
+            ))
+            metadata = {
+                "returnedModel": "gpt-5.6-sol", "createdAt": "2026-09-30T00:00:00Z",
+                "inputTokens": 10, "outputTokens": 20, "retryCount": 0,
+                "usage": {"total_tokens": 30},
+            }
+            return json.dumps(EMPTY_PAYLOAD).encode("utf-8"), metadata, {"id": "resp-fixture", "status": "completed"}
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with patch.object(runner, "load_openai_api_key", return_value="fixture-key"), patch.object(
+                runner, "call_openai_responses_detailed", side_effect=mocked_live_call
+            ) as provider:
+                result = runner.execute_live_subset(root)
+            self.assertEqual(provider.call_count, 11)
+            self.assertEqual(dispatched_bodies, expected_bodies)
+            self.assertEqual(result["completedRequestCount"], 11)
+            for record in subset["requests"]:
+                self.assertTrue((root / "requests" / record["requestID"] / "attempt_selection.json").is_file())
 
     def test_cli_never_loads_credentials_without_explicit_opt_in(self) -> None:
         """The default CLI creates only a no-call binding artifact."""

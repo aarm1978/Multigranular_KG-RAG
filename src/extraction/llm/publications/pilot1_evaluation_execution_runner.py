@@ -15,7 +15,6 @@ from typing import Any, Callable, Mapping, Sequence, Union
 
 from src.extraction.llm.publications import corrected_production_preflight as corrected
 from src.extraction.llm.publications.openai_provider import (
-    MAX_OUTPUT_TOKENS,
     build_provider_input,
     call_openai_responses_detailed,
     load_openai_api_key,
@@ -27,6 +26,7 @@ from src.extraction.llm.publications.pilot1_evaluation_execution_subset import (
     OUTPUT_NAME,
 )
 from src.extraction.llm.publications.production_runner import (
+    MAX_OUTPUT_TOKENS,
     _prepared_request,
     _terminal_request,
     execute_with_provider_fixture,
