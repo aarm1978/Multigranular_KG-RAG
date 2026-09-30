@@ -7,7 +7,7 @@ from collections import Counter
 from typing import Any
 
 from . import human_core_n5_semantic_equivalence_review as prior
-from .human_core_n5_evaluation import load_frozen_inputs, _record_view, _node_indexes, _endpoint_identity
+from .human_core_n5_evaluation import load_historical_c1_inputs, _record_view, _node_indexes, _endpoint_identity
 
 PROTOCOL = prior.PROJECT_ROOT / 'docs/publication_human_core_posthoc_semantic_equivalence_sensitivity_protocol_v0.1.1.md'
 OUTPUT = prior.GOLD_ROOT / 'publication_human_core_n5_posthoc_semantic_equivalence_review_package_v0.1.1.json'
@@ -73,7 +73,7 @@ def build_package() -> dict[str, Any]:
     """Build the corrected instrument with unchanged strict populations and blank judgments."""
     verify_preservation()
     package = prior.build_package()
-    inputs = load_frozen_inputs()
+    inputs = load_historical_c1_inputs()
     all_records = list(inputs.references + inputs.predictions)
     records = {record.key: record for record in all_records}
     node_index = _node_indexes(all_records)

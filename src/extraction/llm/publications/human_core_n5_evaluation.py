@@ -1,4 +1,4 @@
-"""Evaluate frozen C1 predictions against the immutable Human Core N=5 reference.
+"""Evaluate frozen Pilot 1 predictions against the immutable Human Core N=5 reference.
 
 This module implements only extractor-to-Human-Core mode from the frozen amended
 matching contract.  It derives a read-only reference view from the distinct primary
@@ -32,14 +32,35 @@ SUPPLEMENTAL_PACKAGE_PATH = GOLD_ROOT / "publication_human_core_supplemental_ann
 SUPPLEMENTAL_PACKAGE_SHA256 = "22d4946f0159361badbb8bf87517368a9d24ffa336d4c3549f3166c45b4334c2"
 TARGET_INVENTORY_PATH = PROJECT_ROOT / "src/extraction/llm/publications/publication_target_inventory_v0.1.5.yaml"
 TARGET_INVENTORY_GIT_BLOB = "8a4921d687e93d4e8db879ae2e9c611f07e04bd1"
-FREEZE_PATH = PROJECT_ROOT / "data/curation/papers/m2/publication_step6c_canonical_c1_freeze_v1.0.0.json"
+HISTORICAL_C1_FREEZE_PATH = PROJECT_ROOT / "data/curation/papers/m2/publication_step6c_canonical_c1_freeze_v1.0.0.json"
+CORRECTED_EVALUATION_ROOT = PROJECT_ROOT / "data/curation/papers/m2/publication_pilot1_corrected_evaluation"
+CORRECTED_EVALUATION_FREEZE_PATH = CORRECTED_EVALUATION_ROOT / "publication_pilot1_corrected_evaluation_realization_freeze_v1.0.0.json"
+CORRECTED_EVALUATION_FREEZE_ARTIFACT_SHA256 = "5aad26c75be98c759dacb14d31878e3c9c678662198b307d305360e3c9515842"
+CORRECTED_PREDICTIONS_PATH = CORRECTED_EVALUATION_ROOT / "publication_pilot1_corrected_evaluation_canonical_predictions_v1.0.0.jsonl"
+CORRECTED_PREDICTIONS_SHA256 = "e888c4c4c68ede19cb4c65275b96637fd183e64f887d9a649f70e57f98eadb86"
+HUMAN_CORE_EXECUTION_COHORT = "human_core_n5"
 MATCHING_CONTRACT_PATH = PROJECT_ROOT / "docs/publication_human_core_amended_matching_contract_v0.1.md"
 V010_OUTPUT = GOLD_ROOT / "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze_v0.1.0.json"
 V010_REPORT = GOLD_ROOT / "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze_v0.1.0.md"
 V010_OUTPUT_SHA256 = "ee77ee845c6c92cbbf0776c46a09b1049d24b6b79d289ab98f90f8de0b2eaaba"
 V010_REPORT_SHA256 = "a07292543dd4eae88edab9a569121cd850ccfcdd738af6c219e3bd76a4998414"
-DEFAULT_OUTPUT = GOLD_ROOT / "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze_v0.1.1.json"
-DEFAULT_REPORT = GOLD_ROOT / "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze_v0.1.1.md"
+DEFAULT_OUTPUT = GOLD_ROOT / "publication_human_core_n5_corrected_evaluation_step7b_pre_freeze_v1.0.0.json"
+DEFAULT_REPORT = GOLD_ROOT / "publication_human_core_n5_corrected_evaluation_step7b_pre_freeze_v1.0.0.md"
+
+
+@dataclass(frozen=True)
+class PredictionAuthority:
+    """One immutable prediction realization available to the scorer."""
+
+    name: str
+    freeze_path: Path
+    prediction_path: Path | None
+    prediction_sha256: str | None
+    artifact_type: str
+    artifact_version: str
+    execution: str
+    report_title: str
+    report_intro: str
 
 
 @dataclass(frozen=True)
@@ -93,6 +114,30 @@ class FrozenInputs:
     routes: dict[str, dict[str, Any]]
     baseline_aliases: dict[str, str]
     provenance: dict[str, Any]
+
+
+HISTORICAL_C1_AUTHORITY = PredictionAuthority(
+    name="historical_c1",
+    freeze_path=HISTORICAL_C1_FREEZE_PATH,
+    prediction_path=None,
+    prediction_sha256=None,
+    artifact_type="publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze",
+    artifact_version="0.1.1",
+    execution="one_time_step_7b_confirmatory_evaluation",
+    report_title="Publication Human Core N=5 C1 Confirmatory Evaluation — PRE-FREEZE",
+    report_intro="Historical C1-only reproducibility authority; not for prospective Step 7 use.",
+)
+CORRECTED_EVALUATION_AUTHORITY = PredictionAuthority(
+    name="corrected_pilot1_evaluation",
+    freeze_path=CORRECTED_EVALUATION_FREEZE_PATH,
+    prediction_path=CORRECTED_PREDICTIONS_PATH,
+    prediction_sha256=CORRECTED_PREDICTIONS_SHA256,
+    artifact_type="publication_human_core_n5_corrected_evaluation_step7b_pre_freeze",
+    artifact_version="1.0.0",
+    execution="one_time_step_7b_confirmatory_evaluation_against_corrected_pilot1_realization",
+    report_title="Publication Human Core N=5 Corrected Evaluation Step 7B — PRE-FREEZE",
+    report_intro="This is the prospective strict deterministic Step 7B result against the frozen corrected Pilot 1 evaluation realization. It does not alter historical C1 Step 7B artifacts and is not a Step 7C freeze or closure record.",
+)
 
 
 def _sha256(path: Path) -> str:
@@ -258,23 +303,23 @@ def _human_records(export: dict[str, Any], partition: str, expected_session: str
     return records, treatments
 
 
-def _prediction_records(row: dict[str, Any]) -> list[EvaluationRecord]:
+def _prediction_records(row: dict[str, Any], realization_id: str) -> list[EvaluationRecord]:
     """Create records solely from one accepted-semantic Step 7 projection."""
     projection = row.get("acceptedSemanticProjection")
     if not isinstance(projection, dict) or projection.get("acceptanceStatus") != "production_accepted" or projection.get("step7PredictionContent") is not True:
-        raise AuthorityError("Human Core C1 row is not frozen accepted-semantic Step 7 content")
+        raise AuthorityError("Human Core prediction row is not frozen accepted-semantic Step 7 content")
     request = row.get("requestID")
     unit, artifact = projection.get("sourceUnitID"), projection.get("sourceArtifactID")
     attempt = projection.get("selectedProviderAttempt")
     output = projection.get("outputID")
     if not all(isinstance(value, str) and value for value in (request, unit, artifact, output)) or not isinstance(attempt, dict):
-        raise AuthorityError("C1 projection lacks immutable run/request provenance")
+        raise AuthorityError("prediction projection lacks immutable run/request provenance")
     attempt_number = attempt.get("attemptNumber")
     request_hash = attempt.get("requestInputSha256")
     response_hash = attempt.get("providerResponseSha256")
     if not isinstance(attempt_number, int) or not all(isinstance(value, str) and value for value in (request_hash, response_hash)):
-        raise AuthorityError("C1 projection lacks immutable selected-attempt provenance")
-    run = f"publication-c1-canonical-v1.0.0|attempt-{attempt_number}|{output}|{request_hash}|{response_hash}"
+        raise AuthorityError("prediction projection lacks immutable selected-attempt provenance")
+    run = f"{realization_id}|attempt-{attempt_number}|{output}|{request_hash}|{response_hash}"
     records: list[EvaluationRecord] = []
     for kind, field in (("node", "acceptedNodes"), ("relation", "acceptedEdges")):
         for wrapper in projection.get(field, []):
@@ -302,8 +347,51 @@ def _inventory_targets() -> dict[str, dict[str, Any]]:
     return result
 
 
-def load_frozen_inputs(root: Path = PROJECT_ROOT) -> FrozenInputs:
-    """Validate every bound authority and build read-only evaluation inputs."""
+def _prediction_binding(
+    root: Path, authority: PredictionAuthority,
+) -> tuple[dict[str, Any], dict[str, Any], Path]:
+    """Validate one frozen realization and return its tracked prediction binding."""
+    freeze_path = root / authority.freeze_path.relative_to(PROJECT_ROOT)
+    freeze = _load_json(freeze_path)
+    prediction_binding = freeze.get("trackedArtifacts", {}).get("predictions", {})
+    if not isinstance(prediction_binding, dict):
+        raise AuthorityError("prediction realization lacks a tracked prediction binding")
+    if authority is HISTORICAL_C1_AUTHORITY:
+        prediction_path = root / prediction_binding.get("path", "")
+        if freeze.get("status") != "FROZEN_CLOSED" or freeze.get("step7Executed") is not False:
+            raise AuthorityError("historical Step 6 freeze does not authorize its preserved C1 loader")
+        if _sha256(prediction_path) != prediction_binding.get("sha256"):
+            raise AuthorityError("historical canonical C1 prediction artifact differs from its Step 6 freeze")
+        return freeze, prediction_binding, prediction_path
+
+    if authority is not CORRECTED_EVALUATION_AUTHORITY:
+        raise AuthorityError("unsupported prediction authority")
+    if (
+        freeze.get("artifactType") != "publication_pilot1_corrected_evaluation_realization_freeze"
+        or freeze.get("artifactVersion") != "1.0.0"
+        or freeze.get("status") != "FROZEN_CLOSED"
+        or freeze.get("artifactSha256") != CORRECTED_EVALUATION_FREEZE_ARTIFACT_SHA256
+    ):
+        raise AuthorityError("corrected evaluation realization freeze identity is invalid")
+    if authority.prediction_path is None or authority.prediction_sha256 is None:
+        raise AuthorityError("corrected prediction authority is incomplete")
+    expected_path = str(authority.prediction_path.relative_to(PROJECT_ROOT))
+    if (
+        prediction_binding.get("path") != expected_path
+        or prediction_binding.get("sha256") != authority.prediction_sha256
+        or prediction_binding.get("recordCount") != 11
+    ):
+        raise AuthorityError("corrected realization prediction binding is invalid")
+    prediction_path = root / expected_path
+    if _sha256(prediction_path) != authority.prediction_sha256:
+        raise AuthorityError("corrected canonical prediction artifact differs from its realization freeze")
+    return freeze, prediction_binding, prediction_path
+
+
+def _load_inputs(
+    authority: PredictionAuthority, root: Path = PROJECT_ROOT,
+) -> FrozenInputs:
+    """Validate one bound authority and build read-only evaluation inputs."""
     def local(path: Path) -> Path:
         return root / path.relative_to(PROJECT_ROOT)
 
@@ -315,13 +403,7 @@ def load_frozen_inputs(root: Path = PROJECT_ROOT) -> FrozenInputs:
         if _sha256(local(path)) != expected:
             raise AuthorityError(f"SHA-256 mismatch for frozen input: {path.relative_to(PROJECT_ROOT)}")
 
-    freeze = _load_json(local(FREEZE_PATH))
-    prediction_binding = freeze.get("trackedArtifacts", {}).get("predictions", {})
-    prediction_path = root / prediction_binding.get("path", "")
-    if freeze.get("status") != "FROZEN_CLOSED" or freeze.get("step7Executed") is not False:
-        raise AuthorityError("Step 6 freeze does not authorize a first Step 7 execution")
-    if _sha256(prediction_path) != prediction_binding.get("sha256"):
-        raise AuthorityError("canonical C1 prediction artifact differs from its Step 6 freeze")
+    freeze, prediction_binding, prediction_path = _prediction_binding(root, authority)
 
     primary = _load_json(local(PRIMARY_PATH))
     supplemental = _load_json(local(SUPPLEMENTAL_PATH))
@@ -374,10 +456,22 @@ def load_frozen_inputs(root: Path = PROJECT_ROOT) -> FrozenInputs:
     prediction_rows = _jsonl(prediction_path)
     if len(prediction_rows) != prediction_binding.get("recordCount"):
         raise AuthorityError("canonical C1 prediction record count differs from freeze")
-    selected = [row for row in prediction_rows if row.get("acceptedSemanticProjection", {}).get("sourceUnitID") in units]
+    if authority is CORRECTED_EVALUATION_AUTHORITY:
+        selected = [row for row in prediction_rows if row.get("executionCohort") == HUMAN_CORE_EXECUTION_COHORT]
+        if any(row.get("executionCohort") == "step5_n6" for row in selected):
+            raise AuthorityError("Step 5 N=6 prediction row entered Human Core selection")
+    else:
+        selected = [row for row in prediction_rows if row.get("acceptedSemanticProjection", {}).get("sourceUnitID") in units]
     if len(selected) != 5 or len({row["acceptedSemanticProjection"]["sourceUnitID"] for row in selected}) != 5:
-        raise AuthorityError("canonical C1 source does not provide exactly one prediction row per Human Core unit")
-    predictions = tuple(record for row in selected for record in _prediction_records(row))
+        raise AuthorityError("prediction source does not provide exactly one row per Human Core unit")
+    if {row["acceptedSemanticProjection"]["sourceUnitID"] for row in selected} != set(units):
+        raise AuthorityError("prediction source units differ from the frozen Human Core N=5")
+    realization_id = (
+        "publication-pilot1-corrected-evaluation-v1.0.0"
+        if authority is CORRECTED_EVALUATION_AUTHORITY
+        else "publication-c1-canonical-v1.0.0"
+    )
+    predictions = tuple(record for row in selected for record in _prediction_records(row, realization_id))
 
     projection = _load_json(local(GOLD_ROOT / "publication_human_core_v0.1.5_composite_reference_projection.json"))
     if projection.get("destructiveMergeAuthorized") is not False:
@@ -386,7 +480,11 @@ def load_frozen_inputs(root: Path = PROJECT_ROOT) -> FrozenInputs:
     provenance = {
         "matchingContract": str(MATCHING_CONTRACT_PATH.relative_to(PROJECT_ROOT)),
         "matchingContractSHA256": _sha256(local(MATCHING_CONTRACT_PATH)),
-        "step6Freeze": str(FREEZE_PATH.relative_to(PROJECT_ROOT)),
+        "predictionAuthority": authority.name,
+        "realizationFreeze": {
+            "path": str(authority.freeze_path.relative_to(PROJECT_ROOT)),
+            "artifactSha256": freeze.get("artifactSha256"),
+        },
         "canonicalPredictions": prediction_binding,
         "primaryExport": {"path": str(PRIMARY_PATH.relative_to(PROJECT_ROOT)), "sha256": PRIMARY_SHA256},
         "supplementalExport": {"path": str(SUPPLEMENTAL_PATH.relative_to(PROJECT_ROOT)), "sha256": SUPPLEMENTAL_SHA256},
@@ -395,6 +493,16 @@ def load_frozen_inputs(root: Path = PROJECT_ROOT) -> FrozenInputs:
         "targetInventory": {"path": str(TARGET_INVENTORY_PATH.relative_to(PROJECT_ROOT)), "gitBlobSHA1": TARGET_INVENTORY_GIT_BLOB},
     }
     return FrozenInputs(tuple(primary_records + supplemental_records), predictions, opportunities, routes, aliases, provenance)
+
+
+def load_frozen_inputs(root: Path = PROJECT_ROOT) -> FrozenInputs:
+    """Load the sole prospective corrected Pilot 1 Step 7 prediction authority."""
+    return _load_inputs(CORRECTED_EVALUATION_AUTHORITY, root)
+
+
+def load_historical_c1_inputs(root: Path = PROJECT_ROOT) -> FrozenInputs:
+    """Load preserved historical C1 inputs for legacy review-package reproducibility."""
+    return _load_inputs(HISTORICAL_C1_AUTHORITY, root)
 
 
 def _inventory_targets_for_root(root: Path) -> dict[str, dict[str, Any]]:
@@ -689,17 +797,20 @@ def compute(inputs: FrozenInputs) -> dict[str, Any]:
         for unit in sorted(inputs.opportunities)
         for target, kind in sorted(inputs.opportunities[unit].items())
     ]
+    authority_name = inputs.provenance.get("predictionAuthority")
+    if authority_name == CORRECTED_EVALUATION_AUTHORITY.name:
+        artifact_type = CORRECTED_EVALUATION_AUTHORITY.artifact_type
+        artifact_version = CORRECTED_EVALUATION_AUTHORITY.artifact_version
+        execution = CORRECTED_EVALUATION_AUTHORITY.execution
+    else:
+        artifact_type = "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze"
+        artifact_version = "0.1.1"
+        execution = "one_time_step_7b_confirmatory_evaluation"
     return {
-        "artifactType": "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze",
-        "artifactVersion": "0.1.1",
+        "artifactType": artifact_type,
+        "artifactVersion": artifact_version,
         "status": "PRE_FREEZE",
-        "execution": "one_time_step_7b_confirmatory_evaluation",
-        "supersedes": {
-            "path": str(V010_OUTPUT.relative_to(PROJECT_ROOT)),
-            "sha256": V010_OUTPUT_SHA256,
-            "artifactVersion": "0.1.0",
-            "reason": "v0.1.0 violated the frozen matching-contract implementation through its final assignment tie-break and asymmetric evidence diagnostic orientation; no frozen input, scoring scope, or semantic record changed",
-        },
+        "execution": execution,
         "scope": "exact frozen N=5 routed extract_and_evaluate opportunities only; extract_and_monitor excluded",
         "explicitExclusions": ["Annotator B / N=2 reliability", "extract_and_monitor", "provider/model calls", "semantic repair, inference, normalization, adjudication, or deduplication"],
         "frozenInputs": inputs.provenance,
@@ -736,9 +847,11 @@ def render_report(result: dict[str, Any]) -> str:
         return "undefined" if number is None else f"{number:.6f}"
 
     nodes, relations = result["aggregate"]["nodes"], result["aggregate"]["relations"]
+    corrected = result.get("artifactType") == CORRECTED_EVALUATION_AUTHORITY.artifact_type
+    title = CORRECTED_EVALUATION_AUTHORITY.report_title if corrected else HISTORICAL_C1_AUTHORITY.report_title
+    intro = CORRECTED_EVALUATION_AUTHORITY.report_intro if corrected else HISTORICAL_C1_AUTHORITY.report_intro
     lines = [
-        "# Publication Human Core N=5 C1 Confirmatory Evaluation — PRE-FREEZE", "",
-        "This is the contract-corrected v0.1.1 Step 7B result under the frozen amended matching contract. It supersedes v0.1.0 solely because v0.1.0's final assignment tie-break and asymmetric evidence diagnostic orientation violated that contract; no frozen input, scoring scope, or semantic record changed. It is not a Step 7C freeze or closure record.", "",
+        f"# {title}", "", intro, "",
         "## Aggregate confirmatory metrics", "",
         f"- Nodes: TP={nodes['TP']}, FP={nodes['FP']}, FN={nodes['FN']}, reference support={nodes['referenceSupport']}, prediction support={nodes['predictionSupport']}, micro P/R/F1={value(nodes['precision'])}/{value(nodes['recall'])}/{value(nodes['f1'])}.",
         f"- Relations: TP={relations['TP']}, FP={relations['FP']}, FN={relations['FN']}, reference support={relations['referenceSupport']}, prediction support={relations['predictionSupport']}, micro P/R/F1={value(relations['precision'])}/{value(relations['recall'])}/{value(relations['f1'])}.", "",
@@ -753,15 +866,15 @@ def render_report(result: dict[str, Any]) -> str:
 
 
 def main() -> None:
-    """Materialize the contract-corrected v0.1.1 PRE-FREEZE Step 7B artifacts."""
+    """Materialize the corrected-realization PRE-FREEZE Step 7B artifacts."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     args = parser.parse_args()
     if args.output.exists() or args.report.exists():
-        raise AuthorityError("Step 7B v0.1.1 output already exists; refusing to materialize it again")
+        raise AuthorityError("corrected Step 7B output already exists; refusing to materialize it again")
     if _sha256(V010_OUTPUT) != V010_OUTPUT_SHA256 or _sha256(V010_REPORT) != V010_REPORT_SHA256:
-        raise AuthorityError("v0.1.0 PRE-FREEZE artifacts differ from their preserved byte authorities")
+        raise AuthorityError("historical v0.1.0 PRE-FREEZE artifacts differ from their preserved byte authorities")
     result = compute(load_frozen_inputs())
     args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     args.report.write_text(render_report(result), encoding="utf-8")

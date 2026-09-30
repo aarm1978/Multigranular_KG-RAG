@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import hashlib
 import unittest
+from pathlib import Path
 
 from src.extraction.llm.publications.human_core_n5_evaluation import (
+    CORRECTED_EVALUATION_FREEZE_ARTIFACT_SHA256,
+    CORRECTED_PREDICTIONS_SHA256,
     EvaluationRecord,
     FrozenInputs,
     _contract_assignment,
@@ -12,6 +16,7 @@ from src.extraction.llm.publications.human_core_n5_evaluation import (
     compute,
     evidence_metrics,
     load_frozen_inputs,
+    load_historical_c1_inputs,
     pair_nodes,
     pair_relations,
     span_metrics,
@@ -172,12 +177,40 @@ class HumanCoreN5EvaluationTests(unittest.TestCase):
         self.assertIsNone(result["recall"])
         self.assertIsNone(result["f1"])
 
-    def test_preflight_derives_exact_five_unit_opportunities(self) -> None:
-        """Authority loading succeeds without computing or inspecting metrics."""
+    def test_corrected_realization_selects_exact_human_core_cohort(self) -> None:
+        """The active loader validates the corrected freeze and excludes Step 5 N=6."""
         inputs = load_frozen_inputs()
+        self.assertEqual(inputs.provenance["predictionAuthority"], "corrected_pilot1_evaluation")
+        self.assertEqual(inputs.provenance["realizationFreeze"]["artifactSha256"], CORRECTED_EVALUATION_FREEZE_ARTIFACT_SHA256)
+        self.assertEqual(inputs.provenance["canonicalPredictions"]["sha256"], CORRECTED_PREDICTIONS_SHA256)
         self.assertEqual(len(inputs.opportunities), 5)
         self.assertEqual(set(inputs.opportunities), set(inputs.routes))
         self.assertTrue(all(kind in {"node", "relation"} for rows in inputs.opportunities.values() for kind in rows.values()))
+        self.assertEqual({record.unit for record in inputs.predictions}, set(inputs.opportunities))
+        self.assertEqual(len(inputs.predictions), 229)
+        self.assertTrue(all("publication-pilot1-corrected-evaluation-v1.0.0" in record.key for record in inputs.predictions))
+        self.assertTrue(all("publication-c1-canonical" not in record.key for record in inputs.predictions))
+
+    def test_historical_loader_and_artifacts_remain_byte_preserved(self) -> None:
+        """Legacy C1 review authorities stay independent of prospective binding."""
+        historical = load_historical_c1_inputs()
+        self.assertEqual(historical.provenance["predictionAuthority"], "historical_c1")
+        self.assertTrue(all("publication-c1-canonical-v1.0.0" in record.key for record in historical.predictions))
+        root = Path(__file__).resolve().parents[1] / "data/curation/papers/m2/human_core_gold"
+        expected = {
+            "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze_v0.1.0.json": "ee77ee845c6c92cbbf0776c46a09b1049d24b6b79d289ab98f90f8de0b2eaaba",
+            "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze_v0.1.0.md": "a07292543dd4eae88edab9a569121cd850ccfcdd738af6c219e3bd76a4998414",
+            "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze_v0.1.1.json": "3ad2db463d6a6d1fcbd6ba838e3f9a3288ea1f379a5aeee68b97c10add60978c",
+            "publication_human_core_n5_c1_confirmatory_evaluation_pre_freeze_v0.1.1.md": "88d2ed4e7f9fd383a2202584d74546437c2b6f2e4846a1bcd9ba5023ffd597e9",
+            "publication_human_core_n5_posthoc_semantic_equivalence_review_package_v0.1.0.json": "c2555229fa6d12e268deaba1643791cef70e3d8bd43d50e51084057ca32425ef",
+            "publication_human_core_n5_posthoc_semantic_equivalence_review_package_v0.1.0.md": "163e091f9afbdf883f50eaea6172a12b0fe7b701edff4db7c275d511fb36f42d",
+            "publication_human_core_n5_posthoc_semantic_equivalence_review_package_v0.1.1.json": "d376ef1912e617d4f92320d34c3e2facacbbbe89b1eaf571e82ee2308b5ce6d9",
+            "publication_human_core_n5_posthoc_semantic_equivalence_review_package_v0.1.1.md": "e1b8cc7570fe1ac83d088010e537e7b996a2d9a00038b7eeff6882ad545bf675",
+        }
+        self.assertEqual(
+            {name: hashlib.sha256((root / name).read_bytes()).hexdigest() for name in expected},
+            expected,
+        )
 
 
 if __name__ == "__main__":
