@@ -70,26 +70,67 @@ pub:276:sec:0019:unit:0001
 
 ## 4. Sole Step 8 candidate source
 
-For future Step 8 pooled evaluation, the sole model-generated candidate source MUST be
-the six records whose `executionCohort` is `step5_n6` in:
+For future Step 8 pooled evaluation, the sole model-generated contributor is the six exact
+selected, processable provider attempts with `executionCohort` `step5_n6`, bound by the
+frozen corrected evaluation realization:
+
+`data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_realization_freeze_v1.0.0.json`
+
+Candidate construction MUST use each selected attempt's preserved provider response/raw
+output and its parser, validation, lifecycle, and attempt-selection provenance. The
+realization's frozen lifecycle ledger and result index are the required request-level
+bindings for those six attempts:
+
+- `data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_lifecycle_ledger_v1.0.0.jsonl`;
+- `data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_result_index_v1.0.0.jsonl`.
+
+The canonical corrected prediction JSONL remains the frozen autonomous accepted-semantic
+projection and provenance authority:
 
 `data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_canonical_predictions_v1.0.0.jsonl`
 
-That file is frozen by the corrected evaluation realization; its SHA-256 is
-`e888c4c4c68ede19cb4c65275b96637fd183e64f887d9a649f70e57f98eadb86`.
-Only those six `step5_n6` records may enter the pooled candidate layer. The historical
-227-request C1 realization remains preserved provenance only and MUST NOT be the Step 8
-candidate source.
+Its SHA-256 is `e888c4c4c68ede19cb4c65275b96637fd183e64f887d9a649f70e57f98eadb86`.
+It MUST NOT silently narrow the human-review candidate layer to accepted-semantic content.
+The historical 227-request C1 realization remains preserved provenance only and MUST NOT
+be the Step 8 candidate source.
 
 No second replicate, model, configuration, ablation, historical DEV output, Human Core
 record, or human-authored assertion contributes a pooled candidate.
 
 ## 5. Candidate layer, deduplication, and blinding
 
-A pooled candidate is a preserved assertion from the bound `step5_n6` cohort that is
-processable under its frozen validation and provenance lineage and source-groundable in
-its exact corrected envelope. Deterministic Phase B endpoints may support a relation but
-are not candidate contributors.
+A pooled candidate is a preserved assertion from one of the six bound selected processable
+`step5_n6` attempts that is source-groundable in its exact corrected envelope. Pooled
+eligibility is evaluated independently of Production Acceptance: it does not mean
+production accepted, human supported, scientifically true, canonical, or globally aligned.
+Only routed `extract_and_evaluate` target candidates are eligible. `extract_and_monitor`
+outputs and pipeline-derived assertions, including generic D-26 `ciroh:mentions`, MUST NOT
+generate pooled judgment items.
+
+From each selected processable response, the following lifecycle boundary is retained from
+v0.1.1:
+
+- `validated`, including `candidateValidationStatus = validated` with
+  `normalizationStatus = pending_review`, is eligible; its authoritative verbatim label
+  governs identity and pending normalization does not;
+- `needs_review / POSSIBLE_LOCAL_DUPLICATE` is eligible before deduplication and remains
+  separate pending explicit duplicate review;
+- a deferred case resolved under existing frozen authority into ordinary `validated` is
+  eligible under that rule;
+- `needs_review / ATOMICITY_VIOLATION`, `rejected`, unresolved deferred content,
+  authorized abstention, processing failure, and an independently presented `superseded`
+  record are ineligible.
+
+Pool-ineligible does not mean human-adjudicated false. A `superseded` record retains its
+original evidence and lineage, but cannot generate an independent item. Deterministic
+Phase B endpoints may serve as authorized context or exact relation endpoints when frozen
+extraction authorities permit them; they are not model contributors and do not become
+pooled candidate nodes merely because a relation refers to them. A model-authored relation
+using such an endpoint may remain eligible.
+
+No candidate gains eligibility through manual correction, rewriting, splitting,
+reclassification, endpoint/evidence substitution, resampling, normalization, name-based
+linking, canonicalization, or cross-source alignment.
 
 Deduplication is conservative and source-local. Automatic collapse is allowed only for
 exact validator-lineage or governed exact node/relation identities already authorized by

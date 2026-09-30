@@ -158,14 +158,15 @@ encodes UTF-8, and computes lowercase SHA-256. Individual excluded IDs are not p
   from proposal):* computed **globally and per entity type**, to separate intended
   multiplicity (e.g. versioned datasets) from undesirable duplication.
 
-### 2.3 Human-reference metrics — amended, not yet confirmatory
+### 2.3 Human-reference metrics — bounded current evidence
 
-Precision, Recall, F1, and fact recoverability remain prospective only under the amended
-Human Core matching contract. They are not claims against a broad “gold standard.” Human
-Core N=5 and the N=2 reliability subset are frozen bounded procedures; pooled
-human-adjudicated reference, model-blind completeness audit, and SciERC external IE anchor
-have separate pending contracts. See the amendment rather than this document for their
-boundaries and status.
+Human Core N=5 scoring and the N=2 reliability procedure are frozen/closed under their
+existing matching and closure authorities; they are bounded evidence, not claims against a
+broad “gold standard.” Complementary N=6 pooled validation remains a prospective draft
+procedure. Optional incidental omission observations are outside its positive pooled
+reference and excluded from Recall/F1 and completeness-related statistics. The SciERC
+adapter binding is frozen as a separate external anchor; see amendment v0.2 for current
+boundaries and execution status.
 
 ### 2.4 Ontology validation — partially done
 
@@ -342,11 +343,12 @@ model-sensitive evaluation design.
 Per-type columns separate intended multiplicity (e.g. versioned datasets) from undesirable
 duplication.
 
-### 6.3 Human-reference (amended — framework only)
+### 6.3 Human-reference (current bounded architecture)
 
 | Layer / source | Precision | Recall | F1 | Fact recoverability |
 |---|---|---|---|---|
-| Human Core / pooled reference procedure, when its matching contract is frozen | | | | |
+| Human Core N=5 (frozen Step 7 closure) | | | | |
+| Complementary N=6 pooled validation (draft; candidate-conditioned) | | | | |
 
 ---
 
@@ -357,9 +359,8 @@ duplication.
   point. GitHub alone is retained only as a module diagnostic.
 - **As construction proceeds:** materialize the next cumulative snapshot and re-run the
   same evaluator after each added source and each consolidation stage (the fine trajectory).
-- **Later (requires amended contracts):** pooled-reference scoring, model-blind
-  completeness audit, Human Core P/R/F1, fact recoverability, and SciERC external IE
-  anchoring.
+- **Later (requires researcher authorization):** execution of the draft N=6 pooled
+  validation procedure and any separate SciERC external-anchor execution.
 - **Later (requires GraphRAG runs):** the §5 comparison.
 
 ---
@@ -374,5 +375,6 @@ duplication.
 - Preserve the frozen Multigranular KG file-inventory class policy and endpoint-derived
   edge filtering as a supporting sensitivity analysis; do not claim symmetric GraphRAG
   filtering without a pre-defined common cross-schema identification protocol.
-- Freeze the pending matching, pooled-reference, completeness-audit, SciERC, and production
-  acceptance procedures before their results are used for confirmatory claims.
+- Obtain researcher authorization before executing the draft pooled-validation procedure or
+  any separate SciERC external-anchor execution; preserve their frozen bindings and do not
+  treat optional omission observations as completeness evidence.

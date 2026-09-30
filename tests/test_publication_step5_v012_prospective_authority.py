@@ -17,6 +17,8 @@ SECONDARY = ROOT / "data/curation/papers/m2/step5_freeze/publication_pool_second
 SCIERC = ROOT / "data/curation/papers/m2/step5_freeze/scierc_external_anchor_adapter_freeze_v0.1.2.json"
 REALIZATION = ROOT / "data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_realization_freeze_v1.0.0.json"
 PREDICTIONS = ROOT / "data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_canonical_predictions_v1.0.0.jsonl"
+LIFECYCLE = ROOT / "data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_lifecycle_ledger_v1.0.0.jsonl"
+RESULT_INDEX = ROOT / "data/curation/papers/m2/publication_pilot1_corrected_evaluation/publication_pilot1_corrected_evaluation_result_index_v1.0.0.jsonl"
 STEP7C = ROOT / "data/curation/papers/m2/human_core_gold/publication_human_core_n5_corrected_evaluation_step7c_closure_v1.0.0.json"
 
 N6_IDS = [
@@ -44,8 +46,8 @@ class PublicationStep5V012ProspectiveAuthorityTests(unittest.TestCase):
         self.assertIn("**Status:** **DRAFT — NOT FROZEN**", AUTHORITY.read_text(encoding="utf-8"))
         self.assertEqual(sha256(V011), "f946b6d9a6cc0928bd575f6eefffaab68d70d905fff9deaae2db1cd984fa83c3")
 
-    def test_corrected_n6_candidate_source_and_frozen_bindings(self) -> None:
-        """Only the corrected realization's six step5_n6 records are candidates."""
+    def test_corrected_selected_attempts_and_frozen_bindings(self) -> None:
+        """The six selected processable attempts, not only their projection, bind the pool."""
 
         envelopes = json.loads(ENVELOPES.read_text(encoding="utf-8"))
         secondary = json.loads(SECONDARY.read_text(encoding="utf-8"))
@@ -53,6 +55,8 @@ class PublicationStep5V012ProspectiveAuthorityTests(unittest.TestCase):
         scierc = json.loads(SCIERC.read_text(encoding="utf-8"))
         step7c = json.loads(STEP7C.read_text(encoding="utf-8"))
         rows = [json.loads(line) for line in PREDICTIONS.read_text(encoding="utf-8").splitlines()]
+        lifecycle_rows = [json.loads(line) for line in LIFECYCLE.read_text(encoding="utf-8").splitlines()]
+        index_rows = [json.loads(line) for line in RESULT_INDEX.read_text(encoding="utf-8").splitlines()]
 
         self.assertEqual(envelopes["artifactSha256"], "ee3b8ec8b1cc931fbcfe03e9659af992d26f6ab6705bebfedd3367d6903d7dce")
         self.assertEqual(envelopes["selectionIDsUnchanged"], N6_IDS)
@@ -62,8 +66,32 @@ class PublicationStep5V012ProspectiveAuthorityTests(unittest.TestCase):
         self.assertEqual(step7c["status"], "FROZEN_CLOSED")
         self.assertEqual(sha256(PREDICTIONS), realization["trackedArtifacts"]["predictions"]["sha256"])
         step5_rows = [row for row in rows if row["executionCohort"] == "step5_n6"]
+        step5_lifecycle = [row for row in lifecycle_rows if row["executionCohort"] == "step5_n6"]
+        step5_index = [row for row in index_rows if row["executionCohort"] == "step5_n6"]
         self.assertEqual(len(step5_rows), 6)
         self.assertEqual(sorted(row["primarySourceUnitID"] for row in step5_rows), sorted(N6_IDS))
+        self.assertEqual(len(step5_lifecycle), 6)
+        self.assertEqual(len(step5_index), 6)
+        self.assertEqual({row["selectedAttemptNumber"] for row in step5_lifecycle}, {1})
+        self.assertEqual({row["selectionDisposition"] for row in step5_lifecycle}, {"first_processable_response_selected"})
+        self.assertTrue(all(row["attempts"][0]["status"] == "processed" for row in step5_lifecycle))
+        self.assertEqual({row["attempts"][0]["parseStatus"] for row in step5_lifecycle}, {"parsed"})
+        self.assertTrue(all(row["providerResponseSha256"] and row["rawOutputSha256"] for row in step5_index))
+
+    def test_candidate_eligibility_is_not_production_acceptance(self) -> None:
+        """The retained v0.1.1 lifecycle boundary governs human-review eligibility."""
+
+        authority = AUTHORITY.read_text(encoding="utf-8")
+        self.assertIn("eligibility is evaluated independently of Production Acceptance", authority)
+        self.assertIn("`validated`", authority)
+        self.assertIn("`normalizationStatus = pending_review`", authority)
+        self.assertIn("`needs_review / POSSIBLE_LOCAL_DUPLICATE`", authority)
+        self.assertIn("`needs_review / ATOMICITY_VIOLATION`", authority)
+        self.assertIn("`rejected`, unresolved deferred content", authority)
+        self.assertIn("independently presented `superseded`", authority)
+        self.assertIn("No candidate gains eligibility through manual correction", authority)
+        self.assertIn("MUST NOT silently narrow the human-review candidate layer", authority)
+        self.assertIn("accepted-semantic\nprojection and provenance authority", authority)
 
     def test_no_live_completeness_audit_requirement_is_carried_forward(self) -> None:
         """The prospective documents retain no audit ordering, matching, or statistics."""
