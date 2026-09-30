@@ -22,6 +22,8 @@ RESULT_INDEX = ROOT / "data/curation/papers/m2/publication_pilot1_corrected_eval
 STEP7C = ROOT / "data/curation/papers/m2/human_core_gold/publication_human_core_n5_corrected_evaluation_step7c_closure_v1.0.0.json"
 DECISIONS = ROOT / "docs/evaluation_decisions.md"
 FREEZE_RECORD = ROOT / "data/curation/papers/m2/publication_step5_evaluation_authority_freeze_v0.1.2.json"
+V013_AUTHORITY = ROOT / "docs/publication_step5_evaluation_authority_v0.1.3.md"
+V013_FREEZE_RECORD = ROOT / "data/curation/papers/m2/publication_step5_evaluation_authority_freeze_v0.1.3.json"
 
 N6_IDS = [
     "pub:18:sec:0002:unit:0001",
@@ -154,6 +156,28 @@ class PublicationStep5V012ProspectiveAuthorityTests(unittest.TestCase):
         self.assertIn("#### Strict Human Core N=5 metrics", decisions)
         self.assertNotIn("| Complementary N=6 pooled validation", decisions)
         self.assertIn("does not produce Recall, F1, completeness, saturation, or\nmissed-reference statistics", decisions)
+
+    def test_v013_preserves_v012_and_corrects_only_closure_state(self) -> None:
+        """The successor keeps predecessor bytes and every frozen binding unchanged."""
+
+        predecessor = json.loads(FREEZE_RECORD.read_text(encoding="utf-8"))
+        successor = json.loads(V013_FREEZE_RECORD.read_text(encoding="utf-8"))
+        authority = V013_AUTHORITY.read_text(encoding="utf-8")
+        decisions = DECISIONS.read_text(encoding="utf-8")
+        self.assertEqual(sha256(AUTHORITY), "291b70577ad37b7df274df72cd2ccc1f8c9841cce8cf0240d4b7fd07eb27ffd2")
+        self.assertEqual(sha256(FREEZE_RECORD), "cf270611e6bec11765c1d0c4a2c719275861f32373fba3955a31dbe11769349b")
+        self.assertEqual(successor["authority"]["sha256"], sha256(V013_AUTHORITY))
+        self.assertEqual(successor["amendment"]["sha256"], sha256(AMENDMENT))
+        self.assertEqual(successor["frozenBindings"], predecessor["frozenBindings"])
+        self.assertTrue(successor["closureStateCorrectionOnly"])
+        self.assertFalse(successor["methodologicalChange"])
+        self.assertFalse(successor["closureExecutionBoundary"]["providerModelCallsOccurred"])
+        self.assertFalse(successor["closureExecutionBoundary"]["step8Executed"])
+        self.assertIn("**Status:** **FROZEN/CLOSED**", authority)
+        self.assertIn("no additional researcher approval", authority)
+        self.assertIn("Step 8 is authorized", authority)
+        self.assertNotIn("DRAFT — NOT FROZEN", decisions)
+        self.assertNotIn("requires researcher authorization", decisions)
 
 
 if __name__ == "__main__":

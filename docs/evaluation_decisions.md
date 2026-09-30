@@ -19,7 +19,7 @@ needs grounding.
 
 The authoritative prospective Study 2 evaluation architecture is
 [`study2_evaluation_protocol_amendment_v0.2.md`](study2_evaluation_protocol_amendment_v0.2.md)
-and [`publication_step5_evaluation_authority_v0.1.2.md`](publication_step5_evaluation_authority_v0.1.2.md),
+and [`publication_step5_evaluation_authority_v0.1.3.md`](publication_step5_evaluation_authority_v0.1.3.md),
 both **FROZEN/CLOSED**. Step 8 execution remains separately authorized. It governs this
 decisions record wherever historical design text conflicts with it. The current
 architecture is: bounded, model-blind **Human Core N=5**; independent **reliability
@@ -162,8 +162,8 @@ encodes UTF-8, and computes lowercase SHA-256. Individual excluded IDs are not p
 
 Human Core N=5 scoring and the N=2 reliability procedure are frozen/closed under their
 existing matching and closure authorities; they are bounded evidence, not claims against a
-broad “gold standard.” Complementary N=6 pooled validation remains a prospective draft
-procedure. Optional incidental omission observations are outside its positive pooled
+broad “gold standard.” Complementary N=6 pooled validation is a frozen current
+architecture. Optional incidental omission observations are outside its positive pooled
 reference and excluded from Recall/F1 and completeness-related statistics. The SciERC
 adapter binding is frozen as a separate external anchor; see amendment v0.2 for current
 boundaries and execution status.
@@ -352,7 +352,7 @@ duplication.
 
 #### Complementary N=6 candidate-conditioned validation
 
-The draft N=6 pooled procedure is a separate candidate-conditioned human-validation
+The frozen N=6 pooled procedure is a separate candidate-conditioned human-validation
 component. Under v0.1.2 it does not produce Recall, F1, completeness, saturation, or
 missed-reference statistics. No new N=6 quantitative metric is defined here.
 
@@ -365,8 +365,8 @@ missed-reference statistics. No new N=6 quantitative metric is defined here.
   point. GitHub alone is retained only as a module diagnostic.
 - **As construction proceeds:** materialize the next cumulative snapshot and re-run the
   same evaluator after each added source and each consolidation stage (the fine trajectory).
-- **Later (requires researcher authorization):** execution of the draft N=6 pooled
-  validation procedure and any separate SciERC external-anchor execution.
+- **Later (separately authorized implementation/execution):** N=6 pooled validation and
+  any separate SciERC external-anchor execution.
 - **Later (requires GraphRAG runs):** the §5 comparison.
 
 ---
@@ -381,6 +381,6 @@ missed-reference statistics. No new N=6 quantitative metric is defined here.
 - Preserve the frozen Multigranular KG file-inventory class policy and endpoint-derived
   edge filtering as a supporting sensitivity analysis; do not claim symmetric GraphRAG
   filtering without a pre-defined common cross-schema identification protocol.
-- Obtain researcher authorization before executing the draft pooled-validation procedure or
-  any separate SciERC external-anchor execution; preserve their frozen bindings and do not
-  treat optional omission observations as completeness evidence.
+- Preserve the frozen pooled-validation and SciERC bindings during their separately
+  authorized implementation/execution, and do not treat optional omission observations as
+  completeness evidence.
