@@ -46,16 +46,19 @@ class SourceAndPackageTests(unittest.TestCase):
     def test_role_membership_and_context_are_package_derived(self) -> None:
         """Only accepted primary IDs are navigable; context remains supporting text."""
 
-        self.assertEqual((len(self.primary.items), len(self.second.items)), (182, 45))
+        self.assertEqual((len(self.primary.items), len(self.second.items)), (182, 182))
         self.assertEqual(len(self.primary.units), 6)
-        self.assertEqual(len(self.second.units), 2)
-        self.assertEqual(set(self.second.items), {key for key, value in self.primary.items.items() if value["primarySourceUnitID"] in self.second.units})
+        self.assertEqual(len(self.second.units), 6)
+        self.assertEqual(self.second.units, self.primary.units)
+        self.assertEqual(self.second.items, self.primary.items)
+        for unit in self.primary.units:
+            self.assertEqual(self.second.unit(unit), self.primary.unit(unit))
         context = "pub:46:sec:0006:unit:0002"
         self.assertIn(context, self.primary.sources)
         with self.assertRaisesRegex(ReviewError, "UNIT_NOT_ASSIGNED"):
             self.primary.unit(context)
         with self.assertRaisesRegex(ReviewError, "UNIT_NOT_ASSIGNED"):
-            self.second.unit(next(unit for unit in self.primary.units if unit not in self.second.units))
+            self.second.unit(context)
 
     def test_source_text_and_every_evidence_segment_are_exact(self) -> None:
         """Paragraph rendering never changes source characters or evidence offsets."""
@@ -266,6 +269,26 @@ class SessionTests(unittest.TestCase):
         with patch("src.annotation.publication_step8.service.runtime_hash", return_value="drift"):
             with self.assertRaisesRegex(ReviewError, "RUNTIME_BINDING_DRIFT"):
                 production.export()
+
+    def test_production_role_isolation_and_activation_package_drift(self) -> None:
+        """Synthetic full-review roles remain separate; stale package approvals fail."""
+
+        services = {}
+        for role in ("primary", "second"):
+            path = self.root / (role + "-synthetic-activation.json")
+            required = activation_requirements(fixture(role), "fixture", "synthetic-reviewer")
+            path.write_text(json.dumps({**required, "inputPackageSha256": "historical-package"}))
+            with self.assertRaisesRegex(ReviewError, "PRODUCTION_ACTIVATION_BINDING_DRIFT"):
+                self.service(role, mode="production", activation=path)
+            path.write_text(json.dumps(required))
+            services[role] = self.service(role, mode="production", activation=path)
+        change(services["primary"], "phase", "synthetic-unit", "nodes")
+        change(services["primary"], "judgment", "opaque-node", JUDGMENTS[0])
+        self.assertEqual(services["second"].decisions(), {})
+        self.assertEqual(services["second"].phase("synthetic-unit"), "orientation")
+        services["second"].inputs.package_hash = "changed-package"
+        with self.assertRaisesRegex(ReviewError, "PRODUCTION_ACTIVATION_BINDING_DRIFT"):
+            services["second"].export()
 
     def test_duplicate_vocabulary_and_completion(self) -> None:
         """An existing blinded group requires a decision but no authored assertions."""

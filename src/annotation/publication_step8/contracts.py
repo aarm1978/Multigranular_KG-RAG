@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[3]
 PACKAGE_ROOT = "data/curation/papers/m2/publication_step8_blinded_adjudication"
 PACKAGES = {
     "primary": ("publication_step8b_blinded_primary_review_v1.0.0.json", "112f14e3a9093ce8acc7fd47b06f150a01ba579dac641e7baad1956818fbe2f7"),
-    "second": ("publication_step8b_blinded_second_review_v1.0.0.json", "f6c75ff80675ef2e940f2a6aa402c3df554c41bbb21aef6e85f6ea3bf7fdff2c"),
+    "second": ("publication_step8b_blinded_second_review_v1.1.0.json", "628bb07cfb5dd0a6df59fb367aec6b46492760b356dc380b64637d0e7b063983"),
 }
 INVENTORY = "data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl"
 INVENTORY_HASH = "7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e"

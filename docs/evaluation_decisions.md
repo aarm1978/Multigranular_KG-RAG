@@ -18,12 +18,13 @@ needs grounding.
 ## Current accepted architecture
 
 The authoritative prospective Study 2 evaluation architecture is
-[`study2_evaluation_protocol_amendment_v0.2.md`](study2_evaluation_protocol_amendment_v0.2.md)
-and [`publication_step5_evaluation_authority_v0.1.3.md`](publication_step5_evaluation_authority_v0.1.3.md),
+[`study2_evaluation_protocol_amendment_v0.3.md`](study2_evaluation_protocol_amendment_v0.3.md)
+and [`publication_step5_evaluation_authority_v0.1.4.md`](publication_step5_evaluation_authority_v0.1.4.md),
 both **FROZEN/CLOSED**. Step 8 execution remains separately authorized. It governs this
 decisions record wherever historical design text conflicts with it. The current
 architecture is: bounded, model-blind **Human Core N=5**; independent **reliability
-N=2**; complementary candidate-conditioned **N=6 pooled validation** with optional
+N=2**; complementary candidate-conditioned **N=6 pooled validation** with full
+independent 6/6 review of the same 182 items before reconciliation and optional
 non-exhaustive omission observations; a **SciERC external IE anchor**; and **GraphRAG for
 structural comparison only**. The N=6 candidate source is the frozen corrected
 `step5_n6` cohort, not the historical 227-request C1 realization. No standalone
@@ -31,6 +32,13 @@ exhaustive/model-blind completeness procedure, audit-to-pool matching, saturatio
 missed-reference proportion, or completeness statistic is a current requirement.
 Historical three-LLM, broad-gold-standard, paired per-model GraphRAG, and prior audit
 design text below are retained as design history, not current authority.
+
+The 6/6 replication successor was authorized before any Step 8 production judgment
+or activation file. Its paired candidate-support agreement plan is exact observed
+agreement and three-category nominal Cohen's kappa, with confusion/count tables,
+overall (182), nodes (133), and relations (49); target-level results are descriptive
+only where support is adequate. This is not extraction IAA or Human Core reliability.
+The historical 2/6 authorities and accepted primary package remain byte-identical.
 
 ---
 

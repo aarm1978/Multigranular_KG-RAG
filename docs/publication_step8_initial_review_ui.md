@@ -1,10 +1,36 @@
 # Publication Step 8 initial review UI
 
 The local interface implements the accepted Step 8B candidate-review packages
-under Step 5 v0.1.3/v0.1.2 and the retained human-review rules. It runs one reviewer
+under Step 5 v0.1.4 (amendment v0.3), v0.1.3/v0.1.2 and the retained human-review rules. It runs one reviewer
 role and one session per server. Package membership supplies the primary units,
-authorized context units, opaque item IDs, and second-review subset at runtime.
+authorized context units, opaque item IDs, and full second-review scope at runtime.
 It does not read the internal opaque-lineage map or Step 8A records.
+
+Interface version 1.1.0 binds primary v1.0.0 unchanged and second v1.1.0: both
+contain the same six primary units and 182 blinded items (133 nodes, 49 relations),
+with identical opaque IDs, semantic projections, evidence, and zero duplicate groups.
+Full independent second review was authorized before any production judgment or
+activation file. The historical two-unit, 45-item second package v1.0.0 and its
+selector/freeze remain historical artifacts and are not active UI inputs.
+
+The frozen coverage binding is
+`data/curation/papers/m2/step5_freeze/publication_pool_secondary_review_scope_freeze_v0.1.4.json`;
+the complete successor binding is
+`data/curation/papers/m2/publication_step5_evaluation_authority_freeze_v0.1.4.json`.
+Reproduce only the new artifacts with:
+
+```bash
+python -m src.extraction.llm.publications.step8_full_secondary_review
+```
+
+The historical `step8_blinded_adjudication` materializer remains a reproducibility
+path for the old 2/6 artifacts; it is not the active full-review materializer.
+Both reviewers must complete independent initial judgments before reconciliation.
+Preserve their original exports separately. Pre-reconciliation candidate-support
+agreement (observed agreement, three-category nominal Cohen's kappa and confusion
+counts overall/by node/by relation) follows Step 5 v0.1.4 Section 3; it is not
+extraction IAA or a replacement for Human Core reliability. No analysis or
+reconciliation is performed by the UI.
 
 ## Dry run
 
@@ -75,6 +101,11 @@ python -m src.annotation.publication_step8.app \
 
 Use the corresponding second role/package and separate activation for the second
 reviewer. Production activation is verified before any database is created.
+The package/runtime change invalidates earlier runtime approvals and session bindings;
+use fresh dry-run session IDs for this version. No historical session is migrated.
+Before production activation, obtain the researcher execution authorization, choose
+the two reviewer identities and role-specific session IDs, and approve the exact
+activation requirements from this final runtime separately for each role.
 Production access subsequently rechecks package and runtime bindings and the
 activation file. A runtime or package change blocks access and resume; it never
 silently migrates production state. Preserve existing state and seek an explicit
