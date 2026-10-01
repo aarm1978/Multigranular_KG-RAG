@@ -88,8 +88,8 @@ class Step8DistributionTests(unittest.TestCase):
                                (json.loads(line) for line in (distribution.ROOT / distribution.INVENTORY).read_text().splitlines())
                                if row["sourceUnitID"] in expected}):
                 raw_bytes = raw.read_bytes()
-                self.assertFalse(any(raw_bytes == archive_bytes for archive_bytes in
-                                     (zipfile.ZipFile(self.zips[reviewer]).read(name) for name in names)))
+                with zipfile.ZipFile(self.zips[reviewer]) as archive:
+                    self.assertFalse(any(raw_bytes == archive.read(f"step8_review_{reviewer}_v1/{name}") for name in names))
             self.assertNotIn(assignment["session"], seen)
             seen.add(assignment["session"])
             rebuilt, _ = distribution.build_package(reviewer, self.root / f"again-{reviewer}.zip", checkpoint="a" * 40)
