@@ -5,8 +5,11 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 from src.extraction.llm.publications.request_builder import canonical_json
 
@@ -18,6 +21,8 @@ PACKAGES = {
 }
 INVENTORY = "data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl"
 INVENTORY_HASH = "7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e"
+TARGET_INVENTORY = "src/extraction/llm/publications/publication_target_inventory_v0.1.5.yaml"
+TARGET_INVENTORY_HASH = "84aa773f0a4931fafc50d27240d784b2c977ef29767f3d9e80f3f4a42ef8e6e0"
 JUDGMENTS = ("supported_as_proposed", "not_supported_as_proposed", "insufficient_evidence_to_decide")
 DUPLICATE_DECISIONS = ("same_source_local_assertion", "distinct_assertions", "insufficient_evidence_to_resolve_duplicate_status")
 
@@ -66,6 +71,10 @@ class ReviewInputs:
         self.groups = {group["duplicateReviewGroupID"]: group for group in self.package["duplicateReviewGroups"]}
         if len(self.items) != len(self.package["judgmentItems"]) or len(set(self.units)) != len(self.units):
             raise ReviewError("PACKAGE_IDENTITY_NOT_UNIQUE")
+        self.target_guidance = self._load_target_guidance()
+        missing_targets = {item["operationalTarget"]["operationalID"] for item in self.items.values()} - set(self.target_guidance)
+        if missing_targets:
+            raise ReviewError("REVIEW_TARGET_INVENTORY_MAPPING_ABSENT")
         self.contexts = {unit: sorted({context for item in self.items.values() if item["primarySourceUnitID"] == unit
                                      for context in item["authorizedContextSourceUnitIDs"]}) for unit in self.units}
         allowed = set(self.units) | {context for values in self.contexts.values() for context in values}
@@ -108,6 +117,45 @@ class ReviewInputs:
                         or occurrence["startOffsetInDocument"] != start + row["startOffsetInDocument"]
                         or occurrence["endOffsetInDocument"] != end + row["startOffsetInDocument"]):
                     raise ReviewError("EVIDENCE_COORDINATE_OR_TEXT_DRIFT")
+        self.endpoint_bindings = self._current_paper_endpoint_bindings()
+
+    def _load_target_guidance(self) -> dict[str, dict[str, str]]:
+        """Load the frozen human-review criterion and boundary for each target."""
+
+        path = self.root / TARGET_INVENTORY
+        if not path.is_file() or digest(path.read_bytes()) != TARGET_INVENTORY_HASH:
+            raise ReviewError("TARGET_INVENTORY_BINDING_DRIFT")
+        try:
+            inventory = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except yaml.YAMLError as exc:
+            raise ReviewError("TARGET_INVENTORY_INVALID") from exc
+        targets = [*inventory.get("node_targets", []), *inventory.get("relation_targets", [])]
+        guidance = {
+            target.get("operational_id"): {
+                "positiveCriterion": target.get("positive_criterion"),
+                "boundary": target.get("boundary"),
+            }
+            for target in targets
+        }
+        if (len(guidance) != len(targets) or any(not isinstance(key, str) or not isinstance(value["positiveCriterion"], str)
+                                                  or not isinstance(value["boundary"], str) for key, value in guidance.items())):
+            raise ReviewError("TARGET_INVENTORY_GUIDANCE_INVALID")
+        return guidance
+
+    def _current_paper_endpoint_bindings(self) -> dict[str, list[dict[str, str]]]:
+        """Retain exact current-paper endpoint IDs for internal deterministic exports."""
+
+        bindings: dict[str, list[dict[str, str]]] = {}
+        for item in self.items.values():
+            source_id = self.sources[item["primarySourceUnitID"]]["sourceArtifactID"]
+            found = []
+            for endpoint_name in ("sourceEndpoint", "targetEndpoint"):
+                endpoint = item["assertion"].get(endpoint_name, {})
+                if endpoint.get("endpointKind") == "deterministic_node" and endpoint.get("exactNodeID") == source_id:
+                    found.append({"endpoint": endpoint_name, "exactNodeID": source_id})
+            if found:
+                bindings[item["judgmentItemID"]] = found
+        return bindings
 
     def verify_package(self) -> None:
         """Recheck the exact accepted package before persistence or export."""
@@ -120,12 +168,24 @@ class ReviewInputs:
 
         if unit not in self.units:
             raise ReviewError("UNIT_NOT_ASSIGNED")
-        items = [item for item in self.items.values() if item["primarySourceUnitID"] == unit]
+        items = [self._reviewer_item(item) for item in self.items.values() if item["primarySourceUnitID"] == unit]
         return {"primarySourceUnitID": unit, "source": self.sources[unit],
                 "authorizedContext": [self.sources[context] for context in self.contexts[unit]],
                 "items": [{**item, "paragraphContexts": evidence_contexts(item, self.sources)} for item in items],
                 "duplicateReviewGroups": [group for group in self.groups.values()
                                           if all(self.items[key]["primarySourceUnitID"] == unit for key in group["judgmentItemIDs"])]}
+
+    def _reviewer_item(self, item: dict[str, Any]) -> dict[str, Any]:
+        """Project one package item into its blinded reviewer-facing presentation."""
+
+        rendered = deepcopy(item)
+        rendered["reviewGuidance"] = self.target_guidance[item["operationalTarget"]["operationalID"]]
+        for binding in self.endpoint_bindings.get(item["judgmentItemID"], []):
+            endpoint = rendered["assertion"][binding["endpoint"]]
+            endpoint.pop("exactNodeID", None)
+            endpoint.pop("sourceArtifactID", None)
+            endpoint["displayLabel"] = "Current paper"
+        return rendered
 
 
 def evidence_contexts(item: dict[str, Any], sources: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
@@ -146,14 +206,18 @@ def evidence_contexts(item: dict[str, Any], sources: dict[str, dict[str, Any]]) 
         for left, right in zip(boundaries, boundaries[1:]):
             if left >= end or right <= start:
                 continue
-            spans = [(max(left, start), min(right, end), "evidence")]
+            evidence_left, evidence_right = max(left, start), min(right, end)
+            spans = [(evidence_left, evidence_right, "evidence")]
             for kind, label in labels.items():
                 if isinstance(label, str) and label:
-                    spans.extend((left + match.start(), left + match.end(), kind)
-                                 for match in re.finditer(re.escape(label), text[left:right]))
+                    spans.extend((evidence_left + match.start(), evidence_left + match.end(), kind)
+                                 for match in re.finditer(re.escape(label), text[evidence_left:evidence_right]))
             cuts = sorted({left, right, *(value for a, b, _ in spans for value in (a, b))})
             segments = [{"text": text[a:b], "highlights": [kind for x, y, kind in spans if x <= a and b <= y]}
                         for a, b in zip(cuts, cuts[1:])]
             contexts.append({"occurrence": ordinal, "sourceUnitID": evidence["sourceUnitID"],
-                             "startOffsetInUnit": left, "endOffsetInUnit": right, "segments": segments})
+                             "startOffsetInUnit": left, "endOffsetInUnit": right,
+                             "renderingKind": "cited_evidence_paragraph",
+                             "renderingLabel": f"Cited-evidence paragraph for evidence occurrence {ordinal}",
+                             "segments": segments})
     return contexts

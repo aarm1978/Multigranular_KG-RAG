@@ -190,7 +190,7 @@ class ReviewService:
                 allowed = {"orientation": {"nodes"}, "nodes": {"relations"}, "relations": {"nodes", "complete"}, "complete": set()}
                 if value not in allowed[previous]:
                     raise ReviewError("INVALID_PHASE_TRANSITION")
-                required = self._items(unit, "node") if value == "relations" else self._items(unit) + self._groups(unit) if value == "complete" else []
+                required = self._items(unit) + self._groups(unit) if value == "complete" else []
                 if any(identifier not in answers for identifier in required):
                     raise ReviewError("UNIT_PHASE_INCOMPLETE")
                 self.db.execute("INSERT INTO phases VALUES (?,?) ON CONFLICT(unit) DO UPDATE SET phase=excluded.phase", (unit, value))
@@ -216,5 +216,6 @@ class ReviewService:
                                "syntheticDryRun": self.mode == "dry-run", "revision": state["revision"],
                                "judgments": {key: value for key, value in sorted(state["decisions"].items()) if key in self.inputs.items},
                                "duplicateDecisions": {key: value for key, value in sorted(state["decisions"].items()) if key in self.inputs.groups},
+                               "currentPaperEndpointBindings": getattr(self.inputs, "endpoint_bindings", {}),
                                "complete": state["complete"], "unitCompletion": {unit: self.phase(unit) == "complete" for unit in self.inputs.units},
                                "revisions": records}) + b"\n"

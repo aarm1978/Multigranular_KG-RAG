@@ -24,12 +24,21 @@ servers run simultaneously. State is stored under
 reviewer's database or activation file to the other reviewer.
 
 The source-orientation page contains the exact complete authorized primary text.
-Begin candidate review to inspect nodes, then relations. All nodes must receive
-an initial judgment before continuing to relations. Optional context controls
-appear only for the authorized context units. Evidence appears in complete
-intersecting paragraphs, bounded by the authorized source unit. Evidence is
-yellow, literal node labels are darker, and literal relation endpoint mentions
-have distinct underline colors. No inferred label or relation span is displayed.
+Begin candidate review in Nodes. Nodes and Relations can then be revisited freely;
+unit completion remains unavailable until every assigned node and relation judgment
+and every duplicate decision is present. Optional controls are labeled **Additional
+authorized context** and appear only for authorized context units. Evidence appears
+as a complete **Cited-evidence paragraph for evidence occurrence N**, bounded by
+the authorized source unit. Evidence is yellow. Literal node labels and relation
+endpoint mentions are highlighted only for every exact occurrence wholly inside the
+frozen cited-evidence interval; same-string occurrences elsewhere in the paragraph
+are never highlighted. No inferred label or relation span is displayed.
+
+Each target displays its frozen `positive_criterion` and `boundary`, derived from
+`publication_target_inventory_v0.1.5.yaml`. A deterministic endpoint that is the
+current source artifact is displayed to the reviewer only as **Current paper**; the
+exact identifier remains in the accepted package and deterministic internal export
+binding, not in the endpoint display.
 
 Each selection autosaves before navigation resumes. `Saved ✓` acknowledges the
 committed revision. A failure leaves the previous confirmed choice visible and
@@ -74,10 +83,10 @@ versioned migration decision if a later implementation change is needed.
 Reviewer identity is stored with the session and each revision and cannot change
 after the first decision. Every action is revision-checked and appended to the
 history. Exports include mode, role, reviewer, session, input package binding,
-interface/runtime bindings, opaque IDs, exact controlled decisions, unit/session
-completion, and revision timestamps. Export bytes are deterministic for unchanged
-state. Dry-run exports are explicitly marked `syntheticDryRun` and cannot resume
-as production.
+interface/runtime bindings, opaque IDs, exact controlled decisions, internal
+current-paper endpoint bindings, unit/session completion, and revision timestamps.
+Export bytes are deterministic for unchanged state. Dry-run exports are explicitly
+marked `syntheticDryRun` and cannot resume as production.
 
 Only this session's progress and decisions are served. The server binds to
 loopback, serves fixed routes, and requires a session token for POST actions.

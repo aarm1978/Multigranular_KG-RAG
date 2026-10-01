@@ -27,7 +27,7 @@ function choices(parent, id, values, action) {
     input.onchange = () => act(action,id,value); label.append(input, document.createTextNode(' '+value.replaceAll('_',' '))); options.append(label); });
   box.append(options); parent.append(box);
 }
-function endpoint(parent, value) { const box=el('div',undefined,'endpoint'); box.append(el('strong',value.label || value.exactNodeID || 'Endpoint')); if(value.className) box.append(el('div',value.className)); parent.append(box); }
+function endpoint(parent, value) { const box=el('div',undefined,'endpoint'); box.append(el('strong',value.displayLabel || value.label || value.exactNodeID || 'Endpoint')); if(value.className) box.append(el('div',value.className)); parent.append(box); }
 function render() {
   if (!state) return;
   q('session').textContent = `${state.mode} · ${state.reviewRole} · ${state.reviewerID} · Session: ${state.answered} / ${state.total} reviewed`;
@@ -37,7 +37,7 @@ function render() {
   root.append(el('h2',unit.source.sectionTitle),el('p',`Nodes: ${current.nodesAnswered} / ${current.nodesTotal} · Relations: ${current.relationsAnswered} / ${current.relationsTotal}`,'progress'));
   if(current.phase==='orientation') {root.append(el('p','Source orientation: read the authorized primary unit, then begin candidate review.'),el('div',unit.source.text,'source'),button('Begin candidate review',()=>act('phase',unit.primarySourceUnitID,'nodes')));return;}
   sourcePanel(root,unit.source,'Complete authorized primary source text');
-  unit.authorizedContext.forEach(source=>sourcePanel(root,source,'Show authorized context: '+source.sectionTitle));
+  unit.authorizedContext.forEach(source=>sourcePanel(root,source,'Additional authorized context: '+source.sectionTitle));
   if(current.phase==='complete') {root.append(el('h3','Unit complete'));const i=state.units.findIndex(u=>u.primarySourceUnitID===unit.primarySourceUnitID);if(i+1<state.units.length)root.append(button('Next unit',()=>openUnit(state.units[i+1].primarySourceUnitID)));return;}
   const kind=current.phase==='nodes'?'node':'relation';const items=unit.items.filter(x=>x.recordKind===kind);
   position=Math.max(0,Math.min(position,items.length-1));
@@ -46,14 +46,18 @@ function render() {
   if(items.length) {
     const item=items[position], assertion=item.assertion;
     root.append(el('p',`${item.judgmentItemID} · ${position+1} / ${items.length}`),el('h3',item.operationalTarget.name));
+    if(item.reviewGuidance) {
+      root.append(el('p','Positive criterion: '+item.reviewGuidance.positiveCriterion,'targetGuidance'),
+                  el('p','Boundary: '+item.reviewGuidance.boundary,'targetGuidance'));
+    }
     if(kind==='node') {root.append(el('p',assertion.label),el('p','Identity action: '+assertion.action));if(assertion.exactExistingNodeID)root.append(el('p',assertion.exactExistingNodeID));assertion.attributes.forEach(a=>root.append(el('p',a.attributeName+': '+String(a.value))));}
     else {const r=el('div',undefined,'relation');endpoint(r,assertion.sourceEndpoint);r.append(el('strong','→ '+assertion.relationName+' →'));endpoint(r,assertion.targetEndpoint);root.append(r,el('p','Scope: '+assertion.relationScope));}
     choices(root,item.judgmentItemID,state.judgments,'judgment');
-    item.paragraphContexts.forEach((context,i)=>{root.append(el('small',`Evidence context ${i+1} of ${item.paragraphContexts.length} · ${context.sourceUnitID}`));const p=el('div',undefined,'paragraph');context.segments.forEach(segment=>{const s=el('span',segment.text);s.className=segment.highlights.map(k=>k==='source'?'sourceMention':k==='target'?'targetMention':k).join(' ');p.append(s);});root.append(p);});
+    item.paragraphContexts.forEach((context,i)=>{root.append(el('small',`${context.renderingLabel || 'Cited-evidence paragraph'} ${i+1} of ${item.paragraphContexts.length} · ${context.sourceUnitID}`));const p=el('div',undefined,'paragraph');context.segments.forEach(segment=>{const s=el('span',segment.text);s.className=segment.highlights.map(k=>k==='source'?'sourceMention':k==='target'?'targetMention':k).join(' ');p.append(s);});root.append(p);});
     root.append(button('Previous',()=>{position--;render();},position===0),button('Next',()=>{position++;render();},position>=items.length-1));
   }
-  if(kind==='node')root.append(button('Continue to relations',()=>{position=0;act('phase',unit.primarySourceUnitID,'relations');},current.nodesAnswered!==current.nodesTotal));
-  else {unit.duplicateReviewGroups.forEach(group=>{root.append(el('h3',group.duplicateReviewGroupID),el('p',group.instruction),el('p',group.judgmentItemIDs.join(', ')));choices(root,group.duplicateReviewGroupID,state.duplicateDecisions,'duplicate');});root.append(button('Return to nodes',()=>{position=0;act('phase',unit.primarySourceUnitID,'nodes');}),button('Complete unit',()=>act('phase',unit.primarySourceUnitID,'complete'),current.relationsAnswered!==current.relationsTotal || unit.duplicateReviewGroups.some(g=>!state.decisions[g.duplicateReviewGroupID])));}
+  if(kind==='node')root.append(button('Go to relations',()=>{position=0;return act('phase',unit.primarySourceUnitID,'relations');}));
+  else {unit.duplicateReviewGroups.forEach(group=>{root.append(el('h3',group.duplicateReviewGroupID),el('p',group.instruction),el('p',group.judgmentItemIDs.join(', ')));choices(root,group.duplicateReviewGroupID,state.duplicateDecisions,'duplicate');});root.append(button('Return to nodes',()=>{position=0;return act('phase',unit.primarySourceUnitID,'nodes');}),button('Complete unit',()=>act('phase',unit.primarySourceUnitID,'complete'),current.relationsAnswered!==current.relationsTotal || unit.duplicateReviewGroups.some(g=>!state.decisions[g.duplicateReviewGroupID])));}
 }
 async function start() {try {state=await api('/api/state');csrf=state.csrfToken;const next=state.units.find(u=>u.phase!=='complete') || state.units[0];await openUnit(next.primarySourceUnitID);}catch(e){q('error').textContent=e.message;}}
 start();

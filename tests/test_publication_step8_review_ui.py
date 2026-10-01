@@ -15,7 +15,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from src.annotation.publication_step8.app import make_handler
-from src.annotation.publication_step8.contracts import JUDGMENTS, ReviewError, ReviewInputs, digest, evidence_contexts
+from src.annotation.publication_step8.contracts import JUDGMENTS, TARGET_INVENTORY, ReviewError, ReviewInputs, digest, evidence_contexts
 from src.annotation.publication_step8.service import ReviewService, activation_requirements
 
 
@@ -84,6 +84,55 @@ class SourceAndPackageTests(unittest.TestCase):
         rendered = evidence_contexts(relation, {"u": {"text": text}})
         self.assertEqual({kind for context in rendered for segment in context["segments"] for kind in segment["highlights"]}, {"source", "target", "evidence"})
 
+    def test_literal_mentions_are_bounded_to_each_cited_evidence_interval(self) -> None:
+        """Every literal occurrence inside evidence highlights; none outside does."""
+
+        text = "LSTM outside cited evidence. LSTM LSTM cited evidence."
+        start = text.index("LSTM LSTM")
+        end = start + len("LSTM LSTM")
+        node = {"recordKind": "node", "assertion": {"label": "LSTM"},
+                "evidenceOccurrences": [{"sourceUnitID": "u", "startOffsetInUnit": start, "endOffsetInUnit": end}]}
+        contexts = evidence_contexts(node, {"u": {"text": text}})
+        labels = [segment["text"] for context in contexts for segment in context["segments"] if "label" in segment["highlights"]]
+        self.assertEqual(labels, ["LSTM", "LSTM"])
+        self.assertEqual(contexts[0]["renderingKind"], "cited_evidence_paragraph")
+        self.assertEqual(contexts[0]["renderingLabel"], "Cited-evidence paragraph for evidence occurrence 1")
+
+        relation = {"recordKind": "relation", "assertion": {"sourceEndpoint": {"label": "LSTM"},
+                    "targetEndpoint": {"label": "LSTM"}}, "evidenceOccurrences": node["evidenceOccurrences"]}
+        endpoint_contexts = evidence_contexts(relation, {"u": {"text": text}})
+        mentions = [segment for context in endpoint_contexts for segment in context["segments"]
+                    if "source" in segment["highlights"] or "target" in segment["highlights"]]
+        self.assertEqual([segment["text"] for segment in mentions], ["LSTM", "LSTM"])
+
+    def test_target_guidance_is_derived_from_frozen_inventory(self) -> None:
+        """Reviewer criteria and boundaries use the exact frozen target rows."""
+
+        import yaml
+
+        inventory = yaml.safe_load((self.primary.root / TARGET_INVENTORY).read_text(encoding="utf-8"))
+        authoritative = {row["operational_id"]: row for row in [*inventory["node_targets"], *inventory["relation_targets"]]}
+        for item in self.primary.items.values():
+            guidance = self.primary.target_guidance[item["operationalTarget"]["operationalID"]]
+            row = authoritative[item["operationalTarget"]["operationalID"]]
+            self.assertEqual(guidance, {"positiveCriterion": row["positive_criterion"], "boundary": row["boundary"]})
+
+    def test_current_paper_is_display_only_with_internal_export_binding(self) -> None:
+        """The reviewer gets a neutral endpoint label while the export retains its ID."""
+
+        raw = next(item for item in self.primary.items.values() if item["judgmentItemID"] in self.primary.endpoint_bindings)
+        shown = next(item for item in self.primary.unit(raw["primarySourceUnitID"])["items"]
+                     if item["judgmentItemID"] == raw["judgmentItemID"])
+        endpoint_name = self.primary.endpoint_bindings[raw["judgmentItemID"]][0]["endpoint"]
+        self.assertEqual(shown["assertion"][endpoint_name], {"endpointKind": "deterministic_node", "displayLabel": "Current paper"})
+        with tempfile.TemporaryDirectory() as directory:
+            service = ReviewService(self.primary, Path(directory), "display-only", "synthetic-reviewer")
+            try:
+                exported = json.loads(service.export())
+            finally:
+                service.close()
+        self.assertEqual(exported["currentPaperEndpointBindings"][raw["judgmentItemID"]], self.primary.endpoint_bindings[raw["judgmentItemID"]])
+
     def test_package_and_source_drift_fail_closed(self) -> None:
         """Exact accepted file binding and source inventory hashes are mandatory."""
 
@@ -92,6 +141,9 @@ class SourceAndPackageTests(unittest.TestCase):
                 ReviewInputs("primary")
         with patch("src.annotation.publication_step8.contracts.INVENTORY_HASH", "wrong"):
             with self.assertRaisesRegex(ReviewError, "SOURCE_INVENTORY_BINDING_DRIFT"):
+                ReviewInputs("primary")
+        with patch("src.annotation.publication_step8.contracts.TARGET_INVENTORY_HASH", "wrong"):
+            with self.assertRaisesRegex(ReviewError, "TARGET_INVENTORY_BINDING_DRIFT"):
                 ReviewInputs("primary")
 
     def test_reviewer_payload_has_no_internal_lineage(self) -> None:
@@ -138,8 +190,8 @@ class SessionTests(unittest.TestCase):
         self.services.append(value)
         return value
 
-    def test_workflow_vocabulary_completion_and_no_preselection(self) -> None:
-        """Orientation, nodes, and relations gates enforce the initial-review contract."""
+    def test_workflow_vocabulary_free_navigation_completion_and_no_preselection(self) -> None:
+        """Nodes and Relations are freely revisitable, while completion remains gated."""
 
         service = self.service()
         self.assertEqual(service.decisions(), {})
@@ -149,8 +201,8 @@ class SessionTests(unittest.TestCase):
         for bad in ("edited_label", "adjudication_unresolved", "", "yes"):
             with self.assertRaisesRegex(ReviewError, "INVALID_JUDGMENT_OR_ITEM"):
                 change(service, "judgment", "opaque-node", bad)
-        with self.assertRaisesRegex(ReviewError, "UNIT_PHASE_INCOMPLETE"):
-            change(service, "phase", "synthetic-unit", "relations")
+        change(service, "phase", "synthetic-unit", "relations")
+        change(service, "phase", "synthetic-unit", "nodes")
         change(service, "judgment", "opaque-node", JUDGMENTS[0])
         with self.assertRaisesRegex(ReviewError, "REVIEWER_IDENTITY_LOCKED"):
             change(service, "reviewer", "", "different")
