@@ -54,6 +54,8 @@ test('orientation, free navigation, guidance, context labels, and literal-only r
   const relations=descendants(elements.review).find(x=>x.textContent==='Go to relations');
   await relations.onclick();
   assert.equal(state.units[0].phase,'relations');
+  const complete=descendants(elements.review).find(x=>x.textContent==='Complete unit');
+  assert.ok(complete.disabled,'Complete unit must remain disabled while Nodes are unanswered');
   const nodes=descendants(elements.review).find(x=>x.textContent==='Return to nodes');
   assert.ok(nodes, descendants(elements.review).map(x=>x.textContent).join(' | '));
   await nodes.onclick();
