@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 import zipfile
+import hashlib
 from pathlib import Path
 
 from src.annotation.publication_step8 import distribution
@@ -100,6 +101,26 @@ class Step8DistributionTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("PACKAGE_FILE_HASH_MISMATCH", result.stderr)
         self.assertFalse((package / "state").exists())
+
+    def test_tracked_manifest_binds_final_local_zip_bytes(self) -> None:
+        """The versioned manifest records both final ZIP hashes and immutable bindings."""
+
+        manifest_path = distribution.MANIFEST_PATH
+        self.assertTrue(manifest_path.is_file())
+        manifest = json.loads(manifest_path.read_text())
+        body = dict(manifest)
+        declared = body.pop("artifactSha256")
+        self.assertEqual(declared, hashlib.sha256(json.dumps(body, ensure_ascii=False, sort_keys=True,
+                                                             separators=(",", ":")).encode()).hexdigest())
+        self.assertEqual(manifest["interfaceVersion"], "1.1.0")
+        self.assertFalse(any(manifest["boundary"].values()))
+        for reviewer, assignment in distribution.ASSIGNMENTS.items():
+            bundle = manifest["reviewerBundles"][reviewer]
+            self.assertEqual((bundle["reviewerID"], bundle["reviewRole"], bundle["reviewSessionID"]),
+                             (reviewer, assignment["role"], assignment["session"]))
+            zip_path = distribution.ROOT / bundle["zipPath"]
+            self.assertTrue(zip_path.is_file())
+            self.assertEqual(hashlib.sha256(zip_path.read_bytes()).hexdigest(), bundle["zipSha256"])
 
 
 if __name__ == "__main__":
