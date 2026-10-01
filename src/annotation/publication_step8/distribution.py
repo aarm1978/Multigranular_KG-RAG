@@ -235,6 +235,7 @@ def build_package(reviewer: str, output: Path, *, checkpoint: str, root: Path = 
 def materialize(output_dir: Path = DEFAULT_OUTPUT, *, checkpoint: str | None = None) -> dict[str, Any]:
     """Build both ZIPs and write a tracked, self-hashed distribution manifest."""
 
+    output_dir = output_dir.resolve()
     checkpoint = checkpoint or _clean_checkpoint(ROOT)
     records = {}
     for reviewer in ASSIGNMENTS:
