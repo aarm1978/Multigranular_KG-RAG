@@ -17,15 +17,18 @@ from typing import Any, Iterable
 import yaml
 
 from . import INTERFACE_VERSION
-from .contracts import INVENTORY, INVENTORY_HASH, PACKAGE_ROOT, PACKAGES, TARGET_INVENTORY, TARGET_INVENTORY_HASH, ReviewInputs, digest
+from .contracts import (INVENTORY, INVENTORY_HASH, PACKAGE_ROOT, PACKAGES, TARGET_INVENTORY,
+                        TARGET_INVENTORY_HASH, ReviewInputs, canonical_text, digest)
+from .distribution_scoped_inputs import SCOPED_SOURCE_PATH, ScopedReviewInputs
 from .service import activation_requirements
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 ACCEPTED_RUNTIME_CHECKPOINT = "03ed4372c40d4d22ce0309fe5719f6260afc4692"
-MANIFEST_PATH = ROOT / "data/curation/papers/m2/publication_step8_review_distribution_manifest_v1.0.0.json"
-DEFAULT_OUTPUT = ROOT / "var/publication_step8_distribution"
+MANIFEST_PATH = ROOT / "data/curation/papers/m2/publication_step8_review_distribution_manifest_v1.0.1.json"
+SUPERSEDED_MANIFEST_PATH = ROOT / "data/curation/papers/m2/publication_step8_review_distribution_manifest_v1.0.0.json"
+DEFAULT_OUTPUT = ROOT / "var/publication_step8_distribution/v1.0.1"
 ASSIGNMENTS = {
     "reviewer_1": {"role": "primary", "session": "step8-production-reviewer-1-v1"},
     "reviewer_2": {"role": "second", "session": "step8-production-reviewer-2-v1"},
@@ -74,18 +77,43 @@ def _python_source_files() -> list[Path]:
     ]
 
 
-def _source_files(role: str) -> list[Path]:
-    """Return all and only role-authorized reviewer-visible source dependencies."""
+def _scoped_source_artifact(role: str) -> dict[str, Any]:
+    """Build the exact source-unit envelope that may cross the reviewer boundary."""
 
     package = ROOT / PACKAGE_ROOT / PACKAGES[role][0]
     visible = json.loads(package.read_text(encoding="utf-8"))
-    allowed = set(visible["primarySourceUnitIDs"]) | {context for item in visible["judgmentItems"]
-                                                         for context in item["authorizedContextSourceUnitIDs"]}
-    records = [json.loads(line) for line in (ROOT / INVENTORY).read_text(encoding="utf-8").splitlines()]
-    source_files = {ROOT / row["sourceFile"] for row in records if row["sourceUnitID"] in allowed}
-    if len(source_files) != 6 or any(not path.is_file() for path in source_files):
+    primary = list(visible["primarySourceUnitIDs"])
+    contexts = sorted({context for item in visible["judgmentItems"] for context in item["authorizedContextSourceUnitIDs"]})
+    allowed = set(primary) | set(contexts)
+    inventory = ROOT / INVENTORY
+    if digest(inventory.read_bytes()) != INVENTORY_HASH:
+        raise DistributionBuildError("DISTRIBUTION_SOURCE_INVENTORY_DRIFT")
+    rows = {row["sourceUnitID"]: row for row in (json.loads(line) for line in inventory.read_text(encoding="utf-8").splitlines())
+            if row["sourceUnitID"] in allowed}
+    if set(rows) != allowed:
         raise DistributionBuildError("DISTRIBUTION_SOURCE_CLOSURE_INVALID")
-    return [package, ROOT / INVENTORY, ROOT / TARGET_INVENTORY, *sorted(source_files)]
+    source_units = []
+    for unit in sorted(allowed):
+        row = rows[unit]
+        raw = ROOT / row["sourceFile"]
+        if not raw.is_file():
+            raise DistributionBuildError("DISTRIBUTION_SOURCE_CLOSURE_INVALID")
+        document = canonical_text(raw.read_bytes())
+        text = document[row["startOffsetInDocument"]:row["endOffsetInDocument"]]
+        if (digest(document.encode()) != row["canonicalTextSha256"] or text != row["text"]
+                or digest(text.encode()) != row["textHash"]):
+            raise DistributionBuildError("DISTRIBUTION_SOURCE_CLOSURE_INVALID")
+        source_units.append({"sourceUnitID": unit, "sourceArtifactID": row["canonicalArtifactID"],
+                             "sectionID": row["sectionID"], "sectionTitle": row["sectionTitleRaw"] or row["sectionTitleNormalized"],
+                             "startOffsetInDocument": row["startOffsetInDocument"], "endOffsetInDocument": row["endOffsetInDocument"],
+                             "text": text, "textHash": row["textHash"], "canonicalTextSha256": row["canonicalTextSha256"],
+                             "originalSourceFileSha256": _sha(raw)})
+    body = {"artifactType": "publication_step8_distribution_scoped_sources", "artifactVersion": VERSION,
+            "primarySourceUnitIDs": primary, "authorizedContextSourceUnitIDs": contexts,
+            "fullInventoryProvenance": {"path": INVENTORY, "sha256": INVENTORY_HASH}, "sourceUnits": source_units}
+    body["artifactSha256"] = hashlib.sha256(json.dumps(body, ensure_ascii=False, sort_keys=True,
+                                                         separators=(",", ":")).encode("utf-8")).hexdigest()
+    return body
 
 
 def _vendor_yaml(destination: Path) -> None:
@@ -163,7 +191,7 @@ The review is private and runs only on your computer. It does not need a Git che
 ## Backup and final return
 
 - Double-click **EXPORT_BACKUP.command** at any time for a recovery copy. Its filename and contents say **NON_FINAL_BACKUP**. Do not return it as your completed result.
-- When every assigned item is finished, double-click **EXPORT_FINAL.command**. It fails if any of the 182 decisions is incomplete.
+- When every assigned item is finished, complete each of the six review units in the UI, then double-click **EXPORT_FINAL.command**. It fails unless all 182 decisions and all six formal unit completions are present. A final export is read-only; return it only after completing the review.
 - Return only `exports/STEP8_FINAL_EXPORT.json` to the researcher using the agreed private transfer method. Do not return the `state` folder, SQLite database, the activation file, or this whole package.
 
 Your fixed session identifier is `{session}`. It exists only to let you safely resume this same local review.
@@ -202,13 +230,17 @@ def build_package(reviewer: str, output: Path, *, checkpoint: str, root: Path = 
     if assignment is None:
         raise DistributionBuildError("DISTRIBUTION_REVIEWER_UNKNOWN")
     role, session = assignment["role"], assignment["session"]
-    inputs = ReviewInputs(role, root=root)
-    activation = activation_requirements(inputs, session, reviewer)
     with tempfile.TemporaryDirectory() as temporary_name:
         package = Path(temporary_name) / f"step8_review_{reviewer}_v1"
         package.mkdir()
-        for source in [*_python_source_files(), *_source_files(role)]:
+        for source in [*_python_source_files(), root / PACKAGE_ROOT / PACKAGES[role][0], root / TARGET_INVENTORY]:
             _copy(source, package)
+        scoped = _scoped_source_artifact(role)
+        scoped_path = package / SCOPED_SOURCE_PATH
+        scoped_path.parent.mkdir(parents=True, exist_ok=True)
+        scoped_path.write_bytes(_canonical(scoped))
+        inputs = ScopedReviewInputs(role, root=package)
+        activation = activation_requirements(inputs, session, reviewer)
         _vendor_yaml(package)
         activation_path = package / "activation" / "production_activation.json"
         activation_path.parent.mkdir(parents=True, exist_ok=True)
@@ -224,6 +256,9 @@ def build_package(reviewer: str, output: Path, *, checkpoint: str, root: Path = 
         manifest = {"packageSchemaVersion": VERSION, "distributionBuildCheckpoint": checkpoint,
                     "acceptedRuntimeCheckpoint": ACCEPTED_RUNTIME_CHECKPOINT, "reviewerID": reviewer,
                     "reviewRole": role, "reviewSessionID": session, **activation,
+                    "scopedSourceArtifact": SCOPED_SOURCE_PATH,
+                    "scopedSourceArtifactSha256": digest(scoped_path.read_bytes()),
+                    "fullSourceInventoryProvenanceSha256": INVENTORY_HASH,
                     "files": files, "stateDirectory": "state", "exportsDirectory": "exports",
                     "privateOpaqueLineageIncluded": False, "zipRoot": package.name}
         (package / "PACKAGE_MANIFEST.json").write_bytes(_canonical(manifest))
@@ -244,9 +279,13 @@ def materialize(output_dir: Path = DEFAULT_OUTPUT, *, checkpoint: str | None = N
                              "reviewSessionID": package["reviewSessionID"], "zipPath": str(path.relative_to(ROOT)),
                              "zipSha256": _sha(path), "packageManifest": {key: package[key] for key in (
                                  "inputPackageSha256", "runtimeSha256", "sourceInventorySha256", "interfaceVersion", "files")}}
+    if not SUPERSEDED_MANIFEST_PATH.is_file():
+        raise DistributionBuildError("SUPERSEDED_DISTRIBUTION_MANIFEST_ABSENT")
     body = {"artifactType": "publication_step8_reviewer_distribution_manifest", "artifactVersion": VERSION,
             "distributionBuildCheckpoint": checkpoint, "acceptedRuntimeCheckpoint": ACCEPTED_RUNTIME_CHECKPOINT,
             "interfaceVersion": INTERFACE_VERSION, "reviewerBundles": records,
+            "supersedes": {"path": str(SUPERSEDED_MANIFEST_PATH.relative_to(ROOT)), "sha256": _sha(SUPERSEDED_MANIFEST_PATH),
+                           "status": "superseded_before_distribution"},
             "boundary": {"productionJudgmentsCreated": False, "reconciliationCreated": False,
                          "privateOpaqueLineageIncluded": False, "providerModelCallsOccurred": False}}
     body["artifactSha256"] = hashlib.sha256(json.dumps(body, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()

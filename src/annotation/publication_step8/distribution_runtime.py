@@ -12,7 +12,8 @@ from pathlib import Path
 from typing import Any
 
 from .app import make_handler
-from .contracts import ReviewError, ReviewInputs, canonical_json
+from .contracts import ReviewError, canonical_json
+from .distribution_scoped_inputs import ScopedReviewInputs
 from .service import ReviewService, activation_requirements
 
 
@@ -33,7 +34,7 @@ def _load_manifest(package_root: Path) -> dict[str, Any]:
         value = json.loads((package_root / "PACKAGE_MANIFEST.json").read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise DistributionError("PACKAGE_MANIFEST_INVALID") from exc
-    if not isinstance(value, dict) or value.get("packageSchemaVersion") != "1.0.0":
+    if not isinstance(value, dict) or value.get("packageSchemaVersion") != "1.0.1":
         raise DistributionError("PACKAGE_MANIFEST_INVALID")
     return value
 
@@ -62,7 +63,7 @@ def verify_package(package_root: Path) -> dict[str, Any]:
         activation = json.loads(activation_path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise DistributionError("PACKAGE_ACTIVATION_INVALID") from exc
-    inputs = ReviewInputs(role, root=package_root)
+    inputs = ScopedReviewInputs(role, root=package_root)
     expected = activation_requirements(inputs, session, reviewer)
     if activation != expected:
         raise DistributionError("PACKAGE_ACTIVATION_BINDING_DRIFT")
@@ -77,7 +78,7 @@ def _service(package_root: Path) -> tuple[ReviewService, dict[str, Any]]:
 
     manifest = verify_package(package_root)
     activation = package_root / "activation" / "production_activation.json"
-    service = ReviewService(ReviewInputs(manifest["reviewRole"], root=package_root), package_root / "state",
+    service = ReviewService(ScopedReviewInputs(manifest["reviewRole"], root=package_root), package_root / "state",
                             manifest["reviewSessionID"], manifest["reviewerID"], "production", activation)
     return service, manifest
 
@@ -119,7 +120,8 @@ def export(package_root: Path, *, final: bool) -> Path:
     service, manifest = _service(package_root)
     try:
         state = service.state()
-        if final and not state["complete"]:
+        formally_complete = all(service.phase(unit) == "complete" for unit in service.inputs.units)
+        if final and (not state["complete"] or not formally_complete):
             raise DistributionError("FINAL_EXPORT_REVIEW_INCOMPLETE")
         review_export = service.export()
         if final:

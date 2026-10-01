@@ -13,13 +13,19 @@ from . import INTERFACE_VERSION
 from .contracts import DUPLICATE_DECISIONS, INVENTORY_HASH, JUDGMENTS, ReviewError, ReviewInputs, canonical_json, runtime_hash
 
 
+def _source_binding(inputs: ReviewInputs) -> str:
+    """Use a distribution-scoped source binding when an input adapter provides one."""
+
+    return getattr(inputs, "source_inventory_hash", INVENTORY_HASH)
+
+
 def activation_requirements(inputs: ReviewInputs, session_id: str, reviewer_id: str) -> dict[str, Any]:
     """Return the exact operator-approved activation fields; activate nothing."""
 
     return {"authorizedProductionReview": True, "reviewSessionID": session_id,
             "reviewerID": reviewer_id, "reviewRole": inputs.role,
             "inputPackageSha256": inputs.package_hash, "runtimeSha256": runtime_hash(),
-            "sourceInventorySha256": INVENTORY_HASH, "interfaceVersion": INTERFACE_VERSION}
+            "sourceInventorySha256": _source_binding(inputs), "interfaceVersion": INTERFACE_VERSION}
 
 
 class ReviewService:
@@ -52,7 +58,7 @@ class ReviewService:
         """)
         binding = canonical_json({"reviewSessionID": session_id, "reviewRole": inputs.role, "mode": mode,
                                   "inputPackageSha256": inputs.package_hash, "runtimeSha256": self.runtime,
-                                  "sourceInventorySha256": INVENTORY_HASH, "interfaceVersion": INTERFACE_VERSION}).decode()
+                                  "sourceInventorySha256": _source_binding(inputs), "interfaceVersion": INTERFACE_VERSION}).decode()
         existing = self.db.execute("SELECT * FROM session WHERE id=1").fetchone()
         if existing is not None and (existing["binding"] != binding or existing["reviewer"] != reviewer_id):
             self.db.close()
