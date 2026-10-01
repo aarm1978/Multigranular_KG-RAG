@@ -73,11 +73,8 @@ Thumbs.db
 .mypy_cache/
 .ruff_cache/
 
-# Local Publication Pilot 1 screening drafts, revisions, audit sidecars, and exports
-var/publication_pilot1_screening/
-
-# Local Publication Pilot 1 annotation/calibration sessions, activation files, and exports
-var/publication_pilot1_annotation/
+# Local runtime state, sessions, provider outputs, temporary execution artifacts, and exports
+var/
 
 # Temporary folder used to store intermediate files during the development. Not used in production.
 /temp/

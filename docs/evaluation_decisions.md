@@ -173,7 +173,7 @@ existing matching and closure authorities; they are bounded evidence, not claims
 broad “gold standard.” Complementary N=6 pooled validation is a frozen current
 architecture. Optional incidental omission observations are outside its positive pooled
 reference and excluded from Recall/F1 and completeness-related statistics. The SciERC
-adapter binding is frozen as a separate external anchor; see amendment v0.2 for current
+adapter binding is frozen as a separate external anchor; see amendment v0.3 for current
 boundaries and execution status.
 
 ### 2.4 Ontology validation — partially done
@@ -217,7 +217,7 @@ still increasing graph coverage and total represented information. Global values
 therefore be interpreted together with node and edge counts and per-class diagnostics.
 
 *Historical note — superseded:* the previous ×3 model matrix is not a current requirement.
-Any future evaluation design must follow the prospective architecture in amendment v0.2.
+Any future evaluation design must follow the prospective architecture in amendment v0.3.
 
 *Decision (argued):* the three proposal-mandated consolidation-ratio points (before/after
 alignment, after assembly) are the coarse trajectory; the per-source structural points are
