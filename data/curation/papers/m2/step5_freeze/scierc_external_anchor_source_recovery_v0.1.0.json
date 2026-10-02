@@ -1,0 +1,23 @@
+{
+  "artifactType": "scierc_external_anchor_source_recovery",
+  "artifactVersion": "0.1.0",
+  "status": "blocked_archive_identity_mismatch",
+  "providerModelCalls": 0,
+  "officialArchive": {
+    "url": "http://nlp.cs.washington.edu/sciIE/data/sciERC_processed.tar.gz",
+    "expectedSha256": "bce752fb7ebe4acf570937d76ffb27c239cfc907e477a69075dc7082d0e72e9b",
+    "retrievedRuntimePath": "var/scierc_external_anchor/source/sciERC_processed.tar.gz",
+    "observedSha256": "9855f57507282abe3c95620af78e52a7460efc92e17d13df2b4f0f80378a910a",
+    "usable": false,
+    "reason": "The official URL's current bytes do not match the frozen archive SHA-256; member hashes and document counts were deliberately not inspected."
+  },
+  "annotationGuideline": {
+    "role": "source_documentation_only_not_a_replacement_methodological_authority",
+    "projectPageUrl": "https://nlp.cs.washington.edu/sciIE/",
+    "projectPageSha256": "ced593479d6dc1b1d6f9a3b470f1b1b79dbf09cffd06ffa2cedd51283bd827f8",
+    "guidelineUrl": "https://nlp.cs.washington.edu/sciIE/annotation_guideline.pdf",
+    "guidelineRuntimePath": "var/scierc_external_anchor/source/scierc_annotation_guideline.pdf",
+    "guidelineByteCount": 457939,
+    "guidelineSha256": "0688907df3905cbe19c7d09c152c80b46a90abc9bddca7b019ec3925183b694d"
+  }
+}
