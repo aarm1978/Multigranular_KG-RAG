@@ -1,15 +1,35 @@
 {
   "artifactType": "scierc_external_anchor_source_recovery",
   "artifactVersion": "0.1.0",
-  "status": "blocked_archive_identity_mismatch",
+  "status": "verified_source_materials_recovered_no_execution",
   "providerModelCalls": 0,
   "officialArchive": {
     "url": "http://nlp.cs.washington.edu/sciIE/data/sciERC_processed.tar.gz",
     "expectedSha256": "bce752fb7ebe4acf570937d76ffb27c239cfc907e477a69075dc7082d0e72e9b",
     "retrievedRuntimePath": "var/scierc_external_anchor/source/sciERC_processed.tar.gz",
-    "observedSha256": "9855f57507282abe3c95620af78e52a7460efc92e17d13df2b4f0f80378a910a",
-    "usable": false,
-    "reason": "The official URL's current bytes do not match the frozen archive SHA-256; member hashes and document counts were deliberately not inspected."
+    "observedSha256": "bce752fb7ebe4acf570937d76ffb27c239cfc907e477a69075dc7082d0e72e9b",
+    "byteCount": 695340151,
+    "usable": true,
+    "splitVerification": {
+      "train": {
+        "path": "processed_data/json/train.json",
+        "byteCount": 720664,
+        "sha256": "04970819bd215fce8c60b3a64fccca15388b49eab2010bdc5f6d322b463568c3",
+        "documentCount": 350
+      },
+      "dev": {
+        "path": "processed_data/json/dev.json",
+        "byteCount": 103316,
+        "sha256": "61f21b224129e580a654b036ee6fffeeb1a0311f1009a38ea931c13612db040e",
+        "documentCount": 50
+      },
+      "test": {
+        "path": "processed_data/json/test.json",
+        "byteCount": 213898,
+        "sha256": "7424da64e6214a90e39b09e47a74b3ded57dde86b4a7f848b3625d2c8ecdfbe1",
+        "documentCount": 100
+      }
+    }
   },
   "annotationGuideline": {
     "role": "source_documentation_only_not_a_replacement_methodological_authority",
