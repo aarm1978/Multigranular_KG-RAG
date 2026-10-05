@@ -1,0 +1,57 @@
+{
+  "accounting": {
+    "accountRateLimits": null,
+    "apiPricing": null,
+    "completeRequestUtf8Bytes": 9741,
+    "estimatedProviderInputTokens": null,
+    "expectedCost": null,
+    "interpretation": "byte proxies, not provider token counts",
+    "observedLatency": null,
+    "observedUsage": null,
+    "reasoningTokenRule": "output_tokens already includes reasoning; retain details without adding twice",
+    "repeatedPromptUtf8Bytes": 2933,
+    "repeatedSchemaUtf8Bytes": 968,
+    "sourceProjectionUtf8Bytes": 4757,
+    "sourceTextUtf8Bytes": 814,
+    "sourceTokenCount": 129,
+    "tokenizer": null
+  },
+  "automaticRedispatch": false,
+  "bodySha256": "aff25959d545279da589268a9f4ce87c0aee9df0b83f60664ea92df02120dcc5",
+  "concurrency": 1,
+  "configurationSha256": "0147ddb5830bd9fd7c0964a57be48d83a948374e19b3d3058ef9fa0eb8d3ab4d",
+  "documentID": "ICCV_2003_158_abs",
+  "executionMode": "synchronous_stateless",
+  "planSha256": "905f99e9813074ccfb6b89607b436d0947deb3aa2156578dab18f267f19e631b",
+  "plannedSmokeGenerationPosts": 1,
+  "promptSha256": "458a68a4b1de0b59200af28ef1c0739af50e24edddfab1357ef2484086a51578",
+  "requestID": "scierc-dev-smoke-aff25959d545279da589268a9f4ce87c0aee9df0b83f60664ea92df02120dcc5",
+  "researcherLiveAuthorization": false,
+  "runtimeAccepted": false,
+  "runtimeSha256": "87c0050932bb1c256671ba481e5efa80d07e9f04b0c5bae1c06c4e35e71d5251",
+  "schemaSha256": "08b9bdb6bcefbb60b262196eb8412f9cae2eb170ac6d255315264e7889ca6258",
+  "scope": "scierc_frozen_dev_first_document_mechanical_smoke",
+  "selectionRule": "first JSONL document in frozen dev split, file order, line 1",
+  "separateOfficialTestLogicalRequests": 100,
+  "settings": {
+    "max_output_tokens": 32768,
+    "model": "gpt-5.6-sol",
+    "reasoning": {
+      "effort": "medium"
+    },
+    "store": false
+  },
+  "source": {
+    "adapterFreezeSha256": "23a1515d9aa54e60531ea73a095f3252bd428bd7d32cc20a7b9c0181d874b223",
+    "archiveSha256": "bce752fb7ebe4acf570937d76ffb27c239cfc907e477a69075dc7082d0e72e9b",
+    "sourceFreezeSha256": "47869e3c724ed3eee35319dd860ac7b0e032deed0b1d4d5a27da52dac8018f7c",
+    "sourceProjectionSha256": "fd26d53e94b26c4b91b12cdefbd08a3c37216e86df5805ab9c087effb7e9de2b",
+    "splitPath": "processed_data/json/dev.json",
+    "splitSha256": "61f21b224129e580a654b036ee6fffeeb1a0311f1009a38ea931c13612db040e"
+  },
+  "split": "dev",
+  "status": "NOT AUTHORIZED FOR PROVIDER EXECUTION",
+  "timeoutMeaning": "blocking socket-operation timeout; delivery/processing unknown on transport failure; never resend",
+  "transportTimeoutSeconds": 180,
+  "version": "scierc-single-dev-smoke/0.1.0"
+}
