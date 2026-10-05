@@ -5,8 +5,13 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
+from http.server import HTTPServer
 from pathlib import Path
+from threading import Thread
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
+from src.annotation.publication_step8.reconciliation_app import make_handler
 from src.annotation.publication_step8.reconciliation import ReconciliationError, ReconciliationService
 from src.extraction.llm.publications import step8_reconciliation_package as package
 
@@ -63,6 +68,29 @@ class Step8ReconciliationTests(unittest.TestCase):
                 service.decide(0, "judgment-item-9999", "supported_as_proposed")
             with self.assertRaisesRegex(ReconciliationError, "INVALID_RECONCILIATION_DECISION"):
                 service.decide(0, self.artifact["judgmentItemIDs"][0], "rewrite_assertion")
+
+    def test_ui_serves_only_frozen_items_and_authorized_post_shape(self) -> None:
+        """The loopback UI cannot select an undisclosed item or accept assertion fields."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package_path = root / "package.json"
+            package_path.write_text(json.dumps(self.artifact, sort_keys=True, separators=(",", ":")))
+            service = ReconciliationService(package_path, root / "state.json")
+            server = HTTPServer(("127.0.0.1", 0), make_handler(service))
+            worker = Thread(target=server.serve_forever, daemon=True); worker.start()
+            base = f"http://127.0.0.1:{server.server_port}"
+            try:
+                state = json.loads(urlopen(base + "/api/state").read())
+                self.assertEqual(state["total"], 11)
+                item = json.loads(urlopen(base + "/api/item/" + self.artifact["judgmentItemIDs"][0]).read())
+                self.assertNotIn("reviewerID", json.dumps(item))
+                request = Request(base + "/api/decision", data=json.dumps({"expectedRevision": 0, "judgmentItemID": self.artifact["judgmentItemIDs"][0], "decision": "supported_as_proposed", "assertion": "edited"}).encode(), method="POST", headers={"Content-Type": "application/json", "X-Reconciliation-Token": state["csrfToken"]})
+                with self.assertRaises(HTTPError) as error:
+                    urlopen(request)
+                self.assertEqual(error.exception.code, 409)
+            finally:
+                server.shutdown(); server.server_close(); worker.join()
 
 
 if __name__ == "__main__":
