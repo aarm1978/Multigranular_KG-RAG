@@ -2,8 +2,7 @@
 
 This module deliberately contains no provider dispatch.  It separates processed
 SciERC gold (used only by scoring) from the model-facing document projection.
-Live manifest construction is fail-closed until the researcher supplies an
-authorized textual definition for the official ``EVALUATE-FOR`` label.
+Candidate construction never authorizes provider execution.
 """
 
 from __future__ import annotations
@@ -16,6 +15,8 @@ from pathlib import Path
 import tarfile
 from typing import Any, Iterable, Mapping, Sequence
 
+import jsonschema
+
 from src.extraction.llm.publications.openai_provider import build_responses_api_request
 from src.extraction.llm.publications.publication_artifacts import write_durable_canonical
 from src.extraction.llm.publications.request_builder import PROJECT_ROOT, canonical_json, sha256_bytes
@@ -24,7 +25,11 @@ from src.extraction.llm.publications.request_builder import PROJECT_ROOT, canoni
 SOURCE_FREEZE_PATH = PROJECT_ROOT / "data/curation/papers/m2/step5_freeze/scierc_external_anchor_source_freeze_v0.1.0.json"
 ADAPTER_FREEZE_PATH = PROJECT_ROOT / "data/curation/papers/m2/step5_freeze/scierc_external_anchor_adapter_freeze_v0.1.2.json"
 RUNTIME_ROOT = PROJECT_ROOT / "var/scierc_external_anchor"
-RUNNER_VERSION = "scierc-external-anchor/0.1.0"
+RUNNER_VERSION = "scierc-external-anchor/0.2.0"
+CONFIG_PATH = Path(__file__).with_name("scierc_configuration_v0.2.0.json")
+PROMPT_PATH = Path(__file__).parent / "prompts/scierc_native_v0.2.0.txt"
+ARCHIVE_PATH = RUNTIME_ROOT / "source/sciERC_processed.tar.gz"
+GUIDELINE_PATH = RUNTIME_ROOT / "source/scierc_annotation_guideline.pdf"
 MAX_OUTPUT_TOKENS = 32768
 SYMMETRIC_RELATIONS = frozenset({"COMPARE", "CONJUNCTION"})
 
@@ -41,6 +46,7 @@ class SciERCDocument:
     tokens: tuple[str, ...]
     gold_entities: tuple[tuple[int, int, str], ...]
     gold_relations: tuple[tuple[int, int, int, int, str], ...]
+    sentence_ranges: tuple[tuple[int, int], ...]
 
 
 def _load_json_object(path: Path) -> dict[str, Any]:
@@ -77,7 +83,8 @@ def verify_archive(archive_path: Path, freeze: Mapping[str, Any] | None = None) 
     """Verify archive identity before reading any member, then stream-verify splits."""
 
     authority = source_freeze() if freeze is None else dict(freeze)
-    actual_archive_sha = _sha256_stream(archive_path.open("rb"))
+    with archive_path.open("rb") as handle:
+        actual_archive_sha = _sha256_stream(handle)
     expected_archive_sha = str(authority["officialArchive"]["sha256"])
     if actual_archive_sha != expected_archive_sha:
         raise SciERCAnchorError(
@@ -96,7 +103,7 @@ def verify_archive(archive_path: Path, freeze: Mapping[str, Any] | None = None) 
             actual_sha = sha256_bytes(payload)
             if actual_sha != specification["sha256"]:
                 raise SciERCAnchorError(f"SPLIT_SHA256_MISMATCH:{split_name}")
-            documents = parse_processed_split(payload)
+            documents = parse_processed_split(payload, include_gold=False)
             if len(documents) != specification["documentCount"]:
                 raise SciERCAnchorError(f"SPLIT_DOCUMENT_COUNT_MISMATCH:{split_name}")
             results["splits"][split_name] = {
@@ -106,7 +113,7 @@ def verify_archive(archive_path: Path, freeze: Mapping[str, Any] | None = None) 
     return results
 
 
-def parse_processed_split(payload: bytes) -> list[SciERCDocument]:
+def parse_processed_split(payload: bytes, *, include_gold: bool = True) -> list[SciERCDocument]:
     """Parse DyGIE++ processed JSON lines without altering benchmark offsets."""
 
     try:
@@ -115,38 +122,71 @@ def parse_processed_split(payload: bytes) -> list[SciERCDocument]:
         raise SciERCAnchorError("INVALID_PROCESSED_JSONL") from exc
     if not rows or not all(isinstance(row, Mapping) for row in rows):
         raise SciERCAnchorError("PROCESSED_SPLIT_MUST_CONTAIN_JSON_OBJECT_ROWS")
-    return [parse_processed_document(row) for row in rows]
+    documents = [parse_processed_document(row, include_gold=include_gold) for row in rows]
+    if len({document.document_id for document in documents}) != len(documents):
+        raise SciERCAnchorError("DUPLICATE_DOCUMENT_ID")
+    return documents
 
 
-def parse_processed_document(row: Mapping[str, Any]) -> SciERCDocument:
+def parse_processed_document(row: Mapping[str, Any], *, include_gold: bool = True) -> SciERCDocument:
     """Parse one processed document and preserve its document-global offsets."""
 
+    if not isinstance(row, Mapping):
+        raise SciERCAnchorError("INVALID_PROCESSED_DOCUMENT_SHAPE")
     document_id = row.get("doc_key")
     sentences = row.get("sentences")
+    if not isinstance(document_id, str) or not document_id or not isinstance(sentences, list) or not sentences:
+        raise SciERCAnchorError("INVALID_PROCESSED_DOCUMENT_SHAPE")
+    ranges = []
+    tokens_list = []
+    for sentence in sentences:
+        if not isinstance(sentence, list) or not sentence or any(type(token) is not str or not token for token in sentence):
+            raise SciERCAnchorError("INVALID_SOURCE_TOKENS")
+        ranges.append((len(tokens_list), len(tokens_list) + len(sentence) - 1))
+        tokens_list.extend(sentence)
+    tokens = tuple(tokens_list)
+    if not include_gold:
+        return SciERCDocument(document_id, tokens, (), (), tuple(ranges))
     ner = row.get("ner")
     relations = row.get("relations")
-    if not isinstance(document_id, str) or not document_id or not all(isinstance(x, list) for x in (sentences, ner, relations)):
-        raise SciERCAnchorError("INVALID_PROCESSED_DOCUMENT_SHAPE")
+    if not isinstance(ner, list) or not isinstance(relations, list):
+        raise SciERCAnchorError("INVALID_GOLD_COLLECTIONS")
     if not (len(sentences) == len(ner) == len(relations)):
         raise SciERCAnchorError("SENTENCE_ANNOTATION_ALIGNMENT_FAILURE")
-    tokens = tuple(str(token) for sentence in sentences for token in sentence)
     entities: list[tuple[int, int, str]] = []
     edges: list[tuple[int, int, int, int, str]] = []
-    for sentence_entities in ner:
+    for sentence_index, sentence_entities in enumerate(ner):
+        if not isinstance(sentence_entities, list):
+            raise SciERCAnchorError("INVALID_GOLD_ENTITY_SHAPE")
         for item in sentence_entities:
             if not isinstance(item, list) or len(item) != 3:
                 raise SciERCAnchorError("INVALID_GOLD_ENTITY_SHAPE")
             start, end, label = item
             _validate_span(start, end, len(tokens))
+            if sentence_for_span(start, end, tuple(ranges)) != sentence_index:
+                raise SciERCAnchorError("GOLD_ENTITY_SENTENCE_MISMATCH")
             entities.append((start, end, _validate_entity_label(label)))
-    for sentence_relations in relations:
+    for sentence_index, sentence_relations in enumerate(relations):
+        if not isinstance(sentence_relations, list):
+            raise SciERCAnchorError("INVALID_GOLD_RELATION_SHAPE")
         for item in sentence_relations:
             if not isinstance(item, list) or len(item) != 5:
                 raise SciERCAnchorError("INVALID_GOLD_RELATION_SHAPE")
             hs, he, ts, te, label = item
             _validate_span(hs, he, len(tokens)); _validate_span(ts, te, len(tokens))
+            if any(sentence_for_span(a, b, tuple(ranges)) != sentence_index for a, b in ((hs, he), (ts, te))):
+                raise SciERCAnchorError("GOLD_RELATION_SENTENCE_MISMATCH")
             edges.append((hs, he, ts, te, _validate_relation_label(label)))
-    return SciERCDocument(document_id, tokens, tuple(entities), tuple(edges))
+    return SciERCDocument(document_id, tokens, tuple(entities), tuple(edges), tuple(ranges))
+
+
+def sentence_for_span(start: int, end: int, ranges: tuple[tuple[int, int], ...]) -> int:
+    """Resolve a span wholly within one sentence; reject boundary crossing."""
+
+    for index, (lower, upper) in enumerate(ranges):
+        if lower <= start <= end <= upper:
+            return index
+    raise SciERCAnchorError("MENTION_CROSSES_SENTENCE_BOUNDARY")
 
 
 def inference_projection(document: SciERCDocument) -> dict[str, Any]:
@@ -156,6 +196,8 @@ def inference_projection(document: SciERCDocument) -> dict[str, Any]:
         "documentID": document.document_id,
         "tokens": [{"index": index, "text": token} for index, token in enumerate(document.tokens)],
         "text": " ".join(document.tokens),
+        "sentences": [{"sentenceIndex": index, "start": start, "end": end}
+                      for index, (start, end) in enumerate(document.sentence_ranges)],
     }
 
 
@@ -184,7 +226,7 @@ def output_schema() -> dict[str, Any]:
 def _validate_span(start: Any, end: Any, token_count: int) -> None:
     """Require a document-global zero-based inclusive span."""
 
-    if not isinstance(start, int) or not isinstance(end, int) or start < 0 or end < start or end >= token_count:
+    if type(start) is not int or type(end) is not int or start < 0 or end < start or end >= token_count:
         raise SciERCAnchorError("INVALID_DOCUMENT_GLOBAL_INCLUSIVE_SPAN")
 
 
@@ -207,6 +249,10 @@ def _validate_relation_label(label: Any) -> str:
 def validate_prediction(payload: Mapping[str, Any], document: SciERCDocument) -> dict[str, Any]:
     """Validate and bind a prediction to exactly one benchmark document."""
 
+    try:
+        jsonschema.Draft202012Validator(output_schema()).validate(payload)
+    except jsonschema.ValidationError as exc:
+        raise SciERCAnchorError("INVALID_PREDICTION_SCHEMA") from exc
     if payload.get("documentID") != document.document_id:
         raise SciERCAnchorError("PREDICTION_DOCUMENT_ID_MISMATCH")
     entities = payload.get("entities")
@@ -219,9 +265,10 @@ def validate_prediction(payload: Mapping[str, Any], document: SciERCDocument) ->
         if not isinstance(row, Mapping) or not all(key in row for key in ("entityID", "entityType", "spanStart", "spanEnd", "mentionText")):
             raise SciERCAnchorError("INVALID_PREDICTED_ENTITY_SHAPE")
         entity_id = row["entityID"]
-        if not isinstance(entity_id, str) or not entity_id or entity_id in bound:
+        if not isinstance(entity_id, str) or not entity_id.strip() or entity_id in bound:
             raise SciERCAnchorError("PREDICTED_ENTITY_ID_NOT_UNIQUE")
         start, end = row["spanStart"], row["spanEnd"]; _validate_span(start, end, len(document.tokens))
+        sentence_for_span(start, end, document.sentence_ranges)
         label = _validate_entity_label(row["entityType"])
         if row["mentionText"] != " ".join(document.tokens[start:end + 1]):
             raise SciERCAnchorError("PREDICTED_MENTION_TEXT_NOT_EXACT_TOKEN_SPAN")
@@ -230,12 +277,19 @@ def validate_prediction(payload: Mapping[str, Any], document: SciERCDocument) ->
             raise SciERCAnchorError("DUPLICATE_PREDICTED_ENTITY_SIGNATURE")
         signatures.add(signature); bound[entity_id] = signature
     edge_signatures: set[tuple[str, tuple[int, int], tuple[int, int]]] = set()
+    relation_ids: set[str] = set()
     for row in relations:
         if not isinstance(row, Mapping) or not all(key in row for key in ("relationID", "relationType", "sourceEntityID", "targetEntityID")):
             raise SciERCAnchorError("INVALID_PREDICTED_RELATION_SHAPE")
         source, target = row["sourceEntityID"], row["targetEntityID"]
+        relation_id = row["relationID"]
+        if not relation_id.strip() or relation_id in relation_ids:
+            raise SciERCAnchorError("PREDICTED_RELATION_ID_NOT_UNIQUE_OR_EMPTY")
+        relation_ids.add(relation_id)
         if source not in bound or target not in bound:
             raise SciERCAnchorError("RELATION_ENDPOINT_NOT_SAME_DOCUMENT_ENTITY")
+        if sentence_for_span(*bound[source][:2], document.sentence_ranges) != sentence_for_span(*bound[target][:2], document.sentence_ranges):
+            raise SciERCAnchorError("RELATION_CROSSES_SENTENCE_BOUNDARY")
         relation = _validate_relation_label(row["relationType"])
         signature = relation_signature(relation, bound[source][:2], bound[target][:2])
         if signature in edge_signatures:
@@ -257,7 +311,11 @@ def score_documents(documents_and_predictions: Iterable[tuple[SciERCDocument, Ma
     """Compute frozen micro entity and relation scores; never a composite score."""
 
     entity_counts: Counter[str] = Counter(); relation_counts: Counter[str] = Counter()
+    seen: set[str] = set()
     for document, prediction in documents_and_predictions:
+        if document.document_id in seen:
+            raise SciERCAnchorError("DUPLICATE_DOCUMENT_ID")
+        seen.add(document.document_id)
         bound = validate_prediction(prediction, document)
         gold_entities = set(document.gold_entities)
         predicted_entities = set(bound["entities"].values())
@@ -265,7 +323,7 @@ def score_documents(documents_and_predictions: Iterable[tuple[SciERCDocument, Ma
         predicted_relations = set(bound["relationSignatures"])
         _add_counts(entity_counts, gold_entities, predicted_entities)
         _add_counts(relation_counts, gold_relations, predicted_relations)
-    return {"entity": _metrics(entity_counts), "relation": _metrics(relation_counts), "composite": None}
+    return {"entity": _metrics(entity_counts), "relation": _metrics(relation_counts)}
 
 
 def _add_counts(counts: Counter[str], gold: set[Any], predicted: set[Any]) -> None:
@@ -282,72 +340,116 @@ def _metrics(counts: Mapping[str, int]) -> dict[str, Any]:
     tp, fp, fn = counts["TP"], counts["FP"], counts["FN"]
     precision = None if tp + fp == 0 else tp / (tp + fp)
     recall = None if tp + fn == 0 else tp / (tp + fn)
-    f1 = None if precision is None or recall is None or precision + recall == 0 else 2 * precision * recall / (precision + recall)
+    f1 = None if 2 * tp + fp + fn == 0 else 2 * tp / (2 * tp + fp + fn)
     return {"TP": tp, "FP": fp, "FN": fn, "goldSupport": counts["goldSupport"], "predictionSupport": counts["predictionSupport"], "precision": precision, "recall": recall, "f1": f1}
 
 
-def prompt_status(label_definitions: Mapping[str, str]) -> dict[str, Any]:
-    """Fail closed until every frozen label, especially EVALUATE-FOR, has text."""
+def configuration() -> dict[str, Any]:
+    """Require the approved candidate settings, independently of live authorization."""
 
-    missing = [label for label in adapter_freeze()["benchmarkNativeRelationLabels"] if not isinstance(label_definitions.get(label), str) or not label_definitions[label].strip()]
-    return {"dispatchReady": not missing, "missingRelationDefinitions": missing,
-            "blockingReason": None if not missing else "UNRESOLVED_OFFICIAL_PROMPT_SEMANTICS"}
+    config = _load_json_object(CONFIG_PATH)
+    expected = {"model": "gpt-5.6-sol", "reasoningEffort": "medium", "maxOutputTokens": 32768,
+                "store": False, "executionMode": "synchronous_stateless", "automaticRedispatch": False,
+                "runtimeAccepted": False, "researcherLiveAuthorization": False}
+    if any(config.get(key) != value for key, value in expected.items()):
+        raise SciERCAnchorError("CANDIDATE_CONFIGURATION_DRIFT")
+    if adapter_freeze()["baseLLM"] != config["model"] or adapter_freeze()["reasoningEffort"] != config["reasoningEffort"]:
+        raise SciERCAnchorError("FROZEN_CONFIGURATION_DRIFT")
+    return config
 
 
-def build_run_manifest(documents: Sequence[SciERCDocument], label_definitions: Mapping[str, str]) -> dict[str, Any]:
-    """Build a deterministic manifest; body hashes exist only for a dispatch-ready prompt."""
+def build_request_body(document: SciERCDocument) -> dict[str, Any]:
+    """Build exact source-only request bytes through the shared stateless body builder."""
+
+    config = configuration()
+    input_bytes = PROMPT_PATH.read_bytes() + b"\nSciERC benchmark document:\n" + canonical_json(inference_projection(document))
+    body = build_responses_api_request(input_bytes, model_authorable_schema=output_schema(), max_output_tokens=MAX_OUTPUT_TOKENS)
+    body["text"]["format"]["name"] = "scierc_native_payload"
+    if body["model"] != config["model"] or body["reasoning"] != {"effort": config["reasoningEffort"]} or body["store"] is not False or "background" in body or "tools" in body:
+        raise SciERCAnchorError("PROVIDER_BODY_CONFIGURATION_DRIFT")
+    return body
+
+
+def _build_candidate_records(documents: Sequence[SciERCDocument]) -> dict[str, Any]:
+    """Build review records; the public official builder alone establishes split identity."""
 
     if len({doc.document_id for doc in documents}) != len(documents):
         raise SciERCAnchorError("DUPLICATE_DOCUMENT_ID")
-    status = prompt_status(label_definitions)
     schema = output_schema(); schema_sha = sha256_bytes(canonical_json(schema))
-    manifest: dict[str, Any] = {"artifactType": "scierc_external_anchor_run_manifest", "artifactVersion": "0.1.0",
+    manifest: dict[str, Any] = {"artifactType": "scierc_external_anchor_preflight_candidate", "artifactVersion": "0.2.0",
         "runnerVersion": RUNNER_VERSION, "providerModelCalls": 0, "logicalRequestPolicy": "one official document = one logical inference request",
         "logicalRequestCount": len(documents), "configuredOutputCeilingTokens": MAX_OUTPUT_TOKENS,
         "providerConfiguration": {"model": adapter_freeze()["baseLLM"], "reasoningEffort": adapter_freeze()["reasoningEffort"], "store": False, "executionMode": "synchronous_stateless"},
-        "schemaSha256": schema_sha, "promptStatus": status, "requests": []}
+        "schemaSha256": schema_sha, "promptSha256": sha256_bytes(PROMPT_PATH.read_bytes()),
+        "configurationSha256": sha256_bytes(CONFIG_PATH.read_bytes()),
+        "buildReady": True, "runtimeAccepted": False, "researcherLiveAuthorization": False,
+        "automaticRedispatch": False, "requests": []}
     for document in sorted(documents, key=lambda item: item.document_id):
         projection = inference_projection(document)
         record: dict[str, Any] = {"documentID": document.document_id, "projectionSha256": sha256_bytes(canonical_json(projection)), "schemaSha256": schema_sha,
-            "inputTokenAccounting": {"exactProviderInputTokens": None, "conservativeUtf8ByteUpperBound": None, "includesRepeatedPromptAndSchemaOverhead": True},
+            "promptSha256": manifest["promptSha256"], "configurationSha256": manifest["configurationSha256"],
             "providerRequestBodySha256": None, "terminalStatus": "not_dispatched"}
-        if status["dispatchReady"]:
-            prompt = _prompt(label_definitions)
-            input_bytes = prompt.encode("utf-8") + b"\n\nSciERC benchmark document:\n" + canonical_json(projection)
-            body = build_responses_api_request(input_bytes, model_authorable_schema=schema, max_output_tokens=MAX_OUTPUT_TOKENS)
-            record["inputTokenAccounting"]["conservativeUtf8ByteUpperBound"] = len(canonical_json(body))
-            record["providerRequestBodySha256"] = sha256_bytes(canonical_json(body))
+        body = build_request_body(document)
+        record["inputTokenAccounting"] = {"exactProviderInputTokens": None,
+            "serializedRequestUtf8Bytes": len(canonical_json(body)),
+            "includesRepeatedPromptAndSchemaOverhead": True}
+        record["providerRequestBodySha256"] = sha256_bytes(canonical_json(body))
         manifest["requests"].append(record)
-    conservative_inputs = [row["inputTokenAccounting"]["conservativeUtf8ByteUpperBound"] for row in manifest["requests"]]
+    conservative_inputs = [row["inputTokenAccounting"]["serializedRequestUtf8Bytes"] for row in manifest["requests"]]
     manifest["preflightAccounting"] = {
-        "inputTokenEstimateMethod": "utf8_byte_upper_bound_v0.1.0",
+        "inputAccountingMethod": "serialized_request_utf8_bytes_proxy_not_provider_tokens",
         "includesRepeatedPromptAndSchemaOverhead": True,
-        "totalConservativeInputTokenUpperBound": None if any(value is None for value in conservative_inputs) else sum(conservative_inputs),
+        "totalSerializedRequestUtf8Bytes": sum(conservative_inputs),
+        "exactProviderInputTokens": None,
+        "observedUsage": None, "observedLatency": None,
         "configuredOutputCeilingTokensPerRequest": MAX_OUTPUT_TOKENS,
         "configuredOutputCeilingTokensAllLogicalRequests": len(documents) * MAX_OUTPUT_TOKENS,
         "futureObservedUsageSource": "preserved provider usage metadata",
         "futureObservedLatencySource": "per-request client elapsedMilliseconds",
         "apiPricing": None,
     }
-    manifest["status"] = "ready_for_explicit_live_execution" if status["dispatchReady"] else "blocked_pending_prompt_semantics"
-    manifest["manifestSha256"] = sha256_bytes(canonical_json(manifest))
+    manifest["status"] = "NOT AUTHORIZED FOR PROVIDER EXECUTION"
     return manifest
 
 
-def _prompt(label_definitions: Mapping[str, str]) -> str:
-    """Create the allowed benchmark-native instruction after complete definitions exist."""
+def build_run_manifest(archive_path: Path = ARCHIVE_PATH) -> dict[str, Any]:
+    """Build only from all 100 unique documents of the verified frozen test split.
 
-    status = prompt_status(label_definitions)
-    if not status["dispatchReady"]:
-        raise SciERCAnchorError("UNRESOLVED_OFFICIAL_PROMPT_SEMANTICS")
-    definitions = "\n".join(f"- {label}: {label_definitions[label].strip()}" for label in adapter_freeze()["benchmarkNativeRelationLabels"])
-    return "Extract only benchmark-native SciERC entities and relations. Use exact indexed inclusive token spans. Relations must cite entities in this document. COMPARE and CONJUNCTION are symmetric; all other relations are directed.\nRelation definitions:\n" + definitions
+    JSON decoding is mechanical; test gold fields are never passed to parsers,
+    request construction, validation, scoring, or prompt decisions.
+    """
+
+    config = configuration()
+    if sha256_bytes(GUIDELINE_PATH.read_bytes()) != config["guidelineSha256"]:
+        raise SciERCAnchorError("GUIDELINE_HASH_MISMATCH")
+    verified = verify_archive(archive_path)
+    spec = source_freeze()["splits"]["test"]
+    with tarfile.open(archive_path, "r:gz") as archive:
+        payload = archive.extractfile(spec["path"]).read()
+    if sha256_bytes(payload) != spec["sha256"]:
+        raise SciERCAnchorError("TEST_SPLIT_HASH_MISMATCH")
+    documents = parse_processed_split(payload, include_gold=False)
+    if len(documents) != 100 or len({doc.document_id for doc in documents}) != 100:
+        raise SciERCAnchorError("OFFICIAL_TEST_MEMBERSHIP_FAILURE")
+    manifest = _build_candidate_records(documents)
+    manifest["source"] = {"archiveSha256": verified["archiveSha256"], "test": spec,
+        "sourceFreezeFileSha256": sha256_bytes(SOURCE_FREEZE_PATH.read_bytes()),
+        "adapterFreezeFileSha256": sha256_bytes(ADAPTER_FREEZE_PATH.read_bytes()),
+        "guidelineSha256": config["guidelineSha256"]}
+    manifest["implementationSha256"] = sha256_bytes(Path(__file__).read_bytes())
+    manifest["providerBuilderSha256"] = sha256_bytes(Path(__file__).with_name("openai_provider.py").read_bytes())
+    manifest["documentIDsSha256"] = sha256_bytes(canonical_json(sorted(doc.document_id for doc in documents)))
+    manifest["manifestSha256"] = sha256_bytes(canonical_json(manifest))
+    return manifest
 
 
 def runtime_record(manifest_record: Mapping[str, Any]) -> dict[str, Any]:
     """Create a no-call durable output skeleton with future usage and latency fields."""
 
     return {"documentID": manifest_record["documentID"], "providerRequestBodySha256": manifest_record["providerRequestBodySha256"],
+        "schemaSha256": manifest_record["schemaSha256"], "promptSha256": manifest_record["promptSha256"],
+        "configurationSha256": manifest_record["configurationSha256"],
+        "requestedModel": configuration()["model"], "reasoningEffort": "medium", "maxOutputTokens": MAX_OUTPUT_TOKENS,
         "rawProviderResponse": None, "rawModelOutputBase64": None, "usage": None,
         "latency": {"clientStartedAt": None, "clientCompletedAt": None, "elapsedMilliseconds": None},
         "terminalStatus": "not_dispatched"}
@@ -361,17 +463,23 @@ def persist_request_artifacts(document_id: str, body: Mapping[str, Any], root: P
     beside these bytes.
     """
 
-    request_root = root / "requests" / document_id
+    request_root = root / "requests" / sha256_bytes(document_id.encode("utf-8"))
     schema_path = request_root / "model_authorable_schema.json"
     body_path = request_root / "provider_request.json"
-    write_durable_canonical(schema_path, output_schema())
-    write_durable_canonical(body_path, dict(body))
+    for path, payload in ((schema_path, body["text"]["format"]["schema"]), (body_path, dict(body))):
+        if path.exists() and path.read_bytes() != canonical_json(payload) + b"\n":
+            raise SciERCAnchorError("RUNTIME_ARTIFACT_CONFLICT")
+        write_durable_canonical(path, payload)
     return {"schema": schema_path, "providerRequest": body_path}
 
 
 def write_runtime_manifest(manifest: Mapping[str, Any], root: Path = RUNTIME_ROOT) -> Path:
     """Write a separate ignored runtime manifest without dispatching a provider call."""
 
-    path = root / "run_manifest.json"
+    path = root / "preflight_candidate.json"
+    if manifest.get("researcherLiveAuthorization") is not False or manifest.get("runtimeAccepted") is not False:
+        raise SciERCAnchorError("CANDIDATE_CANNOT_AUTHORIZE_EXECUTION")
+    if path.exists() and path.read_bytes() != canonical_json(manifest) + b"\n":
+        raise SciERCAnchorError("RUNTIME_ARTIFACT_CONFLICT")
     write_durable_canonical(path, dict(manifest))
     return path

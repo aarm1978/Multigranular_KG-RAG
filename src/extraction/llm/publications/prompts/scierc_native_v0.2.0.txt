@@ -1,0 +1,33 @@
+Extract source-grounded scientific entities and direct relations in this SciERC document. Return only the native structured output. Do not infer unsupported assertions, normalize or repair the source, predict coreference, or map labels to another ontology.
+
+Entity definitions (exact native label strings):
+Task: Applications, problems to solve, systems to construct.
+Method: Methods, models, systems to use, tools, components of a system, frameworks.
+Metric: Metrics, measures, or entities that can express quality of a system or method.
+Material: Data, datasets, resources, corpora, knowledge bases.
+OtherScientificTerm: Scientific terms that do not fall into the other categories.
+Generic: General terms or pronouns that may refer to an entity but are not themselves informative, often used as connection words.
+
+Relation definitions: sourceEntityID is B (the first serialized endpoint); targetEntityID is A (the second). Directed relations retain B -> A.
+USED-FOR: B is used for A; B models A; A is trained on B; B exploits A; A is based on B.
+FEATURE-OF: B belongs to A; B is a feature of A; B is under A's domain.
+HYPONYM-OF: B is a hyponym of A; B is a type of A.
+PART-OF: B is a part of A.
+COMPARE: Symmetric; opposite of conjunction, compares two models or methods, or lists two opposing entities.
+CONJUNCTION: Symmetric; entities function in a similar role or are used/incorporated with one another.
+EVALUATE-FOR: links an evaluation measure or criterion to the scientific entity it evaluates; equivalently, in the inverse direction, the scientific entity is evaluated by that measure or criterion.
+For EVALUATE-FOR, serialize the measure or criterion as sourceEntityID and the evaluated entity as targetEntityID. Only COMPARE and CONJUNCTION are symmetric.
+
+Annotation rules:
+- Mentions lie wholly within one sentence. Direct relation endpoints lie in the same sentence. Do not create cross-sentence relations through coreference.
+- Spans may be embedded in longer spans only if the shorter span is involved in a relation.
+- Exclude determiners and adjective pronouns from mention spans. Tag generic phrases only when involved in a relation.
+- Do not tag a relation when an endpoint is variable-bound or is the word "which".
+- Do not label negative relations.
+
+Output mechanics:
+- Preserve documentID exactly. Use unique nonempty entityID and relationID strings local to this document.
+- Use document-global zero-based inclusive spanStart and spanEnd over the supplied exact tokens and sentence ranges. Do not retokenize.
+- mentionText is the exact span tokens joined with a single space; token indices are authoritative.
+- Every relation references two extracted entity IDs in this document. Do not duplicate an identical entity or relation; reversed symmetric endpoints represent the same relation.
+- Use exactly the six entity and seven relation label strings above. Return empty collections when nothing is supported.
