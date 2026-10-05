@@ -40,6 +40,23 @@ overall (182), nodes (133), and relations (49); target-level results are descrip
 only where support is adequate. This is not extraction IAA or Human Core reliability.
 The historical 2/6 authorities and accepted primary package remain byte-identical.
 
+### Step 8 initial-review agreement interpretation
+
+The frozen unreconciled Step 8 agreement artifact reports exact observed agreement of
+171/182 = 0.939560 and three-category nominal Cohen's kappa of -0.007549 overall.
+The expected agreement is 0.940013. Reviewer marginals were highly concentrated in
+`supported_as_proposed` (172/182 versus 181/182), which explains the divergence
+between high raw agreement and near-zero kappa. Nodes report 124/133 = 0.932331
+observed agreement with kappa 0; relations report 47/49 = 0.959184 observed agreement
+with kappa -0.010309.
+
+Kappa remains reported because it was predeclared, but it must be interpreted alongside
+exact agreement, marginals, and the frozen confusion tables rather than alone.
+Reconciliation does not alter the initial kappa or any initial-review agreement result,
+and no replacement reliability metric is added post hoc. The prevalence/marginal-
+imbalance interpretation requires literature support before manuscript use.
+`[CITE-NEEDED: methodological source on Cohen's kappa under highly imbalanced category marginals/prevalence.]`
+
 ---
 
 ## 1. Framing: intrinsic evaluation, two purposes
