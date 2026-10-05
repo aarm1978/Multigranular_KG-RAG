@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import secrets
+import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlparse
@@ -105,7 +106,9 @@ def main() -> int:
             print(args.export)
         else:
             server = HTTPServer(("127.0.0.1", args.port), make_handler(service))
-            print(f"Step 8 reconciliation at http://127.0.0.1:{server.server_port}")
+            url = f"http://127.0.0.1:{server.server_port}"
+            print(f"Step 8 reconciliation at {url}")
+            webbrowser.open(url)
             try:
                 server.serve_forever()
             finally:

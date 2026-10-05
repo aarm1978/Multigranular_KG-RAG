@@ -17,9 +17,9 @@ from src.extraction.llm.publications import step8_reconciliation_package as pack
 
 ROOT = PROJECT_ROOT
 PACKAGE = package_builder.OUTPUT
-VERSION = "1.0.0"
-DEFAULT_OUTPUT = ROOT / "var/publication_step8_reconciliation_distribution/v1.0.0"
-MANIFEST = ROOT / "data/curation/papers/m2/publication_step8_reconciliation/publication_step8_reconciliation_distribution_manifest_v1.0.0.json"
+VERSION = "1.0.1"
+DEFAULT_OUTPUT = ROOT / "var/publication_step8_reconciliation_distribution/v1.0.1"
+MANIFEST = ROOT / "data/curation/papers/m2/publication_step8_reconciliation/publication_step8_reconciliation_distribution_manifest_v1.0.1.json"
 RUNTIME_FILES = ("reconciliation.py", "reconciliation_app.py")
 STATIC = Path(__file__).with_name("reconciliation_static")
 
