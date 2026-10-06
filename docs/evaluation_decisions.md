@@ -15,6 +15,23 @@ by explicit reasoning rather than citation). Citations are NOT invented here; pl
 mark where literature support must be added. This doubles as a checklist of what still
 needs grounding.
 
+## SciERC post-run failure-handling decision — 2026-10-06
+
+The researcher explicitly approved
+[`scierc_postrun_failure_isolation_amendment_v0.1.0.md`](scierc_postrun_failure_isolation_amendment_v0.1.0.md)
+after completed official test execution and diagnostics of inconsistent model
+mentionText/span pairs. **This amendment was not predeclared and is not a
+confirmatory failure-handling policy.** Before accessing gold, fix and hash both
+views: (A) uniformly exclude only inconsistent entities and their dependent
+relations while retaining independent records unchanged, with all other errors
+fail-closed; (B) document-rejection sensitivity using the original 98 valid
+predictions and empty collections for the two originally rejected documents.
+Both use the complete frozen 100-document gold and unchanged native scorer and
+must be reported regardless of outcome. No correction, inferred intent, semantic
+adjudication, new predictions, provider rerun, or Publication Production Acceptance
+is authorized. Original runtime evidence and frozen authorities stay unchanged.
+Step 9 remains open; Step 8 acceptance/closure is unaffected.
+
 ## Current accepted architecture
 
 The authoritative prospective Study 2 evaluation architecture is

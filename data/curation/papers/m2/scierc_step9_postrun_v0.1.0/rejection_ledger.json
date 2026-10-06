@@ -1,0 +1,69 @@
+{
+  "policy": "post-run A",
+  "rejections": [
+    {
+      "documentID": "C08-2010",
+      "reason": "PREDICTED_MENTION_TEXT_NOT_EXACT_TOKEN_SPAN",
+      "reasonKind": "direct",
+      "recordID": "e11",
+      "recordKind": "entity",
+      "recordSha256": "879ef053a262fc25bd146e969114f75a396b59e2980eff0ecb635a7d2987d77c",
+      "sourceOutputSha256": "b5cc0f42b1f34f27815647af7ef779a113b97865a9bb1b3b9b3879f8d668b1e8"
+    },
+    {
+      "documentID": "C08-2010",
+      "excludedEntityIDs": [
+        "e11"
+      ],
+      "reason": "ENDPOINT_ENTITY_EXCLUDED",
+      "reasonKind": "dependency",
+      "recordID": "r6",
+      "recordKind": "relation",
+      "recordSha256": "9e5d9c11e3ea1fd74159631af8c1868bbe68dd265565c0663d3c7ea903d97583",
+      "sourceOutputSha256": "b5cc0f42b1f34f27815647af7ef779a113b97865a9bb1b3b9b3879f8d668b1e8"
+    },
+    {
+      "documentID": "C08-2010",
+      "excludedEntityIDs": [
+        "e11"
+      ],
+      "reason": "ENDPOINT_ENTITY_EXCLUDED",
+      "reasonKind": "dependency",
+      "recordID": "r8",
+      "recordKind": "relation",
+      "recordSha256": "c7adfdcf48142cb6d8bc2635ae959d28e7c970c26689e3b50b6715be11e40fab",
+      "sourceOutputSha256": "b5cc0f42b1f34f27815647af7ef779a113b97865a9bb1b3b9b3879f8d668b1e8"
+    },
+    {
+      "documentID": "ICCV_2001_47_abs",
+      "reason": "PREDICTED_MENTION_TEXT_NOT_EXACT_TOKEN_SPAN",
+      "reasonKind": "direct",
+      "recordID": "e1",
+      "recordKind": "entity",
+      "recordSha256": "a64964c06122de74a1621ef2c8bee2f79416789746662c86ad1d2470c02dc242",
+      "sourceOutputSha256": "12f97d55889033895775d4d735c8b8a46cef292887c98c8b3311d8455933d972"
+    },
+    {
+      "documentID": "ICCV_2001_47_abs",
+      "reason": "PREDICTED_MENTION_TEXT_NOT_EXACT_TOKEN_SPAN",
+      "reasonKind": "direct",
+      "recordID": "e18",
+      "recordKind": "entity",
+      "recordSha256": "722f69bc8f1ada134488dfacd14ef6d87e5ff72ebfc1141dcb3e252c460a6fe9",
+      "sourceOutputSha256": "12f97d55889033895775d4d735c8b8a46cef292887c98c8b3311d8455933d972"
+    },
+    {
+      "documentID": "ICCV_2001_47_abs",
+      "excludedEntityIDs": [
+        "e1"
+      ],
+      "reason": "ENDPOINT_ENTITY_EXCLUDED",
+      "reasonKind": "dependency",
+      "recordID": "r1",
+      "recordKind": "relation",
+      "recordSha256": "6cedea4e09c19f763b8c7453624e34854af063d742f5aa223880521ef28aa1b3",
+      "sourceOutputSha256": "12f97d55889033895775d4d735c8b8a46cef292887c98c8b3311d8455933d972"
+    }
+  ],
+  "version": "0.1.0"
+}
