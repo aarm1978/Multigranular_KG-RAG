@@ -40,6 +40,21 @@ overall (182), nodes (133), and relations (49); target-level results are descrip
 only where support is adequate. This is not extraction IAA or Human Core reliability.
 The historical 2/6 authorities and accepted primary package remain byte-identical.
 
+### Step 8 researcher acceptance — ACCEPTED / FROZEN_CLOSED
+
+The researcher accepts the Step 8 closure materialized at commit
+`edece69d545eb08ef54b269f2cc5f7c649b6abc8`. Step 8 is **ACCEPTED / FROZEN_CLOSED**.
+This acceptance binds the exact file
+`data/curation/papers/m2/publication_step8_final_evaluation/publication_step8_closure_freeze_v1.0.0.json`
+with SHA-256 `f1b434fbc995f17222ba4bb65a4e220af5856d5a3f6be9d4a10b4f3c6ba56b94`.
+
+This note records acceptance after materialization; the freeze snapshot's pending
+acceptance field and the summary are preserved as historical bytes, not rewritten.
+The initial reviews/agreement, reconciliation export, and all final evaluation
+artifacts remain byte-identical. Step 9 remains open and separately paused; this
+acceptance changes none of its status or authorization boundaries and does not
+authorize its resumption or provider execution.
+
 ### Step 8 initial-review agreement interpretation
 
 The frozen unreconciled Step 8 agreement artifact reports exact observed agreement of
