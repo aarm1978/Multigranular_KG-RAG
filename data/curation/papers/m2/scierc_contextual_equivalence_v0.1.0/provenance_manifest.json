@@ -1,0 +1,98 @@
+{
+  "alternativeCaseCoverage": 61,
+  "implementation": {
+    "path": "src/extraction/llm/publications/scierc_contextual_review.py",
+    "sha256": "011fc45037118f8fe83cd73733d601e0efd0703072b1bbb8746b2adc763a89c1",
+    "sizeBytes": 9008
+  },
+  "independentlyHumanAdjudicated": false,
+  "inputs": [
+    {
+      "path": "var/scierc_external_anchor/scierc_overlap_review_progress_v0.6.0/alternative_audit.jsonl",
+      "sha256": "0a6f18161c241280974f75639659f8baaf977f4b874cafba4df423badb003729",
+      "sizeBytes": 128970
+    },
+    {
+      "path": "var/scierc_external_anchor/scierc_overlap_review_progress_v0.6.0/interpretations_cumulative.jsonl",
+      "sha256": "f0963245cb107cecc4ca8f492496c41693059934d918230a2d6b45331ed7f3e8",
+      "sizeBytes": 1527075
+    },
+    {
+      "path": "var/scierc_external_anchor/scierc_overlap_review_progress_v0.6.0/review_metadata.json",
+      "sha256": "b10d2f403950605fa76118cb108dba6558f61b861046b09ad84fbdc53e46db5d",
+      "sizeBytes": 1321
+    },
+    {
+      "path": "var/scierc_external_anchor/scierc_overlap_review_progress_v0.6.0/review_progress_note.md",
+      "sha256": "35b9e8f12114f1b1f8b0cbe6f4c14b2a63ecc0a9d2cefe8dcd44b0129dacc815",
+      "sizeBytes": 4663
+    },
+    {
+      "path": "var/scierc_external_anchor/scierc_overlap_review_progress_v0.6.0/semantic_matching_summary.json",
+      "sha256": "8ad0dbb4b6455cfdf92064ae8a455e0bfca305c26e36763246dfca6fecccbf71",
+      "sizeBytes": 2684
+    },
+    {
+      "path": "var/scierc_external_anchor/overlap_sensitivity_v0.1.0/review.jsonl",
+      "sha256": "497b01055774147f3b703900b258fbe6b925796cc1a810eddd46d5e5026f20d6",
+      "sizeBytes": 9650743
+    },
+    {
+      "path": "var/scierc_external_anchor/overlap_sensitivity_v0.1.0/scierc_overlap_review_v0.1.0.zip",
+      "sha256": "c12e1f8c66c52bfa15afd4d82f1cfa55cd4c5e24da95e237e715ee5f774f133b",
+      "sizeBytes": 1513251
+    },
+    {
+      "path": "data/curation/papers/m2/scierc_overlap_sensitivity_v0.1.0/aggregate_report.json",
+      "sha256": "0acadfa35cb082518e5b3ecee1ce5fce3882292d38d0a95629ac95f8c2ee5195",
+      "sizeBytes": 1794
+    },
+    {
+      "path": "docs/evaluation_decisions.md",
+      "sha256": "b0f81b0d7d7454cbaa65646a5f749ee4fa501799630e4720f7a43688d107f1e5",
+      "sizeBytes": 25901
+    },
+    {
+      "path": "var/scierc_external_anchor/postrun_projections_v0.1.0/A_record_isolation.jsonl",
+      "sha256": "0f51ad5e98bd8aebec4c3079f8320c2e0b66ebf843db9f23a448bcf987db2d94",
+      "sizeBytes": 408254
+    },
+    {
+      "path": "var/scierc_external_anchor/postrun_projections_v0.1.0/B_document_rejection.jsonl",
+      "sha256": "73627288166ce98bf937299a342ec35ddadb15817bc9a6f04c6aecad1620795f",
+      "sizeBytes": 402130
+    },
+    {
+      "path": "data/curation/papers/m2/scierc_step9_postrun_v0.1.0/projection_manifest.json",
+      "sha256": "405b63f7d4f78f206bcfb6b6ed3572139b35e19d30c9117c0a3e652795fddbf6",
+      "sizeBytes": 132382
+    },
+    {
+      "path": "data/curation/papers/m2/scierc_step9_postrun_v0.1.0/metrics.json",
+      "sha256": "c4e80f73224137f54be653777817373b03b800dea05dfde9beab5844a2697a75",
+      "sizeBytes": 1936
+    }
+  ],
+  "nonacceptedSelectedCasesWithAlternatives": 52,
+  "oneToOneVerified": true,
+  "outputs": [
+    {
+      "path": "data/curation/papers/m2/scierc_contextual_equivalence_v0.1.0/decision_ledger.jsonl",
+      "sha256": "3eac7c198f44a017bcfc7c936baa1364a6e6c594f83c87e2099ae2519735dde8",
+      "sizeBytes": 256018
+    },
+    {
+      "path": "data/curation/papers/m2/scierc_contextual_equivalence_v0.1.0/alternative_rematch_ledger.jsonl",
+      "sha256": "367a959556dc768ba9559a581086baf4987ad5329ab2b3a9e47919f4b75c395f",
+      "sizeBytes": 34609
+    },
+    {
+      "path": "data/curation/papers/m2/scierc_contextual_equivalence_v0.1.0/aggregate_metrics.json",
+      "sha256": "3697abe64c38c64cb421a9191dc0b6dfd88860649e2920dcb3bbbfc41b2b89e0",
+      "sizeBytes": 1357
+    }
+  ],
+  "selectedCaseCoverage": 447,
+  "sourcePackageUse": "identity/hash verification only, including endpoint identity and strict-lock collision checks; judgments exclusively from final v0.6.0",
+  "version": "0.1.0"
+}
