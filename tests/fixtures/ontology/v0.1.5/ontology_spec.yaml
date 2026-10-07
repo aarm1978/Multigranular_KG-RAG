@@ -20,7 +20,7 @@ ontology:
   iri: "https://w3id.org/ciroh/ontology#"
   prefix: ciroh
   title: "Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts"
-  version: "0.1.6"
+  version: "0.1.5"
 
 # -----------------------------------------------------------------------------
 # Namespaces / imports (v0.1 §3.1).
@@ -44,7 +44,6 @@ prefixes:
   - {prefix: gn,      iri: "http://www.geonames.org/ontology#", use: reference, note: ">= 2.2.1"}
   - {prefix: schema,  iri: "https://schema.org/",         use: reference, note: "primary for Person/Org/Software/Parameter"}
   - {prefix: dcterms, iri: "http://purl.org/dc/terms/",   use: reference, note: "not legacy dc:"}
-  - {prefix: dcat,    iri: "http://www.w3.org/ns/dcat#",    use: reference, note: "DCAT v3 data-service reuse; reference-only, no new import"}
   - {prefix: foaf,    iri: "http://xmlns.com/foaf/0.1/",  use: reference, note: "optional owl:equivalentClass only"}
   - {prefix: doap,    iri: "http://usefulinc.com/ns/doap#", use: reference}
   - {prefix: spdx,    iri: "http://spdx.org/rdf/terms#",  use: reference}
@@ -231,13 +230,6 @@ classes:
                    evidence: "app_home_page_url / app-launching URL pattern"}]}
   - {id: A-D12, name: Measurement, iri: ciroh:Measurement, kind: domain, extraction: llm,
      anchor: null, status: E, status_note: "coverage ~ 0 · demote-candidate", locus: "README prose"}
-  # Prospective v0.1.6 service representation: declared now, optional deterministic materialization later.
-  - {id: A-D13, name: DataService, iri: ciroh:DataService, kind: metadata, extraction: det,
-     anchor: {curie: "dcat:DataService", relation: subClassOf}, status: S,
-     locus: "HydroShare structured data_services WMS/WCS declarations",
-     note: "Source-asserted data-access service, not a Tool, repository, landing page, or verified live endpoint; source-local identity until alignment",
-     attributes: [{name: endpointURL, type: string, anchor: "dcat:endpointURL", evidence: "data_services explicit endpoint field (exact location to be mapped)"},
-                  {name: serviceType, type: string, anchor: "schema:serviceType", evidence: "data_services explicit WMS/WCS type when present"}]}
   # A-D07 SpatialCoverage -> A-DOM09; A-D08 TemporalCoverage -> A-DOM10; A-D11 Variable -> A-DOM04 (refs, not redeclared)
 
   # ---- Module 3: Code Repository (Part 4) ----
@@ -255,7 +247,7 @@ classes:
   - {id: A-C04, name: ExecutionEnvironment, iri: ciroh:ExecutionEnvironment, kind: metadata, extraction: det,
      anchor: null, status: S, note: "codemeta:runtimePlatform; Dockerfile/environment.yml"}
   - {id: A-C07, name: RepositoryPurpose, iri: ciroh:RepositoryPurpose, kind: metadata, extraction: llm,
-     anchor: null, status: S, note: "controlled vocabulary; SKOS is already imported and may encode a later approved instance-level concept scheme; no TBox category list is minted"}
+     anchor: null, status: S, note: "controlled vocabulary"}
   - {id: A-C08, name: Function, iri: ciroh:Function, kind: domain, extraction: llm, anchor: null, status: E,
      note: "prose only; AST = future"}
   - {id: A-C10, name: ModelVersion, iri: ciroh:ModelVersion, kind: metadata, extraction: hybrid,
@@ -298,7 +290,7 @@ relations:
      anchor: "schema:affiliation", evidence: "affiliation block (det)", type: intra, status: S}
   - {id: A-AG-R2, name: fundedBy, domain: [Paper, DatasetResource], range: Award,
      anchor: "schema:funder", evidence: "acknowledgments / awards[] (det)", type: prov, status: S,
-     note: "Award -> Organization is separately authorized by C-D28 in prospective v0.1.6"}
+     note: "Award -> Organization via funding_agency"}
 
   # ---- Provenance (Part 1) ----
   - {id: PROV-R1, name: hasEvidence, domain: owl:Thing, range: EvidenceSpan,
@@ -441,18 +433,6 @@ relations:
   - {id: C-D26, name: mentionsModel, domain: DatasetResource, range: ComputationalModel,
      anchor: "ciroh:", evidence: "abstract or README prose naming or referencing a model without sufficient evidence of use",
      type: [cross, same], consol: true, status: S, maps_to: D-21, note: "Weaker than C-D25 usesModel.", subproperty_of: mentions}
-  # Step 10 compatibility corrections, additive realizations of existing property names.
-  - {id: C-D27, name: hasContributor, domain: DatasetResource, range: Person,
-     anchor: "schema:contributor", evidence: "contributors[] (det)", type: intra, status: S,
-     note: "Merged with existing Repository/DocumentationPage hasContributor; restores missing DatasetResource domain"}
-  - {id: C-D28, name: fundedBy, domain: Award, range: Organization,
-     anchor: "schema:funder", evidence: "awards[].funding_agency (det)", type: prov, status: S,
-     note: "Award funding agency explicitly named in metadata; distinct from DatasetResource -> Award funding"}
-  # Additional optional deterministic data-service support; no endpoint network verification.
-  - {id: C-D29, name: servesDataset, domain: DataService, range: DatasetResource,
-     anchor: "dcat:servesDataset", evidence: "data_services attached to the source DatasetResource (det)",
-     type: intra, status: S,
-     note: "Service offers access to this DatasetResource; source-local identity, explicit endpoint/type only, no service-consumption or implementation claim"}
 
   # ---- Module 3: Code Repository (Table C) ----
   - {id: C-C01, name: hasFile, domain: Repository, range: RepoFile, anchor: "schema:hasPart", evidence: "files_manifest (det)", type: intra, status: S}

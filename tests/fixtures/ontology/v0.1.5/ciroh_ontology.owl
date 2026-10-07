@@ -14,7 +14,7 @@
   <owl:imports rdf:resource="http://www.w3.org/2004/02/skos/core"/>
   <owl:imports rdf:resource="http://purl.org/net/p-plan"/>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts</rdfs:comment>
-  <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.1.6</owl:versionInfo>
+  <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.1.5</owl:versionInfo>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Generated from src/ontology/ontology_spec.yaml by build_ontology.py.</rdfs:comment>
 </owl:Ontology>
 
@@ -503,7 +503,6 @@
       <owl:unionOf rdf:parseType="Collection">
         <rdf:Description rdf:about="#Paper"/>
         <rdf:Description rdf:about="#DatasetResource"/>
-        <rdf:Description rdf:about="#Award"/>
       </owl:unionOf>
     </owl:Class>
   </rdfs:domain>
@@ -518,7 +517,7 @@
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">A-AG-R2</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: A-AG-R2</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Award -&gt; Organization is separately authorized by C-D28 in prospective v0.1.6</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Award -&gt; Organization via funding_agency</rdfs:comment>
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">schema:funder</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: schema:funder</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: acknowledgments / awards[] (det)</rdfs:comment>
@@ -528,10 +527,6 @@
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: schema:funding</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Same as inventory relation: A-AG-R2</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: awards[] (det)</rdfs:comment>
-  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-D28</inventoryId>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-D28</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Award funding agency explicitly named in metadata; distinct from DatasetResource -&gt; Award funding</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: awards[].funding_agency (det)</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>
@@ -617,22 +612,17 @@
   <rdfs:domain>
     <owl:Class>
       <owl:unionOf rdf:parseType="Collection">
-        <rdf:Description rdf:about="#DatasetResource"/>
         <rdf:Description rdf:about="#Repository"/>
         <rdf:Description rdf:about="#DocumentationPage"/>
       </owl:unionOf>
     </owl:Class>
   </rdfs:domain>
   <rdfs:range rdf:resource="https://schema.org/Person"/>
-  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-D27</inventoryId>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-D27</rdfs:comment>
-  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Merged with existing Repository/DocumentationPage hasContributor; restores missing DatasetResource domain</rdfs:comment>
-  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">schema:contributor</reuseAnchor>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: schema:contributor</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: contributors[] (det)</rdfs:comment>
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-C04</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-C04</rdfs:comment>
+  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
+  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">schema:contributor</reuseAnchor>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: schema:contributor</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: contributors.json (det)</rdfs:comment>
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-DC05</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-DC05</rdfs:comment>
@@ -1705,20 +1695,6 @@
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>
 
-<owl:ObjectProperty rdf:about="#servesDataset">
-  <rdfs:domain rdf:resource="#DataService"/>
-  <rdfs:range rdf:resource="#DatasetResource"/>
-  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C-D29</inventoryId>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: C-D29</rdfs:comment>
-  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Service offers access to this DatasetResource; source-local identity, explicit endpoint/type only, no service-consumption or implementation claim</rdfs:comment>
-  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dcat:servesDataset</reuseAnchor>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: dcat:servesDataset</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: data_services attached to the source DatasetResource (det)</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
-</owl:ObjectProperty>
-
 <owl:ObjectProperty rdf:about="#studiesFeature">
   <rdfs:domain>
     <owl:Class>
@@ -1960,16 +1936,6 @@
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Attribute on MediaObject.</rdfs:comment>
 </owl:DatatypeProperty>
 
-<owl:DatatypeProperty rdf:about="#endpointURL">
-  <rdfs:domain rdf:resource="#DataService"/>
-  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Data property generated from class attributes in ontology_spec.yaml.</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Attribute on DataService.</rdfs:comment>
-  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dcat:endpointURL</reuseAnchor>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: dcat:endpointURL</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: data_services explicit endpoint field (exact location to be mapped)</rdfs:comment>
-</owl:DatatypeProperty>
-
 <owl:DatatypeProperty rdf:about="#evidenceText">
   <rdfs:domain rdf:resource="#EvidenceSpan"/>
   <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
@@ -2043,16 +2009,6 @@
   <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Data property generated from class attributes in ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Attribute on MediaObject.</rdfs:comment>
-</owl:DatatypeProperty>
-
-<owl:DatatypeProperty rdf:about="#serviceType">
-  <rdfs:domain rdf:resource="#DataService"/>
-  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Data property generated from class attributes in ontology_spec.yaml.</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Attribute on DataService.</rdfs:comment>
-  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">schema:serviceType</reuseAnchor>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: schema:serviceType</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: data_services explicit WMS/WCS type when present</rdfs:comment>
 </owl:DatatypeProperty>
 
 <owl:DatatypeProperty rdf:about="#sourceArtifact">
@@ -3081,24 +3037,6 @@
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Status note: coverage ~ 0 · demote-candidate</rdfs:comment>
 </owl:Class>
 
-<owl:Class rdf:about="#DataService">
-  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
-  <rdfs:subClassOf rdf:resource="http://www.w3.org/ns/dcat#DataService"/>
-  <rdfs:subClassOf>
-    <owl:Restriction>
-      <owl:onProperty rdf:resource="#hasEvidence"/>
-      <owl:onClass rdf:resource="#EvidenceSpan"/>
-      <owl:minQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:minQualifiedCardinality>
-    </owl:Restriction>
-  </rdfs:subClassOf>
-  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">A-D13</inventoryId>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: A-D13</rdfs:comment>
-  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
-  <sourceKind rdf:datatype="http://www.w3.org/2001/XMLSchema#string">metadata</sourceKind>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Source-asserted data-access service, not a Tool, repository, landing page, or verified live endpoint; source-local identity until alignment</rdfs:comment>
-  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dcat:DataService</reuseAnchor>
-</owl:Class>
-
 <owl:Class rdf:about="#Repository">
   <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
   <rdfs:subClassOf rdf:resource="https://schema.org/SoftwareSourceCode"/>
@@ -3166,7 +3104,7 @@
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: A-C07</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
   <sourceKind rdf:datatype="http://www.w3.org/2001/XMLSchema#string">metadata</sourceKind>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: controlled vocabulary; SKOS is already imported and may encode a later approved instance-level concept scheme; no TBox category list is minted</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: controlled vocabulary</rdfs:comment>
 </owl:Class>
 
 <owl:Class rdf:about="#Function">
@@ -3385,10 +3323,6 @@
 </owl:Class>
 
 <owl:Class rdf:about="https://schema.org/WebApplication">
-  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
-</owl:Class>
-
-<owl:Class rdf:about="http://www.w3.org/ns/dcat#DataService">
   <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
 </owl:Class>
 

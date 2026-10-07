@@ -5,16 +5,20 @@
 > exhaustive human-readable schema with stable IDs; `src/ontology/ontology_spec.yaml`
 > is the current machine-readable authority; and `ontology_formalization.md` records
 > formalization history, exact hashes, generated-artifact counts, and reasoner
-> validation. The current formally frozen ontology release is **0.1.5**.
+> validation. The current formally frozen ontology release is **0.1.6**.
 
-**Current 0.1.5 summary.** The frozen ontology has 76 source class declarations and
-127 source relation declarations: 52 minted CIROH classes, 22 referenced external
-classes, 91 object properties, 18 datatype properties, and 6 direct OWL imports. The
-generated RDF/XML OWL SHA-256 is
-`ce5f6d3d8ac926dc8ff872c9a36066758a86068b6681417bf7edc6aaeccf1e71`.
-The formal HermiT gate passed: classification completed, the ontology is consistent,
-zero named unsatisfiable classes were found under `owl:Nothing`, and no execution
-errors were observed.
+**Current 0.1.6 summary.** The frozen ontology has 77 source class declarations and
+130 source relation declarations: 53 minted CIROH classes, 22 referenced external
+classes, 92 object properties, 20 datatype properties, and 6 direct OWL imports.
+The generated RDF/XML OWL SHA-256 is
+`6ebf7f67f79d8aae4fada176911ed9311964beb567f40a097af9017f1ad9c730`.
+The 44-test focused structural suite passed. The researcher-confirmed HermiT gate
+passed on 2026-10-07: classification completed, no inconsistency or HermiT exception
+was reported, and zero named unsatisfiable classes were visually confirmed under
+`owl:Nothing`. Third-party import/parser limitations preclude claiming a fully resolved
+import closure; see `ontology_formalization.md` §12. The additive amendment declares
+DatasetResource contributors, Award funding agencies, and optional DataService support.
+Historical v0.1.5 and Publication evaluation authorities remain unchanged.
 
 > **Scope (TBox/ABox).** The schema declares all proposal classes. Instance-level
 > extraction status is `S` (supported-now), `E` (extract where evidence supports it),

@@ -1,6 +1,6 @@
 # Ontology Inventory — Study 2 (Phase 1 closure)
 
-**Current semantic version:** 0.1.6, formally frozen on 2026-10-07 — 77 source class declarations and 130 source relation declarations. The 44-test focused ontology suite passed, and the researcher-confirmed HermiT gate passed on the exact generated OWL artifact. See `ontology_formalization.md` §12 for the hash, validation scope, and import limitations. Frozen v0.1.5 authorities and existing extraction/evaluation artifacts remain historical authorities; no deterministic extractor or Publication artifact has been changed.
+**Current semantic version:** 0.1.5, formally frozen — 76 class declarations and 127 source relation declarations. The structural suite passed (38 tests), and the researcher-confirmed HermiT gate passed on the exact generated OWL artifact. The frozen deterministic graphs remain unchanged.
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 **Companion to `Study2_Ontology_v0.1.md` (concepts + namespaces §3.1). Vocabulary reuse verified (validation 1); schema fit-checked on 6 real artifacts (validation 2, Etapa A) — GO, with the schema-change log below applied.**
@@ -48,14 +48,12 @@ Person canonicalization across four regimes (ORCID / name+affiliation+email / na
 | A-AG-R1 | `affiliatedWith` | `Person` → `Organization` | `schema:affiliation` / `org:` | affiliation block (det) | S |
 | A-AG-R2 | `fundedBy` | `Paper`/`DatasetResource` → `Award` | `schema:funder` | acknowledgments / `awards[]` (det) | S |
 
-**Historical distinction / prospective correction:** through frozen v0.1.5, the
-`funding_agency` note on A-AG-R2 was non-logical documentation; C-D09 authorized
-`DatasetResource` → `Award` or `Organization`, not `Award` → `Organization`.
-The formally frozen v0.1.6 adds C-D28, an explicitly evidence-backed `Award` →
-`Organization` realization of `fundedBy`, aligned to the `schema:funder` reuse anchor.
-This does not retroactively alter the historical ontology artifacts.
+The `funding_agency` note carried by A-AG-R2 is non-logical documentation; ontology
+0.1.3 does not formally declare an `Award` → `Organization` branch. The separate
+dataset-module C-D09 signature directly permits `DatasetResource` → `Award` or
+`Organization`, but it does not create an `Award` → `Organization` relation.
 
-> `hasAuthor`/`hasCreator`/`hasContributor` are declared in module Tables C (C-P01, C-D03, C-C04, C-DC05); the v0.1.6 DatasetResource `hasContributor` realization is C-D27. `Award` is A-D09.
+> `hasAuthor`/`hasCreator`/`hasContributor` are declared in the module Tables C (C-P01, C-D03, C-C04, C-DC05). `Award` is `A-D09`.
 
 
 ## Shared CIROH domain-entity layer — Table A (the contribution)
@@ -216,7 +214,6 @@ evidence. `C-P09` represents positive support only, and `C-P12` has no summary b
 | A-D10 | `ToolConfiguration` (ToolResource) | metadata | det | `tool_config` | `ciroh:` + `schema:WebApplication`/`url` | S |
 | A-D11 | `Variable` (→ A-DOM04) | domain | LLM | abstract/README prose | `schema:variableMeasured`; CF | E |
 | A-D12 | `Measurement` | domain | LLM | README prose | `ciroh:` | **E · coverage ≈ 0 · demote-candidate** |
-| A-D13 | `DataService` (endpointURL, serviceType) | metadata | det (prospective) | structured `data_services` (WMS/WCS) | `dcat:DataService` (subClassOf; reference-only) | S; optional future materialization |
 | (refs) | A-DOM02/03 + `HydrologicFeature` (via `geospatial_relations`); `EvaluationMetric`/`Parameter` (where README reports them) | domain | LLM/det | abstract/README; geoconnex | Part 1 | S/E |
 
 > Three subtypes (corpus JSON): Composite has files; Collection groups members (no own files); Tool has `tool_config`, no files. `Measurement` did not fire across the validated artifacts (corpus does not open data files); the useful distinction is `Variable` vs `DatasetMention`.
@@ -230,14 +227,6 @@ evidence. `C-P09` represents positive support only, and `C-P12` has no summary b
 | B-D04 | README: Workflow / Usage | A-C11, A-DOM02 |
 | B-D05 | README: Variables & Measurements | A-D11, A-D12 |
 | B-D06 | README: External References | A-P01, A-C01, A-D01 (→ D-05/D-19) |
-
-**Prospective structured-service note (v0.1.6):** `DataService` (A-D13) is a
-source-asserted access service, not a code `Tool`, a dataset file, or an assumed
-operational endpoint. `servesDataset` (C-D29) points from the service to the
-source-local `DatasetResource`, with protocol and endpoint captured only when
-explicit. Its ontology declaration supports a later optional deterministic
-enhancement; the minimal implementation need not materialize any DataService
-instances. DCAT is added as a **reference-only** reuse vocabulary, not an OWL import.
 
 ## Table C — Relations
 | # | Relation | Domain → Range | Reuse anchor | Evidence locus | Type | Status |
@@ -268,9 +257,6 @@ instances. DCAT is added as a **reference-only** reuse vocabulary, not an OWL im
 | C-D24 | `mentionsTool` | `DatasetResource` → `Tool` | `ciroh:` | prose naming a tool without sufficient evidence of use | cross+same | S · consol |
 | C-D25 | `usesModel` | `DatasetResource` → `ComputationalModel` | `ciroh:` | prose establishing use, execution, configuration, or generation with the model | cross+same | S · consol |
 | C-D26 | `mentionsModel` | `DatasetResource` → `ComputationalModel` | `ciroh:` | prose naming a model without sufficient evidence of use | cross+same | S · consol (→ D-21) |
-| C-D27 | `hasContributor` | `DatasetResource` → `Person` | `schema:contributor` | `contributors[]` (det) | intra | S; additive domain branch |
-| C-D28 | `fundedBy` | `Award` → `Organization` | `schema:funder` | `awards[].funding_agency` (det) | prov | S; additive funding-agency branch |
-| C-D29 | `servesDataset` | `DataService` → `DatasetResource` | `dcat:servesDataset` | source-bound structured `data_services` (det) | intra | S; prospective optional extraction |
 
 ---
 
@@ -287,7 +273,7 @@ instances. DCAT is added as a **reference-only** reuse vocabulary, not an OWL im
 | A-C04 | `ExecutionEnvironment` | metadata | det | Dockerfile/`environment.yml` | `ciroh:` (`codemeta:runtimePlatform`) | S |
 | A-C05 | `Person`/`Contributor` (→ A-AG01) | agent | det | `contributors.json` | `schema:Person` | S |
 | A-C06 | `License` | metadata | det | `repo_metadata.license` | SPDX | S |
-| A-C07 | `RepositoryPurpose` | metadata | LLM (controlled) | README | `ciroh:` (controlled; SKOS available for an approved ABox concept scheme) | S |
+| A-C07 | `RepositoryPurpose` | metadata | LLM (controlled) | README | `ciroh:` (controlled) | S |
 | A-C08 | `Function` | domain | LLM (prose only) | dossier files | `ciroh:` | E |
 | A-C09 | `Algorithm` (→ A-DOM13, shared) | domain | LLM (prose only) | dossier files | `ciroh:` | E |
 | A-C10 | `ModelVersion` | metadata | hybrid | release tags / `CITATION.cff` / README | `schema:softwareVersion`; `ciroh:` | E |

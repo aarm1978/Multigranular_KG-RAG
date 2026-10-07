@@ -2,12 +2,11 @@
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 
-**Current semantic version:** 0.1.5, formally frozen. The generated and structurally
-validated OWL passed the formal manual HermiT gate: classification completed successfully,
-no inconsistency was reported, and the researcher confirmed zero named unsatisfiable
-classes under `owl:Nothing`. Frozen deterministic Phase B graphs remain historical products
-accepted unchanged. Downstream Publication LLM authority contracts require a later
-coordinated migration; that migration does not reopen or invalidate ontology 0.1.5.
+**Current semantic version:** 0.1.6, formally frozen on 2026-10-07. The exact generated
+OWL passed the researcher-confirmed manual HermiT gate; see §12 for the artifact hash,
+structural compatibility results, and import/parser limitations. Historical v0.1.5
+validation and authorities remain preserved. Deterministic graphs, Publication artifacts,
+and evaluation authorities are unchanged; this freeze does not authorize their migration.
 
 **Purpose.** This document records the *formalization* phase: how the validated
 conceptual schema was translated into a machine-readable OWL/RDF ontology, the
@@ -218,7 +217,8 @@ workflow invocation. **Use is not implementation**, so no duplicate
 ## 4. The generated ontology
 
 `build_ontology.py` (owlready2) reads the specification and emits `ciroh_ontology.owl`
-in RDF/XML. The current formally frozen ontology 0.1.5 artifact has these counts:
+in RDF/XML. The historical formally frozen ontology 0.1.5 artifact has these counts
+(the current v0.1.6 counts are recorded in §12):
 
 | Element | Count |
 |---|---|
@@ -642,3 +642,90 @@ the historical authorities of existing artifacts.
 **Refinement stop rule.** This 0.1.5 cycle is the one bounded ontology refinement authorized
 from Human Core coverage observations. After formal freeze, further ontology expansion is
 deferred unless a reproducible blocker invalidates the frozen Study 2 evaluation protocol.
+
+
+## 12. Study 2 Step 10 additive amendment 0.1.6 (formally frozen)
+
+The researcher approved this prospective amendment separately from the historical
+v0.1.5 Human Core refinement. The reviewed inventory and YAML were applied as the
+build authorities. The amendment adds:
+
+- C-D27: `DatasetResource hasContributor Person`, merged additively with the existing
+  Repository and DocumentationPage branches.
+- C-D28: `Award fundedBy Organization`, preserving the existing Paper and
+  DatasetResource funding branches.
+- A-D13: `DataService`, subclassed from reference-only `dcat:DataService`, with
+  string-valued `endpointURL` and `serviceType` attributes.
+- C-D29: `DataService servesDataset DatasetResource`.
+
+DCAT introduces no new OWL import. The `dcat:endpointURL` reuse anchor is an annotation,
+not an equivalent-property assertion: the internal string attribute is not an assertion
+of a literal against DCAT's resource-valued property. Service identity and materialization
+remain future implementation-contract decisions. RepositoryPurpose gains only an
+explanatory note about a later approved SKOS instance-level scheme, not new TBox values.
+
+### 12.1 Build, reproducibility, and historical compatibility
+
+The existing `build_ontology.py` generated the artifact without modification. The focused
+ontology suite passed all 44 tests, including three independent byte-identical builds
+in temporary locations matching the checked-in candidate. The validated working OWL
+was not regenerated during freeze finalization.
+
+| Element | Count |
+|---|---:|
+| Source class declarations | 77 |
+| Source relation declarations | 130 |
+| Minted CIROH classes | 53 |
+| Referenced external classes | 22 |
+| Object properties | 92 |
+| Datatype properties | 20 |
+| Direct `owl:imports` | 6 |
+
+Tests preserve v0.1.5 declarations, inventory IDs, generated class/property IRIs,
+valid domain/range branches, subclass/subproperty/inverse axioms, and direct imports.
+The saved Publication, HydroShare, GitHub, and Hub graph signatures resolve against
+v0.1.6, and all four historical graph hashes remain unchanged. Historical v0.1.5
+inventory, YAML, and OWL fixtures retain their exact bytes and pinned hashes under
+`tests/fixtures/ontology/v0.1.5/`. Historical assertions remain; prospective expectations
+are separate. No extractor, extraction mapping, graph, metric, or Publication
+evaluation/production artifact was changed.
+
+### 12.2 Researcher-confirmed manual HermiT gate
+
+On **2026-10-07**, the researcher validated the exact artifact in **Protégé Desktop
+5.6.5** using **HermiT 1.4.3.456**. Classification completed; the log reports:
+
+> Ontologies processed in 75072 ms by HermiT
+
+No HermiT exception or ontology inconsistency was reported. The researcher visually
+confirmed zero named unsatisfiable classes under `owl:Nothing`.
+
+**HERMIT 0.1.6 FORMAL REASONER GATE: PASS — classification completed; no ontology
+inconsistency or HermiT exception reported; researcher-confirmed zero named
+unsatisfiable classes under `owl:Nothing`.**
+
+Validated and freeze-finalization-verified OWL SHA-256:
+
+`6ebf7f67f79d8aae4fada176911ed9311964beb567f40a097af9017f1ad9c730`
+
+### 12.3 Validation scope and import observations
+
+The researcher reported these Protégé observations:
+
+- Several ontology catalog lookups were followed by successful remote import loading.
+- DataCite's transitive `literalreification` import failed to load.
+- DCMI/PROV-O/SKOS property-punning and annotation-property transformation warnings
+  occurred in imported vocabularies.
+- The Fact++ plugin failed to start; HermiT ran independently and completed.
+
+The formal result applies to the exact CIROH artifact and the import configuration
+available in that manual session. It does **not** establish a fully resolved third-party
+import closure. These are documented import/parser limitations, not demonstrated
+CIROH-specific logical defects. The structural suite establishes declared-signature
+compatibility, not a reasoner validation of every saved instance graph or scientific
+validation of extracted claims. No service availability or endpoint liveness is inferred.
+
+Ontology **v0.1.6 is formally frozen** on this exact artifact. Historical v0.1.5
+formalization, hashes, and evaluation authorities remain intact. This freeze does not
+close Step 10: a separate researcher-approved scope record is required. It does not
+begin Step 11 or authorize the minimal deterministic corrections.
