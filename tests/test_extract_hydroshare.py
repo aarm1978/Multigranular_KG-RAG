@@ -197,13 +197,13 @@ class ProspectiveCorpusTests(unittest.TestCase):
 
     @unittest.skipUnless(DEFAULT_OUTPUT.exists(), "Prospective artifacts not yet generated")
     def test_saved_prospective_snapshots_metrics_and_trajectory(self) -> None:
-        """Persisted results match versioned inputs and the unchanged generator."""
+        """Accepted HydroShare results remain reproducible in the pre-enrichment archive."""
         self.assertEqual(json.loads(DEFAULT_OUTPUT.read_text()), self.new)
         expectation = json.loads((ROOT / "tests/fixtures/hydroshare/prospective_v016_hashes.json").read_text())
         for name, digest in expectation.items():
             self.assertEqual(hashlib.sha256((ROOT / name).read_bytes()).hexdigest(), digest)
         records = []
-        for record_path in (ROOT / "results/metrics/snapshots").glob("*.json"):
+        for record_path in (ROOT / "results/metrics/history/pre_reference_enrichment_v1/snapshots").glob("*.json"):
             record = json.loads(record_path.read_text())
             input_path = ROOT / record["input"]["path"]
             self.assertTrue(input_path.stem.endswith("_v016"))
@@ -215,7 +215,7 @@ class ProspectiveCorpusTests(unittest.TestCase):
             self.assertEqual(record, rebuilt)
             records.append(record)
         records.sort(key=lambda r: r["trajectoryOrder"])
-        self.assertEqual((ROOT / "results/metrics/trajectory.md").read_text(), render_trajectory_markdown(records))
+        self.assertEqual((ROOT / "results/metrics/history/pre_reference_enrichment_v1/trajectory.md").read_text(), render_trajectory_markdown(records))
 
 
 if __name__ == "__main__":

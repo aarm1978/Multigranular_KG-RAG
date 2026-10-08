@@ -1,5 +1,39 @@
 # CIROH Hub → Ontology — Deterministic Extraction Mapping
 
+## Prospective reference enrichment v1 (post-Step-10)
+
+This bounded addendum activates C-DC22 under frozen ontology **v0.1.6**.
+The remaining mapping describes historical Phase B 1.0.0, including its prohibition
+of generic `references`. That prohibition remains operative for historical-profile
+validation. `--enrich-references` (Python: `enrich_references=True`) selects prospective
+Phase B **1.1.0**, not a new ontology version. Default API behavior remains historical;
+the default output is `data/interim/documents/ciroh_hub_nodes_edges_refs_v1.json`.
+Writes to frozen `ciroh_hub_nodes_edges.json` are prohibited in either profile.
+
+Use Phase A `links` with internal/relative targets resolving through existing exact
+canonical-page and unambiguous terminal-slash aliases. Emit DocumentationPage
+`references` DocumentationPage (C-DC22) only between existing curated pages.
+Never create a missing-page stub for this rule. Exclude self links, excluded routes,
+query-bearing/ambiguous targets, and pairs already covered by announces, isPartOf,
+or hasSubPage. Preserve every preexisting node and edge, including Link/linksTo.
+
+Conservative content gate: the declared anchor/target Markdown token must occur at
+the declared source line; require at least three surrounding alphabetic words after
+removing inline links. Standalone links/cards and ambiguous lists therefore abstain.
+Exclude fenced/indented code, image lines, navigation/comment blocks, navigation
+headings, breadcrumb/redirect and next/previous-page instructions. This is a bounded
+sufficient rule, not exhaustive classification of genuine page references.
+
+Deduplicate source/target pairs while retaining all qualifying declarations: page URL,
+corpus path, raw target, resolved URL, anchor text, line, ordinal, Link ID, exact source
+line and content-hash version. Primary public evidence and internal lineage follow
+the existing exact-target ordering; repeated declarations do not create extra edges.
+No citation parsing or stronger semantic relation is introduced.
+
+Scope and preservation authority:
+`docs/handoffs/STUDY2_POST_STEP10_REFERENCE_ENRICHMENT_V1.md`.
+
+
 **Study 2 — Knowledge-graph construction, deterministic layer (Module 4: Documentation / CIROH Hub)**
 
 **Target implementation:** `src/extraction/deterministic/extract_ciroh_hub.py`  

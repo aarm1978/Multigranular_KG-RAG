@@ -1,0 +1,882 @@
+{
+  "displayName": "Hub (det., module only) [refs v1]",
+  "evaluationPolicy": {
+    "attributeExclusions": {
+      "classSpecificAdministrative": {
+        "ExecutionEnvironment": [
+          "pinnedCount",
+          "pinnedSetEvidence",
+          "prefix"
+        ],
+        "Identifier": [
+          "idType",
+          "value"
+        ],
+        "License": [
+          "declarationKind",
+          "declarationScope",
+          "key"
+        ],
+        "Repository": [
+          "forkParent",
+          "owner"
+        ],
+        "Tool": [
+          "cffVersion",
+          "declaredLicenseKind",
+          "declaredLicenseSourceValue",
+          "repository",
+          "repositoryCode"
+        ]
+      },
+      "globalAdministrativeOrIdentifier": [
+        "archiveFormat",
+        "bagUrl",
+        "canonicalName",
+        "checksum",
+        "contentAvailable",
+        "contributions",
+        "contributorType",
+        "createdAt",
+        "curationStatus",
+        "declaredLicenseMetadata",
+        "doi",
+        "downloadUrl",
+        "downloaded",
+        "downloadedFileCount",
+        "edgeId",
+        "email",
+        "extractionMethod",
+        "fileName",
+        "filePath",
+        "fileTotalCount",
+        "fullName",
+        "fundingAgencyUrl",
+        "githubId",
+        "githubStats",
+        "homepage",
+        "host",
+        "htmlUrl",
+        "hydroshareResourceId",
+        "hydroshareUserId",
+        "id",
+        "identifier",
+        "identifierRegime",
+        "identifierType",
+        "identifierValue",
+        "identifiers",
+        "identityRegime",
+        "internalId",
+        "inventoryId",
+        "launchURL",
+        "login",
+        "manifestType",
+        "mentionCount",
+        "metricExclusion",
+        "modifiedAt",
+        "moduleRoleId",
+        "nodeId",
+        "normalizedValue",
+        "orcid",
+        "originalValue",
+        "paperId",
+        "path",
+        "phaseAField",
+        "phaseAVersion",
+        "profileUrl",
+        "pushedAt",
+        "rawSource",
+        "repoId",
+        "requestUrlBase",
+        "requestUrlBaseFile",
+        "resourceId",
+        "ror",
+        "selectionReason",
+        "selectionReasonHistogram",
+        "sizeBytes",
+        "sourceArtifact",
+        "sourceDeclarations",
+        "sourceLocation",
+        "sourcePath",
+        "sourceRepoId",
+        "sourceType",
+        "spdxId",
+        "timestamp",
+        "toolIconUrl",
+        "toolId",
+        "updatedAt",
+        "url",
+        "urls"
+      ]
+    },
+    "fileInventorySensitivity": {
+      "edgeExclusionRule": "incident_to_excluded_node",
+      "excludedClasses": [
+        "DatasetFile",
+        "File",
+        "RepoFile"
+      ],
+      "excludedEdgeCount": 484,
+      "excludedEdgeCountsByRelation": {
+        "hasFile": 242,
+        "hasSourceFile": 242
+      },
+      "excludedEdgeIdsSha256": "7a7d31fe6ec4022733669ceb3cf8a5be9a5d880ebd1e18e99e674c89b663fa84",
+      "excludedNodeCount": 242,
+      "excludedNodeCountsByClass": {
+        "DatasetFile": 0,
+        "File": 0,
+        "RepoFile": 242
+      },
+      "excludedNodeIdsSha256": "7ee342ae1136fbe8fa3f2f3bf60d4cccbc0bb0e3a981f3d5e451fdf834300188",
+      "expectedInventoryIdsByClass": {
+        "DatasetFile": "A-D03",
+        "File": "A-C02",
+        "RepoFile": "A-C02"
+      },
+      "rationale": "File-inventory entities are legitimate KG content and remain in the full graph. This sensitivity analysis excludes the complete class-defined file-inventory layer and every edge incident to an excluded node so per-node structural averages can be interpreted independently of explicit repository and dataset file granularity."
+    }
+  },
+  "evaluatorVersion": "1.2.0",
+  "input": {
+    "path": "data/interim/documents/ciroh_hub_nodes_edges_refs_v1.json",
+    "sha256": "6893cb9dfe2869378983e878b9411ed88367b0df946a5547c791bc0ff40baa7d"
+  },
+  "label": "ciroh_hub_deterministic",
+  "methodology": {
+    "consolidationRatioDefinition": "Unique canonical entity nodes divided by total extracted entity mentions, globally and per class. Lower values indicate greater consolidation, but the ratio does not establish consolidation quality because erroneous over-merging can also reduce it.",
+    "externalUrlStubNote": "Because url and host are excluded as identifier/administrative fields, external-URL stub nodes may have near-zero informative-attribute density. This is intentional and honest: unresolved stubs are information-poor, while their incident relations still contribute to structural density.",
+    "informationDensityDefinition": "Average per node of nonempty informative attribute keys plus incident edge instances. Incoming and outgoing edges count; a self-loop counts once for its node.",
+    "informativeAttributeDefinition": "Each nonempty node.attributes key not excluded by the global or class-specific policy counts once, regardless of value length.",
+    "relationalRichnessDefinition": "Average per node of distinct incoming or outgoing relation names."
+  },
+  "recordSeries": "module",
+  "schemaVersion": "1.2",
+  "trajectoryOrder": 25,
+  "variants": {
+    "fileInventoryExcluded": {
+      "attributeAccounting": {
+        "counted": {
+          "DatasetResource": {
+            "originalTargets": 8,
+            "resourceUrl": 8
+          },
+          "DocumentationPage": {
+            "authorCount": 242,
+            "canonicalUrl": 242,
+            "contentSha256": 242,
+            "corpusPath": 242,
+            "description": 221,
+            "externalContentSourceCount": 242,
+            "fileSha256": 242,
+            "generatedFromJs": 242,
+            "headingCount": 242,
+            "lastUpdatedDate": 242,
+            "lastUpdatedDateRaw": 242,
+            "linkCount": 242,
+            "pageType": 228,
+            "slug": 74,
+            "sourceGroup": 242,
+            "tagCount": 242,
+            "title": 242,
+            "titleSource": 242
+          },
+          "Link": {
+            "anchorText": 1679,
+            "headingOrdinal": 1709,
+            "linkType": 1767,
+            "ordinal": 1767,
+            "pageUrl": 1767,
+            "rawTarget": 1767,
+            "resolvedUrl": 1708,
+            "sectionId": 1709,
+            "sourceLine": 1767
+          },
+          "Organization": {
+            "alignmentCandidateKey": 119,
+            "authorOrdinal": 119,
+            "name": 119,
+            "normalizedName": 119
+          },
+          "Person": {
+            "affiliation": 119,
+            "alignmentCandidateKey": 119,
+            "authorOrdinal": 119,
+            "name": 119,
+            "normalizedName": 119,
+            "role": 119,
+            "source": 119,
+            "sourceIdentifier": 0
+          },
+          "Repository": {
+            "name": 106,
+            "originalTargets": 105,
+            "repositoryRef": 1,
+            "role": 1,
+            "sourceKinds": 105
+          },
+          "Section": {
+            "level": 1583,
+            "ordinal": 1583,
+            "pageUrl": 1583,
+            "parentHeadingOrdinal": 1056,
+            "parentSectionId": 1056,
+            "rawText": 1583,
+            "sourceLine": 1583,
+            "text": 1583
+          },
+          "Subject": {
+            "normalizedLabel": 125,
+            "preferredLabel": 125,
+            "sourceLabels": 125
+          }
+        },
+        "excluded": {
+          "DatasetResource": {
+            "resourceId": {
+              "count": 8,
+              "rule": "global_administrative_or_identifier"
+            }
+          },
+          "DocumentationPage": {
+            "path": {
+              "count": 242,
+              "rule": "global_administrative_or_identifier"
+            },
+            "sourcePath": {
+              "count": 242,
+              "rule": "global_administrative_or_identifier"
+            }
+          },
+          "Identifier": {
+            "idType": {
+              "count": 356,
+              "rule": "class_specific_administrative"
+            },
+            "normalizedValue": {
+              "count": 356,
+              "rule": "global_administrative_or_identifier"
+            },
+            "value": {
+              "count": 356,
+              "rule": "class_specific_administrative"
+            }
+          },
+          "Person": {
+            "profileUrl": {
+              "count": 119,
+              "rule": "global_administrative_or_identifier"
+            }
+          },
+          "Repository": {
+            "htmlUrl": {
+              "count": 106,
+              "rule": "global_administrative_or_identifier"
+            },
+            "owner": {
+              "count": 106,
+              "rule": "class_specific_administrative"
+            }
+          },
+          "Subject": {
+            "sourceDeclarations": {
+              "count": 125,
+              "rule": "global_administrative_or_identifier"
+            }
+          }
+        }
+      },
+      "counts": {
+        "edges": 6163,
+        "nodes": 4425
+      },
+      "metrics": {
+        "byEntityType": {
+          "DatasetResource": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 2.625,
+              "averageInformativeAttributesPerNode": 2.0,
+              "combinedAveragePerNode": 4.625,
+              "totalIncidentEdgeOccurrences": 21,
+              "totalInformativeAttributes": 16
+            },
+            "nodeCount": 8,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 2.0,
+              "totalPerNodeDistinctRelationTypes": 16
+            }
+          },
+          "DocumentationPage": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 27.033058,
+              "averageInformativeAttributesPerNode": 17.161157,
+              "combinedAveragePerNode": 44.194215,
+              "totalIncidentEdgeOccurrences": 6542,
+              "totalInformativeAttributes": 4153
+            },
+            "nodeCount": 242,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 7.27686,
+              "totalPerNodeDistinctRelationTypes": 1761
+            }
+          },
+          "Identifier": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 1.0,
+              "averageInformativeAttributesPerNode": 0.0,
+              "combinedAveragePerNode": 1.0,
+              "totalIncidentEdgeOccurrences": 356,
+              "totalInformativeAttributes": 0
+            },
+            "nodeCount": 356,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 1.0,
+              "totalPerNodeDistinctRelationTypes": 356
+            }
+          },
+          "Link": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 1.0,
+              "averageInformativeAttributesPerNode": 8.85116,
+              "combinedAveragePerNode": 9.85116,
+              "totalIncidentEdgeOccurrences": 1767,
+              "totalInformativeAttributes": 15640
+            },
+            "nodeCount": 1767,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 1.0,
+              "totalPerNodeDistinctRelationTypes": 1767
+            }
+          },
+          "Organization": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 1.0,
+              "averageInformativeAttributesPerNode": 4.0,
+              "combinedAveragePerNode": 5.0,
+              "totalIncidentEdgeOccurrences": 119,
+              "totalInformativeAttributes": 476
+            },
+            "nodeCount": 119,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 1.0,
+              "totalPerNodeDistinctRelationTypes": 119
+            }
+          },
+          "Person": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 2.0,
+              "averageInformativeAttributesPerNode": 7.0,
+              "combinedAveragePerNode": 9.0,
+              "totalIncidentEdgeOccurrences": 238,
+              "totalInformativeAttributes": 833
+            },
+            "nodeCount": 119,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 2.0,
+              "totalPerNodeDistinctRelationTypes": 238
+            }
+          },
+          "Repository": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 4.839623,
+              "averageInformativeAttributesPerNode": 3.0,
+              "combinedAveragePerNode": 7.839623,
+              "totalIncidentEdgeOccurrences": 513,
+              "totalInformativeAttributes": 318
+            },
+            "nodeCount": 106,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 2.292453,
+              "totalPerNodeDistinctRelationTypes": 243
+            }
+          },
+          "Section": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 1.0,
+              "averageInformativeAttributesPerNode": 7.334176,
+              "combinedAveragePerNode": 8.334176,
+              "totalIncidentEdgeOccurrences": 1583,
+              "totalInformativeAttributes": 11610
+            },
+            "nodeCount": 1583,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 1.0,
+              "totalPerNodeDistinctRelationTypes": 1583
+            }
+          },
+          "Subject": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 9.496,
+              "averageInformativeAttributesPerNode": 3.0,
+              "combinedAveragePerNode": 12.496,
+              "totalIncidentEdgeOccurrences": 1187,
+              "totalInformativeAttributes": 375
+            },
+            "nodeCount": 125,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 1.0,
+              "totalPerNodeDistinctRelationTypes": 125
+            }
+          }
+        },
+        "consolidation": {
+          "global": {
+            "ratio": 1.0,
+            "totalEntityMentions": 4425,
+            "uniqueCanonicalEntities": 4425
+          },
+          "interpretation": "mention_level_pre_consolidation",
+          "mentionCountAttribute": "mentionCount",
+          "perEntityType": {
+            "DatasetResource": {
+              "ratio": 1.0,
+              "totalEntityMentions": 8,
+              "uniqueCanonicalEntities": 8
+            },
+            "DocumentationPage": {
+              "ratio": 1.0,
+              "totalEntityMentions": 242,
+              "uniqueCanonicalEntities": 242
+            },
+            "Identifier": {
+              "ratio": 1.0,
+              "totalEntityMentions": 356,
+              "uniqueCanonicalEntities": 356
+            },
+            "Link": {
+              "ratio": 1.0,
+              "totalEntityMentions": 1767,
+              "uniqueCanonicalEntities": 1767
+            },
+            "Organization": {
+              "ratio": 1.0,
+              "totalEntityMentions": 119,
+              "uniqueCanonicalEntities": 119
+            },
+            "Person": {
+              "ratio": 1.0,
+              "totalEntityMentions": 119,
+              "uniqueCanonicalEntities": 119
+            },
+            "Repository": {
+              "ratio": 1.0,
+              "totalEntityMentions": 106,
+              "uniqueCanonicalEntities": 106
+            },
+            "Section": {
+              "ratio": 1.0,
+              "totalEntityMentions": 1583,
+              "uniqueCanonicalEntities": 1583
+            },
+            "Subject": {
+              "ratio": 1.0,
+              "totalEntityMentions": 125,
+              "uniqueCanonicalEntities": 125
+            }
+          },
+          "stage": "pre_consolidation"
+        },
+        "informationDensity": {
+          "averageIncidentEdgesPerNode": 2.785537,
+          "averageInformativeAttributesPerNode": 7.552768,
+          "combinedAveragePerNode": 10.338305,
+          "totalIncidentEdgeOccurrences": 12326,
+          "totalInformativeAttributes": 33421
+        },
+        "relationalRichness": {
+          "averageDistinctRelationTypesPerNode": 1.402938,
+          "totalPerNodeDistinctRelationTypes": 6208
+        }
+      }
+    },
+    "full": {
+      "attributeAccounting": {
+        "counted": {
+          "DatasetResource": {
+            "originalTargets": 8,
+            "resourceUrl": 8
+          },
+          "DocumentationPage": {
+            "authorCount": 242,
+            "canonicalUrl": 242,
+            "contentSha256": 242,
+            "corpusPath": 242,
+            "description": 221,
+            "externalContentSourceCount": 242,
+            "fileSha256": 242,
+            "generatedFromJs": 242,
+            "headingCount": 242,
+            "lastUpdatedDate": 242,
+            "lastUpdatedDateRaw": 242,
+            "linkCount": 242,
+            "pageType": 228,
+            "slug": 74,
+            "sourceGroup": 242,
+            "tagCount": 242,
+            "title": 242,
+            "titleSource": 242
+          },
+          "Link": {
+            "anchorText": 1679,
+            "headingOrdinal": 1709,
+            "linkType": 1767,
+            "ordinal": 1767,
+            "pageUrl": 1767,
+            "rawTarget": 1767,
+            "resolvedUrl": 1708,
+            "sectionId": 1709,
+            "sourceLine": 1767
+          },
+          "Organization": {
+            "alignmentCandidateKey": 119,
+            "authorOrdinal": 119,
+            "name": 119,
+            "normalizedName": 119
+          },
+          "Person": {
+            "affiliation": 119,
+            "alignmentCandidateKey": 119,
+            "authorOrdinal": 119,
+            "name": 119,
+            "normalizedName": 119,
+            "role": 119,
+            "source": 119,
+            "sourceIdentifier": 0
+          },
+          "RepoFile": {
+            "extension": 242,
+            "fileRole": 242,
+            "fileSha256": 231,
+            "generatedFromJs": 242,
+            "materializedContentSha256": 11,
+            "materializedCorpusPath": 11,
+            "materializedFileSha256": 11,
+            "sourceHashAvailable": 242,
+            "sourceRepositoryRef": 242,
+            "sourceRepositoryUrl": 242,
+            "sourceUrl": 242
+          },
+          "Repository": {
+            "name": 106,
+            "originalTargets": 105,
+            "repositoryRef": 1,
+            "role": 1,
+            "sourceKinds": 105
+          },
+          "Section": {
+            "level": 1583,
+            "ordinal": 1583,
+            "pageUrl": 1583,
+            "parentHeadingOrdinal": 1056,
+            "parentSectionId": 1056,
+            "rawText": 1583,
+            "sourceLine": 1583,
+            "text": 1583
+          },
+          "Subject": {
+            "normalizedLabel": 125,
+            "preferredLabel": 125,
+            "sourceLabels": 125
+          }
+        },
+        "excluded": {
+          "DatasetResource": {
+            "resourceId": {
+              "count": 8,
+              "rule": "global_administrative_or_identifier"
+            }
+          },
+          "DocumentationPage": {
+            "path": {
+              "count": 242,
+              "rule": "global_administrative_or_identifier"
+            },
+            "sourcePath": {
+              "count": 242,
+              "rule": "global_administrative_or_identifier"
+            }
+          },
+          "Identifier": {
+            "idType": {
+              "count": 356,
+              "rule": "class_specific_administrative"
+            },
+            "normalizedValue": {
+              "count": 356,
+              "rule": "global_administrative_or_identifier"
+            },
+            "value": {
+              "count": 356,
+              "rule": "class_specific_administrative"
+            }
+          },
+          "Person": {
+            "profileUrl": {
+              "count": 119,
+              "rule": "global_administrative_or_identifier"
+            }
+          },
+          "RepoFile": {
+            "contentAvailable": {
+              "count": 242,
+              "rule": "global_administrative_or_identifier"
+            },
+            "downloaded": {
+              "count": 242,
+              "rule": "global_administrative_or_identifier"
+            },
+            "fileName": {
+              "count": 242,
+              "rule": "global_administrative_or_identifier"
+            },
+            "path": {
+              "count": 242,
+              "rule": "global_administrative_or_identifier"
+            },
+            "selectionReason": {
+              "count": 242,
+              "rule": "global_administrative_or_identifier"
+            }
+          },
+          "Repository": {
+            "htmlUrl": {
+              "count": 106,
+              "rule": "global_administrative_or_identifier"
+            },
+            "owner": {
+              "count": 106,
+              "rule": "class_specific_administrative"
+            }
+          },
+          "Subject": {
+            "sourceDeclarations": {
+              "count": 125,
+              "rule": "global_administrative_or_identifier"
+            }
+          }
+        }
+      },
+      "counts": {
+        "edges": 6647,
+        "nodes": 4667
+      },
+      "metrics": {
+        "byEntityType": {
+          "DatasetResource": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 2.625,
+              "averageInformativeAttributesPerNode": 2.0,
+              "combinedAveragePerNode": 4.625,
+              "totalIncidentEdgeOccurrences": 21,
+              "totalInformativeAttributes": 16
+            },
+            "nodeCount": 8,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 2.0,
+              "totalPerNodeDistinctRelationTypes": 16
+            }
+          },
+          "DocumentationPage": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 28.033058,
+              "averageInformativeAttributesPerNode": 17.161157,
+              "combinedAveragePerNode": 45.194215,
+              "totalIncidentEdgeOccurrences": 6784,
+              "totalInformativeAttributes": 4153
+            },
+            "nodeCount": 242,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 8.27686,
+              "totalPerNodeDistinctRelationTypes": 2003
+            }
+          },
+          "Identifier": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 1.0,
+              "averageInformativeAttributesPerNode": 0.0,
+              "combinedAveragePerNode": 1.0,
+              "totalIncidentEdgeOccurrences": 356,
+              "totalInformativeAttributes": 0
+            },
+            "nodeCount": 356,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 1.0,
+              "totalPerNodeDistinctRelationTypes": 356
+            }
+          },
+          "Link": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 1.0,
+              "averageInformativeAttributesPerNode": 8.85116,
+              "combinedAveragePerNode": 9.85116,
+              "totalIncidentEdgeOccurrences": 1767,
+              "totalInformativeAttributes": 15640
+            },
+            "nodeCount": 1767,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 1.0,
+              "totalPerNodeDistinctRelationTypes": 1767
+            }
+          },
+          "Organization": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 1.0,
+              "averageInformativeAttributesPerNode": 4.0,
+              "combinedAveragePerNode": 5.0,
+              "totalIncidentEdgeOccurrences": 119,
+              "totalInformativeAttributes": 476
+            },
+            "nodeCount": 119,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 1.0,
+              "totalPerNodeDistinctRelationTypes": 119
+            }
+          },
+          "Person": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 2.0,
+              "averageInformativeAttributesPerNode": 7.0,
+              "combinedAveragePerNode": 9.0,
+              "totalIncidentEdgeOccurrences": 238,
+              "totalInformativeAttributes": 833
+            },
+            "nodeCount": 119,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 2.0,
+              "totalPerNodeDistinctRelationTypes": 238
+            }
+          },
+          "RepoFile": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 2.0,
+              "averageInformativeAttributesPerNode": 8.090909,
+              "combinedAveragePerNode": 10.090909,
+              "totalIncidentEdgeOccurrences": 484,
+              "totalInformativeAttributes": 1958
+            },
+            "nodeCount": 242,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 2.0,
+              "totalPerNodeDistinctRelationTypes": 484
+            }
+          },
+          "Repository": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 7.122642,
+              "averageInformativeAttributesPerNode": 3.0,
+              "combinedAveragePerNode": 10.122642,
+              "totalIncidentEdgeOccurrences": 755,
+              "totalInformativeAttributes": 318
+            },
+            "nodeCount": 106,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 2.301887,
+              "totalPerNodeDistinctRelationTypes": 244
+            }
+          },
+          "Section": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 1.0,
+              "averageInformativeAttributesPerNode": 7.334176,
+              "combinedAveragePerNode": 8.334176,
+              "totalIncidentEdgeOccurrences": 1583,
+              "totalInformativeAttributes": 11610
+            },
+            "nodeCount": 1583,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 1.0,
+              "totalPerNodeDistinctRelationTypes": 1583
+            }
+          },
+          "Subject": {
+            "informationDensity": {
+              "averageIncidentEdgesPerNode": 9.496,
+              "averageInformativeAttributesPerNode": 3.0,
+              "combinedAveragePerNode": 12.496,
+              "totalIncidentEdgeOccurrences": 1187,
+              "totalInformativeAttributes": 375
+            },
+            "nodeCount": 125,
+            "relationalRichness": {
+              "averageDistinctRelationTypesPerNode": 1.0,
+              "totalPerNodeDistinctRelationTypes": 125
+            }
+          }
+        },
+        "consolidation": {
+          "global": {
+            "ratio": 1.0,
+            "totalEntityMentions": 4667,
+            "uniqueCanonicalEntities": 4667
+          },
+          "interpretation": "mention_level_pre_consolidation",
+          "mentionCountAttribute": "mentionCount",
+          "perEntityType": {
+            "DatasetResource": {
+              "ratio": 1.0,
+              "totalEntityMentions": 8,
+              "uniqueCanonicalEntities": 8
+            },
+            "DocumentationPage": {
+              "ratio": 1.0,
+              "totalEntityMentions": 242,
+              "uniqueCanonicalEntities": 242
+            },
+            "Identifier": {
+              "ratio": 1.0,
+              "totalEntityMentions": 356,
+              "uniqueCanonicalEntities": 356
+            },
+            "Link": {
+              "ratio": 1.0,
+              "totalEntityMentions": 1767,
+              "uniqueCanonicalEntities": 1767
+            },
+            "Organization": {
+              "ratio": 1.0,
+              "totalEntityMentions": 119,
+              "uniqueCanonicalEntities": 119
+            },
+            "Person": {
+              "ratio": 1.0,
+              "totalEntityMentions": 119,
+              "uniqueCanonicalEntities": 119
+            },
+            "RepoFile": {
+              "ratio": 1.0,
+              "totalEntityMentions": 242,
+              "uniqueCanonicalEntities": 242
+            },
+            "Repository": {
+              "ratio": 1.0,
+              "totalEntityMentions": 106,
+              "uniqueCanonicalEntities": 106
+            },
+            "Section": {
+              "ratio": 1.0,
+              "totalEntityMentions": 1583,
+              "uniqueCanonicalEntities": 1583
+            },
+            "Subject": {
+              "ratio": 1.0,
+              "totalEntityMentions": 125,
+              "uniqueCanonicalEntities": 125
+            }
+          },
+          "stage": "pre_consolidation"
+        },
+        "informationDensity": {
+          "averageIncidentEdgesPerNode": 2.848511,
+          "averageInformativeAttributesPerNode": 7.580673,
+          "combinedAveragePerNode": 10.429184,
+          "totalIncidentEdgeOccurrences": 13294,
+          "totalInformativeAttributes": 35379
+        },
+        "relationalRichness": {
+          "averageDistinctRelationTypesPerNode": 1.485965,
+          "totalPerNodeDistinctRelationTypes": 6935
+        }
+      }
+    }
+  }
+}

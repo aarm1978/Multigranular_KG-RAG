@@ -9,9 +9,9 @@ Primary description of the complete deterministic KG at each construction point.
 | Construction point | Nodes | Edges | Information density | Informative attributes per node | Incident edges per node | Relational richness | Consolidation ratio |
 |---|---:|---:|---:|---:|---:|---:|---|
 | HydroShare (det.) [HS v0.1.6] | 1303 | 1628 | 3.774367 | 1.275518 | 2.498849 | 1.342287 | 1.000000 (mention level pre consolidation) |
-| + GitHub (det.) [HS v0.1.6; refs v1] | 14083 | 14393 | 3.953135 | 1.909110 | 2.044025 | 1.051765 | 1.000000 (mention level pre consolidation) |
-| + Hub (det.) [HS v0.1.6; refs v1] | 18750 | 21040 | 5.565067 | 3.320800 | 2.244267 | 1.159840 | 1.000000 (mention level pre consolidation) |
-| + Publications (det.) [HS v0.1.6; refs v1] | 28406 | 32812 | 5.513729 | 3.203513 | 2.310216 | 1.138316 | 1.000000 (mention level pre consolidation) |
+| + GitHub (det.) [HS v0.1.6] | 14011 | 14298 | 3.957319 | 1.916351 | 2.040968 | 1.047677 | 1.000000 (mention level pre consolidation) |
+| + Hub (det.) [HS v0.1.6] | 18678 | 20851 | 5.564354 | 3.331674 | 2.232680 | 1.152747 | 1.000000 (mention level pre consolidation) |
+| + Publications (det.) [HS v0.1.6] | 28334 | 32623 | 5.513129 | 3.210383 | 2.302746 | 1.133585 | 1.000000 (mention level pre consolidation) |
 
 ## Table B — File-inventory-excluded sensitivity analysis
 
@@ -20,9 +20,9 @@ Sensitivity analysis only. File-inventory entities remain legitimate content in 
 | Construction point | Nodes | Edges | Information density | Informative attributes per node | Incident edges per node | Relational richness | Consolidation ratio |
 |---|---:|---:|---:|---:|---:|---:|---|
 | HydroShare (det.) [HS v0.1.6] | 546 | 871 | 4.849817 | 1.659341 | 3.190476 | 1.747253 | 1.000000 (mention level pre consolidation) |
-| + GitHub (det.) [HS v0.1.6; refs v1] | 1624 | 1934 | 4.219828 | 1.838054 | 2.381773 | 1.394089 | 1.000000 (mention level pre consolidation) |
-| + Hub (det.) [HS v0.1.6; refs v1] | 6049 | 8097 | 8.695652 | 6.018515 | 2.677137 | 1.400562 | 1.000000 (mention level pre consolidation) |
-| + Publications (det.) [HS v0.1.6; refs v1] | 15705 | 19869 | 6.678001 | 4.147724 | 2.530277 | 1.213626 | 1.000000 (mention level pre consolidation) |
+| + GitHub (det.) [HS v0.1.6] | 1552 | 1839 | 4.269974 | 1.900129 | 2.369845 | 1.373067 | 1.000000 (mention level pre consolidation) |
+| + Hub (det.) [HS v0.1.6] | 5977 | 7908 | 8.731136 | 6.084992 | 2.646144 | 1.381295 | 1.000000 (mention level pre consolidation) |
+| + Publications (det.) [HS v0.1.6] | 15633 | 19680 | 6.682275 | 4.164524 | 2.517751 | 1.205399 | 1.000000 (mention level pre consolidation) |
 
 ## Table C — Sensitivity effect
 
@@ -31,9 +31,9 @@ Every delta is `file_inventory_excluded − full`. Parenthesized values are perc
 | Construction point | Excluded nodes | Excluded edges | Excluded nodes as percentage of full graph | Delta information density | Delta informative attributes per node | Delta incident edges per node | Delta relational richness | Delta consolidation ratio |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | HydroShare (det.) [HS v0.1.6] | 757 | 757 | 58.096700% | +1.075450 (+28.494%) | +0.383823 (+30.092%) | +0.691627 (+27.678%) | +0.404966 (+30.170%) | +0.000000 (+0.000%) |
-| + GitHub (det.) [HS v0.1.6; refs v1] | 12459 | 12459 | 88.468366% | +0.266693 (+6.746%) | -0.071056 (-3.722%) | +0.337748 (+16.524%) | +0.342324 (+32.548%) | +0.000000 (+0.000%) |
-| + Hub (det.) [HS v0.1.6; refs v1] | 12701 | 12943 | 67.738667% | +3.130585 (+56.254%) | +2.697715 (+81.237%) | +0.432870 (+19.288%) | +0.240722 (+20.755%) | +0.000000 (+0.000%) |
-| + Publications (det.) [HS v0.1.6; refs v1] | 12701 | 12943 | 44.712385% | +1.164272 (+21.116%) | +0.944211 (+29.474%) | +0.220061 (+9.526%) | +0.075310 (+6.616%) | +0.000000 (+0.000%) |
+| + GitHub (det.) [HS v0.1.6] | 12459 | 12459 | 88.922989% | +0.312655 (+7.901%) | -0.016222 (-0.847%) | +0.328877 (+16.114%) | +0.325390 (+31.058%) | +0.000000 (+0.000%) |
+| + Hub (det.) [HS v0.1.6] | 12701 | 12943 | 67.999786% | +3.166782 (+56.912%) | +2.753318 (+82.641%) | +0.413464 (+18.519%) | +0.228548 (+19.826%) | +0.000000 (+0.000%) |
+| + Publications (det.) [HS v0.1.6] | 12701 | 12943 | 44.826004% | +1.169146 (+21.207%) | +0.954141 (+29.720%) | +0.215005 (+9.337%) | +0.071814 (+6.335%) | +0.000000 (+0.000%) |
 
 ## Counting Policy
 

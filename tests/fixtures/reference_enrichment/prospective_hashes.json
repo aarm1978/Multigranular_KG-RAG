@@ -1,0 +1,9 @@
+{
+  "data/interim/coderepos/github_nodes_edges_refs_v1.json": "ea49b820903ae102068783c3a890632f648974f0d0e83a3688697ad618d8de3b",
+  "data/interim/datasets/hydroshare_nodes_edges_v016.json": "4fbfcb2548f51323e9bfc83a0ea9ffa76bfa8344f9c86c4550efce7373515576",
+  "data/interim/documents/ciroh_hub_nodes_edges_refs_v1.json": "6893cb9dfe2869378983e878b9411ed88367b0df946a5547c791bc0ff40baa7d",
+  "data/interim/evaluation/hydroshare_github_deterministic_refs_v1.json": "57e60ab935fe1041fc80e9aca87feee024a9c28163b00776bf20f90a0bb3154c",
+  "data/interim/evaluation/hydroshare_github_hub_deterministic_refs_v1.json": "2055da7bdc870e298c460233bd1b3ab87c3aaf76fb73e33abe506ea257cf0043",
+  "data/interim/evaluation/hydroshare_github_hub_publications_deterministic_refs_v1.json": "5e2d5265c90d09c0f2735a18440e9d04369d34ecdd2cba761e1950b504e6548d",
+  "data/interim/papers/publication_nodes_edges.json": "675049dae5c3dfed6f492ad0aa79e27fc1a9b37d0ecbc13ab3cf1a69cdb8efaf"
+}

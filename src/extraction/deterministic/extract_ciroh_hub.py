@@ -26,7 +26,8 @@ import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_INPUT = PROJECT_ROOT / "data/interim/documents/ciroh_hub_corpus.json"
-DEFAULT_OUTPUT = PROJECT_ROOT / "data/interim/documents/ciroh_hub_nodes_edges.json"
+HISTORICAL_OUTPUT = PROJECT_ROOT / "data/interim/documents/ciroh_hub_nodes_edges.json"
+DEFAULT_OUTPUT = PROJECT_ROOT / "data/interim/documents/ciroh_hub_nodes_edges_refs_v1.json"
 DEFAULT_ONTOLOGY_SPEC = PROJECT_ROOT / "src/ontology/ontology_spec.yaml"
 DEFAULT_SOURCE_REPOSITORY_URL = "https://github.com/CIROH-UA/ciroh_hub"
 DEFAULT_SOURCE_REPOSITORY_REF = "main"
@@ -100,6 +101,7 @@ HUB_RELATION_RULE_IDS = {
     "referencesRepository": "C-DC14",
     "referencesDataset": "C-DC15",
     "announces": "C-DC18",
+    "references": "C-DC22",
 }
 FORBIDDEN_NODE_CLASSES = frozenset(
     {
@@ -1988,6 +1990,7 @@ def validate_output(
     corpus: Mapping[str, Any],
     ontology: OntologyRegistry | None = None,
     validate_frozen_snapshot: bool = False,
+    enrich_references: bool = False,
 ) -> list[str]:
     """Validate graph shape, ontology compatibility, provenance, and Phase A reconciliation."""
     ontology = ontology or load_ontology_registry()
@@ -2049,9 +2052,11 @@ def validate_output(
                 issues.append(f"{edge['id']}: domain violation {source['class']} not in {sorted(domains)}")
             if target["class"] not in ranges:
                 issues.append(f"{edge['id']}: range violation {target['class']} not in {sorted(ranges)}")
-        if edge["relation"] in FORBIDDEN_RELATIONS:
+        if edge["relation"] in FORBIDDEN_RELATIONS and not (enrich_references and edge["relation"] == "references" and edge["inventoryId"] == "C-DC22"):
             issues.append(f"{edge['id']}: forbidden or undeclared relation {edge['relation']}")
         _validate_evidence(edge.get("evidence"), str(edge["id"]), issues)
+    if enrich_references:
+        issues.extend(validate_page_reference_evidence(output, corpus))
     curated_pages = [node for node in nodes if node.get("class") == "DocumentationPage" and node.get("curationStatus") == CURATED]
     if len(curated_pages) != len(corpus["pages"]):
         issues.append("curated DocumentationPage count does not match Phase A pages")
@@ -2287,6 +2292,117 @@ class OutputValidationError(ValueError):
         super().__init__("CIROH Hub Phase B validation failed:\n- " + "\n- ".join(self.issues))
 
 
+def page_reference_declaration(context: PageContext, link: Mapping[str, Any]) -> JsonObject | None:
+    """Require an exact inline Markdown link in prose, excluding navigation and code."""
+    lines = str(context.page["content_mdx"]).splitlines()
+    number = int(link["source_line"])
+    if number < 1 or number > len(lines):
+        return None
+    line = lines[number - 1]
+    fenced = False
+    for previous in lines[:number]:
+        if re.match(r"^\s*(```|~~~)", previous):
+            fenced = not fenced
+    prefix = "\n".join(lines[:number])
+    if prefix.count("<!--") > prefix.count("-->") or prefix.lower().count("<nav") > prefix.lower().count("</nav>"):
+        return None
+    if fenced or "<!--" in line or line.startswith(("    ", "\t")) or re.search(r"!\[|<img\b|<nav\b|breadcrumb|redirects? to|(?:next|previous) page|back to (?:home|index|top)", line, re.I):
+        return None
+    heading = next((h for h in context.page["headings"] if h["ordinal"] == link.get("heading_ordinal")), {})
+    if re.search(r"navigation|table of contents|quick links|on this page|explore ciroh", str(heading.get("text", "")), re.I):
+        return None
+    raw = str(link["raw_target"])
+    anchor = str(link["anchor_text"])
+    token = f"[{anchor}]({raw})"
+    if not anchor or token not in line:
+        return None
+    # Standalone links/cards/list navigation are deliberately not promoted.
+    surrounding = re.sub(r"\[[^\]]*\]\([^)]*\)", "", line)
+    if len(re.findall(r"[A-Za-z]{2,}", surrounding)) < 3:
+        return None
+    declaration = _repository_declaration(context, f"links[ordinal={link['ordinal']}]",
+        int(link["ordinal"]), number, raw, "link", line)
+    declaration.update(anchorText=anchor, resolvedUrl=link["resolved_url"],
+                       linkId=make_link_id(context.url, int(link["ordinal"])))
+    return declaration
+
+
+def enrich_page_references(
+    contexts: Sequence[PageContext], contexts_by_url: Mapping[str, PageContext],
+    aliases: Mapping[str, str], excluded: set[str], builder: GraphBuilder,
+) -> None:
+    """Aggregate conservative content links to curated pages without new page stubs."""
+    stronger = {(edge.source, edge.target) for edge in builder.edges.values()
+                if edge.relation in {"announces", "isPartOf", "hasSubPage"}}
+    groups: dict[tuple[str, str], list[JsonObject]] = defaultdict(list)
+    for context in contexts:
+        for link in context.page["links"]:
+            if link["link_type"] not in {"hub_internal", "relative"}:
+                continue
+            resolved = str(link.get("resolved_url") or "")
+            normalized = normalize_hub_url(resolved)
+            target_url = aliases.get(normalized or "")
+            reason = None
+            if not normalized or urlsplit(resolved).query or urlsplit(resolved).netloc.casefold() != "hub.ciroh.org":
+                reason = "ambiguous_target"
+            elif normalized in excluded:
+                reason = "excluded_route"
+            elif not target_url or target_url not in contexts_by_url:
+                reason = "target_not_curated"
+            elif target_url == context.url:
+                reason = "self_reference"
+            elif (context.page_id, contexts_by_url[target_url].page_id) in stronger:
+                reason = "stronger_relation"
+            declaration = page_reference_declaration(context, link) if reason is None else None
+            if reason is None and declaration is None:
+                reason = "navigation_or_insufficient_content_evidence"
+            if reason:
+                builder.record("skipped", context.url, str(context.page["corpus_path"]),
+                    f"links[ordinal={link['ordinal']}]", int(link["ordinal"]), link["raw_target"],
+                    "reference_enrichment_" + reason)
+                continue
+            groups[(context.url, target_url)].append(declaration)
+    for (source_url, target_url), declarations in sorted(groups.items()):
+        context = contexts_by_url[source_url]
+        primary, _ = select_primary_declaration(declarations)
+        builder.emit_edge("references", context.page_id, contexts_by_url[target_url].page_id,
+            _semantic_edge_attributes(declarations, targetUrl=target_url), primary["evidenceText"],
+            context.url, context.url, context.version,
+            _lineage_from_declaration(builder.phase_a_version, primary, context.page))
+
+
+def validate_page_reference_evidence(output: Mapping[str, Any], corpus: Mapping[str, Any]) -> list[str]:
+    """Validate curated endpoints and exact occurrence declarations for prospective C-DC22."""
+    issues = []
+    contexts = {make_page_id(page["canonical_url"]): PageContext(page, make_page_id(page["canonical_url"]), derive_page_type(page), str(corpus["phase_a_version"])) for page in corpus["pages"]}
+    aliases = build_hub_page_alias_index(corpus["pages"])
+    stronger = {(edge["source"], edge["target"]) for edge in output["edges"] if edge["relation"] in {"announces", "isPartOf", "hasSubPage"}}
+    excluded = {normalize_hub_url(str(item["route"])).rstrip("/") for item in corpus["known_exclusions"] if normalize_hub_url(str(item["route"]))}
+    for edge in output["edges"]:
+        if edge["relation"] != "references":
+            continue
+        context, target = contexts.get(edge["source"]), contexts.get(edge["target"])
+        label = f"{edge['id']}: invalid prospective page reference"
+        if not context or not target or context.url == target.url or (edge["source"], edge["target"]) in stronger or target.url.rstrip("/") in excluded:
+            issues.append(label)
+            continue
+        declarations = []
+        for link in context.page["links"]:
+            resolved = str(link.get("resolved_url") or "")
+            if link["link_type"] in {"hub_internal", "relative"} and not urlsplit(resolved).query and urlsplit(resolved).netloc.casefold() == "hub.ciroh.org" and aliases.get(normalize_hub_url(resolved) or "") == target.url:
+                declaration = page_reference_declaration(context, link)
+                if declaration:
+                    declarations.append(declaration)
+        if not declarations or edge["attributes"].get("sourceDeclarations") != select_primary_declaration(declarations)[1]:
+            issues.append(label + " (unbound declarations)")
+            continue
+        primary, _ = select_primary_declaration(declarations)
+        expected = make_evidence(edge["id"], primary["evidenceText"], context.url, context.url, context.version)
+        if edge["evidence"] != expected or edge["internalLineage"] != _lineage_from_declaration(str(corpus["phase_a_version"]), primary, context.page):
+            issues.append(label + " (evidence/provenance mismatch)")
+    return issues
+
+
 def extract_corpus(
     corpus: JsonObject,
     source_corpus_sha256: str | None = None,
@@ -2294,6 +2410,7 @@ def extract_corpus(
     source_repository_ref: str = DEFAULT_SOURCE_REPOSITORY_REF,
     ontology: OntologyRegistry | None = None,
     validate_frozen_snapshot: bool = False,
+    enrich_references: bool = False,
 ) -> JsonObject:
     """Run complete two-pass deterministic CIROH Hub Phase B extraction."""
     validate_input_corpus(corpus)
@@ -2344,6 +2461,8 @@ def extract_corpus(
         source_repository_id,
         builder,
     )
+    if enrich_references:
+        enrich_page_references(contexts, contexts_by_url, page_aliases, known_excluded_routes, builder)
     _propagate_reports(corpus, contexts_by_url, builder)
     output = _build_output(
         corpus,
@@ -2353,7 +2472,9 @@ def extract_corpus(
         ontology,
         builder,
     )
-    issues = validate_output(output, corpus, ontology, validate_frozen_snapshot)
+    if enrich_references:
+        output["phase_b_version"] = "1.1.0"
+    issues = validate_output(output, corpus, ontology, validate_frozen_snapshot, enrich_references)
     if issues:
         raise OutputValidationError(issues)
     return output
@@ -2366,6 +2487,10 @@ def serialize_deterministically(output: Mapping[str, Any]) -> bytes:
 
 def write_output(output: Mapping[str, Any], path: Path) -> None:
     """Create parent directories and write the validated deterministic artifact."""
+    if path.resolve() == HISTORICAL_OUTPUT.resolve():
+        raise ValueError("Frozen Hub output must not be overwritten")
+    if path.resolve() == DEFAULT_OUTPUT.resolve() and output.get("phase_b_version") != "1.1.0":
+        raise ValueError("Prospective Hub path requires --enrich-references")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(serialize_deterministically(output))
 
@@ -2409,6 +2534,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--source-repository-ref", default=DEFAULT_SOURCE_REPOSITORY_REF)
     parser.add_argument("--ontology-spec", type=Path, default=DEFAULT_ONTOLOGY_SPEC)
     parser.add_argument("--validate-frozen-snapshot", action="store_true")
+    parser.add_argument("--enrich-references", action="store_true", help="Enable the prospective C-DC22 contract.")
     parser.add_argument("--report", action="store_true")
     return parser.parse_args(argv)
 
@@ -2426,6 +2552,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             args.source_repository_ref,
             ontology,
             args.validate_frozen_snapshot,
+            args.enrich_references,
         )
         write_output(output, args.output)
         if args.report:

@@ -1,5 +1,5 @@
 {
-  "displayName": "+ Publications (det.) [HS v0.1.6; refs v1]",
+  "displayName": "+ Publications (det.) [HS v0.1.6]",
   "evaluationPolicy": {
     "attributeExclusions": {
       "classSpecificAdministrative": {
@@ -143,18 +143,18 @@
       "componentOrderRule": "lexicographic_by_component_label",
       "components": [
         {
-          "edges": 6647,
+          "edges": 6553,
           "label": "ciroh_hub",
           "nodes": 4667,
-          "path": "data/interim/documents/ciroh_hub_nodes_edges_refs_v1.json",
-          "sha256": "6893cb9dfe2869378983e878b9411ed88367b0df946a5547c791bc0ff40baa7d"
+          "path": "data/interim/documents/ciroh_hub_nodes_edges.json",
+          "sha256": "c106c410b6f84a2755d17cec4629b90d5b145c0813c2866005cb20bcea649602"
         },
         {
-          "edges": 12765,
+          "edges": 12670,
           "label": "github",
-          "nodes": 12780,
-          "path": "data/interim/coderepos/github_nodes_edges_refs_v1.json",
-          "sha256": "ea49b820903ae102068783c3a890632f648974f0d0e83a3688697ad618d8de3b"
+          "nodes": 12708,
+          "path": "data/interim/coderepos/github_nodes_edges.json",
+          "sha256": "2f752295a7d465acd094672b0a5961ffd1fe5453d6d576fc497e284068d901a6"
         },
         {
           "edges": 1628,
@@ -174,8 +174,8 @@
       "cumulativeBuilderSchemaVersion": "1.0",
       "snapshotType": "cumulative_pre_alignment"
     },
-    "path": "data/interim/evaluation/hydroshare_github_hub_publications_deterministic_refs_v1.json",
-    "sha256": "5e2d5265c90d09c0f2735a18440e9d04369d34ecdd2cba761e1950b504e6548d"
+    "path": "data/interim/evaluation/hydroshare_github_hub_publications_deterministic_v016.json",
+    "sha256": "6c5d2216c1e9a1a91b4ce2ab236252e6e93136f63fe6f98c9015d84dfb87e3f2"
   },
   "label": "hydroshare_github_hub_publications_deterministic",
   "methodology": {
@@ -344,7 +344,7 @@
             "fork": 51,
             "hasDockerfile": 51,
             "language": 37,
-            "name": 266,
+            "name": 230,
             "originalTargets": 105,
             "referenceStub": 70,
             "repositoryRef": 1,
@@ -515,7 +515,7 @@
           },
           "Identifier": {
             "idType": {
-              "count": 504,
+              "count": 468,
               "rule": "class_specific_administrative"
             },
             "identifierType": {
@@ -527,7 +527,7 @@
               "rule": "global_administrative_or_identifier"
             },
             "normalizedValue": {
-              "count": 1128,
+              "count": 1092,
               "rule": "global_administrative_or_identifier"
             },
             "sourceDeclarations": {
@@ -535,11 +535,11 @@
               "rule": "global_administrative_or_identifier"
             },
             "sourceRepoId": {
-              "count": 148,
+              "count": 112,
               "rule": "global_administrative_or_identifier"
             },
             "value": {
-              "count": 1118,
+              "count": 1082,
               "rule": "class_specific_administrative"
             }
           },
@@ -731,7 +731,7 @@
               "rule": "class_specific_administrative"
             },
             "fullName": {
-              "count": 92,
+              "count": 56,
               "rule": "global_administrative_or_identifier"
             },
             "githubStats": {
@@ -747,7 +747,7 @@
               "rule": "global_administrative_or_identifier"
             },
             "htmlUrl": {
-              "count": 266,
+              "count": 230,
               "rule": "global_administrative_or_identifier"
             },
             "identifierRegime": {
@@ -759,7 +759,7 @@
               "rule": "global_administrative_or_identifier"
             },
             "owner": {
-              "count": 215,
+              "count": 179,
               "rule": "class_specific_administrative"
             },
             "path": {
@@ -783,7 +783,7 @@
               "rule": "global_administrative_or_identifier"
             },
             "sourceRepoId": {
-              "count": 41,
+              "count": 5,
               "rule": "global_administrative_or_identifier"
             },
             "updatedAt": {
@@ -898,8 +898,8 @@
         }
       },
       "counts": {
-        "edges": 19869,
-        "nodes": 15705
+        "edges": 19680,
+        "nodes": 15633
       },
       "metrics": {
         "byEntityType": {
@@ -961,16 +961,16 @@
           },
           "DocumentationPage": {
             "informationDensity": {
-              "averageIncidentEdgesPerNode": 27.033058,
+              "averageIncidentEdgesPerNode": 26.256198,
               "averageInformativeAttributesPerNode": 17.161157,
-              "combinedAveragePerNode": 44.194215,
-              "totalIncidentEdgeOccurrences": 6542,
+              "combinedAveragePerNode": 43.417355,
+              "totalIncidentEdgeOccurrences": 6354,
               "totalInformativeAttributes": 4153
             },
             "nodeCount": 242,
             "relationalRichness": {
-              "averageDistinctRelationTypesPerNode": 7.27686,
-              "totalPerNodeDistinctRelationTypes": 1761
+              "averageDistinctRelationTypesPerNode": 6.933884,
+              "totalPerNodeDistinctRelationTypes": 1678
             }
           },
           "ExecutionEnvironment": {
@@ -1004,15 +1004,15 @@
           "Identifier": {
             "informationDensity": {
               "averageIncidentEdgesPerNode": 1.0,
-              "averageInformativeAttributesPerNode": 1.024187,
-              "combinedAveragePerNode": 2.024187,
-              "totalIncidentEdgeOccurrences": 1199,
+              "averageInformativeAttributesPerNode": 1.05589,
+              "combinedAveragePerNode": 2.05589,
+              "totalIncidentEdgeOccurrences": 1163,
               "totalInformativeAttributes": 1228
             },
-            "nodeCount": 1199,
+            "nodeCount": 1163,
             "relationalRichness": {
               "averageDistinctRelationTypesPerNode": 1.0,
-              "totalPerNodeDistinctRelationTypes": 1199
+              "totalPerNodeDistinctRelationTypes": 1163
             }
           },
           "License": {
@@ -1101,16 +1101,16 @@
           },
           "Repository": {
             "informationDensity": {
-              "averageIncidentEdgesPerNode": 6.066176,
-              "averageInformativeAttributesPerNode": 3.455882,
-              "combinedAveragePerNode": 9.522059,
-              "totalIncidentEdgeOccurrences": 1650,
-              "totalInformativeAttributes": 940
+              "averageIncidentEdgesPerNode": 6.338983,
+              "averageInformativeAttributesPerNode": 3.830508,
+              "combinedAveragePerNode": 10.169492,
+              "totalIncidentEdgeOccurrences": 1496,
+              "totalInformativeAttributes": 904
             },
-            "nodeCount": 272,
+            "nodeCount": 236,
             "relationalRichness": {
-              "averageDistinctRelationTypesPerNode": 2.316176,
-              "totalPerNodeDistinctRelationTypes": 630
+              "averageDistinctRelationTypesPerNode": 2.258475,
+              "totalPerNodeDistinctRelationTypes": 533
             }
           },
           "ResourceType": {
@@ -1229,8 +1229,8 @@
         "consolidation": {
           "global": {
             "ratio": 1.0,
-            "totalEntityMentions": 15705,
-            "uniqueCanonicalEntities": 15705
+            "totalEntityMentions": 15633,
+            "uniqueCanonicalEntities": 15633
           },
           "interpretation": "mention_level_pre_consolidation",
           "mentionCountAttribute": "mentionCount",
@@ -1272,8 +1272,8 @@
             },
             "Identifier": {
               "ratio": 1.0,
-              "totalEntityMentions": 1199,
-              "uniqueCanonicalEntities": 1199
+              "totalEntityMentions": 1163,
+              "uniqueCanonicalEntities": 1163
             },
             "License": {
               "ratio": 1.0,
@@ -1307,8 +1307,8 @@
             },
             "Repository": {
               "ratio": 1.0,
-              "totalEntityMentions": 272,
-              "uniqueCanonicalEntities": 272
+              "totalEntityMentions": 236,
+              "uniqueCanonicalEntities": 236
             },
             "ResourceType": {
               "ratio": 1.0,
@@ -1354,15 +1354,15 @@
           "stage": "pre_consolidation"
         },
         "informationDensity": {
-          "averageIncidentEdgesPerNode": 2.530277,
-          "averageInformativeAttributesPerNode": 4.147724,
-          "combinedAveragePerNode": 6.678001,
-          "totalIncidentEdgeOccurrences": 39738,
-          "totalInformativeAttributes": 65140
+          "averageIncidentEdgesPerNode": 2.517751,
+          "averageInformativeAttributesPerNode": 4.164524,
+          "combinedAveragePerNode": 6.682275,
+          "totalIncidentEdgeOccurrences": 39360,
+          "totalInformativeAttributes": 65104
         },
         "relationalRichness": {
-          "averageDistinctRelationTypesPerNode": 1.213626,
-          "totalPerNodeDistinctRelationTypes": 19060
+          "averageDistinctRelationTypesPerNode": 1.205399,
+          "totalPerNodeDistinctRelationTypes": 18844
         }
       }
     },
@@ -1541,7 +1541,7 @@
             "fork": 51,
             "hasDockerfile": 51,
             "language": 37,
-            "name": 266,
+            "name": 230,
             "originalTargets": 105,
             "referenceStub": 70,
             "repositoryRef": 1,
@@ -1756,7 +1756,7 @@
           },
           "Identifier": {
             "idType": {
-              "count": 504,
+              "count": 468,
               "rule": "class_specific_administrative"
             },
             "identifierType": {
@@ -1768,7 +1768,7 @@
               "rule": "global_administrative_or_identifier"
             },
             "normalizedValue": {
-              "count": 1128,
+              "count": 1092,
               "rule": "global_administrative_or_identifier"
             },
             "sourceDeclarations": {
@@ -1776,11 +1776,11 @@
               "rule": "global_administrative_or_identifier"
             },
             "sourceRepoId": {
-              "count": 148,
+              "count": 112,
               "rule": "global_administrative_or_identifier"
             },
             "value": {
-              "count": 1118,
+              "count": 1082,
               "rule": "class_specific_administrative"
             }
           },
@@ -1994,7 +1994,7 @@
               "rule": "class_specific_administrative"
             },
             "fullName": {
-              "count": 92,
+              "count": 56,
               "rule": "global_administrative_or_identifier"
             },
             "githubStats": {
@@ -2010,7 +2010,7 @@
               "rule": "global_administrative_or_identifier"
             },
             "htmlUrl": {
-              "count": 266,
+              "count": 230,
               "rule": "global_administrative_or_identifier"
             },
             "identifierRegime": {
@@ -2022,7 +2022,7 @@
               "rule": "global_administrative_or_identifier"
             },
             "owner": {
-              "count": 215,
+              "count": 179,
               "rule": "class_specific_administrative"
             },
             "path": {
@@ -2046,7 +2046,7 @@
               "rule": "global_administrative_or_identifier"
             },
             "sourceRepoId": {
-              "count": 41,
+              "count": 5,
               "rule": "global_administrative_or_identifier"
             },
             "updatedAt": {
@@ -2161,8 +2161,8 @@
         }
       },
       "counts": {
-        "edges": 32812,
-        "nodes": 28406
+        "edges": 32623,
+        "nodes": 28334
       },
       "metrics": {
         "byEntityType": {
@@ -2238,16 +2238,16 @@
           },
           "DocumentationPage": {
             "informationDensity": {
-              "averageIncidentEdgesPerNode": 28.033058,
+              "averageIncidentEdgesPerNode": 27.256198,
               "averageInformativeAttributesPerNode": 17.161157,
-              "combinedAveragePerNode": 45.194215,
-              "totalIncidentEdgeOccurrences": 6784,
+              "combinedAveragePerNode": 44.417355,
+              "totalIncidentEdgeOccurrences": 6596,
               "totalInformativeAttributes": 4153
             },
             "nodeCount": 242,
             "relationalRichness": {
-              "averageDistinctRelationTypesPerNode": 8.27686,
-              "totalPerNodeDistinctRelationTypes": 2003
+              "averageDistinctRelationTypesPerNode": 7.933884,
+              "totalPerNodeDistinctRelationTypes": 1920
             }
           },
           "ExecutionEnvironment": {
@@ -2295,15 +2295,15 @@
           "Identifier": {
             "informationDensity": {
               "averageIncidentEdgesPerNode": 1.0,
-              "averageInformativeAttributesPerNode": 1.024187,
-              "combinedAveragePerNode": 2.024187,
-              "totalIncidentEdgeOccurrences": 1199,
+              "averageInformativeAttributesPerNode": 1.05589,
+              "combinedAveragePerNode": 2.05589,
+              "totalIncidentEdgeOccurrences": 1163,
               "totalInformativeAttributes": 1228
             },
-            "nodeCount": 1199,
+            "nodeCount": 1163,
             "relationalRichness": {
               "averageDistinctRelationTypesPerNode": 1.0,
-              "totalPerNodeDistinctRelationTypes": 1199
+              "totalPerNodeDistinctRelationTypes": 1163
             }
           },
           "License": {
@@ -2406,16 +2406,16 @@
           },
           "Repository": {
             "informationDensity": {
-              "averageIncidentEdgesPerNode": 49.977941,
-              "averageInformativeAttributesPerNode": 3.455882,
-              "combinedAveragePerNode": 53.433824,
-              "totalIncidentEdgeOccurrences": 13594,
-              "totalInformativeAttributes": 940
+              "averageIncidentEdgesPerNode": 56.949153,
+              "averageInformativeAttributesPerNode": 3.830508,
+              "combinedAveragePerNode": 60.779661,
+              "totalIncidentEdgeOccurrences": 13440,
+              "totalInformativeAttributes": 904
             },
-            "nodeCount": 272,
+            "nodeCount": 236,
             "relationalRichness": {
-              "averageDistinctRelationTypesPerNode": 2.507353,
-              "totalPerNodeDistinctRelationTypes": 682
+              "averageDistinctRelationTypesPerNode": 2.478814,
+              "totalPerNodeDistinctRelationTypes": 585
             }
           },
           "ResourceType": {
@@ -2534,8 +2534,8 @@
         "consolidation": {
           "global": {
             "ratio": 1.0,
-            "totalEntityMentions": 28406,
-            "uniqueCanonicalEntities": 28406
+            "totalEntityMentions": 28334,
+            "uniqueCanonicalEntities": 28334
           },
           "interpretation": "mention_level_pre_consolidation",
           "mentionCountAttribute": "mentionCount",
@@ -2587,8 +2587,8 @@
             },
             "Identifier": {
               "ratio": 1.0,
-              "totalEntityMentions": 1199,
-              "uniqueCanonicalEntities": 1199
+              "totalEntityMentions": 1163,
+              "uniqueCanonicalEntities": 1163
             },
             "License": {
               "ratio": 1.0,
@@ -2627,8 +2627,8 @@
             },
             "Repository": {
               "ratio": 1.0,
-              "totalEntityMentions": 272,
-              "uniqueCanonicalEntities": 272
+              "totalEntityMentions": 236,
+              "uniqueCanonicalEntities": 236
             },
             "ResourceType": {
               "ratio": 1.0,
@@ -2674,15 +2674,15 @@
           "stage": "pre_consolidation"
         },
         "informationDensity": {
-          "averageIncidentEdgesPerNode": 2.310216,
-          "averageInformativeAttributesPerNode": 3.203513,
-          "combinedAveragePerNode": 5.513729,
-          "totalIncidentEdgeOccurrences": 65624,
-          "totalInformativeAttributes": 90999
+          "averageIncidentEdgesPerNode": 2.302746,
+          "averageInformativeAttributesPerNode": 3.210383,
+          "combinedAveragePerNode": 5.513129,
+          "totalIncidentEdgeOccurrences": 65246,
+          "totalInformativeAttributes": 90963
         },
         "relationalRichness": {
-          "averageDistinctRelationTypesPerNode": 1.138316,
-          "totalPerNodeDistinctRelationTypes": 32335
+          "averageDistinctRelationTypesPerNode": 1.133585,
+          "totalPerNodeDistinctRelationTypes": 32119
         }
       }
     }
