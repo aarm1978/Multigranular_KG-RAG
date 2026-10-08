@@ -140,7 +140,7 @@
   "evaluatorVersion": "1.2.0",
   "input": {
     "path": "data/interim/documents/ciroh_hub_nodes_edges_refs_v1.json",
-    "sha256": "6893cb9dfe2869378983e878b9411ed88367b0df946a5547c791bc0ff40baa7d"
+    "sha256": "4e2939bce4ecec0080111e5415a841b1502c56f92ca44289d88c0cb5c1235277"
   },
   "label": "ciroh_hub_deterministic",
   "methodology": {
@@ -287,7 +287,7 @@
         }
       },
       "counts": {
-        "edges": 6163,
+        "edges": 6160,
         "nodes": 4425
       },
       "metrics": {
@@ -308,16 +308,16 @@
           },
           "DocumentationPage": {
             "informationDensity": {
-              "averageIncidentEdgesPerNode": 27.033058,
+              "averageIncidentEdgesPerNode": 27.008264,
               "averageInformativeAttributesPerNode": 17.161157,
-              "combinedAveragePerNode": 44.194215,
-              "totalIncidentEdgeOccurrences": 6542,
+              "combinedAveragePerNode": 44.169421,
+              "totalIncidentEdgeOccurrences": 6536,
               "totalInformativeAttributes": 4153
             },
             "nodeCount": 242,
             "relationalRichness": {
-              "averageDistinctRelationTypesPerNode": 7.27686,
-              "totalPerNodeDistinctRelationTypes": 1761
+              "averageDistinctRelationTypesPerNode": 7.264463,
+              "totalPerNodeDistinctRelationTypes": 1758
             }
           },
           "Identifier": {
@@ -477,15 +477,15 @@
           "stage": "pre_consolidation"
         },
         "informationDensity": {
-          "averageIncidentEdgesPerNode": 2.785537,
+          "averageIncidentEdgesPerNode": 2.784181,
           "averageInformativeAttributesPerNode": 7.552768,
-          "combinedAveragePerNode": 10.338305,
-          "totalIncidentEdgeOccurrences": 12326,
+          "combinedAveragePerNode": 10.336949,
+          "totalIncidentEdgeOccurrences": 12320,
           "totalInformativeAttributes": 33421
         },
         "relationalRichness": {
-          "averageDistinctRelationTypesPerNode": 1.402938,
-          "totalPerNodeDistinctRelationTypes": 6208
+          "averageDistinctRelationTypesPerNode": 1.40226,
+          "totalPerNodeDistinctRelationTypes": 6205
         }
       }
     },
@@ -657,7 +657,7 @@
         }
       },
       "counts": {
-        "edges": 6647,
+        "edges": 6644,
         "nodes": 4667
       },
       "metrics": {
@@ -678,16 +678,16 @@
           },
           "DocumentationPage": {
             "informationDensity": {
-              "averageIncidentEdgesPerNode": 28.033058,
+              "averageIncidentEdgesPerNode": 28.008264,
               "averageInformativeAttributesPerNode": 17.161157,
-              "combinedAveragePerNode": 45.194215,
-              "totalIncidentEdgeOccurrences": 6784,
+              "combinedAveragePerNode": 45.169421,
+              "totalIncidentEdgeOccurrences": 6778,
               "totalInformativeAttributes": 4153
             },
             "nodeCount": 242,
             "relationalRichness": {
-              "averageDistinctRelationTypesPerNode": 8.27686,
-              "totalPerNodeDistinctRelationTypes": 2003
+              "averageDistinctRelationTypesPerNode": 8.264463,
+              "totalPerNodeDistinctRelationTypes": 2000
             }
           },
           "Identifier": {
@@ -866,15 +866,15 @@
           "stage": "pre_consolidation"
         },
         "informationDensity": {
-          "averageIncidentEdgesPerNode": 2.848511,
+          "averageIncidentEdgesPerNode": 2.847225,
           "averageInformativeAttributesPerNode": 7.580673,
-          "combinedAveragePerNode": 10.429184,
-          "totalIncidentEdgeOccurrences": 13294,
+          "combinedAveragePerNode": 10.427898,
+          "totalIncidentEdgeOccurrences": 13288,
           "totalInformativeAttributes": 35379
         },
         "relationalRichness": {
-          "averageDistinctRelationTypesPerNode": 1.485965,
-          "totalPerNodeDistinctRelationTypes": 6935
+          "averageDistinctRelationTypesPerNode": 1.485322,
+          "totalPerNodeDistinctRelationTypes": 6932
         }
       }
     }

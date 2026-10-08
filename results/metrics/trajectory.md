@@ -10,8 +10,8 @@ Primary description of the complete deterministic KG at each construction point.
 |---|---:|---:|---:|---:|---:|---:|---|
 | HydroShare (det.) [HS v0.1.6] | 1303 | 1628 | 3.774367 | 1.275518 | 2.498849 | 1.342287 | 1.000000 (mention level pre consolidation) |
 | + GitHub (det.) [HS v0.1.6; refs v1] | 14083 | 14393 | 3.953135 | 1.909110 | 2.044025 | 1.051765 | 1.000000 (mention level pre consolidation) |
-| + Hub (det.) [HS v0.1.6; refs v1] | 18750 | 21040 | 5.565067 | 3.320800 | 2.244267 | 1.159840 | 1.000000 (mention level pre consolidation) |
-| + Publications (det.) [HS v0.1.6; refs v1] | 28406 | 32812 | 5.513729 | 3.203513 | 2.310216 | 1.138316 | 1.000000 (mention level pre consolidation) |
+| + Hub (det.) [HS v0.1.6; refs v1] | 18750 | 21037 | 5.564747 | 3.320800 | 2.243947 | 1.159680 | 1.000000 (mention level pre consolidation) |
+| + Publications (det.) [HS v0.1.6; refs v1] | 28406 | 32809 | 5.513518 | 3.203513 | 2.310005 | 1.138210 | 1.000000 (mention level pre consolidation) |
 
 ## Table B — File-inventory-excluded sensitivity analysis
 
@@ -21,8 +21,8 @@ Sensitivity analysis only. File-inventory entities remain legitimate content in 
 |---|---:|---:|---:|---:|---:|---:|---|
 | HydroShare (det.) [HS v0.1.6] | 546 | 871 | 4.849817 | 1.659341 | 3.190476 | 1.747253 | 1.000000 (mention level pre consolidation) |
 | + GitHub (det.) [HS v0.1.6; refs v1] | 1624 | 1934 | 4.219828 | 1.838054 | 2.381773 | 1.394089 | 1.000000 (mention level pre consolidation) |
-| + Hub (det.) [HS v0.1.6; refs v1] | 6049 | 8097 | 8.695652 | 6.018515 | 2.677137 | 1.400562 | 1.000000 (mention level pre consolidation) |
-| + Publications (det.) [HS v0.1.6; refs v1] | 15705 | 19869 | 6.678001 | 4.147724 | 2.530277 | 1.213626 | 1.000000 (mention level pre consolidation) |
+| + Hub (det.) [HS v0.1.6; refs v1] | 6049 | 8094 | 8.694660 | 6.018515 | 2.676145 | 1.400066 | 1.000000 (mention level pre consolidation) |
+| + Publications (det.) [HS v0.1.6; refs v1] | 15705 | 19866 | 6.677619 | 4.147724 | 2.529895 | 1.213435 | 1.000000 (mention level pre consolidation) |
 
 ## Table C — Sensitivity effect
 
@@ -32,8 +32,8 @@ Every delta is `file_inventory_excluded − full`. Parenthesized values are perc
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | HydroShare (det.) [HS v0.1.6] | 757 | 757 | 58.096700% | +1.075450 (+28.494%) | +0.383823 (+30.092%) | +0.691627 (+27.678%) | +0.404966 (+30.170%) | +0.000000 (+0.000%) |
 | + GitHub (det.) [HS v0.1.6; refs v1] | 12459 | 12459 | 88.468366% | +0.266693 (+6.746%) | -0.071056 (-3.722%) | +0.337748 (+16.524%) | +0.342324 (+32.548%) | +0.000000 (+0.000%) |
-| + Hub (det.) [HS v0.1.6; refs v1] | 12701 | 12943 | 67.738667% | +3.130585 (+56.254%) | +2.697715 (+81.237%) | +0.432870 (+19.288%) | +0.240722 (+20.755%) | +0.000000 (+0.000%) |
-| + Publications (det.) [HS v0.1.6; refs v1] | 12701 | 12943 | 44.712385% | +1.164272 (+21.116%) | +0.944211 (+29.474%) | +0.220061 (+9.526%) | +0.075310 (+6.616%) | +0.000000 (+0.000%) |
+| + Hub (det.) [HS v0.1.6; refs v1] | 12701 | 12943 | 67.738667% | +3.129913 (+56.245%) | +2.697715 (+81.237%) | +0.432198 (+19.261%) | +0.240386 (+20.729%) | +0.000000 (+0.000%) |
+| + Publications (det.) [HS v0.1.6; refs v1] | 12701 | 12943 | 44.712385% | +1.164101 (+21.114%) | +0.944211 (+29.474%) | +0.219890 (+9.519%) | +0.075225 (+6.609%) | +0.000000 (+0.000%) |
 
 ## Counting Policy
 

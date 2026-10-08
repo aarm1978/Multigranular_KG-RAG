@@ -2327,9 +2327,18 @@ def page_reference_declaration(context: PageContext, link: Mapping[str, Any]) ->
     return declaration
 
 
+def hub_homepage_url(corpus: Mapping[str, Any]) -> str:
+    """Derive the canonical homepage from Phase A's site base, not a page ID."""
+    homepage = normalize_hub_url(str(corpus["source"]["base_url"]))
+    if homepage is None:
+        raise ValueError("Hub corpus base URL cannot identify its homepage")
+    return homepage
+
+
 def enrich_page_references(
     contexts: Sequence[PageContext], contexts_by_url: Mapping[str, PageContext],
     aliases: Mapping[str, str], excluded: set[str], builder: GraphBuilder,
+    homepage_url: str,
 ) -> None:
     """Aggregate conservative content links to curated pages without new page stubs."""
     stronger = {(edge.source, edge.target) for edge in builder.edges.values()
@@ -2347,6 +2356,8 @@ def enrich_page_references(
                 reason = "ambiguous_target"
             elif normalized in excluded:
                 reason = "excluded_route"
+            elif normalized.rstrip("/") == homepage_url.rstrip("/"):
+                reason = "homepage_target"
             elif not target_url or target_url not in contexts_by_url:
                 reason = "target_not_curated"
             elif target_url == context.url:
@@ -2376,6 +2387,7 @@ def validate_page_reference_evidence(output: Mapping[str, Any], corpus: Mapping[
     issues = []
     contexts = {make_page_id(page["canonical_url"]): PageContext(page, make_page_id(page["canonical_url"]), derive_page_type(page), str(corpus["phase_a_version"])) for page in corpus["pages"]}
     aliases = build_hub_page_alias_index(corpus["pages"])
+    homepage_url = hub_homepage_url(corpus)
     stronger = {(edge["source"], edge["target"]) for edge in output["edges"] if edge["relation"] in {"announces", "isPartOf", "hasSubPage"}}
     excluded = {normalize_hub_url(str(item["route"])).rstrip("/") for item in corpus["known_exclusions"] if normalize_hub_url(str(item["route"]))}
     for edge in output["edges"]:
@@ -2383,6 +2395,9 @@ def validate_page_reference_evidence(output: Mapping[str, Any], corpus: Mapping[
             continue
         context, target = contexts.get(edge["source"]), contexts.get(edge["target"])
         label = f"{edge['id']}: invalid prospective page reference"
+        if target and target.url.rstrip("/") == homepage_url.rstrip("/"):
+            issues.append(label + " (homepage target)")
+            continue
         if not context or not target or context.url == target.url or (edge["source"], edge["target"]) in stronger or target.url.rstrip("/") in excluded:
             issues.append(label)
             continue
@@ -2462,7 +2477,8 @@ def extract_corpus(
         builder,
     )
     if enrich_references:
-        enrich_page_references(contexts, contexts_by_url, page_aliases, known_excluded_routes, builder)
+        enrich_page_references(contexts, contexts_by_url, page_aliases, known_excluded_routes, builder,
+                               homepage_url=hub_homepage_url(corpus))
     _propagate_reports(corpus, contexts_by_url, builder)
     output = _build_output(
         corpus,

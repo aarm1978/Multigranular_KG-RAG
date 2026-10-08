@@ -13,6 +13,15 @@ Writes to frozen `ciroh_hub_nodes_edges.json` are prohibited in either profile.
 Use Phase A `links` with internal/relative targets resolving through existing exact
 canonical-page and unambiguous terminal-slash aliases. Emit DocumentationPage
 `references` DocumentationPage (C-DC22) only between existing curated pages.
+Prospective homepage correction after candidate commit `10c1227`: exclude the
+site-root/homepage target derived from Phase A `source.base_url`, including its
+terminal-slash and fragment variants. The validator rejects C-DC22 homepage targets
+independently of prose eligibility. This removes three candidate references (H2,
+H8, and the AWS best-practices homepage link), leaving 91 C-DC22 edges. Original
+Link/linksTo and all other assertions remain unchanged. Candidate v1 was not
+scientifically accepted; its prior hashes/evidence remain at commit `10c1227` and
+in `tests/fixtures/reference_enrichment/hub_homepage_correction_v1.json`.
+
 Never create a missing-page stub for this rule. Exclude self links, excluded routes,
 query-bearing/ambiguous targets, and pairs already covered by announces, isPartOf,
 or hasSubPage. Preserve every preexisting node and edge, including Link/linksTo.
