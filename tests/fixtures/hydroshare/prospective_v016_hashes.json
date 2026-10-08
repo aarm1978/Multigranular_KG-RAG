@@ -1,0 +1,6 @@
+{
+  "data/interim/datasets/hydroshare_nodes_edges_v016.json": "4fbfcb2548f51323e9bfc83a0ea9ffa76bfa8344f9c86c4550efce7373515576",
+  "data/interim/evaluation/hydroshare_github_deterministic_v016.json": "a565683c588b77ab8ff61e253f2ce224e72378a1f29b0ba654eda96b0ba9667c",
+  "data/interim/evaluation/hydroshare_github_hub_deterministic_v016.json": "53bfe1350d6133b9f43f57c16727c6eae27561d61ed8897f1316698bb8ec2d3e",
+  "data/interim/evaluation/hydroshare_github_hub_publications_deterministic_v016.json": "6c5d2216c1e9a1a91b4ce2ab236252e6e93136f63fe6f98c9015d84dfb87e3f2"
+}

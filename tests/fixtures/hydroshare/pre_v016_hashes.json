@@ -1,0 +1,15 @@
+{
+  "data/interim/coderepos/github_nodes_edges.json": "2f752295a7d465acd094672b0a5961ffd1fe5453d6d576fc497e284068d901a6",
+  "data/interim/datasets/hydroshare_nodes_edges.json": "c76c1cf9c88fe2a91f4927bd3bd4fc03456e3a2a83190bd3d8c47076f2acb7e3",
+  "data/interim/documents/ciroh_hub_nodes_edges.json": "c106c410b6f84a2755d17cec4629b90d5b145c0813c2866005cb20bcea649602",
+  "data/interim/evaluation/hydroshare_github_deterministic.json": "1f4a1567c677140f11d2f52b9eaf659241450944aa5b1cdd1093832d6404ed64",
+  "data/interim/evaluation/hydroshare_github_hub_deterministic.json": "31edeb6a5dd5c229b1f0789dd302fa4a4a54e52e93f5207ee56f98554f0746bf",
+  "data/interim/evaluation/hydroshare_github_hub_publications_deterministic.json": "a5165f88ba32783478f09f8224d0837cb16167dbbfe202ec22734c8e2817f897",
+  "data/interim/papers/publication_nodes_edges.json": "675049dae5c3dfed6f492ad0aa79e27fc1a9b37d0ecbc13ab3cf1a69cdb8efaf",
+  "results/metrics/history/pre_hydroshare_v016/snapshots/hydroshare_deterministic.json": "f4c74ee8d6276addbf891e3eb5574fdbb78e23826f555e4c58d01085ee52c22a",
+  "results/metrics/history/pre_hydroshare_v016/snapshots/hydroshare_github_deterministic.json": "eaaae9280ff8e6abd0dfbe8a5855e257ea8b0ea2cd5fd8eca939b84f0f49aa23",
+  "results/metrics/history/pre_hydroshare_v016/snapshots/hydroshare_github_hub_deterministic.json": "f85020b8f53e61803eb26a657197e717d1b9d25f968660101eb6d821971ec63a",
+  "results/metrics/history/pre_hydroshare_v016/snapshots/hydroshare_github_hub_publications_deterministic.json": "047a1bff0ce6de1575875b62a175d92303cc82fe8b03520aadcebe8bba77abeb",
+  "results/metrics/history/pre_hydroshare_v016/trajectory.md": "de558ceb10a9ee106f19496f6ea6f93f205f593f33a298d08b232718a7c9096e",
+  "src/ontology/ciroh_ontology.owl": "6ebf7f67f79d8aae4fada176911ed9311964beb567f40a097af9017f1ad9c730"
+}

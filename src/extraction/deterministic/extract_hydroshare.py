@@ -10,7 +10,7 @@ Inputs:
     data/interim/datasets/ciroh_hydroshare_corpus.json
 
 Outputs:
-    data/interim/datasets/hydroshare_nodes_edges.json
+    data/interim/datasets/hydroshare_nodes_edges_v016.json
 
 No network calls are made, no random identifiers are used, and re-running the
 script with the same input produces byte-stable output.
@@ -32,7 +32,8 @@ from urllib.parse import urlparse
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_INPUT = PROJECT_ROOT / "data/interim/datasets/ciroh_hydroshare_corpus.json"
-DEFAULT_OUTPUT = PROJECT_ROOT / "data/interim/datasets/hydroshare_nodes_edges.json"
+HISTORICAL_OUTPUT = PROJECT_ROOT / "data/interim/datasets/hydroshare_nodes_edges.json"
+DEFAULT_OUTPUT = PROJECT_ROOT / "data/interim/datasets/hydroshare_nodes_edges_v016.json"
 
 EXTRACTION_METHOD = "deterministic"
 CURATED = "curated"
@@ -349,6 +350,22 @@ def normalize_doi(value: str | None) -> str | None:
     return match.group(1).rstrip(".").lower()
 
 
+def normalize_own_doi(value: Any) -> str | None:
+    """Accept a complete DOI token or DOI-resolver URL, never a prose substring.
+
+    This is lexical validation of explicit metadata, not network registration
+    verification. The older external-reference DOI rules remain unchanged.
+    """
+    if not isinstance(value, str):
+        return None
+    token = re.sub(r"^(?:https?://(?:dx\.)?doi\.org/|doi:\s*)", "", value.strip(), flags=re.I)
+    if not re.fullmatch(r"10\.\d{4,9}/[A-Za-z0-9][A-Za-z0-9._;()/:-]*", token):
+        return None
+    if token.endswith((".", ";", ":", "/")) or token.count("(") != token.count(")"):
+        return None
+    return token.lower()
+
+
 def extract_hydroshare_resource_id(value: str | None) -> str | None:
     """Extract a HydroShare resource ID from a target string or URL."""
     if not value:
@@ -538,7 +555,7 @@ def extract_agents(resource: JsonDict, builder: GraphBuilder) -> None:
         (
             "contributors",
             "hasContributor",
-            "C-DC05/A-AG",
+            "C-D27",
             resource.get("contributors") or [],
             contributor_ids,
         ),
@@ -690,12 +707,29 @@ def extract_metadata_nodes(resource: JsonDict, builder: GraphBuilder) -> None:
 
 
 def extract_resource_identifiers(resource: JsonDict, builder: GraphBuilder) -> None:
-    """Apply N12 and E5 for the resource identifier and URL fields."""
+    """Apply N12/E5, preferring exact own-DOI evidence over duplicate URL forms."""
     resource_id = require_resource_id(resource)
+    metadata = resource.get("system_metadata")
+    raw_doi = metadata.get("doi") if isinstance(metadata, dict) else None
+    own_doi = normalize_own_doi(raw_doi)
+    if own_doi and own_doi.startswith("10.4211/hs.") and own_doi != f"10.4211/hs.{resource_id.lower()}":
+        own_doi = None
+    if own_doi:
+        # Source-local identity avoids cross-resource alignment and slug collisions.
+        doi_id = f"{resource_id}:identifier:doi:{hashlib.sha256(own_doi.encode('utf-8')).hexdigest()}"
+        evidence = Evidence(raw_doi, f"{resource_id}:system_metadata.doi", EXTRACTION_METHOD, f"hydroshare:{resource_id}")
+        builder.add_node(doi_id, "Identifier", "A-ID01", {
+            "identifierValue": own_doi, "identifierType": "DOI",
+        }, evidence, CURATED)
+        builder.add_edge("hasIdentifier", "C-D04", resource_id, doi_id, evidence)
+    elif raw_doi not in (None, ""):
+        builder.skip("invalid_own_doi:system_metadata.doi")
     seen: set[str] = set()
     for field_name in ("identifier", "url"):
         identifier_value = resource.get(field_name)
         if not identifier_value or identifier_value in seen:
+            continue
+        if own_doi and normalize_own_doi(identifier_value) == own_doi:
             continue
         seen.add(identifier_value)
         identifier_id = identifier_node_id(identifier_value)
@@ -860,7 +894,7 @@ def extract_awards(resource: JsonDict, builder: GraphBuilder) -> None:
             )
             builder.add_edge(
                 "fundedBy",
-                "A-AG-R2",
+                "C-D28",
                 award_id,
                 org_id,
                 make_evidence(resource_id, agency, agency_path),
@@ -1436,6 +1470,8 @@ def extract_corpus(resources: list[JsonDict]) -> tuple[JsonDict, Counter[str]]:
 
 def write_output(output: JsonDict, path: Path) -> None:
     """Write the interim output JSON deterministically."""
+    if path.resolve() == HISTORICAL_OUTPUT.resolve():
+        raise ValueError("Frozen HydroShare output cannot be overwritten; use the prospective v016 path")
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
         json.dump(output, handle, indent=2, ensure_ascii=False, sort_keys=True)

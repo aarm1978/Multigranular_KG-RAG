@@ -14,6 +14,46 @@ manuscript-ready record of how the KG's dataset layer is populated.
 prose → `Variable`, `DatasetMention`, `Tool`/`Model` mentions, `Measurement`) are listed
 in §5 as out-of-scope here and deferred to the LLM extractor.
 
+## Prospective v0.1.6 minimal package
+
+Authority: frozen ontology v0.1.6 and
+`docs/handoffs/STUDY2_STEP10_SEMANTIC_GAP_DECISIONS.md`. This revision changes only
+own DOI extraction and two inventory IDs; relation semantics and endpoints are unchanged.
+
+- Historical `data/interim/datasets/hydroshare_nodes_edges.json` is preserved byte-for-byte.
+  The extractor defaults to `hydroshare_nodes_edges_v016.json` and refuses to write the
+  historical path. Cumulative prospective outputs use `_v016.json` in
+  `data/interim/evaluation/`; existing unsuffixed historical snapshots remain unchanged.
+- Historical metric records/trajectory are preserved under
+  `results/metrics/history/pre_hydroshare_v016/`; current `snapshots/` and `trajectory.md`
+  are regenerated with unchanged metric definitions. The preservation manifest is
+  `tests/fixtures/hydroshare/pre_v016_hashes.json`. Existing frozen assertions keep
+  their original input paths and expectations. GitHub, Hub, and Publication inputs
+  remain unchanged.
+- `system_metadata.doi` is an explicit own-resource identifier field. Accept a complete
+  bare DOI, `doi:` form, or http(s) doi.org/dx.doi.org resolver URL, not a substring in
+  prose or an unrelated URL. The conservative lexical profile is `10.` plus 4–9 digits,
+  slash, and an ASCII alphanumeric-leading suffix containing alphanumerics or
+  `._;()/:-`; reject terminal punctuation (`.;:/`), unbalanced parentheses, queries,
+  fragments, whitespace within the token, and non-string values. An explicit
+  `10.4211/hs.{resource_id}` must agree with the owning resource ID. Other registrations
+  are accepted from this typed field without network verification; unsupported forms
+  are skipped, not repaired. This is not a universal DOI registration validator.
+- Normalize the accepted DOI to lowercase for `identifierValue` and set
+  `identifierType=DOI`. Use a source-local resource-ID plus full normalized-DOI SHA-256
+  identity. Preserve the exact original string, including surrounding whitespace, in
+  node and edge evidence at `{resource_id}:system_metadata.doi`. Matching DOI forms in
+  `identifier`/`url` do not create duplicate URL identifiers; own metadata evidence wins.
+  No Paper, external DatasetResource, or stronger relation is inferred. Existing
+  external-reference parsing remains unchanged; other `system_metadata` fields remain
+  outside this minimal mapping.
+- Existing contributor edges use C-D27; Award-to-Organization funding edges use C-D28.
+  Their IDs change because inventory ID participates in `make_edge_id`; evidence,
+  attributes, relation names, and endpoints are preserved. Historical C-DC05/A-AG and
+  A-AG-R2 assertions remain unchanged in the frozen graph.
+
+No DataService, README references, or additional semantic targets are activated.
+
 ---
 
 ## 1. Conventions
@@ -78,9 +118,9 @@ is a separate consolidation step run after extraction.
 | N8 | `spatial_coverage` | `SpatialCoverage` (`geo:Geometry`) | A-D07→A-DOM09 | human-readable extent (e.g. bbox / "CONUS") | `spatial_coverage` | per-resource footprint, not a place |
 | N9 | `temporal_coverage` | `TemporalCoverage` | A-D08→A-DOM10 | the period (e.g. "1979–2023") | `temporal_coverage` | start/end |
 | N10 | `awards[i]` | `Award` | A-D09 | award title/number | `awards[i]` | funding |
-| N11 | `awards[i].funding_agency` | `Organization` | A-AG02 | agency name | `awards[i].funding_agency` | ROR if resolvable; funding source |
+| N11 | `awards[i].funding_agency_name` | `Organization` | A-AG02 | agency name | `awards[i].funding_agency_name` | ROR if resolvable; funding source |
 | N11b | `creators[i].organization` / `contributors[i].organization` (where non-empty) | `Organization` | A-AG02 | the organization string | `creators[i].organization` | affiliation source; same `Organization` class as funding agencies — a shared, consolidated entity |
-| N12 | `identifier` / `url` (+ DOI if present) | `Identifier` | A-ID01 | the identifier string | `identifier` / `url` | the resource's own identifier(s) |
+| N12 | `identifier` / `url` / `system_metadata.doi` | `Identifier` | A-ID01 | the identifier string | exact contributing field, including `system_metadata.doi` | the resource's own identifier(s); DOI profile above |
 | N13 | **[Composite]** `files[i]` | `DatasetFile` (`schema:DataDownload`) | A-D03 | `files[i].file_name` (+ extension) | `files[i]` | only Composite has own files; carry checksum/size as attributes |
 | N14 | **[Tool]** `tool_config` | `ToolConfiguration` | A-D10 | a descriptor (e.g. "CIROH 2i2c JupyterHub, v{tool_version}") | `tool_config` | + `launchURL` attribute (see N15) |
 | N15 | **[Tool]** `tool_config.app_home_page_url` | `launchURL` attribute on the `ToolConfiguration` (literal) | A-D10 attr | the URL string | `tool_config.app_home_page_url` | the launch endpoint as a literal (datatype) |
@@ -95,15 +135,15 @@ is a separate consolidation step run after extraction.
 | E1 | `resource_type` | `DatasetResource` —hasResourceType→ `ResourceType` | C-D01 | the type string | `resource_type` | |
 | E2 | **[Composite]** `files[i]` | `DatasetResource` —hasFile→ `DatasetFile` | C-D02 | `files[i].file_name` | `files[i]` | one edge per file |
 | E3 | `creators[i]` | `DatasetResource` —hasCreator→ `Person` | C-D03 | `creators[i].name` | `creators[i]` | ordered (creator order matters) |
-| E4 | `contributors[i]` | `DatasetResource` —hasContributor→ `Person` | C-DC05/A-AG | `contributors[i].name` | `contributors[i]` | reuse agent contributor relation |
-| E5 | `identifier`/`url`/DOI | `DatasetResource` —hasIdentifier→ `Identifier` | C-D04 | the identifier string | `identifier` | |
+| E4 | `contributors[i]` | `DatasetResource` —hasContributor→ `Person` | C-D27 | `contributors[i].name` | `contributors[i]` | reuse agent contributor relation |
+| E5 | `identifier`/`url`/`system_metadata.doi` | `DatasetResource` —hasIdentifier→ `Identifier` | C-D04 | exact source string | exact contributing field | DOI deduplication as above |
 | E6 | `creator_identifiers[i]` / `contributor_identifiers[i]` | `Person` —hasIdentifier→ `Identifier` | A-ID01 (ID-R1) | the identifier URL | `creator_identifiers[i]` | ORCID, Google Scholar, and ResearchGate identifiers |
 | E7 | `rights` | `DatasetResource` —hasLicense→ `License` | C-D05 | rights statement text | `rights` | |
 | E8 | `subjects[i]` | `DatasetResource` —hasSubject→ `Subject` | C-D06 | the subject string | `subjects[i]` | |
 | E9 | `spatial_coverage` | `DatasetResource` —hasSpatialCoverage→ `SpatialCoverage` | C-D07 | the extent | `spatial_coverage` | |
 | E10 | `temporal_coverage` | `DatasetResource` —coversPeriod→ `TemporalCoverage` | C-D08 | the period | `temporal_coverage` | |
 | E11 | `awards[i]` | `DatasetResource` —fundedBy→ `Award` | C-D09 / A-AG-R2 | award title/number | `awards[i]` | |
-| E12 | `awards[i].funding_agency` | `Award` —(funder)→ `Organization` | A-AG-R2 | agency name | `awards[i].funding_agency` | award↔agency |
+| E12 | `awards[i].funding_agency_name` | `Award` —fundedBy→ `Organization` | C-D28 | agency name | `awards[i].funding_agency_name` | award↔agency |
 | E13 | `creators[i].organization` / `contributors[i].organization` (where non-empty) | `Person` —affiliatedWith→ `Organization` | A-AG-R1 | the organization string | `creators[i].organization` | the `organization` key inside each creator/contributor dict; not always filled |
 | E14 | **[Tool]** `tool_config` | `DatasetResource` —hasToolConfig→ `ToolConfiguration` | C-D10 | tool descriptor | `tool_config` | Tool subtype only |
 | E15 | **[Tool]** `tool_config.app_home_page_url` | `ToolConfiguration` —launchesApp→ `Tool` | C-D11 | the launched-app name/URL | `tool_config.app_home_page_url` | object property to the Tool node (N16) |

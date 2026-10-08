@@ -1,5 +1,5 @@
 {
-  "displayName": "HydroShare (det.) [HS v0.1.6]",
+  "displayName": "HydroShare (det.)",
   "evaluationPolicy": {
     "attributeExclusions": {
       "classSpecificAdministrative": {
@@ -138,8 +138,8 @@
   },
   "evaluatorVersion": "1.2.0",
   "input": {
-    "path": "data/interim/datasets/hydroshare_nodes_edges_v016.json",
-    "sha256": "4fbfcb2548f51323e9bfc83a0ea9ffa76bfa8344f9c86c4550efce7373515576"
+    "path": "data/interim/datasets/hydroshare_nodes_edges.json",
+    "sha256": "c76c1cf9c88fe2a91f4927bd3bd4fc03456e3a2a83190bd3d8c47076f2acb7e3"
   },
   "label": "hydroshare_deterministic",
   "methodology": {
@@ -255,11 +255,11 @@
           },
           "Identifier": {
             "identifierType": {
-              "count": 81,
+              "count": 66,
               "rule": "global_administrative_or_identifier"
             },
             "identifierValue": {
-              "count": 81,
+              "count": 66,
               "rule": "global_administrative_or_identifier"
             },
             "normalizedValue": {
@@ -380,8 +380,8 @@
         }
       },
       "counts": {
-        "edges": 871,
-        "nodes": 546
+        "edges": 856,
+        "nodes": 531
       },
       "metrics": {
         "byEntityType": {
@@ -401,10 +401,10 @@
           },
           "DatasetResource": {
             "informationDensity": {
-              "averageIncidentEdgesPerNode": 9.604651,
+              "averageIncidentEdgesPerNode": 9.430233,
               "averageInformativeAttributesPerNode": 3.44186,
-              "combinedAveragePerNode": 13.046512,
-              "totalIncidentEdgeOccurrences": 826,
+              "combinedAveragePerNode": 12.872093,
+              "totalIncidentEdgeOccurrences": 811,
               "totalInformativeAttributes": 296
             },
             "nodeCount": 86,
@@ -432,13 +432,13 @@
               "averageIncidentEdgesPerNode": 1.0,
               "averageInformativeAttributesPerNode": 0.0,
               "combinedAveragePerNode": 1.0,
-              "totalIncidentEdgeOccurrences": 81,
+              "totalIncidentEdgeOccurrences": 66,
               "totalInformativeAttributes": 0
             },
-            "nodeCount": 81,
+            "nodeCount": 66,
             "relationalRichness": {
               "averageDistinctRelationTypesPerNode": 1.0,
-              "totalPerNodeDistinctRelationTypes": 81
+              "totalPerNodeDistinctRelationTypes": 66
             }
           },
           "License": {
@@ -599,8 +599,8 @@
         "consolidation": {
           "global": {
             "ratio": 1.0,
-            "totalEntityMentions": 546,
-            "uniqueCanonicalEntities": 546
+            "totalEntityMentions": 531,
+            "uniqueCanonicalEntities": 531
           },
           "interpretation": "mention_level_pre_consolidation",
           "mentionCountAttribute": "mentionCount",
@@ -622,8 +622,8 @@
             },
             "Identifier": {
               "ratio": 1.0,
-              "totalEntityMentions": 81,
-              "uniqueCanonicalEntities": 81
+              "totalEntityMentions": 66,
+              "uniqueCanonicalEntities": 66
             },
             "License": {
               "ratio": 1.0,
@@ -684,15 +684,15 @@
           "stage": "pre_consolidation"
         },
         "informationDensity": {
-          "averageIncidentEdgesPerNode": 3.190476,
-          "averageInformativeAttributesPerNode": 1.659341,
-          "combinedAveragePerNode": 4.849817,
-          "totalIncidentEdgeOccurrences": 1742,
+          "averageIncidentEdgesPerNode": 3.224105,
+          "averageInformativeAttributesPerNode": 1.706215,
+          "combinedAveragePerNode": 4.93032,
+          "totalIncidentEdgeOccurrences": 1712,
           "totalInformativeAttributes": 906
         },
         "relationalRichness": {
-          "averageDistinctRelationTypesPerNode": 1.747253,
-          "totalPerNodeDistinctRelationTypes": 954
+          "averageDistinctRelationTypesPerNode": 1.768362,
+          "totalPerNodeDistinctRelationTypes": 939
         }
       }
     },
@@ -815,11 +815,11 @@
           },
           "Identifier": {
             "identifierType": {
-              "count": 81,
+              "count": 66,
               "rule": "global_administrative_or_identifier"
             },
             "identifierValue": {
-              "count": 81,
+              "count": 66,
               "rule": "global_administrative_or_identifier"
             },
             "normalizedValue": {
@@ -940,8 +940,8 @@
         }
       },
       "counts": {
-        "edges": 1628,
-        "nodes": 1303
+        "edges": 1613,
+        "nodes": 1288
       },
       "metrics": {
         "byEntityType": {
@@ -975,10 +975,10 @@
           },
           "DatasetResource": {
             "informationDensity": {
-              "averageIncidentEdgesPerNode": 18.406977,
+              "averageIncidentEdgesPerNode": 18.232558,
               "averageInformativeAttributesPerNode": 3.44186,
-              "combinedAveragePerNode": 21.848837,
-              "totalIncidentEdgeOccurrences": 1583,
+              "combinedAveragePerNode": 21.674419,
+              "totalIncidentEdgeOccurrences": 1568,
               "totalInformativeAttributes": 296
             },
             "nodeCount": 86,
@@ -1006,13 +1006,13 @@
               "averageIncidentEdgesPerNode": 1.0,
               "averageInformativeAttributesPerNode": 0.0,
               "combinedAveragePerNode": 1.0,
-              "totalIncidentEdgeOccurrences": 81,
+              "totalIncidentEdgeOccurrences": 66,
               "totalInformativeAttributes": 0
             },
-            "nodeCount": 81,
+            "nodeCount": 66,
             "relationalRichness": {
               "averageDistinctRelationTypesPerNode": 1.0,
-              "totalPerNodeDistinctRelationTypes": 81
+              "totalPerNodeDistinctRelationTypes": 66
             }
           },
           "License": {
@@ -1173,8 +1173,8 @@
         "consolidation": {
           "global": {
             "ratio": 1.0,
-            "totalEntityMentions": 1303,
-            "uniqueCanonicalEntities": 1303
+            "totalEntityMentions": 1288,
+            "uniqueCanonicalEntities": 1288
           },
           "interpretation": "mention_level_pre_consolidation",
           "mentionCountAttribute": "mentionCount",
@@ -1201,8 +1201,8 @@
             },
             "Identifier": {
               "ratio": 1.0,
-              "totalEntityMentions": 81,
-              "uniqueCanonicalEntities": 81
+              "totalEntityMentions": 66,
+              "uniqueCanonicalEntities": 66
             },
             "License": {
               "ratio": 1.0,
@@ -1263,15 +1263,15 @@
           "stage": "pre_consolidation"
         },
         "informationDensity": {
-          "averageIncidentEdgesPerNode": 2.498849,
-          "averageInformativeAttributesPerNode": 1.275518,
-          "combinedAveragePerNode": 3.774367,
-          "totalIncidentEdgeOccurrences": 3256,
+          "averageIncidentEdgesPerNode": 2.504658,
+          "averageInformativeAttributesPerNode": 1.290373,
+          "combinedAveragePerNode": 3.795031,
+          "totalIncidentEdgeOccurrences": 3226,
           "totalInformativeAttributes": 1662
         },
         "relationalRichness": {
-          "averageDistinctRelationTypesPerNode": 1.342287,
-          "totalPerNodeDistinctRelationTypes": 1749
+          "averageDistinctRelationTypesPerNode": 1.346273,
+          "totalPerNodeDistinctRelationTypes": 1734
         }
       }
     }
