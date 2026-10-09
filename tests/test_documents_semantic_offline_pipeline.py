@@ -236,5 +236,60 @@ class OfflineReplayTests(unittest.TestCase):
         self.assertEqual(report.to_record()["endpointMapping"]["acceptedAssertions"], [accepted])
 
 
+    def test_integrated_visible_fence_and_parent_context(self):
+        """Replay visible prose and displayed examples while holding parent gates."""
+        from src.extraction.llm.documents.source_units import read_page_source_units
+        page = deepcopy(self.inputs["page"])
+        page["content_mdx"] += "\n<!-- HIDDEN_COMMENT -->\n{runtimeValue}\n\n```python\nprint('example')\n```\n"
+        page["content_sha256"] = hashlib.sha256(page["content_mdx"].encode()).hexdigest()
+        mapping = deepcopy(self.inputs["accepted_section_mapping"])
+        mapping["content_sha256"] = page["content_sha256"]
+        reader = read_page_source_units(page, accepted_section_mapping=mapping)
+        visible = next(u for u in reader["sourceUnits"] if self.quote in u["text"])
+        other = next(u for u in reader["sourceUnits"] if self.other_quote in u["text"])
+        fence = next(u for u in reader["sourceUnits"] if "print('example')" in u["text"])
+        self.assertNotIn("HIDDEN_COMMENT", repr(reader["sourceUnits"]))
+        self.assertNotIn("runtimeValue", repr(reader["sourceUnits"]))
+        payload = self.payload()
+        payload["candidateNodes"][0]["evidence"] = [{"sourceUnitID": visible["sourceUnitID"], "evidenceText": self.quote}]
+        payload["candidateEdges"][0]["evidence"] = [{"sourceUnitID": other["sourceUnitID"], "evidenceText": self.other_quote}]
+        procedure = deepcopy(payload["candidateNodes"][0])
+        procedure.update(candidateID="procedure", inventoryId="A-DC05", **{"class": "Procedure"})
+        parent = deepcopy(payload["candidateEdges"][0])
+        parent.update(candidateID="parent", inventoryId="C-DC20", relation="hasProcedure",
+                      target={"referenceType": "candidate_node", "referenceID": "procedure"})
+        payload["candidateNodes"].append(procedure)
+        payload["candidateEdges"].append(parent)
+        for cid, inventory, name, relation, rid in (("example", "A-DC08", "Example", "hasExample", "C-DC12"),
+                                                   ("parameter", "A-DOM12", "Parameter", "hasParameter", "C-DC11")):
+            node = deepcopy(procedure)
+            node.update(candidateID=cid, inventoryId=inventory, **{"class": name},
+                evidence=[{"sourceUnitID": fence["sourceUnitID"], "evidenceText": "print('example')"}],
+                parentPath=[{"referenceType": "candidate_edge", "referenceID": ref} for ref in ("parent", cid + "-edge")])
+            edge = deepcopy(parent)
+            edge.update(candidateID=cid + "-edge", inventoryId=rid, relation=relation,
+                        source={"referenceType": "candidate_node", "referenceID": "procedure"},
+                        target={"referenceType": "candidate_node", "referenceID": cid})
+            payload["candidateNodes"].append(node)
+            payload["candidateEdges"].append(edge)
+        before = deepcopy((page, reader, payload))
+        report = self.replay(payload, page=page, reader_result=reader, accepted_section_mapping=mapping,
+                             selected_unit_ids=[visible["sourceUnitID"], other["sourceUnitID"], fence["sourceUnitID"]])
+        records = self.records(report)
+        self.assertEqual(records["tool"]["finalDisposition"], "validated")
+        self.assertEqual(records["parent"]["finalDisposition"], "validated")
+        self.assertEqual(records["example"]["finalDisposition"], "unresolved_condition")
+        self.assertEqual(records["example"]["validationRecord"]["contextDisposition"], "possible_example_context")
+        self.assertEqual(records["parameter"]["finalDisposition"], "needs_review")
+        self.assertNotEqual(records["parameter-edge"]["finalDisposition"], "validated")
+        for cid in ("tool", "parent", "example"):
+            span = records[cid]["validationRecord"]["boundEvidence"][0]
+            self.assertEqual(span["authorityTextSha256"], page["content_sha256"])
+            self.assertEqual(span["startOffsetInAuthority"], page["content_mdx"].index(span["evidenceText"]))
+            self.assertEqual(span["sectionID"], mapping["sections"][0]["section_id"])
+        self.assertEqual(before, (page, reader, payload))
+        self.assertFalse(report.to_record()["kgAuthorization"])
+
+
 if __name__ == "__main__":
     unittest.main()

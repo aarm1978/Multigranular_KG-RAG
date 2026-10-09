@@ -262,5 +262,47 @@ class OfflineReplayTests(unittest.TestCase):
         self.assertFalse(records["tool"]["kgAuthorization"])
 
 
+    def test_integrated_abstract_readme_and_prohibited_targets(self):
+        """Replay selected mixed authorities without promoting README gates."""
+        payload = self.payload()
+        readme_evidence = {"sourceUnitID": self.other_uid, "evidenceText": self.other_quote}
+        payload["candidateNodes"][0]["evidence"].append(deepcopy(readme_evidence))
+        for fragment, contribution in zip(payload["candidateNodes"][0]["evidence"],
+                                          ("Abstract identifies tool use", "README adds alternative tool context")):
+            fragment["contribution"] = contribution
+        payload["candidateEdges"][0]["evidence"] = [deepcopy(readme_evidence)]
+        measurement = deepcopy(payload["candidateNodes"][0])
+        measurement.update(candidateID="measurement", inventoryId="A-D12", **{"class": "Measurement"},
+                           evidence=[deepcopy(readme_evidence)])
+        abstract_measurement = deepcopy(measurement)
+        abstract_measurement.update(candidateID="abstract-measurement", evidence=[
+            {"sourceUnitID": self.uid, "evidenceText": self.quote}])
+        payload["candidateNodes"].extend([measurement, abstract_measurement])
+        for identifier, name in (("A-DOM03", "Model"), ("A-D13", "DataService")):
+            bad = deepcopy(measurement)
+            bad.update(candidateID=identifier, inventoryId=identifier, **{"class": name})
+            payload["candidateNodes"].append(bad)
+        bad = deepcopy(payload["candidateEdges"][0])
+        bad.update(candidateID="pipeline-only", inventoryId="D-26", relation="mentions")
+        payload["candidateEdges"].append(bad)
+        before = deepcopy((payload, self.inputs))
+        report = self.replay(payload, selected_unit_ids=[self.uid, self.other_uid])
+        records = self.records(report)
+        self.assertEqual(records["tool"]["finalDisposition"], "validated")
+        self.assertEqual(records["edge"]["finalDisposition"], "validated")
+        spans = records["tool"]["validationRecord"]["boundEvidence"]
+        self.assertEqual({s["sourceUnitID"] for s in spans}, {self.uid, self.other_uid})
+        self.assertEqual({s["evidenceText"] for s in spans}, {self.quote, self.other_quote})
+        for span in spans:
+            self.assertEqual(span["authorityTextSha256"], hashlib.sha256(span["evidenceText"].encode()).hexdigest())
+            self.assertEqual(span["startOffsetInAuthority"], 0)
+            self.assertEqual(span["startLine"], 1)
+        self.assertEqual(records["measurement"]["finalDisposition"], "unresolved_condition")
+        for cid in ("abstract-measurement", "A-DOM03", "A-D13", "pipeline-only"):
+            self.assertEqual(records[cid]["finalDisposition"], "rejected_invalid_assertion")
+        self.assertEqual(before, (payload, self.inputs))
+        self.assertFalse(report.to_record()["kgAuthorization"])
+
+
 if __name__ == "__main__":
     unittest.main()

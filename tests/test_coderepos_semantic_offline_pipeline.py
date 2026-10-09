@@ -229,5 +229,65 @@ class OfflineReplayTests(unittest.TestCase):
         self.assertEqual(report.to_record()["endpointMapping"]["acceptedAssertions"], [accepted])
 
 
+    def test_integrated_downloaded_authorities_and_own_product(self):
+        """Replay raw prose and notebook Markdown with exact channel provenance."""
+        from src.extraction.llm.coderepos.source_units import read_repository_sources
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            contents = root / "Demo" / "contents"
+            texts = {"workshops/Flow.markdown": "Café 🌊 workflow processes discharge.\n",
+                     "docs/README.md": "This guide describes a river tool.\n",
+                     "CITATION.txt": "This repository supports hydrologic research.\n"}
+            notebook_text = "# Notebook\n\nThe notebook documents river processing.\n"
+            raw = {p: t.encode() for p, t in texts.items()}
+            raw["notebooks/Flow.ipynb"] = json.dumps({"cells": [
+                {"cell_type": "code", "source": "HIDDEN_CODE", "outputs": ["HIDDEN_OUTPUT"]},
+                {"cell_type": "markdown", "source": notebook_text}]}).encode()
+            raw["examples/run.py"] = b"HIDDEN_CODE"
+            for path, data in raw.items():
+                file = contents / path
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_bytes(data)
+            repo = {"repo_id": 7, "name": "Demo", "full_name": "Example/Demo",
+                "archive": {"frozen_commit_sha": "a" * 40},
+                "readme": {"source_path": "README.md", "text": self.quote},
+                "files": {"downloaded": [{"path": p, "extension": Path(p).suffix, "downloaded": True,
+                    "selection_reason": "allowed_semantic_folder", "file_role": "other"}
+                    for p in ["README.md", *raw, "docs/missing.md"]]}}
+            reader = read_repository_sources(repo, root)
+        units = reader["sourceUnits"]
+        self.assertEqual({u["path"] for u in units}, {"README.md", *texts, "notebooks/Flow.ipynb"})
+        self.assertEqual(sum(u["path"] == "README.md" for u in units), 1)
+        self.assertNotIn("HIDDEN", repr(reader))
+        payload = self.payload()
+        payload["candidateNodes"] = []
+        payload["candidateEdges"] = []
+        for i, unit in enumerate(units):
+            payload["candidateNodes"].append({"candidateID": str(i), "inventoryId": "A-DOM02", "class": "Tool",
+                "label": "Tool", "evidence": [{"sourceUnitID": unit["sourceUnitID"], "evidenceText": unit["text"].strip()}]})
+        for cid, owner in (("own", self.owner), ("dependency", "another-repo")):
+            version = deepcopy(payload["candidateNodes"][0])
+            version.update(candidateID=cid, inventoryId="A-C10", **{"class": "ModelVersion"}, productRepositoryID=owner)
+            payload["candidateNodes"].append(version)
+        before = deepcopy((reader, payload))
+        report = self.replay(payload, reader_result=reader, selected_unit_ids=[u["sourceUnitID"] for u in units])
+        records = self.records(report)
+        for i, unit in enumerate(units):
+            self.assertEqual(records[str(i)]["finalDisposition"], "validated")
+            span = records[str(i)]["validationRecord"]["boundEvidence"][0]
+            authority = next(a for a in reader["authorities"] if a["path"] == unit["path"])
+            self.assertEqual(span["authorityTextSha256"], authority["authorityTextSha256"])
+            self.assertEqual(span["startOffsetInAuthority"], authority["text"].index(span["evidenceText"]))
+            self.assertEqual(span["frozenCommitSha"], "a" * 40)
+            self.assertEqual(span["cellIndex"], unit["cellIndex"])
+            if unit["path"] in raw:
+                self.assertEqual(span["rawFileSha256"], hashlib.sha256(raw[unit["path"]]).hexdigest())
+        self.assertEqual(records["own"]["finalDisposition"], "unresolved_condition")
+        self.assertEqual(records["dependency"]["finalDisposition"], "rejected_invalid_assertion")
+        self.assertFalse(report.to_record()["sourceCompleteness"]["inputComplete"])
+        self.assertEqual(report.to_record()["abstentionRecords"], [])
+        self.assertEqual(before, (reader, payload))
+
+
 if __name__ == "__main__":
     unittest.main()
