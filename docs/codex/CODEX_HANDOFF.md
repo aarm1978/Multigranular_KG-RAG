@@ -8,10 +8,11 @@
 
 ## Current checkpoint
 
-**Study 2 Step 12A — ACTIVE, 2026-10-09. Packages 1 and 2 complete.**
+**Study 2 Step 12A — ACTIVE, ready for researcher closure review, 2026-10-09.**
+**Packages 1, 2 and 3 complete; Step 12A is NOT automatically CLOSED.**
 Current implementation milestone: the commit containing this handoff update,
 on `codex/publication-human-core-annotation-ui`, following
-`66b9832f4f25a9901fff6499f9dbd0e085eca2e3` (GitHub batch validation).
+`fadd2ef79b6a8404280341eb35be33e1729c3422` (Package 3A request/response contracts).
 The unrelated `src/ontology/catalog-v001.xml` modification remains local.
 
 Package 1 completed at `2d6c3022e627cb148234858cc881d0463d797be4` with
@@ -21,7 +22,8 @@ binding solely as possible Example context. Acquisition/enrichment stays deferre
 
 Package 2 now provides source-specific batch candidate validation for every frozen
 active target: HydroShare at `f2d4ac38c821e376212ed252dc5b0b28d176ebcf`,
-GitHub at `66b9832f4f25a9901fff6499f9dbd0e085eca2e3`, and Hub in this commit.
+GitHub at `66b9832f4f25a9901fff6499f9dbd0e085eca2e3`, and Hub at
+`0a1e8c1990fbc62e07229b443ae6aec998f70a1b`.
 Existing representative entry points remain compatible. Hub checks exact trusted
 endpoints, independent multi-unit evidence, explicit page-local parent-relation
 paths, scoped source failures, actual dependencies and duplicate assertions while
@@ -34,12 +36,37 @@ Hub milestone validation: 19 focused synthetic T1/T2 tests passed (11 candidate
 validation tests, including legacy Procedure compatibility; four literal-evidence
 and four Example-context regression tests). No broad suites were run.
 
-**Next, separately authorized Package 3:** Source-specific request/response
-contracts and deterministic offline replay/orchestration with immutable provenance,
-source completeness, processing failures and candidate dispositions. Preserve
-independent candidates through identifiable local failures, exclude only actual
-dependents, and never repair authentic output. No shared framework redesign or
-automatic cross-source identity resolution.
+**Package 3 — complete.** Package 3A at
+`fadd2ef79b6a8404280341eb35be33e1729c3422` adds deterministic source-specific
+request construction and strict recorded-response parsing; 25 focused tests passed.
+Package 3B in this commit adds the three `offline_pipeline.py` adapters and their
+focused tests. Replay snapshots caller-trusted request inputs, preserves exact
+recorded response bytes/hash, links request/contract/source identities, and invokes
+the unchanged batch validators with only selected source units. An optional
+caller-supplied recorded-request digest is checked; no provider association is
+fabricated when it is absent.
+
+Parse-invalid candidates remain unchanged in provenance and are quarantined from
+validation; actual dependent references remain for existing validators to resolve
+or hold. Independent candidates survive local failures. GitHub's six controlled
+seed endpoints are separated from caller endpoints; HydroShare's accepted endpoint
+and authorized-stub inventories remain distinct. Frozen report JSON, its hash and
+exact response bytes provide immutable replay records; inspection views are detached.
+Request-level source completeness remains separate from validator completeness for
+the intentionally restricted unit view. Explicit abstentions remain recorded claims
+or local errors, never inferred from empty output or source failure. Pending semantic
+conditions, unresolved Method/Hub-parent records and duplicate citations are preserved.
+Semantic acceptance stays unevaluated and KG authorization stays false.
+
+Package 3B validation: **23 focused synthetic T1/T2 checks passed** (9 HydroShare,
+7 GitHub, 7 Hub), covering round trips, hashes/immutability, inventory mappings,
+parse/validation failure isolation, selected-unit enforcement, incomplete sources,
+duplicate decisions, conditional gates and zero provider/graph effects. No existing
+request contract, validator, reader, ontology or Publication component changed.
+No broad suites, real-corpus processing, provider calls or graph writes occurred.
+
+**Next decision:** researcher review of Step 12A closure readiness. This implementation
+milestone does not itself close Step 12A or authorize a live pilot or production.
 
 Step 12B focused integrated validation, Step 12C separately approved live pilot,
 Step 13 production and Step 14 alignment remain distinct later work. No live calls
@@ -106,9 +133,9 @@ cumulative counts are historical; use the corrected current baseline above.
 
 Step 11 remains FROZEN_CLOSED. Step 12A is active under the researcher's bounded
 implementation authorizations. Use the frozen v0.3 contract, acceptance record
-and ontology v0.1.6. Package 2 is complete; Package 3 requires its own coding
-authorization. Do not rerun accepted source audits, corrections, reference enrichment or frozen
-Publication evaluations.
+and ontology v0.1.6. Packages 1–3 are complete; Step 12A awaits researcher closure
+review. Further work requires its own authorization. Do not rerun accepted source
+audits, corrections, reference enrichment or frozen Publication evaluations.
 
 ## Deferred scope and frozen Step 11 boundary
 
