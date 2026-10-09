@@ -21,7 +21,6 @@ secrets.*
 
 # Agent-development local instructions
 AGENTS.md
-/docs/codex/
 
 # Python
 __pycache__/
