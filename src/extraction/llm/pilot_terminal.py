@@ -175,7 +175,7 @@ def transport(wire, key, timeout):
 
 
 def execute(root, request_id, approval_raw, approval_digest, *, timeout=1800, progress_interval=15,
-            send=transport, key_loader=None, progress=print):
+            send=transport, key_loader=None, progress=print, wave_token=None):
     """Dispatch exactly once after approval; ambiguous/crashed attempts block all IDs."""
     if request_id == 'HS-01':
         raise ValueError('historical_request_not_dispatchable')
@@ -194,6 +194,12 @@ def execute(root, request_id, approval_raw, approval_digest, *, timeout=1800, pr
     lock.mkdir()  # atomic global lock, survives process crash
     attempt = state / request_id  # one attempt per frozen request, across approvals
     try:
+        wave_lock = state / 'wave.lock'
+        if wave_lock.exists():
+            if wave_token is None or (wave_lock / 'owner').read_text() != wave_token:
+                raise ValueError('wave_dispatch_in_progress')
+        elif wave_token is not None:
+            raise ValueError('wave_lock_missing')
         if (state / 'STOP').exists():
             raise ValueError('dispatch_blocked')
         attempt.mkdir()
