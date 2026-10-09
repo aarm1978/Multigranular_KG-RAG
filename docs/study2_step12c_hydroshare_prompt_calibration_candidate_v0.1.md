@@ -1,7 +1,7 @@
 # Step 12C — Prospective HydroShare prompt calibration candidate v0.1
 
-**DRAFT / NOT AUTHORIZED — wording, implementation and any development call require
-separate researcher approval.** Checkpoint:
+**Wording and opt-in version mechanism APPROVED; offline implementation complete.**
+**Live calibration NOT AUTHORIZED; Step 12C remains open.** Original proposal checkpoint:
 `a1faeb5ac7843ce5de9add45e095b37065aed306`.
 
 ## Authority and historical boundary
@@ -28,7 +28,8 @@ Preserve HS-01 exactly:
 | Original replay report | `c894965f4506242f92f1e4f9a30d82285cefea7d5ecbe5893fc330c0901ee19a` |
 
 All eight original records remain machine-validated, with semantic acceptance
-unevaluated and KG authorization false. No replay was rerun for this drafting task.
+unevaluated and KG authorization false. The original drafting task did not rerun
+replay; the implementation verification below reproduced it offline without writes.
 
 ## What the frozen authorities establish, and what remains interpretive
 
@@ -70,7 +71,7 @@ A weaker `mentionsTool` proposal would still need supported Tool typing and its 
 independent evidence. It cannot rescue an invalid Tool node. No original edge is
 converted, deleted or downgraded by this draft.
 
-## Proposed general prompt addition (prospective only)
+## Approved general prompt addition (prospective only)
 
 > Distinguish an identifiable computational Tool from a source-code artifact that
 > merely implements part of another program. A filename, extension, executability,
@@ -99,34 +100,51 @@ converted, deleted or downgraded by this draft.
 
 This addition deliberately contains no HS-01 names or output-specific corrections.
 It proposes no new Tool eligibility threshold such as packaging, publication,
-separate distribution or runtime proof. Researcher confirmation of its interpretation
-is required before it becomes active guidance.
+separate distribution or runtime proof. The researcher approved this wording for explicit prospective opt-in use; original
+HS-01 semantic ambiguities remain unresolved.
 
-## Smallest versioned implementation proposal
+## Approved version mechanism and implementation status
 
 Do not edit the existing `INSTRUCTIONS` in place. `build_request()` embeds them in
 the hashed body, and offline replay rebuilds that body. An unversioned edit would
 break historical reconstruction even with the same source units.
 
-Propose an explicit opt-in request variant:
+Implemented explicit opt-in request variant:
 `hydroshare-request/1.1.0`, with immutable prompt identifier
 `hydroshare-tool-role-clarification/0.1.0`. Keep the existing default
 `hydroshare-request/1.0.0` and its exact instruction bytes/serialization unchanged.
-A small version resolver would append the approved text only on explicit selection
-of 1.1.0 and include the prompt identifier in that new hashed body. Unknown variants
+The version selector appends the approved text only on explicit selection
+of 1.1.0 and includes the prompt identifier in that new hashed body. Unknown variants
 fail closed. No global monkey-patching, silent latest-version default or post-build
 prompt replacement is acceptable.
 
-Keep `hydroshare-response/1.0.0` if its field/evidence schema remains unchanged.
-The recorded-response parser must explicitly recognize the new **request** version;
+`hydroshare-response/1.0.0` and its field/evidence schema remain unchanged.
+The recorded-response parser explicitly recognizes the new **request** version;
 new replay inputs must carry the opt-in variant so the same builder reconstructs
 its exact hash. Preserve the legacy replay path and report bytes. Existing report
 fields already retain the complete request/version; no generic orchestration
 framework is needed. Provider envelopes and approval hashes must be newly generated
 for the prospective case; never reuse HS-01 approval or overwrite its attempt.
-Expected future scope: HydroShare request contract, narrowly necessary replay/version
-plumbing, prospective preflight association and focused tests. No changes are
-implemented or authorized here.
+Implementation changes only the HydroShare request contract plus focused tests.
+`build_request(..., request_version="hydroshare-request/1.1.0")` selects the approved
+addition and hashes `promptIdentifier` with its instructions. Omitting the argument
+or explicitly choosing 1.0.0 retains the exact legacy body. Parsing recognizes
+both request versions, retains response 1.0.0, and checks the prospective prompt
+identifier/wording. Unknown or malformed versions fail closed.
+
+The existing offline replay already forwards `request_inputs` to `build_request`;
+passing the same explicit `request_version` there reconstructs the selected hash.
+No replay-module or provider-envelope change was needed. New live preflight and
+approval artifacts for a separately selected development case remain future work.
+
+Focused validation passed **22 tests**: four new version tests plus directly affected
+existing HydroShare request/replay tests. It checks pinned pre-change synthetic request and
+replay hashes, deterministic opt-in construction, version/hash routing, malformed
+versions and unchanged local failure isolation. A bounded offline reconstruction
+also verified the original HS-01 request SHA-256 and byte-identical saved replay
+report listed above. All 32 files in the inspected HS-01 terminal/analysis and
+three-request preflight directories retained their original hashes. No provider
+call, new response, historical artifact write or semantic adjudication occurred.
 
 Authority issue: if adjudication requires a new categorical exclusion of notebooks
 or helper scripts, or a new execution-proof requirement, that exceeds this draft's
@@ -135,12 +153,10 @@ policy as an implementation fix or silently alter frozen authorities.
 
 ## Prospective checks and precise approval questions
 
-After separate implementation approval, add focused offline checks for byte-identical
-legacy requests/replay, deterministic new-variant hashing, explicit version routing,
-unknown-version failure and unchanged local failure isolation. Synthetic contrasts
+The completed offline checks above establish version compatibility and routing,
+not whether a model interprets semantics correctly. A prospective semantic review
 can distinguish a named functional program, a merely called helper, use evidence,
-conditional reproducibility and a described workflow. These check request content
-and plumbing, not whether a model interprets semantics correctly.
+conditional reproducibility and a described workflow.
 
 Then propose **one separately approved development request, not HS-01**: choose one
 other eligible HydroShare abstract/verified README with enough context to judge
@@ -151,7 +167,7 @@ unchanged, and review all proposals/omissions qualitatively. No forced target yi
 paired improvement claim, Recall/F1 or new gold labels follow from one development
 case. Do not rerun HS-01 or consume its reserved historical identity.
 
-Researcher decisions required:
+Researcher decision status:
 
 1. Does the notebook's functional description suffice for Tool typing, and what
    additional selected-source evidence, if any, distinguishes the helper as a Tool?
@@ -159,13 +175,14 @@ Researcher decisions required:
 2. Does each edge's **already supplied** evidence support DatasetResource usesTool?
    In particular, how should the helper edge's two fragments be interpreted without
    treating an internal call as sufficient by itself?
-3. Is the proposed general wording a faithful clarification of the frozen profile,
-   including valid-Tool prerequisites for mentionsTool and described-not-executed
-   Workflow? Approve, revise or retain uncertainty; do not infer consensus.
-4. Approve the explicit 1.1.0 opt-in version mechanism and legacy hash/replay invariant?
+3. **Approved for prospective opt-in implementation:** The general wording clarifies
+   the frozen profile, including valid-Tool prerequisites for mentionsTool and
+   described-not-executed Workflow; it does not adjudicate questions 1–2.
+4. **Approved and implemented:** Explicit 1.1.0 opt-in version mechanism and legacy hash/replay invariant.
 5. Separately approve the new development case, exact source/context, call budget
-   and review procedure? Until then, no implementation or live calibration occurs.
+   and review procedure? Until then, no live calibration occurs.
 
-Only this draft document changes. Original pilot artifacts, active instructions,
-selected envelopes, frozen contracts, ontology, evaluations, graphs and the tracked
-handoff remain unchanged.
+Only the HydroShare request contract, focused version tests and this status record
+change. Default legacy instructions, original pilot artifacts, selected envelopes,
+frozen contracts, ontology, evaluations, graphs and the tracked handoff remain
+unchanged. This implementation does not complete live calibration or Step 12C.

@@ -16,6 +16,30 @@ REQUEST_VERSION = "hydroshare-request/1.0.0"
 RESPONSE_VERSION = "hydroshare-response/1.0.0"
 FAMILY = "hydroshare"
 
+PROSPECTIVE_REQUEST_VERSION = "hydroshare-request/1.1.0"
+PROMPT_IDENTIFIER = "hydroshare-tool-role-clarification/0.1.0"
+# Approved wording; legacy INSTRUCTIONS below must remain byte-identical.
+CLARIFICATION_INSTRUCTIONS = ('Distinguish an identifiable computational Tool from a source-code artifact that merely '
+ 'implements part of another program. A filename, extension, executability, or statement that one '
+ 'file calls another does not by itself establish a separate Tool entity. A notebook may qualify '
+ 'when the selected prose sufficiently identifies its functional software role; do not '
+ 'automatically accept or exclude notebooks.',
+ 'Evaluate Tool identity and each resource-to-Tool relation separately. Propose usesTool only when '
+ "independently supplied evidence explicitly establishes this DatasetResource's use of that valid "
+ 'Tool. Internal code dependencies, availability of reproducibility code, or instructions about '
+ 'what will happen if code is run do not by themselves establish the stronger use relation. '
+ 'Interpret multiple supplied fragments together without inventing missing links; give each '
+ "fragment's contribution. Source statements of use do not require external execution testing.",
+ 'mentionsTool is weaker than usesTool, but still requires a valid Tool entity and independent '
+ 'evidence that the resource mentions it. If an entity typing or a proposed relation lacks '
+ 'support, omit that unsupported assertion rather than force it into an available class or '
+ 'predicate. Preserve independent supported proposals; explicit abstention records retain the '
+ "existing contract's preconditions.",
+ 'A Workflow describes a substantive scientific or data-processing sequence and its meaningful '
+ 'actions/dependencies. Describing that sequence need not establish verified execution or success. '
+ 'Do not infer a Workflow solely from filenames, directory arrangements or incidental installation '
+ 'instructions.')
+
 
 def _text(value: Any) -> bool:
     """Require nonempty exact strings without trimming caller content."""
@@ -47,7 +71,8 @@ def _schema() -> dict[str, Any]:
 
 
 def _finish(owner: dict, units: list[dict], selection: list[str], completeness: dict,
-            diagnostics: list, endpoints: Any, assertions: Any, extra: dict | None = None) -> dict:
+            diagnostics: list, endpoints: Any, assertions: Any, extra: dict | None = None,
+            request_version: str = REQUEST_VERSION) -> dict:
     """Snapshot trusted request context; caller inventories are never model output."""
     profile = get_profile(FAMILY)
     if not isinstance(endpoints, list) or not isinstance(assertions, list):
@@ -76,6 +101,9 @@ def _finish(owner: dict, units: list[dict], selection: list[str], completeness: 
         "sourceDiagnostics": deepcopy(diagnostics), "acceptedEndpoints": deepcopy(endpoints),
         "acceptedAssertions": deepcopy(assertions), "instructions": deepcopy(INSTRUCTIONS), "responseContract": _schema(),
         "semanticStatus": "not_evaluated", "kgAuthorization": False, **deepcopy(extra or {})}
+    if request_version == PROSPECTIVE_REQUEST_VERSION:
+        body.update(schemaVersion=request_version, promptIdentifier=PROMPT_IDENTIFIER,
+                    instructions=deepcopy(INSTRUCTIONS) + list(CLARIFICATION_INSTRUCTIONS))
     try:
         digest = hashlib.sha256(_json(body).encode("utf-8")).hexdigest()
     except (TypeError, ValueError, RecursionError):
@@ -123,12 +151,17 @@ def parse_recorded_response(raw: bytes | str, *, request: Mapping[str, Any]) -> 
         return fail("trusted_request_not_ready")
     body = request.get("request")
     try:
-        if (not isinstance(body, Mapping) or body.get("schemaVersion") != REQUEST_VERSION
+        if (not isinstance(body, Mapping) or body.get("schemaVersion") not in (REQUEST_VERSION, PROSPECTIVE_REQUEST_VERSION)
                 or body.get("artifactFamily") != FAMILY
                 or hashlib.sha256(_json(body).encode()).hexdigest() != request.get("requestSha256")):
             return fail("trusted_request_contract_or_hash_mismatch")
     except (TypeError, ValueError, RecursionError):
         return fail("trusted_request_malformed")
+    if body["schemaVersion"] == PROSPECTIVE_REQUEST_VERSION:
+        if (body.get("promptIdentifier") != PROMPT_IDENTIFIER
+                or body.get("instructions") != INSTRUCTIONS + list(CLARIFICATION_INSTRUCTIONS)):
+            return fail("trusted_request_prompt_variant_mismatch")
+        result["requestContractVersion"] = PROSPECTIVE_REQUEST_VERSION
     result["requestSha256"] = request["requestSha256"]
 
     def pairs(items: list) -> dict:
@@ -260,7 +293,8 @@ def build_request(*, accepted_owner_id: str, trusted_provenance: Mapping[str, An
                   readme_results: list[Mapping[str, Any]], input_complete: bool,
                   accepted_endpoints: list[Mapping[str, Any]] | None = None,
                   authorized_stubs: list[Mapping[str, Any]] | None = None,
-                  accepted_assertions: list[Mapping[str, Any]] | None = None) -> dict[str, Any]:
+                  accepted_assertions: list[Mapping[str, Any]] | None = None,
+                  request_version: str = REQUEST_VERSION) -> dict[str, Any]:
     """Build from caller-owned abstract/README read results, without acquisition.
 
     input_complete attests supplied source coverage, not semantic completeness.
@@ -268,7 +302,10 @@ def build_request(*, accepted_owner_id: str, trusted_provenance: Mapping[str, An
     Selecting a failed/missing unit fails the request; unselected source failures
     remain diagnostics and make the request incomplete. Selection order is exact.
     A computed-only digest remains computed-only; no acquisition claim is added.
+    request_version is explicit opt-in; omission preserves the historical 1.0.0 body.
     """
+    if not isinstance(request_version, str) or request_version not in (REQUEST_VERSION, PROSPECTIVE_REQUEST_VERSION):
+        return {"status": "request_failed", "diagnostics": [{"reason": "unsupported_request_version"}]}
     from src.extraction.llm.datasets.source_units import AbstractSourceUnit, build_abstract_source_unit, bind_readme_evidence
 
     diagnostics, reads, sources = [], [], {}
@@ -356,4 +393,4 @@ def build_request(*, accepted_owner_id: str, trusted_provenance: Mapping[str, An
         ([] if accepted_endpoints is None else accepted_endpoints) + stubs,
         [] if accepted_assertions is None else accepted_assertions,
         {"authorizedStubs": deepcopy(stubs), "acceptedEndpoints": deepcopy(accepted_endpoints or []),
-         "trustedProvenance": deepcopy(dict(trusted_provenance))})
+         "trustedProvenance": deepcopy(dict(trusted_provenance))}, request_version=request_version)
