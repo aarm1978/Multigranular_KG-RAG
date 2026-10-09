@@ -8,31 +8,38 @@
 
 ## Current checkpoint
 
-**Study 2 Step 12A — ACTIVE, 2026-10-09. Package 1 of 3 complete.**
-Current accepted implementation checkpoint:
-`2d6c3022e627cb148234858cc881d0463d797be4`, committed and pushed to
-`codex/publication-human-core-annotation-ui` after 29 focused synthetic T1/T2
-checks passed. Eight source-family code/test files changed; no corpus/provider/
-graph work. The unrelated `src/ontology/catalog-v001.xml` change remains local.
+**Study 2 Step 12A — ACTIVE, 2026-10-09. Packages 1 and 2 complete.**
+Current implementation milestone: the commit containing this handoff update,
+on `codex/publication-human-core-annotation-ui`, following
+`66b9832f4f25a9901fff6499f9dbd0e085eca2e3` (GitHub batch validation).
+The unrelated `src/ontology/catalog-v001.xml` modification remains local.
 
-Package 1 adds caller-verified HydroShare README authority/section reading and
-literal binding; reusable GitHub literal binding with scoped source diagnostics;
-trusted hash/offset-bound descriptive-passage eligibility for changelog and
-contributing files; and Hub displayed-fence binding solely as possible Example
-context. README acquisition/enrichment remains deferred. Hub parent gates remain
-pending; structural/literal success never implies semantic acceptance or KG
-permission. Existing representative Variable, RepositoryPurpose and Procedure
-validators and frozen target profiles remain foundations, not complete coverage.
+Package 1 completed at `2d6c3022e627cb148234858cc881d0463d797be4` with
+29 focused synthetic T1/T2 checks: caller-verified HydroShare README authorities,
+GitHub descriptive-source/literal evidence interfaces, and Hub displayed-fence
+binding solely as possible Example context. Acquisition/enrichment stays deferred.
 
-**Remaining, separately authorized packages:**
-- **Package 2:** Complete source-specific candidate validation for every frozen
-  active target, exact endpoint references, dependency propagation, duplicate
-  handling and explicit pending semantic/endpoint gates. Preserve independently
-  valid candidates when failures are identifiable and local; exclude actual
-  dependents only. No shared candidate framework or automatic identity resolution.
-- **Package 3:** Source-specific request/response contracts and deterministic
-  offline replay/orchestration with immutable provenance, source completeness,
-  processing failures and candidate dispositions. Never repair authentic output.
+Package 2 now provides source-specific batch candidate validation for every frozen
+active target: HydroShare at `f2d4ac38c821e376212ed252dc5b0b28d176ebcf`,
+GitHub at `66b9832f4f25a9901fff6499f9dbd0e085eca2e3`, and Hub in this commit.
+Existing representative entry points remain compatible. Hub checks exact trusted
+endpoints, independent multi-unit evidence, explicit page-local parent-relation
+paths, scoped source failures, actual dependencies and duplicate assertions while
+preserving original proposals and citations. Example fences remain possible context;
+Parameter requires prose context. Parent acceptance and other semantic conditions
+remain pending: structural/literal success is never semantic acceptance or KG
+permission. No corpus/provider/graph execution occurred.
+
+Hub milestone validation: 19 focused synthetic T1/T2 tests passed (11 candidate
+validation tests, including legacy Procedure compatibility; four literal-evidence
+and four Example-context regression tests). No broad suites were run.
+
+**Next, separately authorized Package 3:** Source-specific request/response
+contracts and deterministic offline replay/orchestration with immutable provenance,
+source completeness, processing failures and candidate dispositions. Preserve
+independent candidates through identifiable local failures, exclude only actual
+dependents, and never repair authentic output. No shared framework redesign or
+automatic cross-source identity resolution.
 
 Step 12B focused integrated validation, Step 12C separately approved live pilot,
 Step 13 production and Step 14 alignment remain distinct later work. No live calls
@@ -99,8 +106,8 @@ cumulative counts are historical; use the corrected current baseline above.
 
 Step 11 remains FROZEN_CLOSED. Step 12A is active under the researcher's bounded
 implementation authorizations. Use the frozen v0.3 contract, acceptance record
-and ontology v0.1.6. Packages 2–3 require their own coding authorization; do not
-rerun accepted source audits, corrections, reference enrichment or frozen
+and ontology v0.1.6. Package 2 is complete; Package 3 requires its own coding
+authorization. Do not rerun accepted source audits, corrections, reference enrichment or frozen
 Publication evaluations.
 
 ## Deferred scope and frozen Step 11 boundary

@@ -1,4 +1,4 @@
-"""Four synthetic T1/T2 groups for the bounded Hub Procedure validator."""
+"""Focused synthetic T1/T2 coverage for Hub legacy and batch validation."""
 
 from __future__ import annotations
 
@@ -210,6 +210,264 @@ class HubProcedureValidationTests(unittest.TestCase):
         self.assertNotIn("nodes", second)
         self.assertNotIn("edges", second)
         self.assertNotIn("abstained_no_evidence", repr(second))
+
+
+
+
+class HubBatchValidationTests(unittest.TestCase):
+    """Synthetic complete-profile checks, including dependency closure."""
+
+    def setUp(self):
+        """Reuse only the synthetic page fixture, without running legacy tests."""
+        fixture = HubProcedureValidationTests()
+        fixture.setUp()
+        self.page, self.reader = fixture.page, fixture.reader
+        self.mapping, self.page_id, self.section = fixture.mapping, fixture.page_id, fixture.section
+        self.fragment = fixture.fragment
+        from src.extraction.llm.semantic_target_profiles import get_profile
+        self.profile = get_profile("ciroh_hub")
+        self.endpoints = [dict(endpointID="exact-dataset", inventoryId="A-D01", **{"class": "DatasetResource"}),
+                          dict(endpointID="exact-repo", inventoryId="A-C01", **{"class": "Repository"})]
+
+    def ref(self, identifier, kind="candidate_node"):
+        """Construct an explicit reference without inferring identity."""
+        return {"referenceType": kind, "referenceID": identifier}
+
+    def node(self, identifier, cid=None):
+        """Create a literal-backed node with its frozen declaration name."""
+        row = {"candidateID": cid or identifier, "inventoryId": identifier,
+               "class": self.profile["entities"][identifier]["declaration"]["name"],
+               "label": identifier, "evidence": [self.fragment("Prepare café 🌊 inputs for the run.")]}
+        if identifier in {"A-D01", "A-C01"}:
+            row["endpoint"] = self.ref("exact-dataset" if identifier == "A-D01" else "exact-repo", "accepted_endpoint")
+        return row
+
+    def edge(self, identifier, source, target, cid=None):
+        """Construct independently supplied edge evidence."""
+        return {"candidateID": cid or identifier, "inventoryId": identifier,
+            "relation": self.profile["relations"][identifier]["declaration"]["name"],
+            "source": source, "target": target,
+            "evidence": [self.fragment("This page describes the preparation procedure.")]}
+
+    def batch(self):
+        """Cover every frozen entity/relation, using explicit parent paths."""
+        nodes = [self.node(i) for i in self.profile["entities"]]
+        owner = self.ref(self.page_id, "accepted_endpoint")
+        signatures = {"C-DC17": (owner, self.ref("A-DOM03a")),
+            "C-DC19": (self.ref("A-DOM02"), self.ref("A-DOM03b")),
+            "C-DC07": (owner, self.ref("A-DOM02")), "C-DC16": (owner, self.ref("A-DOM03c")),
+            "C-DC27": (owner, self.ref("A-D01")), "C-DC28": (owner, self.ref("A-P13")),
+            "D-22": (self.ref("A-DOM03d"), self.ref("A-C01")),
+            "C-DC20": (owner, self.ref("A-DC05")), "C-DC10": (self.ref("A-DC05"), self.ref("A-DC06")),
+            "C-DC09": (self.ref("A-DC05"), self.ref("A-C11")),
+            "C-DC12": (self.ref("A-DC06"), self.ref("A-DC08")),
+            "C-DC11": (self.ref("A-DC05"), self.ref("A-DOM12"))}
+        for row in nodes:
+            path = {"A-DC06": ["C-DC20", "C-DC10"], "A-DC08": ["C-DC20", "C-DC10", "C-DC12"],
+                    "A-DOM12": ["C-DC20", "C-DC11"]}.get(row["inventoryId"])
+            if path:
+                row["parentPath"] = [self.ref(i, "candidate_edge") for i in path]
+        return {"candidateNodes": nodes, "candidateEdges": [self.edge(i, *signatures[i]) for i in self.profile["relations"]]}
+
+    def validate(self, payload=None, **kwargs):
+        """Call only the offline batch entry point."""
+        from src.extraction.llm.documents.candidate_validation import validate_hub_candidates
+        return validate_hub_candidates(kwargs.pop("page", self.page), kwargs.pop("reader", self.reader),
+            self.batch() if payload is None else payload, accepted_page_id=kwargs.pop("page_id", self.page_id),
+            accepted_section_mapping=self.mapping, accepted_endpoints=kwargs.pop("endpoints", self.endpoints), **kwargs)
+
+    def index(self, result):
+        """Index detached results by authentic candidate identifier."""
+        return {r["candidateID"]: r for r in result["candidateChecks"]}
+
+    def test_complete_allowlist_signatures_and_pending_gates(self):
+        """Every active target binds, while parent/Method semantics remain pending."""
+        result = self.validate()
+        records = self.index(result)
+        self.assertEqual(set(records), set(self.profile["entities"]) | set(self.profile["relations"]))
+        for rec in records.values():
+            self.assertTrue(rec["targetProfileCheck"]["targetStructuralCompatibility"], rec)
+            self.assertTrue(rec["boundEvidence"])
+            self.assertIn(rec["disposition"], {"validated", "suppressed_duplicate", "unresolved_condition"}, rec)
+            self.assertFalse(rec["kgAuthorization"])
+            self.assertEqual(rec["semanticStatus"], "not_evaluated")
+        for key in ("A-DC06", "A-DC08", "A-DOM12", "C-DC10", "C-DC12", "C-DC11", "A-P13", "C-DC28"):
+            self.assertEqual(records[key]["disposition"], "unresolved_condition")
+        self.assertEqual(records["C-DC20"]["disposition"], "validated")
+        for source, target in (("A-DOM02", "A-DOM03e"), ("A-DOM03e", "A-DOM02")):
+            payload = {"candidateNodes": [self.node(source), self.node(target)],
+                       "candidateEdges": [self.edge("C-DC19", self.ref(source), self.ref(target))]}
+            self.assertEqual(self.index(self.validate(payload))["C-DC19"]["disposition"], "validated")
+        for identifier in self.profile["relations"]:
+            edge = self.edge(identifier, self.ref("exact-dataset", "accepted_endpoint"),
+                             self.ref("exact-repo", "accepted_endpoint"))
+            payload = {"candidateNodes": [], "candidateEdges": [edge]}
+            self.assertEqual(self.index(self.validate(payload))[identifier]["disposition"], "rejected_invalid_assertion")
+
+    def test_multiunit_coordinates_duplicates_and_exact_endpoints(self):
+        """Original Unicode/Section coordinates and repeated citations survive."""
+        payload = self.batch()
+        tool = next(n for n in payload["candidateNodes"] if n["inventoryId"] == "A-DOM02")
+        tool["evidence"] = [self.fragment("Prepare café 🌊 inputs for the run.", contribution="identity"),
+                            self.fragment("Save the prepared inputs.", contribution="context")]
+        tool["evidence"].append(deepcopy(tool["evidence"][0]))
+        duplicate = deepcopy(next(e for e in payload["candidateEdges"] if e["inventoryId"] == "C-DC07"))
+        duplicate["candidateID"] = "duplicate"
+        payload["candidateEdges"].append(duplicate)
+        records = self.index(self.validate(payload))
+        self.assertTrue(records["duplicate"]["suppressedDuplicate"])
+        self.assertTrue(records["duplicate"]["boundEvidence"])
+        self.assertEqual(len(records["A-DOM02"]["boundEvidence"]), 3)
+        for span in records["A-DOM02"]["boundEvidence"]:
+            lo, hi = span["startOffsetInAuthority"], span["endOffsetInAuthority"]
+            self.assertEqual(self.page["content_mdx"][lo:hi], span["evidenceText"])
+            self.assertEqual(span["sectionID"], self.section)
+            self.assertEqual(span["content_sha256"], self.page["content_sha256"])
+            self.assertEqual(span["evidenceHash"], hashlib.sha256(span["evidenceText"].encode()).hexdigest())
+        accepted = [{"assertionID": "already", "inventoryId": "C-DC27", "relation": "describesDataset",
+                     "sourceID": self.page_id, "targetID": "exact-dataset"}]
+        self.assertEqual(self.index(self.validate(accepted_assertions=accepted))["C-DC27"]["duplicateOf"], ["already"])
+        self.assertNotIn("validated", [self.index(self.validate(endpoints=[]))["A-D01"]["disposition"]])
+        self.assertEqual(self.validate(page_id="invented")["status"], "failed_source_or_evidence_binding")
+
+    def test_failure_isolation_paths_and_order_independence(self):
+        """A failed required relation holds descendants, not unrelated nodes."""
+        payload = self.batch()
+        next(e for e in payload["candidateEdges"] if e["inventoryId"] == "C-DC20")["evidence"] = []
+        records = self.index(self.validate(payload))
+        for key in ("A-DC06", "A-DC08", "A-DOM12", "C-DC10", "C-DC12", "C-DC11"):
+            self.assertEqual(records[key]["disposition"], "unresolved_endpoint", records[key])
+        self.assertEqual(records["A-DC05"]["disposition"], "validated")
+        self.assertEqual(records["C-DC07"]["disposition"], "validated")
+        payload["candidateNodes"].reverse()
+        payload["candidateEdges"].reverse()
+        reversed_records = self.index(self.validate(payload))
+        self.assertEqual({k: r["disposition"] for k, r in records.items()},
+                         {k: r["disposition"] for k, r in reversed_records.items()})
+        payload = self.batch()
+        next(n for n in payload["candidateNodes"] if n["inventoryId"] == "A-DC08")["parentPath"] = []
+        records = self.index(self.validate(payload))
+        self.assertEqual(records["A-DC08"]["disposition"], "unresolved_endpoint")
+        self.assertEqual(records["C-DC12"]["disposition"], "unresolved_endpoint")
+        self.assertEqual(records["A-DOM12"]["disposition"], "unresolved_condition")
+
+    def test_fence_isolation_visibility_and_scoped_source_failures(self):
+        """Fenced content is possible Example context, never Parameter prose."""
+        payload = self.batch()
+        for node in payload["candidateNodes"]:
+            if node["inventoryId"] in {"A-DC08", "A-DOM12"}:
+                node["evidence"] = [self.fragment("print('example')")]
+        records = self.index(self.validate(payload))
+        self.assertEqual(records["A-DC08"]["contextDisposition"], "possible_example_context")
+        self.assertEqual(records["A-DC08"]["disposition"], "unresolved_condition")
+        self.assertEqual(records["A-DOM12"]["disposition"], "needs_review")
+        self.assertFalse(records["A-DOM12"]["boundEvidence"])
+        reader = deepcopy(self.reader)
+        bad_uid = self.fragment("Save the prepared inputs.")["sourceUnitID"]
+        reader["diagnostics"].append({"status": "failed_source_or_evidence_binding", "sourceUnitID": bad_uid, "reason": "local_failure"})
+        payload = self.batch()
+        payload["candidateNodes"][0]["evidence"] = [self.fragment("Save the prepared inputs.")]
+        result = self.validate(payload, reader=reader)
+        records = self.index(result)
+        self.assertFalse(result["inputComplete"])
+        self.assertEqual(records[payload["candidateNodes"][0]["candidateID"]]["disposition"], "failed_source_or_evidence_binding")
+        self.assertEqual(records["C-DC20"]["disposition"], "validated")
+        reader["diagnostics"][-1].pop("sourceUnitID")
+        self.assertEqual(self.index(self.validate(reader=reader))["C-DC20"]["disposition"], "failed_source_or_evidence_binding")
+
+    def test_untrusted_metadata_quotes_and_global_failures(self):
+        """Malformed identifiable assertions isolate; unidentified envelopes fail."""
+        for change in ({"inventoryId": "D-26"}, {"inventoryId": "A-DOM03"}, {"inventoryId": []}, {"gates": {"accepted_procedure_or_step_parent": True}},
+                       {"evidence": [{"sourceUnitID": self.reader["sourceUnits"][0]["sourceUnitID"], "evidenceText": "fabrication", "startLine": 1}]}):
+            payload = {"candidateNodes": [self.node("A-DOM02"), self.node("A-DC05")],
+                "candidateEdges": [self.edge("C-DC20", self.ref(self.page_id, "accepted_endpoint"), self.ref("A-DC05"))]}
+            payload["candidateNodes"][0].update(change)
+            records = self.index(self.validate(payload))
+            self.assertEqual(records[payload["candidateNodes"][0]["candidateID"]]["disposition"], "rejected_invalid_assertion")
+            self.assertEqual(records["C-DC20"]["disposition"], "validated")
+        for quote in ("fabrication", "Repeat"):
+            payload = {"candidateNodes": [self.node("A-DOM02")], "candidateEdges": []}
+            payload["candidateNodes"][0]["evidence"] = [{**self.fragment("Repeat"), "evidenceText": quote}]
+            records = self.index(self.validate(payload))
+            self.assertEqual(records[payload["candidateNodes"][0]["candidateID"]]["disposition"], "failed_source_or_evidence_binding")
+        payload = self.batch()
+        payload["candidateNodes"].append({})
+        self.assertEqual(self.validate(payload)["status"], "processing_failed")
+        payload = self.batch()
+        payload["candidateNodes"].append(deepcopy(payload["candidateNodes"][0]))
+        self.assertEqual(self.validate(payload)["status"], "processing_failed")
+        page = deepcopy(self.page)
+        page["content_mdx"] += "tamper"
+        self.assertEqual(self.validate(page=page)["status"], "failed_source_or_evidence_binding")
+
+    def test_accepted_parent_path_immutability_and_zero_external_effects(self):
+        """Exact accepted parents support paths without authorizing semantics."""
+        payload = self.batch()
+        originals = deepcopy((payload, self.page, self.reader, self.mapping, self.endpoints))
+        original_open = io.open
+
+        def guarded_open(file, mode="r", *args, **kwargs):
+            """Permit only frozen ontology specification reads."""
+            self.assertEqual(Path(file).resolve(), ONTOLOGY_PATH.resolve())
+            self.assertNotIn("w", mode)
+            return original_open(file, mode, *args, **kwargs)
+
+        with patch("io.open", side_effect=guarded_open), patch("socket.socket", side_effect=AssertionError("network")):
+            result = self.validate(payload)
+        self.assertEqual((payload, self.page, self.reader, self.mapping, self.endpoints), originals)
+        self.assertEqual(result, self.validate(payload))
+        result["originalPayload"]["candidateNodes"][0]["label"] = "detached"
+        self.assertEqual(payload, originals[0])
+        self.assertFalse(result["kgAuthorization"])
+        external = self.endpoints + [{"endpointID": "accepted-procedure", "inventoryId": "A-DC05", "class": "Procedure"}]
+        node = self.node("A-DC08", "example")
+        node["parentPath"] = [self.ref("accepted-parent", "accepted_assertion"), self.ref("attachment", "candidate_edge")]
+        edge = self.edge("C-DC12", self.ref("accepted-procedure", "accepted_endpoint"), self.ref("example"), "attachment")
+        assertion = {"assertionID": "accepted-parent", "inventoryId": "C-DC20", "relation": "hasProcedure",
+                     "sourceID": self.page_id, "targetID": "accepted-procedure"}
+        records = self.index(self.validate({"candidateNodes": [node], "candidateEdges": [edge]}, endpoints=external,
+                                          accepted_assertions=[assertion]))
+        self.assertTrue(records["example"]["parentPathStructurallyLinked"])
+        self.assertEqual(records["example"]["disposition"], "unresolved_condition")
+        # Exact accepted dependent endpoints still require the page-local path.
+        external.append({"endpointID": "accepted-example", "inventoryId": "A-DC08", "class": "Example"})
+        edge["target"] = self.ref("accepted-example", "accepted_endpoint")
+        edge["parentPath"] = [self.ref("accepted-parent", "accepted_assertion")]
+        records = self.index(self.validate({"candidateNodes": [], "candidateEdges": [edge]}, endpoints=external,
+                                          accepted_assertions=[assertion]))
+        self.assertTrue(records["attachment"]["parentPathStructurallyLinked"])
+        self.assertEqual(records["attachment"]["disposition"], "unresolved_condition")
+        edge.pop("parentPath")
+        records = self.index(self.validate({"candidateNodes": [], "candidateEdges": [edge]}, endpoints=external,
+                                          accepted_assertions=[assertion]))
+        self.assertEqual(records["attachment"]["disposition"], "unresolved_endpoint")
+
+
+    def test_parameter_prose_and_attachment_parent_agreement(self):
+        """Headings may provide context, but cannot establish parameter identity."""
+        external = self.endpoints + [
+            {"endpointID": "parent", "inventoryId": "A-DC05", "class": "Procedure"},
+            {"endpointID": "other-parent", "inventoryId": "A-DC05", "class": "Procedure"}]
+        accepted = [{"assertionID": "path", "inventoryId": "C-DC20", "relation": "hasProcedure",
+                     "sourceID": self.page_id, "targetID": "parent"}]
+        node = self.node("A-DOM12", "parameter")
+        node["parentPath"] = [self.ref("path", "accepted_assertion"), self.ref("attachment", "candidate_edge")]
+        node["evidence"] = [self.fragment("Guide", contribution="heading")]
+        edge = self.edge("C-DC11", self.ref("parent", "accepted_endpoint"), self.ref("parameter"), "attachment")
+        payload = {"candidateNodes": [node], "candidateEdges": [edge]}
+        records = self.index(self.validate(payload, endpoints=external, accepted_assertions=accepted))
+        self.assertEqual(records["parameter"]["disposition"], "needs_review")
+        node["evidence"].append(self.fragment("Prepare café 🌊 inputs for the run.", contribution="role claim"))
+        records = self.index(self.validate(payload, endpoints=external, accepted_assertions=accepted))
+        self.assertEqual(records["parameter"]["disposition"], "unresolved_condition")
+        self.assertIn("explanatory_parameter_prose", records["parameter"]["targetProfileCheck"]["pendingGates"])
+        alternative = deepcopy(edge)
+        alternative["candidateID"] = "wrong-parent"
+        alternative["source"] = self.ref("other-parent", "accepted_endpoint")
+        payload["candidateEdges"].append(alternative)
+        records = self.index(self.validate(payload, endpoints=external, accepted_assertions=accepted))
+        self.assertEqual(records["wrong-parent"]["disposition"], "unresolved_endpoint")
+        self.assertEqual(records["parameter"]["disposition"], "unresolved_condition")
 
 
 if __name__ == "__main__":
