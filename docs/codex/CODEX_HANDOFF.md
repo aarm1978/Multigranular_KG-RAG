@@ -8,8 +8,28 @@
 
 ## Current checkpoint
 
+**Study 2 Step 12B — CLOSED / ACCEPTED by the researcher, 2026-10-09.**
+**Next workstream: Step 12C pilot planning.**
+Accepted validation checkpoint: `cefc241d15cdc340a51b02ab654a68b998e189d5`
+on `codex/publication-human-core-annotation-ui`.
+Acceptance: [Step 12B offline validation acceptance](../handoffs/STUDY2_STEP12B_OFFLINE_VALIDATION_ACCEPTANCE.md).
+Codex reported 26 focused synthetic T1/T2 tests passing (10 HydroShare, 8 GitHub,
+8 Hub), including three new integration tests and the 23 existing replay tests.
+The new checks integrate mixed HydroShare abstract/README evidence, GitHub downloaded
+prose/notebook sources and own-product constraints, and Hub visible/fenced
+parent-dependent context. One new fixture required the existing per-fragment
+contribution descriptions; its focused rerun passed. No implementation fix was needed.
+The acceptance maps all seven frozen §9 criteria to direct replay evidence and
+previously accepted component coverage without claiming those components were rerun.
+Offline readiness is accepted; semantic accuracy, contextual completeness, authentic
+provider behavior and KG acceptance remain unproven. Pending gates and source-specific
+exclusions are unchanged. This documentation closure executes no tests or audits
+and authorizes no provider calls, corpus execution or graph writes.
+
+## Accepted Step 12A technical integration
+
 **Study 2 Step 12A — CLOSED / ACCEPTED by the researcher, 2026-10-09.**
-**Packages 1–3 complete. Next workstream: Step 12B focused integrated validation.**
+**Packages 1–3 complete; subsequent Step 12B acceptance is recorded above.**
 Accepted implementation checkpoint: `7abba6faa79867992870bf405e4c8768cb67cb14`
 on `codex/publication-human-core-annotation-ui`.
 Acceptance: [Step 12A technical integration acceptance](../handoffs/STUDY2_STEP12A_TECHNICAL_INTEGRATION_ACCEPTANCE.md).
@@ -69,9 +89,9 @@ duplicate decisions, conditional gates and zero provider/graph effects. No exist
 request contract, validator, reader, ontology or Publication component changed.
 No broad suites, real-corpus processing, provider calls or graph writes occurred.
 
-**Next workstream:** Step 12B focused integrated validation, with execution scope
-to be separately authorized. Step 12C separately approved live pilot, Step 13
-production and Step 14 alignment remain distinct later work. Pending semantic
+**Next workstream:** Step 12C pilot planning, with scope to be separately
+authorized. Live pilot execution requires separate approval. Step 13 production
+and Step 14 alignment remain distinct later work. Pending semantic
 gates and inactive targets remain unchanged; this technical closure authorizes
 no live calls, full-corpus extraction, graph acceptance or production execution.
 
@@ -136,8 +156,9 @@ cumulative counts are historical; use the corrected current baseline above.
 
 Step 11 remains FROZEN_CLOSED. Step 12A is CLOSED / ACCEPTED for offline technical
 integration under the researcher-approved acceptance record above. Use the frozen
-v0.3 contract, its acceptance record and ontology v0.1.6. Step 12B is next;
-further execution requires its own authorization. Do not rerun accepted source
+v0.3 contract, its acceptance record and ontology v0.1.6. Step 12B is CLOSED /
+ACCEPTED for focused offline readiness. Step 12C pilot planning is next; further
+planning/execution requires its own authorization. Do not rerun accepted source
 audits, corrections, reference enrichment or frozen Publication evaluations.
 
 ## Deferred scope and frozen Step 11 boundary
