@@ -1,4 +1,6 @@
 """Offline Step 12C envelope/schema preflight; no transport or credential access."""
+from __future__ import annotations
+
 from copy import deepcopy
 import hashlib
 import itertools
@@ -94,7 +96,8 @@ def check_strict_structure(schema: dict) -> None:
     check_schema_limits(schema)
 
 
-def build_preflight(request_result: dict, *, output_ceiling: int) -> dict:
+def build_preflight(request_result: dict, *, output_ceiling: int,
+                    projection_version: str | None = None) -> dict:
     """Build a no-tools envelope using only Publication's pure body constructor."""
     from src.extraction.llm.publications.openai_provider import build_responses_api_request
     if request_result.get("status") != "request_ready" or type(output_ceiling) is not int or output_ceiling <= 0:
@@ -106,12 +109,17 @@ def build_preflight(request_result: dict, *, output_ceiling: int) -> dict:
     schema = strict_schema(request["responseContract"], request["targetProfile"])
     check_strict_structure(schema)
     input_bytes = canonical(request)
+    if projection_version is not None:
+        from src.extraction.llm.coderepos.provider_input import project_provider_input
+        projection = project_provider_input(request_result, version=projection_version)
+        input_bytes = projection["inputBytes"]
     envelope = build_responses_api_request(input_bytes, model_authorable_schema=schema, max_output_tokens=output_ceiling)
     envelope["text"]["format"]["name"] = request["artifactFamily"] + "_candidate_response"
     if envelope["model"] != "gpt-5.6-sol" or envelope["reasoning"] != {"effort": "medium"} or envelope["store"] is not False or "tools" in envelope:
         raise ValueError("confirmed_provider_configuration_drift")
     wire_bytes = canonical(envelope)
-    return {"authorization": "NOT AUTHORIZED", "semanticRequestSha256": digest(semantic_bytes),
+    return {**({"providerInputProjectionVersion": projection_version} if projection_version is not None else {}),
+            "authorization": "NOT AUTHORIZED", "semanticRequestSha256": digest(semantic_bytes),
             "providerInputSha256": digest(input_bytes), "providerEnvelopeSha256": digest(wire_bytes),
             "schemaSha256": digest(canonical(schema)), "inputBytes": input_bytes, "wireBytes": wire_bytes,
             "semanticRequestBytes": semantic_bytes, "envelope": envelope,
