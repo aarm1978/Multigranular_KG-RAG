@@ -41,7 +41,7 @@ def strict_schema(contract: dict, profile: dict) -> dict:
     props = {"schemaVersion": {"type": "string", "enum": [contract["schemaVersion"]]}}
     for kind, group, targets in (("node", "candidateNodes", "entities"), ("edge", "candidateEdges", "relations")):
         branches = []
-        for identifier in profile[targets]:
+        for identifier in sorted(profile[targets]):
             special = contract["specialFields"].get(kind + ":" + identifier, [])
             required_special = contract["requiredSpecialFields"].get(kind + ":" + identifier, [])
             fields = contract["requiredNodeFields" if kind == "node" else "requiredEdgeFields"]
@@ -91,6 +91,7 @@ def check_strict_structure(schema: dict) -> None:
             for child in value:
                 walk(child)
     walk(schema)
+    check_schema_limits(schema)
 
 
 def build_preflight(request_result: dict, *, output_ceiling: int) -> dict:
@@ -326,7 +327,7 @@ def write_local_preflight(root):
     """Write only prospective offline artifacts to the fixed ignored pilot path."""
     requests = rebuild_selected(root)
     summary = {}
-    for name, ceiling in [('HS-01',4096), ('GH-01',3072), ('HUB-01',8192)]:
+    for name, ceiling in [('HS-01',32768), ('GH-01',32768), ('HUB-01',32768)]:
         result = build_preflight(requests[name], output_ceiling=ceiling)
         folder = root / 'var/study2_step12c/preflight' / name
         folder.mkdir(parents=True, exist_ok=True)
@@ -343,6 +344,56 @@ def write_local_preflight(root):
         (folder / 'request-result.json').write_bytes(canonical(requests[name]))
         summary[name] = meta
     return summary
+
+
+
+
+def check_schema_limits(schema: dict) -> dict:
+    """Check documented limits recorded in the local Publication schema authority.
+
+    Independent structural accounting only; no Publication extraction schema or
+    policy is imported. Remote model acceptance remains untested.
+    """
+    counts = dict(properties=0, strings=0, enums=0)
+
+    def count(value):
+        """Count literal property/definition/enum occurrences."""
+        if not isinstance(value, dict):
+            return
+        for key in ('properties', '$defs'):
+            fields = value.get(key, {})
+            counts['strings'] += sum(len(k) for k in fields)
+            if key == 'properties':
+                counts['properties'] += len(fields)
+            for child in fields.values():
+                count(child)
+        enum = value.get('enum', [])
+        length = sum(len(v) for v in enum if isinstance(v, str))
+        if len(enum) > 250 and length > 15000:
+            raise ValueError('strict_large_enum_limit')
+        counts['strings'] += length + (len(value['const']) if isinstance(value.get('const'), str) else 0)
+        counts['enums'] += len(enum)
+        count(value.get('items'))
+        for branch in value.get('anyOf', []):
+            count(branch)
+
+    def depth(value, seen=()):
+        """Resolve local references; fail closed on unsupported recursion."""
+        if '$ref' in value:
+            ref = value['$ref']
+            if ref in seen or not ref.startswith('#/$defs/'):
+                raise ValueError('strict_reference_unsupported')
+            return depth(schema['$defs'][ref[8:]], seen + (ref,))
+        children = list(value.get('properties', {}).values()) + value.get('anyOf', [])
+        if 'items' in value:
+            children.append(value['items'])
+        return int(value.get('type') in ('object', 'array')) + max([depth(v, seen) for v in children] or [0])
+
+    count(schema)
+    counts['depth'] = depth(schema)
+    if counts['properties'] > 5000 or counts['strings'] > 120000 or counts['enums'] > 1000 or counts['depth'] > 10:
+        raise ValueError('strict_structural_limit')
+    return counts
 
 
 if __name__ == '__main__':

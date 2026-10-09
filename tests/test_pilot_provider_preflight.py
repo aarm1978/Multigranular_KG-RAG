@@ -29,10 +29,13 @@ class PilotPreflightTests(unittest.TestCase):
         for module, fixture, request in self.fixtures():
             before = deepcopy(request)
             with patch('socket.socket', side_effect=AssertionError('network')), patch('builtins.open', side_effect=AssertionError('credential/file IO')):
-                result = preflight.build_preflight(request, output_ceiling=4096)
-                self.assertEqual(result, preflight.build_preflight(request, output_ceiling=4096))
+                result = preflight.build_preflight(request, output_ceiling=32768)
+                self.assertEqual(result, preflight.build_preflight(request, output_ceiling=32768))
+                restored = json.loads(preflight.canonical(request))
+                self.assertEqual(result, preflight.build_preflight(restored, output_ceiling=32768))
             body = json.loads(result['wireBytes'])
             self.assertEqual(body['model'], 'gpt-5.6-sol')
+            self.assertEqual(body['max_output_tokens'], 32768)
             self.assertEqual(body['reasoning'], {'effort':'medium'})
             self.assertIs(body['store'], False)
             self.assertNotIn('tools', body)
@@ -44,7 +47,7 @@ class PilotPreflightTests(unittest.TestCase):
             corrupt = deepcopy(request)
             corrupt['request']['kgAuthorization'] = True
             with self.assertRaisesRegex(ValueError, 'digest_mismatch'):
-                preflight.build_preflight(corrupt, output_ceiling=4096)
+                preflight.build_preflight(corrupt, output_ceiling=32768)
 
     def test_schemas_and_original_parser_local_failure_isolation(self):
         """Strict shape success cannot promote bad evidence or erase siblings."""

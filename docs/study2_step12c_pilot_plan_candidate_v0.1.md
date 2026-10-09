@@ -142,7 +142,7 @@ material is unavailable for evidence even when present in the trusted reader.
 | Reasoning / retention / tools / format | Confirmed `reasoning.effort=medium`, `store=false`, no tools; strict `text.format` JSON Schema where supported; synchronous prospective envelope |
 | Temperature, top-p, seed and other unsupported settings | Unset; support/values remain pending, no assumed defaults |
 | Maximum input tokens per request | PENDING approval; conservative allowances below include semantic input and response schema, with API overhead still unknown |
-| Prospective maximum output tokens | HS-01: 4096; GH-01: 3072; HUB-01: 8192, pending researcher approval |
+| Configured maximum output tokens | 32768 for HS-01, GH-01 and HUB-01, adopted by researcher instruction; live execution remains unauthorized |
 | Planned requests | 3 (HS-01, GH-01, HUB-01); approve individually |
 | Outer request limit | At most 2 per family / 6 total; additional slots require revised exact selection and approval |
 | Attempts, retries and concurrency | Proposed 1 attempt per selected request, 0 automatic retries, sequential execution; approval pending |
@@ -154,7 +154,7 @@ No request may be sent until every execution/budget field is approved and a
 conservative maximum cost fits both per-request and aggregate caps. Count failed
 or interrupted attempts against limits; an unknown billing outcome is a stop.
 Do not silently truncate selected context to fit a token cap. Stop for plan revision
-if the complete approved request cannot fit. No provider transport/runner is implemented here; the offline preflight only constructs envelopes.
+if the complete approved request cannot fit. A researcher-operated terminal runner is now provided below. Its availability does not authorize execution.
 
 ## Request preservation and deterministic replay
 
@@ -316,21 +316,18 @@ processing overhead is additional and requires a margin when approving input cap
 
 | Request | Input bytes | Schema bytes | Exact envelope bytes | Conservative input+schema token allowance (not count) | Proposed output-token ceiling |
 |---|---:|---:|---:|---:|---:|
-| HS-01 | 14130 | 12374 | 28053 | 26504 | 4096 |
-| GH-01 | 28320 | 19313 | 50645 | 47633 | 3072 |
-| HUB-01 | 41104 | 18720 | 63500 | 59824 | 8192 |
+| HS-01 | 14130 | 12374 | 28054 | 26504 | 32768 |
+| GH-01 | 28320 | 19313 | 50646 | 47633 | 32768 |
+| HUB-01 | 41104 | 18720 | 63501 | 59824 | 32768 |
 
 The larger envelope sizes include JSON escaping and the strict schema; source
-context was not expanded. The prospective output ceilings are small feasibility
-budgets: 4096 for the full HydroShare abstract, 3072 for the short GitHub description,
-and 8192 for the 20-unit Hub context with potential parent/dependent proposals.
-They are not target quotas or promises that all candidates fit. They allow more
-headroom for Hub's evidence/dependency records without copying a 32768-token
-production ceiling. Reasoning and visible output must fit the configured limit
-under actual provider behavior; no reasoning/output split is assumed. Truncation
-is an explicit incomplete-response finding and stops that attempt; no silent
-retry or token escalation. Monetary caps, actual prices and support for optional
-settings remain pending. No usage or cost is claimed.
+context was not expanded. The researcher instructed adoption of the Publications
+ceiling: **max_output_tokens=32768 for all three requests**. This supersedes the
+previous 4096/3072/8192 proposals without authorizing live execution. Reasoning and
+visible output share the provider's actual output-budget behavior; no split or
+sufficient-output guarantee is assumed. Truncation is preserved as an incomplete
+response, never repaired or automatically retried. Monetary caps and actual prices
+remain pending. No usage or cost is claimed.
 
 ### Deterministic associations and ignored local artifacts
 
@@ -346,9 +343,9 @@ the JSON values are the same. No network request has been transmitted.
 
 | Request | Semantic request SHA-256 | Provider input SHA-256 | Provider envelope SHA-256 |
 |---|---|---|---|
-| HS-01 | `66a3fd974108b18b58d0b6effed8924669558509502760e43699b2858b07f8c0` | `198cf18594357644ed2debd19aa455fce74a849b15a31f493f4dbdc979cd7878` | `a494d5d90bac2345b5c388d995ef1fa3bc9bfd18acc5f994d858d76a54061a6b` |
-| GH-01 | `bcece9e5d4752cb5804151fcf80c6b74864c62db5430acdc122cee642dea7d45` | `d694226746702b5fd4c11eaf4c82049aa4fb1a42e643bc134f22e8cb929c2344` | `86d5a652a64e94796e3ead05fb52ca883eec66cb475e4ee609f761dedb1bfba1` |
-| HUB-01 | `5a1db2a4da2c43d09c1aa52fdb993e58ef8b9e9600d6d8b3a8197380ff52ae45` | `8b9f0c4fb64ff2d3ae1faf02d7333ebe22f06a4fa92c58afdea8a551bf6ad252` | `efa6644eeb0cd41099469312b19ede2005d8d915c54dd1b552a38a01fb9ee5f3` |
+| HS-01 | `66a3fd974108b18b58d0b6effed8924669558509502760e43699b2858b07f8c0` | `198cf18594357644ed2debd19aa455fce74a849b15a31f493f4dbdc979cd7878` | `402190f9a94eb6e2c3c966406d1a745bcc23fec9d1b0908dd2fe767276d464a7` |
+| GH-01 | `bcece9e5d4752cb5804151fcf80c6b74864c62db5430acdc122cee642dea7d45` | `d694226746702b5fd4c11eaf4c82049aa4fb1a42e643bc134f22e8cb929c2344` | `4db77ac6fd0f9aea7e47e3b2c5073892aff2483540a0ec7e0128bdf78aeb4e85` |
+| HUB-01 | `5a1db2a4da2c43d09c1aa52fdb993e58ef8b9e9600d6d8b3a8197380ff52ae45` | `8b9f0c4fb64ff2d3ae1faf02d7333ebe22f06a4fa92c58afdea8a551bf6ad252` | `086a42828f4fbf4dfe6595712689cb5fdc4a100a0571e0a38e1f373ebe15982c` |
 
 Proposed future layout, still requiring storage/execution approval:
 `var/study2_step12c/runs/<approved-run-id>/<request-id>/` with immutable
@@ -362,7 +359,131 @@ artifacts. Record failures, refusals and incomplete responses separately rather
 than inventing candidate output. Researcher review lives in a distinct record.
 No response/run artifacts are fabricated by preflight.
 
-Approval still required: three requests and incomplete-source treatment, prospective
-output ceilings and input-overhead margin, monetary caps and approved pricing,
+Approval still required: three requests and incomplete-source treatment, input-overhead margin, monetary caps and approved pricing,
 optional supported settings, storage, attempt/review limits, and explicit live
-execution authorization. A future transport implementation needs separate approval.
+execution authorization. The terminal transport below is implemented; using it live still requires separate approval.
+
+
+## Researcher-operated terminal runner — NOT AUTHORIZED to execute
+
+`src/extraction/llm/pilot_terminal.py` provides explicit `dry-run` and `execute`
+modes. Importing the module does not dispatch. Each invocation selects exactly one
+of HS-01, GH-01 or HUB-01; there is no batch execute, retry or replacement mode.
+It loads saved preflight bytes, verifies their hashes and selected-unit manifest,
+and reconstructs the pure envelope to detect drift. Schema alternatives now have
+stable inventory ordering across JSON save/load; a focused regression protects
+this serialization defect found during dry-run. Semantic request hashes and
+selected input text are unchanged; updated envelope hashes above include the
+32768 ceiling and deterministic schema ordering.
+
+The runner reuses only compatible pure Publication envelope/output-text helpers;
+it does not adopt Publication extraction schemas, retry, validation or acceptance
+policies. It makes one synchronous Responses API POST with exact stored body bytes,
+with redirects disabled, configurable socket timeout and an overall elapsed-time
+deadline. A separate daemon worker permits periodic elapsed-time messages while
+the researcher's terminal waits. No background API mode, retrieval polling or
+automatic retry occurs. A local deadline cannot prove remote cancellation: timeout,
+transport exception, interruption or incomplete preservation marks an ambiguous
+attempt and blocks further dispatch. A late remote response may remain unavailable;
+do not delete state or retry to resolve unknown billing/execution.
+
+### Local approval manifest and budget gate
+
+No authorized manifest is created by this task. Before execution the researcher
+must supply a local file with schema `step12c-terminal-approval/1` and separately
+review/pass its exact SHA-256. This is a local approval integrity check, not a
+digital signature or identity-verification service. Required fields:
+
+- `authorized: true`, nonempty `approvalID` and `researcher`, timezone-aware
+  `approvedAt` and `expiresAt` covering dispatch time.
+- `currency`, `pricingReference` and positive `totalCostCap`, all researcher-approved.
+  Each approved request has positive `reservedMaximumCost`, calculated by the
+  researcher from approved prices and worst-case input/output allowances. Their
+  sum must not exceed `totalCostCap`; no invented price or measured cost is used.
+- `requests`: a map containing only individually approved IDs from the three frozen
+  selections. Each entry contains `maximumAttempts: 1`, `reservedMaximumCost`,
+  `semanticRequestSha256` and `providerEnvelopeSha256` exactly matching the table.
+
+Monetary fields are still pending. The runner checks approved reserved-cost bounds;
+it cannot independently verify pricing or guarantee a provider's actual charge.
+Approve a bound including 32768 output tokens and input/schema overhead before
+setting `authorized: true`. Actual returned usage is preserved separately.
+
+The API key is read from `OPENAI_API_KEY` only after execution approval and artifact
+preparation, only in the researcher's execute invocation. No `.env` loader is used.
+Never put the key in arguments, manifests, artifacts or source control.
+
+### Attempt artifacts and stop state
+
+Each request has one exclusive directory at
+`var/study2_step12c/terminal/<request-id>/`. Existing attempts are never overwritten,
+even under a replacement approval file. The global atomic `dispatch.lock` prevents
+concurrent calls and remains after a process crash. A durable `STOP` marker prevents
+any further request after ambiguous/error/incomplete outcomes. Stale locks and stop
+markers require separate researcher investigation; the CLI offers no reset/bypass.
+
+Before dispatch, the runner durably writes the exact approval bytes, semantic
+request, provider input, envelope and association hashes. `events.jsonl` records
+preparation, dispatch, elapsed progress, response preservation and terminal status.
+It writes complete received HTTP body bytes to `response.raw` before parsing or
+extracting anything. `provider-metadata.json` preserves returned ID/model/status,
+usage, timing and error/incomplete fields; the raw body retains the full response.
+`model-output.utf8` preserves the single exact output text when available, even if
+subsequent review is required. HTTP headers and credentials are never logged.
+All files stay in the ignored local pilot tree; no response artifact was fabricated
+or obtained during this task.
+
+The terminal reports transport/provenance status only (`response_recorded` or
+`response_requires_review`); neither means semantic success. Semantic replay and
+researcher review remain separate, explicitly requested tasks. No graph write or
+provider response repair is performed.
+
+### Offline checks and schema limits
+
+Ten directly relevant focused tests cover pure envelope round trips, parser/local
+failure isolation, approval gates, exact raw-byte preservation, non-overwrite,
+timeout progress/blocking, HTTP errors and dry-run isolation. All passed after
+correcting a test guard to permit argparse's noncredential locale lookup. All
+transport tests use injected synthetic responses/keys; no actual credential lookup
+or network call was made. The three real selected preflight requests were rebuilt
+and all three terminal dry-runs succeeded.
+
+Strict-schema checks use the documented limits already recorded in the local
+Publication schema module: 10 nesting levels, 5000 object properties, 120000 total
+schema-name/enum/constant characters, 1000 enum values, and 15000 string characters
+for an individual enum with more than 250 values. They count local-reference depth
+and fail closed on unsupported recursion/references; no Publication policy/schema
+is imported. These are local structural checks, not remote API acceptance claims.
+
+| Request | Nesting depth | Object properties | Schema string budget | Enum values |
+|---|---:|---:|---:|---:|
+| HS-01 | 5 | 183 | 1941 | 36 |
+| GH-01 | 5 | 290 | 2982 | 51 |
+| HUB-01 | 5 | 278 | 2812 | 50 |
+
+### Exact terminal commands (from repository root)
+
+Safe offline dry-runs, with no credentials or network:
+
+```bash
+python -m src.extraction.llm.pilot_terminal dry-run --request-id HS-01
+python -m src.extraction.llm.pilot_terminal dry-run --request-id GH-01
+python -m src.extraction.llm.pilot_terminal dry-run --request-id HUB-01
+```
+
+**Do not run execute until separately approved.** After placing a reviewed approval
+file at the path shown, replace `RESEARCHER_APPROVED_SHA256` with the independently
+reviewed digest. Run only the individually approved request; GH-01 or HUB-01 must
+be selected explicitly in separate invocations, never automatically substituted.
+
+```bash
+python -m src.extraction.llm.pilot_terminal execute --request-id HS-01 \
+  --approval var/study2_step12c/approval.json \
+  --approval-sha256 RESEARCHER_APPROVED_SHA256 \
+  --timeout 3600 --progress-interval 15
+```
+
+The command above is documentation only and was not executed by Codex. The plan
+remains DRAFT / NOT AUTHORIZED. Monetary caps, pricing, approval identity/window,
+approved request hashes, storage/review decisions and actual live execution await
+researcher approval. CODEX_HANDOFF.md is unchanged.
