@@ -8,11 +8,15 @@
 
 ## Current checkpoint
 
-**Study 2 Step 12A — ACTIVE, ready for researcher closure review, 2026-10-09.**
-**Packages 1, 2 and 3 complete; Step 12A is NOT automatically CLOSED.**
-Current implementation milestone: the commit containing this handoff update,
-on `codex/publication-human-core-annotation-ui`, following
-`fadd2ef79b6a8404280341eb35be33e1729c3422` (Package 3A request/response contracts).
+**Study 2 Step 12A — CLOSED / ACCEPTED by the researcher, 2026-10-09.**
+**Packages 1–3 complete. Next workstream: Step 12B focused integrated validation.**
+Accepted implementation checkpoint: `7abba6faa79867992870bf405e4c8768cb67cb14`
+on `codex/publication-human-core-annotation-ui`.
+Acceptance: [Step 12A technical integration acceptance](../handoffs/STUDY2_STEP12A_TECHNICAL_INTEGRATION_ACCEPTANCE.md).
+Closure establishes offline technical integration only, not demonstrated semantic
+correctness, contextual completeness, KG acceptance, full-corpus extraction or
+provider authorization. No context-selection policy is introduced. This closure
+is documentation-only; prior test results below were not rerun or re-audited.
 The unrelated `src/ontology/catalog-v001.xml` modification remains local.
 
 Package 1 completed at `2d6c3022e627cb148234858cc881d0463d797be4` with
@@ -39,8 +43,8 @@ and four Example-context regression tests). No broad suites were run.
 **Package 3 — complete.** Package 3A at
 `fadd2ef79b6a8404280341eb35be33e1729c3422` adds deterministic source-specific
 request construction and strict recorded-response parsing; 25 focused tests passed.
-Package 3B in this commit adds the three `offline_pipeline.py` adapters and their
-focused tests. Replay snapshots caller-trusted request inputs, preserves exact
+Package 3B at `7abba6faa79867992870bf405e4c8768cb67cb14` adds the three
+`offline_pipeline.py` adapters and their focused tests. Replay snapshots caller-trusted request inputs, preserves exact
 recorded response bytes/hash, links request/contract/source identities, and invokes
 the unchanged batch validators with only selected source units. An optional
 caller-supplied recorded-request digest is checked; no provider association is
@@ -65,12 +69,11 @@ duplicate decisions, conditional gates and zero provider/graph effects. No exist
 request contract, validator, reader, ontology or Publication component changed.
 No broad suites, real-corpus processing, provider calls or graph writes occurred.
 
-**Next decision:** researcher review of Step 12A closure readiness. This implementation
-milestone does not itself close Step 12A or authorize a live pilot or production.
-
-Step 12B focused integrated validation, Step 12C separately approved live pilot,
-Step 13 production and Step 14 alignment remain distinct later work. No live calls
-or production execution are authorized by this handoff.
+**Next workstream:** Step 12B focused integrated validation, with execution scope
+to be separately authorized. Step 12C separately approved live pilot, Step 13
+production and Step 14 alignment remain distinct later work. Pending semantic
+gates and inactive targets remain unchanged; this technical closure authorizes
+no live calls, full-corpus extraction, graph acceptance or production execution.
 
 ## Frozen methodological checkpoint
 
@@ -131,10 +134,10 @@ cumulative counts are historical; use the corrected current baseline above.
 
 ## Active implementation authority
 
-Step 11 remains FROZEN_CLOSED. Step 12A is active under the researcher's bounded
-implementation authorizations. Use the frozen v0.3 contract, acceptance record
-and ontology v0.1.6. Packages 1–3 are complete; Step 12A awaits researcher closure
-review. Further work requires its own authorization. Do not rerun accepted source
+Step 11 remains FROZEN_CLOSED. Step 12A is CLOSED / ACCEPTED for offline technical
+integration under the researcher-approved acceptance record above. Use the frozen
+v0.3 contract, its acceptance record and ontology v0.1.6. Step 12B is next;
+further execution requires its own authorization. Do not rerun accepted source
 audits, corrections, reference enrichment or frozen Publication evaluations.
 
 ## Deferred scope and frozen Step 11 boundary
