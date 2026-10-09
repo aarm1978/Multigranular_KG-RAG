@@ -172,3 +172,142 @@ def bind_abstract_evidence(unit: AbstractSourceUnit, evidence_spans: list[Any]) 
             "endLine": _line_at(unit.text, end - 1),
         })
     return {"status": "evidence_bound", "evidenceSpans": spans, "bindingReport": report}
+
+
+def read_readme_source_units(
+    readme: Mapping[str, Any] | None, *, accepted_owner_id: str,
+    provenance: Mapping[str, Any], required: bool = False,
+    expected_authority_text_sha256: str | None = None,
+    sections: list[Mapping[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Read caller-supplied original README text, without acquisition/enrichment.
+
+    The trusted readme supplies resource_id, source_path and text. Provenance
+    supplies snapshotID, optional sourceVersion, and sourceVerified=True (a
+    caller attestation, not independent acquisition verification). Optional
+    sections are trusted original startOffsetInAuthority/endOffsetInAuthority
+    bounds, with optional headingContext. They create no ontology Sections.
+    Digest verification occurs only against a separately supplied expected hash.
+    """
+    from copy import deepcopy
+
+    result: dict[str, Any] = {"status": "source_read_success", "authority": None,
+                              "sourceUnits": [], "diagnostics": [], "inputComplete": True}
+
+    def fail(reason: str) -> dict[str, Any]:
+        """Distinguish malformed/present or required inputs from optional absence."""
+        result.update(status="failed_source_or_evidence_binding", inputComplete=False)
+        result["diagnostics"].append({"reason": reason, "resource_id": accepted_owner_id,
+                                      "sourceField": "README"})
+        return result
+
+    if not isinstance(accepted_owner_id, str) or not accepted_owner_id.strip() or not isinstance(provenance, Mapping):
+        return fail("source_provenance_missing_or_malformed")
+    snapshot, version = provenance.get("snapshotID"), provenance.get("sourceVersion")
+    if (not isinstance(snapshot, str) or not snapshot.strip()
+            or version is not None and (not isinstance(version, str) or not version.strip())):
+        return fail("source_provenance_missing_or_malformed")
+    if readme is None:
+        if required:
+            return fail("required_readme_missing")
+        result["status"] = "optional_input_absent"
+        result["diagnostics"].append({"reason": "optional_readme_absent", "resource_id": accepted_owner_id})
+        return result
+    if not isinstance(readme, Mapping) or readme.get("resource_id") != accepted_owner_id:
+        return fail("source_owner_mismatch")
+    path, text = readme.get("source_path"), readme.get("text")
+    if not isinstance(path, str) or not path.strip() or not isinstance(text, str):
+        return fail("required_readme_field_missing_or_malformed")
+    if provenance.get("sourceVerified") is not True:
+        return fail("readme_source_not_verified")
+    expected = expected_authority_text_sha256
+    if expected is not None and (not isinstance(expected, str) or re.fullmatch(r"[0-9a-f]{64}", expected) is None):
+        return fail("trusted_digest_malformed")
+    try:
+        digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    except UnicodeEncodeError:
+        return fail("source_text_malformed")
+    if expected is not None and digest != expected:
+        return fail("source_content_integrity_failure")
+    base = {"contractID": CONTRACT_ID, "artifactFamily": "hydroshare", "resource_id": accepted_owner_id,
+            "canonicalArtifactID": accepted_owner_id, "snapshotID": snapshot, "sourceVersion": version,
+            "sourceField": "README", "source_path": path, "sourceLocation": f"{accepted_owner_id}:{path}",
+            "authorityTextSha256": digest, "expectedAuthorityTextSha256": expected,
+            "integrityStatus": "matched_trusted_digest" if expected is not None else "computed_only",
+            "sourceVerification": "caller_attested", "acquisitionIntegrityStatus": "not_independently_verified"}
+    result["authority"] = {**base, "text": text}
+    selected = sections if sections is not None else ([{"startOffsetInAuthority": 0,
+        "endOffsetInAuthority": len(text)}] if text else [])
+    if not isinstance(selected, list):
+        return fail("readme_sections_malformed")
+    seen = set()
+    for section in selected:
+        if (not isinstance(section, Mapping) or set(section) - {
+                "startOffsetInAuthority", "endOffsetInAuthority", "headingContext"}):
+            return fail("readme_section_metadata_invalid")
+        start, end = section.get("startOffsetInAuthority"), section.get("endOffsetInAuthority")
+        heading = section.get("headingContext")
+        if (type(start) is not int or type(end) is not int or not 0 <= start < end <= len(text)
+                or heading is not None and not isinstance(heading, str) or (start, end) in seen):
+            return fail("readme_section_bounds_invalid")
+        seen.add((start, end))
+        identity = json.dumps([accepted_owner_id, snapshot, version, "README", path, digest, start, end],
+                              ensure_ascii=True, separators=(",", ":"))
+        result["sourceUnits"].append({**base, "text": text[start:end],
+            "sourceUnitID": "hydroshare:readme:" + hashlib.sha256(identity.encode()).hexdigest(),
+            "startOffsetInAuthority": start, "endOffsetInAuthority": end,
+            "startLine": _line_at(text, start), "endLine": _line_at(text, end - 1),
+            "headingContext": heading, "sectionID": None})
+    return deepcopy(result)
+
+
+def bind_readme_evidence(reader_result: Mapping[str, Any], source_unit_id: str,
+                         evidence_spans: list[Any]) -> dict[str, Any]:
+    """Bind literal quotes against a trusted README reader result, never semantics."""
+    from copy import deepcopy
+
+    result = {"status": "failed_source_or_evidence_binding", "evidenceSpans": [],
+              "originalEvidence": deepcopy(evidence_spans), "diagnostics": []}
+
+    def fail(reason: str) -> dict[str, Any]:
+        """Return no bound evidence on input or authority failure."""
+        result["diagnostics"].append({"reason": reason, "sourceUnitID": source_unit_id})
+        return result
+
+    if not isinstance(reader_result, Mapping) or reader_result.get("status") != "source_read_success":
+        return fail("source_read_not_successful")
+    authority, units = reader_result.get("authority"), reader_result.get("sourceUnits")
+    if not isinstance(authority, Mapping) or not isinstance(units, list):
+        return fail("reader_result_malformed")
+    selected = [u for u in units if isinstance(u, Mapping) and u.get("sourceUnitID") == source_unit_id]
+    if len(selected) != 1:
+        return fail("source_unit_missing_or_ambiguous")
+    unit = selected[0]
+    replay = read_readme_source_units({"resource_id": authority.get("resource_id"),
+        "source_path": authority.get("source_path"), "text": authority.get("text")},
+        accepted_owner_id=authority.get("canonicalArtifactID"), provenance={
+            "snapshotID": authority.get("snapshotID"), "sourceVersion": authority.get("sourceVersion"),
+            "sourceVerified": authority.get("sourceVerification") == "caller_attested"},
+        expected_authority_text_sha256=authority.get("expectedAuthorityTextSha256"),
+        sections=[{k: unit.get(k) for k in ("startOffsetInAuthority", "endOffsetInAuthority", "headingContext")}])
+    if replay["status"] != "source_read_success" or replay["authority"] != authority or replay["sourceUnits"] != [unit]:
+        return fail("source_unit_integrity_or_provenance_mismatch")
+    if (not isinstance(evidence_spans, list) or not evidence_spans or any(not isinstance(s, Mapping)
+            or set(s) - {"evidenceText", "locatorAnchor"} for s in evidence_spans)):
+        return fail("invalid_or_model_authored_evidence_metadata")
+    bound, report = bind_evidence_spans({"evidenceSpans": evidence_spans}, {
+        "text": unit["text"], "startOffsetInDocument": unit["startOffsetInAuthority"],
+        "canonicalArtifactID": unit["canonicalArtifactID"], "sourceUnitID": source_unit_id,
+        "textHash": hashlib.sha256(unit["text"].encode()).hexdigest(),
+        "sectionID": None, "sectionTitleRaw": unit["headingContext"]})
+    result["bindingReport"] = report
+    if report["bindingStatus"] != "bound":
+        return fail("evidence_quote_unbound")
+    metadata = {k: deepcopy(v) for k, v in unit.items() if k != "text"}
+    for span in bound["evidenceSpans"]:
+        start, end = span["startOffsetInDocument"], span["endOffsetInDocument"]
+        result["evidenceSpans"].append({**metadata, **span, "startOffsetInAuthority": start,
+            "endOffsetInAuthority": end, "startLine": _line_at(authority["text"], start),
+            "endLine": _line_at(authority["text"], end - 1)})
+    result["status"] = "evidence_bound"
+    return result

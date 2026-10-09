@@ -63,6 +63,43 @@ class CodeRepositorySourceUnitTests(unittest.TestCase):
         self.assertFalse(any(row["status"] == "failed_source_or_evidence_binding" for row in result["reads"]))
         self.assertEqual(self.repo, before)
 
+    def test_reviewed_changelog_contributing_and_scoped_holds(self) -> None:
+        """Admit explicit trusted descriptive spans; never authorize admin/code."""
+        from src.extraction.llm.coderepos.evidence_binding import bind_repository_evidence
+
+        change = "This release improves river discharge processing.\n"
+        procedure = "Prepare discharge observations before calibration.\n"
+        for path, text in (("CHANGELOG.md", "# Version 2\n" + change + "\nMisc notes\n"),
+                           ("CONTRIBUTING.md", "# Preparation\n" + procedure + "\nPlease submit pull requests.\n")):
+            self.add(path, text)
+        unreviewed = read_repository_sources(self.repo, self.root)
+        self.assertEqual(unreviewed["sourceUnits"], [])
+        reviews = {}
+        for authority, quote, purpose in zip(unreviewed["authorities"], (change, procedure),
+                ("descriptive_change", "scientific_operational_procedure")):
+            start = authority["text"].index(quote)
+            reviews[(authority["path"], None)] = [{"authorityTextSha256": authority["authorityTextSha256"],
+                "startOffsetInAuthority": start, "endOffsetInAuthority": start + len(quote),
+                "purpose": purpose, "reviewID": "synthetic-eligibility-1"}]
+        before = deepcopy(reviews)
+        result = read_repository_sources(self.repo, self.root, trusted_descriptive_passages=reviews)
+        self.assertEqual(len(result["sourceUnits"]), 2)
+        self.assertFalse(result["inputComplete"])
+        for unit in result["sourceUnits"]:
+            owner = {k: unit[k] for k in ("canonicalArtifactID", "repo_id", "full_name", "frozenCommitSha")}
+            bound = bind_repository_evidence(result, unit["sourceUnitID"], [{"evidenceText": unit["text"].strip()}], accepted_repository=owner)
+            self.assertEqual(bound["status"], "evidence_bound")
+        self.assertEqual(reviews, before)
+        wrong = deepcopy(reviews)
+        wrong[("CHANGELOG.md", None)][0]["authorityTextSha256"] = "0" * 64
+        rejected = read_repository_sources(self.repo, self.root, trusted_descriptive_passages=wrong)
+        self.assertNotIn("CHANGELOG.md", {u["path"] for u in rejected["sourceUnits"]})
+        admin = unreviewed["authorities"][1]["text"]
+        wrong = deepcopy(reviews)
+        wrong[("CONTRIBUTING.md", None)][0].update(startOffsetInAuthority=admin.index("Please"), endOffsetInAuthority=len(admin))
+        rejected = read_repository_sources(self.repo, self.root, trusted_descriptive_passages=wrong)
+        self.assertNotIn("CONTRIBUTING.md", {u["path"] for u in rejected["sourceUnits"]})
+
     def test_readme_precedence_and_additional_readmes(self) -> None:
         """Use Phase A verbatim even when its raw duplicate is absent/different."""
         text = "# Readme\r\n\r\nThis repository models river flows.\r\n"

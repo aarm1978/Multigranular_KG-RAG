@@ -8,6 +8,7 @@ content is held for review. No network, execution, graph or Publication pipeline
 
 from __future__ import annotations
 
+from copy import deepcopy
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
@@ -53,7 +54,7 @@ def _line(text: str, offset: int) -> int:
     return 1 + sum(m.end() <= offset for m in re.finditer(r"\r\n|\r|\n", text))
 
 
-def _passages(text: str) -> tuple[list[tuple[int, int, str | None]], bool]:
+def _passages(text: str, review_ranges: list[tuple[int, int]] | None = None) -> tuple[list[tuple[int, int, str | None]], bool]:
     """Select plain prose runs without rewriting their text or coordinates.
 
     Fences, indented blocks, directives, HTML, comments, link/badge-only lines,
@@ -68,6 +69,8 @@ def _passages(text: str) -> tuple[list[tuple[int, int, str | None]], bool]:
     fence: str | None = None
     comment = False
     review = False
+    ranges = review_ranges if review_ranges is not None else []
+    opaque_start = 0
 
     def flush() -> None:
         """Retain a contiguous literal passage under its original heading."""
@@ -84,10 +87,13 @@ def _passages(text: str) -> tuple[list[tuple[int, int, str | None]], bool]:
             flush()
             if fence is None:
                 fence = marker.group(1)
+                opaque_start = offset
             elif marker and marker.group(1)[0] == fence[0] and len(marker.group(1)) >= len(fence):
                 fence = None
         elif comment or "<!--" in line or "{/*" in line:
             flush()
+            if not comment:
+                opaque_start = offset
             comment = not ("-->" in line or "*/}" in line)
         elif title:
             flush()
@@ -99,17 +105,21 @@ def _passages(text: str) -> tuple[list[tuple[int, int, str | None]], bool]:
               or ADMIN_PROSE.search(line)):
             flush()
             review = True
+            ranges.append((offset, offset + len(line)))
         else:
             visible = re.sub(r"!?\[[^\]]*\]\([^)]*\)|https?://\S+|`[^`]*`", "", stripped)
             if len(re.findall(r"[^\W\d_]+", visible)) < 3:
                 flush()
                 review = True
+                ranges.append((offset, offset + len(line)))
             else:
                 if start is None:
                     start = offset
                 end = offset + len(line)
         offset += len(line)
     flush()
+    if fence is not None or comment:
+        ranges.append((opaque_start, len(text)))
     return spans, review or fence is not None or comment
 
 
@@ -117,6 +127,7 @@ def read_repository_sources(
     repo: Mapping[str, Any], raw_corpus_root: Path, *,
     trusted_raw_sha256: Mapping[str, str] | None = None,
     trusted_authority_sha256: Mapping[tuple[str, int | None], str] | None = None,
+    trusted_descriptive_passages: Mapping[tuple[str, int | None], list[Mapping[str, Any]]] | None = None,
 ) -> dict[str, Any]:
     """Read one caller-supplied Phase A repo, never scan the raw corpus.
 
@@ -125,6 +136,12 @@ def read_repository_sources(
     or None); raw digests by original path. Self-computed hashes are labeled as
     such. Phase A README text is never re-decoded or checked against raw bytes.
     Unknown acquisition reasons/content remain review diagnostics, not absence.
+    Changelog/contributing passages need caller-trusted eligibility records keyed
+    by (path, cellIndex). Each supplies authorityTextSha256, exact start/end offsets,
+    purpose (descriptive_change/version_statement or scientific_operational_procedure),
+    and nonempty reviewID. These attest source eligibility only, not target semantics.
+    Selected bounds must lie within structurally eligible prose; metadata cannot
+    authorize code/admin text. Unselected passages remain scoped review holds.
     ``inputComplete`` covers this bounded reader only, not semantic extraction.
     """
     result: dict[str, Any] = {"authorities": [], "sourceUnits": [], "reads": [],
@@ -180,12 +197,47 @@ def read_repository_sources(
                 "sourceLocation": f"https://github.com/{full_name}/blob/{sha}/{quote(meta['path'], safe='/')}"}
         result["authorities"].append({**base, "text": text})
         record("source_read_success", "authority_recorded", **meta, cellIndex=cell)
-        spans, review = _passages(text)
-        # These files need purpose-specific passage review before semantic use.
-        special = PurePosixPath(meta["path"]).name.lower().startswith(("contributing", "changelog"))
+        ranges: list[tuple[int, int]] = []
+        spans, _ = _passages(text, ranges)
+        filename = PurePosixPath(meta["path"]).name.lower()
+        special = filename.startswith(("contributing", "changelog"))
+        reviews = {}
         if special:
-            spans = []
-            review = True
+            if trusted_descriptive_passages is not None and not isinstance(trusted_descriptive_passages, Mapping):
+                record("needs_review", "passage_review_malformed", **meta, cellIndex=cell)
+                return
+            supplied = (trusted_descriptive_passages or {}).get(key, [])
+            if not isinstance(supplied, list):
+                record("needs_review", "passage_review_malformed", **meta, cellIndex=cell)
+                return
+            eligible = []
+            purposes = ({"scientific_operational_procedure"} if filename.startswith("contributing")
+                        else {"descriptive_change", "version_statement"})
+            for item in supplied:
+                lo, hi = (item.get("startOffsetInAuthority"), item.get("endOffsetInAuthority")) if isinstance(item, Mapping) else (None, None)
+                if (not isinstance(item, Mapping) or type(lo) is not int or type(hi) is not int
+                        or not 0 <= lo < hi <= len(text) or item.get("authorityTextSha256") != digest
+                        or item.get("purpose") not in purposes or not isinstance(item.get("reviewID"), str)
+                        or not item["reviewID"].strip() or (lo, hi) in reviews):
+                    record("needs_review", "passage_review_invalid", **meta, cellIndex=cell)
+                    continue
+                containing = [(a, b, h) for a, b, h in spans if a <= lo < hi <= b]
+                if not containing:
+                    record("needs_review", "passage_review_not_prose", **meta, cellIndex=cell,
+                           startLine=_line(text, lo), endLine=_line(text, hi - 1))
+                    continue
+                eligible.append((lo, hi, containing[0][2]))
+                reviews[(lo, hi)] = deepcopy(dict(item))
+            for lo, hi, _ in spans:
+                cursor = lo
+                for a, b, _ in sorted(eligible):
+                    if lo <= a < b <= hi:
+                        if cursor < a:
+                            ranges.append((cursor, a))
+                        cursor = max(cursor, b)
+                if cursor < hi:
+                    ranges.append((cursor, hi))
+            spans = sorted(eligible)
         for start, end, heading in spans:
             identity = json.dumps([repo_id, full_name, sha, meta["path"], cell, digest, start, end],
                                   separators=(",", ":"), ensure_ascii=True)
@@ -195,9 +247,12 @@ def read_repository_sources(
                 "endOffsetInAuthority": end, "startLine": _line(text, start),
                 "endLine": _line(text, end - 1), "headingContext": heading,
                 "contentKind": "prose", "eligibility": "prose_candidate",
+                **({"passageReview": reviews[(start, end)]} if special else {}),
             })
-        if review:
-            record("needs_review", "content_kind_or_purpose_requires_review", **meta, cellIndex=cell)
+        for lo, hi in sorted(set(ranges)):
+            record("needs_review", "content_kind_or_purpose_requires_review", **meta, cellIndex=cell,
+                   startOffsetInAuthority=lo, endOffsetInAuthority=hi,
+                   startLine=_line(text, lo), endLine=_line(text, hi - 1))
 
     readme = repo.get("readme") or {}
     if not isinstance(readme, Mapping):
