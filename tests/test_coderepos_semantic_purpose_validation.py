@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from copy import deepcopy
 from pathlib import Path
+import io
 import unittest
 from unittest.mock import patch
 
 from src.extraction.llm.coderepos.source_units import read_repository_sources
+from src.extraction.llm.semantic_target_profiles import check_target, get_profile, ONTOLOGY_PATH
 from src.extraction.llm.coderepos.purpose_validation import purpose_vocabulary, validate_purpose_candidates
 
 
@@ -40,6 +42,8 @@ class PurposeValidationTests(unittest.TestCase):
             "model_implementation": "Model implementation", "data_processing": "Data processing",
             "scientific_experimentation": "Scientific experimentation", "workflow_orchestration": "Workflow orchestration",
             "software_infrastructure": "Software infrastructure", "tutorial_demonstration": "Tutorial / demonstration"}
+        self.assertFalse(check_target("github", "A-C07")["structuralScopePass"])
+        self.assertTrue(check_target("github", "A-C07", model_authored=False)["structuralScopePass"])
         records = purpose_vocabulary()
         self.assertEqual({r["categoryKey"]: r["label"] for r in records}, expected)
         self.assertEqual(len(records), 6)
@@ -62,6 +66,22 @@ class PurposeValidationTests(unittest.TestCase):
         self.assertEqual(check["status"], "validated")
         self.assertEqual(result["semanticStatus"], "not_evaluated")
         self.assertFalse(result["graphAcceptance"])
+        scope = check["targetProfileCheck"]
+        self.assertTrue(scope["targetStructuralCompatibility"])
+        self.assertTrue(scope["ownerBound"])
+        self.assertTrue(scope["controlledSeedBound"])
+        self.assertFalse(scope["profileResult"]["structuralScopePass"])
+        self.assertEqual(scope["profileResult"]["reasons"], [])
+        self.assertEqual(scope["pendingGates"], [
+            "repository_specific_purpose_evidence", "approved_category_endpoint"])
+        self.assertFalse(scope["kgAuthorization"])
+        self.assertFalse(result["kgAuthorization"])
+        self.assertEqual(scope["profileResult"], check_target("github", "C-C07",
+            relation_name="hasPurpose", source_class_id="A-C01", target_class_id="A-C07"))
+        for family, source, target in (("hydroshare", "A-C01", "A-C07"),
+                                       ("github", "A-C07", "A-C01")):
+            self.assertFalse(check_target(family, "C-C07", relation_name="hasPurpose",
+                source_class_id=source, target_class_id=target)["structuralScopePass"])
         evidence = check["boundEvidence"][0]
         text = self.reader["authorities"][0]["text"]
         self.assertEqual(evidence["startOffsetInAuthority"], text.index("This repository"))
@@ -95,11 +115,33 @@ class PurposeValidationTests(unittest.TestCase):
             check = self.validate([candidate])["candidateChecks"][0]
             self.assertEqual(check["status"], "unresolved_category")
             self.assertEqual(check["originalCandidate"], candidate)
+            self.assertFalse(check["targetProfileCheck"]["controlledSeedBound"])
+            self.assertEqual(len(check["targetProfileCheck"]["pendingGates"]), 2)
+        claimed = {**self.candidate, "gates": {
+            "repository_specific_purpose_evidence": True, "approved_category_endpoint": True}}
+        checked = self.validate([claimed])["candidateChecks"][0]
+        self.assertEqual(checked["status"], "rejected_invalid_assertion")
+        self.assertEqual(len(checked["targetProfileCheck"]["pendingGates"]), 2)
+        self.assertEqual(checked["originalCandidate"], claimed)
 
     def test_source_failures_review_immutability_and_zero_effects(self) -> None:
         """Source checks are separate; inputs and acquisition-integrity limits persist."""
+        profile = get_profile("github")
+        profile["ownerClassID"] = "A-D01"
+        with patch("src.extraction.llm.coderepos.purpose_validation.get_profile", return_value=profile):
+            checked = self.validate()["candidateChecks"][0]
+        self.assertEqual(checked["status"], "rejected_invalid_assertion")
+        self.assertFalse(checked["targetProfileCheck"]["targetStructuralCompatibility"])
+        original_open = io.open
+
+        def authority_only(path, mode="r", *args, **kwargs):
+            """Permit only read access to the frozen ontology; no corpus/graph IO."""
+            self.assertEqual(Path(path), ONTOLOGY_PATH)
+            self.assertEqual(mode, "rb")
+            return original_open(path, mode, *args, **kwargs)
+
         before = deepcopy((self.reader, self.candidate, self.owner))
-        with patch("builtins.open", side_effect=AssertionError("No IO")), patch("socket.socket", side_effect=AssertionError("No network")):
+        with patch("io.open", side_effect=authority_only), patch("builtins.open", side_effect=AssertionError("No IO")), patch("socket.socket", side_effect=AssertionError("No network")):
             result = self.validate()
             self.assertEqual(result, self.validate())
         self.assertEqual((self.reader, self.candidate, self.owner), before)

@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import replace
+from pathlib import Path
+import io
 import unittest
 from unittest.mock import patch
 
 from src.extraction.llm.datasets.candidate_validation import validate_variable_candidate
+from src.extraction.llm.semantic_target_profiles import check_target, get_profile, ONTOLOGY_PATH
 from src.extraction.llm.datasets.source_units import build_abstract_source_unit
 
 
@@ -43,6 +46,18 @@ class DatasetCandidateValidationTests(unittest.TestCase):
         result = self.validate()
         self.assertEqual([c["disposition"] for c in result["candidates"]], ["validated", "validated"])
         node, edge = result["candidates"]
+        for candidate in (node, edge):
+            scope = candidate["targetProfileCheck"]
+            self.assertTrue(scope["targetStructuralCompatibility"])
+            self.assertTrue(scope["profileResult"]["structuralScopePass"])
+            self.assertEqual(scope["pendingGates"], [])
+            self.assertFalse(scope["kgAuthorization"])
+        self.assertTrue(edge["targetProfileCheck"]["endpointsBound"])
+        self.assertEqual(node["targetProfileCheck"]["profileResult"], check_target("hydroshare", "A-DOM04"))
+        self.assertEqual(edge["targetProfileCheck"]["profileResult"], check_target(
+            "hydroshare", "C-D16", relation_name="containsVariable",
+            source_class_id="A-D01", target_class_id="A-DOM04"))
+        self.assertFalse(result["kgAuthorization"])
         self.assertNotEqual(node["boundEvidence"][0]["evidenceText"], edge["boundEvidence"][0]["evidenceText"])
         self.assertEqual(edge["originalCandidate"]["sourceID"], self.owner)
         self.assertEqual(result["semanticStatus"], "not_evaluated")
@@ -62,6 +77,15 @@ class DatasetCandidateValidationTests(unittest.TestCase):
                 payload[kind][field] = value
                 result = self.validate(payload)
                 self.assertEqual(result["candidates"][0 if kind == "node" else 1]["disposition"], "rejected_invalid_assertion")
+        for family, source, target in (("github", "A-D01", "A-DOM04"),
+                                        ("hydroshare", "A-DOM04", "A-D01")):
+            self.assertFalse(check_target(family, "C-D16", relation_name="containsVariable",
+                source_class_id=source, target_class_id=target)["structuralScopePass"])
+        payload = deepcopy(self.payload)
+        payload["node"].update({"class": "RepositoryPurpose", "inventoryId": "A-C07"})
+        checked = self.validate(payload)
+        self.assertFalse(checked["candidates"][0]["targetProfileCheck"]["targetStructuralCompatibility"])
+        self.assertEqual(checked["candidates"][1]["disposition"], "unresolved_endpoint")
         for target in (None, "missing-variable"):
             payload = deepcopy(self.payload)
             payload["edge"]["targetCandidateID"] = target
@@ -91,9 +115,23 @@ class DatasetCandidateValidationTests(unittest.TestCase):
         self.assertEqual(self.validate(payload={})["status"], "failed_source_or_evidence_binding")
 
     def test_identity_immutability_and_zero_external_effects(self) -> None:
-        """Stable IDs remain source-local; validation uses no IO or provider."""
+        """Stable IDs remain source-local; only the frozen ontology is read; no provider or graph IO."""
+        profile = get_profile("hydroshare")
+        profile["ownerClassID"] = "A-C01"
+        with patch("src.extraction.llm.datasets.candidate_validation.get_profile", return_value=profile):
+            checked = self.validate()
+        self.assertEqual(checked["candidates"][1]["disposition"], "rejected_invalid_assertion")
+        self.assertIn("target_profile_incompatible", repr(checked["diagnostics"]))
+        original_open = io.open
+
+        def authority_only(path, mode="r", *args, **kwargs):
+            """Permit only read access to the frozen ontology; no corpus/graph IO."""
+            self.assertEqual(Path(path), ONTOLOGY_PATH)
+            self.assertEqual(mode, "rb")
+            return original_open(path, mode, *args, **kwargs)
+
         before = deepcopy((self.unit, self.payload, self.provenance))
-        with patch("builtins.open", side_effect=AssertionError("No file IO")), \
+        with patch("io.open", side_effect=authority_only), patch("builtins.open", side_effect=AssertionError("No file IO")), \
              patch("socket.socket", side_effect=AssertionError("No network")):
             first = self.validate()
             second = self.validate()

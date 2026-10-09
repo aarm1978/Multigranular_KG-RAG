@@ -12,6 +12,8 @@ import hashlib
 import json
 from typing import Any, Mapping
 
+from src.extraction.llm.semantic_target_profiles import get_profile, check_target
+
 from src.extraction.llm.datasets.source_units import (
     AbstractSourceUnit, CONTRACT_ID, bind_abstract_evidence, build_abstract_source_unit,
 )
@@ -33,6 +35,11 @@ def validate_variable_candidate(
     Evidence is a nonempty list of evidenceText/optional locatorAnchor mappings,
     supplied independently for each assertion (the same quote may support both).
 
+    Frozen profile checks read only the ontology specification. Profile reasons
+    report structural incompatibility separately from pending gates; no gate is
+    attested here. Existing validated dispositions still mean bounded structural
+    and literal checks only, never semantic acceptance or KG authorization.
+
     The caller supplies trusted snapshotID and optional sourceVersion separately
     from the candidate payload. Unit self-consistency is rechecked through the
     unchanged builder, including its expected digest when supplied. Computed-only
@@ -46,7 +53,7 @@ def validate_variable_candidate(
     result: dict[str, Any] = {
         "contractID": CONTRACT_ID, "ontologyVersion": "0.1.6",
         "validationScope": "structure_and_literal_evidence_only",
-        "semanticStatus": "not_evaluated", "graphAcceptance": False,
+        "semanticStatus": "not_evaluated", "graphAcceptance": False, "kgAuthorization": False,
         "originalPayload": deepcopy(payload), "source": None,
         "candidates": [], "diagnostics": [],
     }
@@ -88,6 +95,10 @@ def validate_variable_candidate(
         result["diagnostics"].append({"reason": "candidate_payload_fields_invalid", "disposition": result["status"]})
         return result
 
+    profile = get_profile("hydroshare")
+    variable = profile["entities"]["A-DOM04"]["declaration"]
+    relation = profile["relations"]["C-D16"]["declaration"]
+
     def check(kind: str, supplied: Any) -> dict[str, Any]:
         """Validate one assertion and bind only its own supplied quotations."""
         record: dict[str, Any] = {"kind": kind, "originalCandidate": deepcopy(supplied),
@@ -113,12 +124,12 @@ def validate_variable_candidate(
                 identity = json.dumps([unit.source_unit_id, kind, identifier], ensure_ascii=True, separators=(",", ":"))
                 record["sourceLocalCandidateID"] = "hydroshare:candidate:" + hashlib.sha256(identity.encode()).hexdigest()
             if kind == "node":
-                if (supplied.get("class"), supplied.get("inventoryId")) != ("Variable", "A-DOM04"):
+                if (supplied.get("class"), supplied.get("inventoryId")) != (variable["name"], variable["id"]):
                     finding("class_not_allowed")
                 if not isinstance(supplied.get("label"), str) or not supplied["label"].strip():
                     finding("variable_label_missing_or_malformed")
             else:
-                if (supplied.get("relation"), supplied.get("inventoryId")) != ("containsVariable", "C-D16"):
+                if (supplied.get("relation"), supplied.get("inventoryId")) != (relation["name"], relation["id"]):
                     finding("relation_not_allowed")
                 if supplied.get("sourceID") != accepted_owner_id:
                     finding("source_endpoint_owner_or_direction_mismatch")
@@ -132,6 +143,34 @@ def validate_variable_candidate(
                     finding("target_endpoint_unresolved", "unresolved_endpoint")
                 elif result["candidates"][0]["disposition"] != "validated":
                     finding("target_candidate_not_validated", "unresolved_endpoint")
+            # Profile checks do not replace exact endpoint or independent evidence checks.
+            identifier = supplied.get("inventoryId")
+            identifier = identifier if isinstance(identifier, str) else ""
+            if kind == "node":
+                scope = check_target("hydroshare", identifier)
+                compatible = (not scope["reasons"] and identifier == variable["id"]
+                              and supplied.get("class") == variable["name"])
+                endpoints_bound = None
+            else:
+                node = payload.get("node")
+                endpoints_bound = (supplied.get("sourceID") == accepted_owner_id
+                    and isinstance(node, Mapping)
+                    and supplied.get("targetCandidateID") == node.get("candidateID")
+                    and result["candidates"][0]["disposition"] == "validated")
+                scope = check_target("hydroshare", identifier,
+                    relation_name=supplied.get("relation"),
+                    source_class_id=profile["ownerClassID"] if supplied.get("sourceID") == accepted_owner_id else None,
+                    target_class_id=variable["id"] if endpoints_bound else None)
+                compatible = not scope["reasons"] and identifier == relation["id"]
+            record["targetProfileCheck"] = {
+                "artifactFamily": "hydroshare", "inventoryId": identifier,
+                "profileResult": scope, "targetStructuralCompatibility": compatible,
+                "endpointsBound": endpoints_bound, "pendingGates": list(scope["missingGates"]),
+                "semanticStatus": "not_evaluated", "kgAuthorization": False}
+            # Preserve unresolved endpoint dispositions; signature failure caused by
+            # a missing/invalid node must not turn them into rejected assertions.
+            if not compatible and (kind == "node" or endpoints_bound) and not record["findings"]:
+                finding("target_profile_incompatible")
             evidence = supplied.get("evidence")
             if not isinstance(evidence, list) or not evidence:
                 finding("independent_evidence_missing_or_malformed")

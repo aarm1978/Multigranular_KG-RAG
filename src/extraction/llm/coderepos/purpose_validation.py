@@ -13,6 +13,7 @@ import re
 from typing import Any, Mapping, Sequence
 
 from src.extraction.llm.publications.deterministic_evidence_binding import bind_evidence_spans
+from src.extraction.llm.semantic_target_profiles import get_profile, check_target
 
 
 CONTRACT = "study2-step11-semantic-contracts/v0.3"
@@ -35,8 +36,16 @@ def purpose_vocabulary(existing_nodes: Sequence[Mapping[str, Any]] = ()) -> list
     fails closed. No existing graph is read and no exhaustive collision audit is
     claimed when the caller supplies an empty inventory.
     """
-    records = [{"nodeID": f"repo-purpose:{VERSION}:{key}", "class": "RepositoryPurpose",
-                "inventoryId": "A-C07", "schemeID": SCHEME, "schemeVersion": VERSION,
+    profile = get_profile("github")
+    seed = profile["entities"]["A-C07"]
+    scope = check_target("github", "A-C07", model_authored=False)
+    if (not scope["structuralScopePass"] or seed["mode"] != "controlled_vocabulary_seed"
+            or seed["modelAuthorable"] or seed["schemeID"] != SCHEME
+            or seed["schemeVersion"] != VERSION or seed["categoryCount"] != len(CATEGORIES)
+            or seed["nodeIDPattern"] != "repo-purpose:1.0.0:{category_key}"):
+        raise ValueError("Frozen purpose vocabulary/profile inconsistency")
+    records = [{"nodeID": f"repo-purpose:{VERSION}:{key}", "class": seed["declaration"]["name"],
+                "inventoryId": seed["declaration"]["id"], "schemeID": SCHEME, "schemeVersion": VERSION,
                 "categoryKey": key, "label": label, "definition": definition,
                 "extractionMethod": "controlled_vocabulary_seed", "contractID": CONTRACT}
                for key, label, definition in CATEGORIES]
@@ -64,6 +73,11 @@ def validate_purpose_candidates(
     never model-authored. Its matching authority, read status and diagnostics are
     checked without rereading files; computed-only hashes retain that limitation.
 
+    Frozen profile checks read only the ontology specification. Profile reasons
+    report structural incompatibility separately from pending gates; no gate is
+    attested here. Existing validated dispositions still mean bounded structural
+    and literal checks only, never semantic acceptance or KG authorization.
+
     Each proposal has candidateID, sourceID, sourceUnitID, relation, inventoryId,
     categoryKey, targetID, evidence (nonempty quote/optional locatorAnchor list).
     Optional classification is proposed, unclassified or ambiguous. The latter
@@ -74,7 +88,7 @@ def validate_purpose_candidates(
     result: dict[str, Any] = {"vocabularyRecords": purpose_vocabulary(), "candidateChecks": [],
         "originalCandidates": deepcopy(candidates), "diagnostics": [],
         "validationScope": "structure_and_literal_evidence_only", "semanticStatus": "not_evaluated",
-        "graphAcceptance": False, "source": None}
+        "graphAcceptance": False, "kgAuthorization": False, "source": None}
 
     def stop(status: str, reason: str) -> dict[str, Any]:
         """Preserve technical/review failures without claiming candidate validity."""
@@ -136,6 +150,9 @@ def validate_purpose_candidates(
         return stop(failed, "source_unit_coordinates_or_identity_mismatch")
     if not isinstance(candidates, list):
         return stop("rejected_invalid_assertion", "candidate_list_malformed")
+    profile = get_profile("github")
+    relation = profile["relations"]["C-C07"]["declaration"]
+    result["vocabularyProfileCheck"] = check_target("github", "A-C07", model_authored=False)
     vocabulary = {r["categoryKey"]: r["nodeID"] for r in result["vocabularyRecords"]}
     seen: dict[str, str] = {}
     ids = [c.get("candidateID") for c in candidates if isinstance(c, Mapping)]
@@ -158,7 +175,7 @@ def validate_purpose_candidates(
                 reject("candidate_id_invalid_or_duplicate")
             if candidate.get("sourceID") != unit["canonicalArtifactID"] or candidate.get("sourceUnitID") != source_unit_id:
                 reject("candidate_owner_or_unit_mismatch")
-            if (candidate.get("relation"), candidate.get("inventoryId")) != ("hasPurpose", "C-C07"):
+            if (candidate.get("relation"), candidate.get("inventoryId")) != (relation["name"], relation["id"]):
                 reject("relation_not_allowed")
             mode, key = candidate.get("classification", "proposed"), candidate.get("categoryKey")
             if mode == "proposed":
@@ -171,6 +188,26 @@ def validate_purpose_candidates(
                     reject("unresolved_classification_invalid")
             else:
                 reject("classification_invalid")
+            identifier = candidate.get("inventoryId")
+            identifier = identifier if isinstance(identifier, str) else ""
+            owner_bound = candidate.get("sourceID") == unit["canonicalArtifactID"]
+            seed_bound = (mode == "proposed" and isinstance(key, str) and key in vocabulary
+                          and candidate.get("targetID") == vocabulary[key])
+            # No gate attestations: literal binding is not semantic purpose review,
+            # and matching a seed ID is not external endpoint acceptance.
+            scope = check_target("github", identifier,
+                relation_name=candidate.get("relation"),
+                source_class_id=profile["ownerClassID"] if owner_bound else None,
+                target_class_id="A-C07")
+            compatible = not scope["reasons"] and identifier == relation["id"]
+            check["targetProfileCheck"] = {
+                "artifactFamily": "github", "inventoryId": identifier,
+                "profileResult": scope, "targetStructuralCompatibility": compatible,
+                "ownerBound": owner_bound, "controlledSeedBound": seed_bound,
+                "pendingGates": list(scope["missingGates"]),
+                "semanticStatus": "not_evaluated", "kgAuthorization": False}
+            if not compatible and not check["findings"]:
+                reject("target_profile_incompatible")
             evidence = candidate.get("evidence")
             if (not isinstance(evidence, list) or not evidence or any(not isinstance(e, Mapping)
                     or set(e) - {"evidenceText", "locatorAnchor"} for e in evidence)):
