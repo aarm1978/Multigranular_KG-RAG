@@ -12,6 +12,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 
 from src.extraction.llm.pilot_preflight import build_preflight, canonical, digest, verify_selection, SELECTIONS
+from src.extraction.llm.calibration_preflight import load_case, REQUEST_IDS, MANIFEST_SHA256, wave_for
 
 
 def save(path, data):
@@ -22,7 +23,7 @@ def save(path, data):
         os.fsync(stream.fileno())
 
 
-def load_selected(root, request_id):
+def load_legacy_selected(root, request_id):
     """Verify stored associations and rebuild the pure envelope, without corpus IO."""
     if request_id not in SELECTIONS:
         raise ValueError('unknown_request')
@@ -43,6 +44,11 @@ def load_selected(root, request_id):
     return result
 
 
+def load_selected(root, request_id):
+    """Use pinned manifest preflight for every CLI ID; no legacy approval bypass."""
+    return load_case(root, request_id)
+
+
 def verify_approval(raw, expected_digest, request_id, result):
     """Verify explicit local authorization, expiry, hashes and reserved cost bounds.
 
@@ -60,7 +66,8 @@ def verify_approval(raw, expected_digest, request_id, result):
             result[key] = value
         return result
     approval = json.loads(raw, object_pairs_hook=unique)
-    if approval.get('schemaVersion') != 'step12c-terminal-approval/1' or approval.get('authorized') is not True:
+    version = 'step12c-terminal-approval/2' if 'calibrationManifestSha256' in result else 'step12c-terminal-approval/1'
+    if approval.get('schemaVersion') != version or approval.get('authorized') is not True:
         raise ValueError('not_authorized')
     for field in ('approvalID','researcher','approvedAt','expiresAt','currency','pricingReference'):
         if not isinstance(approval.get(field), str) or not approval[field].strip():
@@ -71,8 +78,10 @@ def verify_approval(raw, expected_digest, request_id, result):
     if start.tzinfo is None or end.tzinfo is None or not start <= now < end:
         raise ValueError('approval_time_invalid')
     rows = approval.get('requests')
-    if not isinstance(rows, dict) or not rows or set(rows) - set(SELECTIONS) or request_id not in rows:
+    if not isinstance(rows, dict) or not rows or set(rows) - set(REQUEST_IDS if version.endswith('/2') else SELECTIONS) or request_id not in rows:
         raise ValueError('request_not_approved')
+    if any(not isinstance(row, dict) for row in rows.values()):
+        raise ValueError('approval_request_malformed')
     caps = [approval.get('totalCostCap')] + [r.get('reservedMaximumCost') for r in rows.values()]
     if any(type(c) not in (int,float) or not math.isfinite(c) or c <= 0 for c in caps) or sum(caps[1:]) > caps[0]:
         raise ValueError('monetary_caps_invalid')
@@ -82,7 +91,69 @@ def verify_approval(raw, expected_digest, request_id, result):
     for key in ('semanticRequestSha256','providerEnvelopeSha256'):
         if selected.get(key) != result[key]:
             raise ValueError('approval_request_mismatch')
+    if version.endswith('/2'):
+        verify_wave_and_context(approval, request_id, result, now)
     return approval
+
+
+def verify_wave_and_context(approval, request_id, result, now):
+    """Require explicit wave clearance and researcher-attested context/budget bounds."""
+    if (approval.get('manifestSha256') != MANIFEST_SHA256
+            or result.get('calibrationManifestSha256') != MANIFEST_SHA256
+            or result.get('calibrationRequestID') != request_id
+            or result.get('calibrationWave') != wave_for(request_id)
+            or 'HS-01' in approval['requests']):
+        raise ValueError('calibration_approval_identity_mismatch')
+    wave = wave_for(request_id)
+    waves = approval.get('waves')
+    if not isinstance(waves, dict) or not waves or set(waves) - {'A', 'B', 'C'}:
+        raise ValueError('wave_approval_missing')
+    wave_caps = []
+    for name, row in waves.items():
+        if not isinstance(row, dict) or type(row.get('authorized')) is not bool:
+            raise ValueError('wave_approval_malformed')
+        ids = row.get('requestIDs')
+        expected = {rid for rid in approval['requests'] if wave_for(rid) == name}
+        cap = row.get('reservedCostCap')
+        if (not isinstance(ids, list) or any(not isinstance(rid, str) for rid in ids)
+                or len(ids) != len(set(ids)) or set(ids) != expected or not ids
+                or type(cap) not in (int, float) or not math.isfinite(cap) or cap <= 0
+                or sum(approval['requests'][rid]['reservedMaximumCost'] for rid in ids) > cap):
+            raise ValueError('wave_inventory_or_budget_invalid')
+        wave_caps.append(cap)
+    if (sum(wave_caps) > approval['totalCostCap']
+            or any(wave_for(rid) not in waves for rid in approval['requests'])
+            or wave not in waves or waves[wave]['authorized'] is not True):
+        raise ValueError('wave_not_authorized_or_over_budget')
+    clearances = approval.get('waveClearances')
+    if not isinstance(clearances, dict):
+        raise ValueError('wave_clearances_missing')
+    for prior in ('A', 'B')[:{'A': 0, 'B': 1, 'C': 2}[wave]]:
+        clearance = clearances.get(prior)
+        if (not isinstance(clearance, dict) or clearance.get('decision') != 'cleared_for_next_wave'
+                or any(not isinstance(clearance.get(k), str) or not clearance[k].strip()
+                       for k in ('researcher', 'clearedAt', 'reviewRecordSha256'))):
+            raise ValueError('prior_wave_researcher_clearance_required')
+        stamp = datetime.fromisoformat(clearance['clearedAt'].replace('Z', '+00:00'))
+        fingerprint = clearance['reviewRecordSha256']
+        if (stamp.tzinfo is None or stamp > now or len(fingerprint) != 64
+                or any(c not in '0123456789abcdef' for c in fingerprint)):
+            raise ValueError('prior_wave_clearance_invalid')
+    selected = approval['requests'][request_id]
+    for key in ('providerInputSha256', 'schemaSha256', 'requestVersion',
+                'providerInputProjectionVersion', 'promptIdentifier'):
+        if key not in selected or selected[key] != result[key]:
+            raise ValueError('calibration_request_version_or_hash_mismatch')
+    if selected.get('wave') != wave:
+        raise ValueError('request_wave_mismatch')
+    values = [selected.get(k) for k in ('inputTokenAllowance', 'providerOverheadTokenAllowance',
+                                      'contextTokenLimit', 'outputTokenCeiling')]
+    if any(type(value) is not int or value <= 0 for value in values):
+        raise ValueError('approved_context_bounds_missing')
+    allowance, overhead, context, output = values
+    if (output != 32768 or allowance < result['conservativeInputTokenAllowance'] + overhead
+            or context < allowance + output):
+        raise ValueError('approved_context_bounds_exceeded')
 
 
 class NoRedirect(HTTPRedirectHandler):
@@ -106,6 +177,8 @@ def transport(wire, key, timeout):
 def execute(root, request_id, approval_raw, approval_digest, *, timeout=1800, progress_interval=15,
             send=transport, key_loader=None, progress=print):
     """Dispatch exactly once after approval; ambiguous/crashed attempts block all IDs."""
+    if request_id == 'HS-01':
+        raise ValueError('historical_request_not_dispatchable')
     from src.extraction.llm.publications.openai_provider import extract_model_output, load_openai_api_key
     if not math.isfinite(timeout) or not math.isfinite(progress_interval) or timeout <= 0 or progress_interval <= 0:
         raise ValueError('invalid_timing')
@@ -144,7 +217,9 @@ def execute(root, request_id, approval_raw, approval_digest, *, timeout=1800, pr
         save(attempt / 'provider-input.txt', result['inputBytes'])
         save(attempt / 'semantic-request.json', result['semanticRequestBytes'])
         save(attempt / 'association.json', canonical({k:result[k] for k in
-             ('semanticRequestSha256','providerEnvelopeSha256','providerInputSha256','schemaSha256')}))
+             ('semanticRequestSha256','providerEnvelopeSha256','providerInputSha256','schemaSha256',
+              'calibrationManifestSha256','calibrationRequestID','calibrationWave','requestVersion',
+              'promptIdentifier','providerInputProjectionVersion') if k in result}))
         event('prepared', requestID=request_id, approvalSha256=approval_digest, timeoutSeconds=timeout)
         replies = queue.Queue()
 
@@ -203,7 +278,7 @@ def main():
     """Explicit dry-run or single-ID execute; never infer authorization."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('mode', choices=['dry-run','execute'])
-    parser.add_argument('--request-id', required=True, choices=list(SELECTIONS))
+    parser.add_argument('--request-id', required=True, choices=list(REQUEST_IDS))
     parser.add_argument('--approval', type=Path)
     parser.add_argument('--approval-sha256')
     parser.add_argument('--timeout', type=float, default=1800)
@@ -212,7 +287,8 @@ def main():
     root = Path(__file__).resolve().parents[3]
     if args.mode == 'dry-run':
         result = load_selected(root,args.request_id)
-        print(json.dumps({k:v for k,v in result.items() if k.endswith('Sha256') or k in ('authorization','outputTokenCeiling')},indent=2))
+        print(json.dumps({k:v for k,v in result.items() if k.endswith('Sha256') or k in ('authorization','outputTokenCeiling','calibrationRequestID','calibrationWave',
+                'inputByteCount','wireByteCount','conservativeInputTokenAllowance','executionHold')},indent=2))
         return
     if args.approval is None or not args.approval_sha256:
         parser.error('execute requires --approval and --approval-sha256')

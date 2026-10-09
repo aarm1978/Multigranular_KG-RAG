@@ -23,7 +23,7 @@ class TerminalTests(unittest.TestCase):
         now = datetime.now(timezone.utc)
         self.approval = dict(schemaVersion='step12c-terminal-approval/1',authorized=True,approvalID='synthetic',researcher='fixture',
             approvedAt=(now-timedelta(minutes=1)).isoformat(),expiresAt=(now+timedelta(hours=1)).isoformat(),currency='TEST',
-            pricingReference='synthetic only',totalCostCap=2,requests={'HS-01':dict(maximumAttempts=1,reservedMaximumCost=1,
+            pricingReference='synthetic only',totalCostCap=2,requests={'GH-01':dict(maximumAttempts=1,reservedMaximumCost=1,
                 semanticRequestSha256=self.result['semanticRequestSha256'],providerEnvelopeSha256=self.result['providerEnvelopeSha256'])})
         self.response = canonical(dict(id='fake',model='fake',status='completed',usage={'input_tokens':3,'output_tokens':4},
             output=[dict(type='message',content=[dict(type='output_text',text=' {"original":true}\n')])]))
@@ -32,24 +32,24 @@ class TerminalTests(unittest.TestCase):
         """Inject fake key/transport; any accidental network or key lookup fails."""
         raw = canonical(self.approval)
         with patch.object(runner,'load_selected',return_value=deepcopy(self.result)), patch('socket.socket',side_effect=AssertionError('network')):
-            return runner.execute(self.root,'HS-01',raw,digest(raw),send=send,key_loader=lambda:'FAKE_TEST_KEY',**kwargs)
+            return runner.execute(self.root,'GH-01',raw,digest(raw),send=send,key_loader=lambda:'FAKE_TEST_KEY',**kwargs)
 
     def test_approval_fail_closed_before_dispatch(self):
         """Wrong hashes, missing caps, expiry and unauthorized IDs fail offline."""
         ambiguous = b'{"authorized":false,"authorized":true}'
         with self.assertRaisesRegex(ValueError, 'duplicate_approval_field'):
-            runner.verify_approval(ambiguous,digest(ambiguous),'HS-01',self.result)
+            runner.verify_approval(ambiguous,digest(ambiguous),'GH-01',self.result)
         raw = canonical(self.approval)
         with self.assertRaises(ValueError):
-            runner.verify_approval(raw,'0'*64,'HS-01',self.result)
+            runner.verify_approval(raw,'0'*64,'GH-01',self.result)
         for change in ({'authorized':False},{'expiresAt':'2000-01-01T00:00:00Z'}, {'totalCostCap':0}, {'currency':''}):
             approval = {**self.approval,**change}
             raw = canonical(approval)
             with self.assertRaises(ValueError):
-                runner.verify_approval(raw,digest(raw),'HS-01',self.result)
+                runner.verify_approval(raw,digest(raw),'GH-01',self.result)
         raw = canonical(self.approval)
         with self.assertRaises(ValueError):
-            runner.verify_approval(raw,digest(raw),'GH-01',self.result)
+            runner.verify_approval(raw,digest(raw),'HUB-01',self.result)
 
     def test_exact_bytes_raw_preservation_and_no_overwrite(self):
         """Persist raw response before pure extraction, and prevent a second call."""
@@ -59,7 +59,7 @@ class TerminalTests(unittest.TestCase):
             calls.append(wire)
             return 200,self.response
         self.assertEqual(self.run_attempt(send),'response_recorded')
-        folder=self.root/'var/study2_step12c/terminal/HS-01'
+        folder=self.root/'var/study2_step12c/terminal/GH-01'
         self.assertEqual((folder/'response.raw').read_bytes(),self.response)
         self.assertEqual((folder/'provider-envelope.json').read_bytes(),self.result['wireBytes'])
         self.assertEqual((folder/'model-output.utf8').read_bytes(),b' {"original":true}\n')
@@ -87,7 +87,7 @@ class TerminalTests(unittest.TestCase):
         """Complete error response is stored and blocks further dispatch."""
         raw=b'{"error":{"message":"synthetic refusal"}}'
         self.assertEqual(self.run_attempt(lambda *args:(429,raw)),'response_requires_review')
-        self.assertEqual((self.root/'var/study2_step12c/terminal/HS-01/response.raw').read_bytes(),raw)
+        self.assertEqual((self.root/'var/study2_step12c/terminal/GH-01/response.raw').read_bytes(),raw)
         self.assertTrue((self.root/'var/study2_step12c/terminal/STOP').exists())
 
     def test_documented_structural_limits(self):
@@ -111,7 +111,7 @@ class TerminalTests(unittest.TestCase):
             if key == 'OPENAI_API_KEY':
                 raise AssertionError('credentials forbidden')
             return default
-        with patch('sys.argv',['pilot_terminal','dry-run','--request-id','HS-01']), \
+        with patch('sys.argv',['pilot_terminal','dry-run','--request-id','GH-01']), \
              patch.object(runner,'load_selected',return_value=self.result), \
              patch.object(runner,'execute',side_effect=AssertionError('execute forbidden')), \
              patch('os.environ.get',side_effect=environment), \
@@ -128,7 +128,7 @@ class TerminalTests(unittest.TestCase):
                    side_effect=OpenAIProviderError('OPENAI_API_KEY is unavailable')) as loader, \
              patch('socket.socket', side_effect=AssertionError('network')):
             with self.assertRaises(OpenAIProviderError):
-                runner.execute(self.root, 'HS-01', raw, digest(raw),
+                runner.execute(self.root, 'GH-01', raw, digest(raw),
                                send=lambda *args: self.fail('must not dispatch'))
             loader.assert_called_once_with(env_path=self.root / '.env')
         self.assertFalse(state.exists())
@@ -152,7 +152,7 @@ class TerminalTests(unittest.TestCase):
             """Check dispatch follows credential resolution and durable preparation."""
             self.assertEqual(calls, ['credential'])
             self.assertEqual(key, 'SYNTHETIC_KEY')
-            self.assertEqual((state / 'HS-01/provider-envelope.json').read_bytes(), wire)
+            self.assertEqual((state / 'GH-01/provider-envelope.json').read_bytes(), wire)
             calls.append('dispatch')
             return 200, self.response
 
@@ -161,8 +161,8 @@ class TerminalTests(unittest.TestCase):
              patch('socket.socket', side_effect=AssertionError('network')):
             invalid = canonical({**self.approval, 'authorized': False})
             with self.assertRaises(ValueError):
-                runner.execute(self.root, 'HS-01', invalid, digest(invalid), send=send)
+                runner.execute(self.root, 'GH-01', invalid, digest(invalid), send=send)
             loader.assert_not_called()
-            self.assertEqual(runner.execute(self.root, 'HS-01', raw, digest(raw), send=send), 'response_recorded')
+            self.assertEqual(runner.execute(self.root, 'GH-01', raw, digest(raw), send=send), 'response_recorded')
         self.assertEqual(calls, ['credential', 'dispatch'])
-        self.assertNotIn('SYNTHETIC_KEY', ''.join(p.read_text() for p in (state / 'HS-01').iterdir()))
+        self.assertNotIn('SYNTHETIC_KEY', ''.join(p.read_text() for p in (state / 'GH-01').iterdir()))
