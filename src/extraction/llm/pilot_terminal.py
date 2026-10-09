@@ -106,11 +106,15 @@ def transport(wire, key, timeout):
 def execute(root, request_id, approval_raw, approval_digest, *, timeout=1800, progress_interval=15,
             send=transport, key_loader=None, progress=print):
     """Dispatch exactly once after approval; ambiguous/crashed attempts block all IDs."""
-    from src.extraction.llm.publications.openai_provider import extract_model_output
+    from src.extraction.llm.publications.openai_provider import extract_model_output, load_openai_api_key
     if not math.isfinite(timeout) or not math.isfinite(progress_interval) or timeout <= 0 or progress_interval <= 0:
         raise ValueError('invalid_timing')
     result = load_selected(root, request_id)
     verify_approval(approval_raw, approval_digest, request_id, result)
+    # Credential absence must not consume the single approved attempt.
+    key = (key_loader or (lambda: load_openai_api_key(env_path=root / '.env')))()
+    if not key:
+        raise ValueError('credential_unavailable')
     state = root / 'var/study2_step12c/terminal'
     state.mkdir(parents=True, exist_ok=True)
     lock = state / 'dispatch.lock'
@@ -142,9 +146,6 @@ def execute(root, request_id, approval_raw, approval_digest, *, timeout=1800, pr
         save(attempt / 'association.json', canonical({k:result[k] for k in
              ('semanticRequestSha256','providerEnvelopeSha256','providerInputSha256','schemaSha256')}))
         event('prepared', requestID=request_id, approvalSha256=approval_digest, timeoutSeconds=timeout)
-        key = (key_loader or (lambda: os.environ.get('OPENAI_API_KEY','')))()
-        if not key:
-            raise ValueError('credential_unavailable')
         replies = queue.Queue()
 
         def worker():

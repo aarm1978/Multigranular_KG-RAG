@@ -117,3 +117,52 @@ class TerminalTests(unittest.TestCase):
              patch('os.environ.get',side_effect=environment), \
              patch('builtins.print'):
             runner.main()
+
+    def test_missing_credentials_leave_approved_attempt_available(self):
+        """Default Publications loader failure occurs before any attempt state."""
+        from src.extraction.llm.publications.openai_provider import OpenAIProviderError
+        raw = canonical(self.approval)
+        state = self.root / 'var/study2_step12c/terminal'
+        with patch.object(runner, 'load_selected', return_value=self.result), \
+             patch('src.extraction.llm.publications.openai_provider.load_openai_api_key',
+                   side_effect=OpenAIProviderError('OPENAI_API_KEY is unavailable')) as loader, \
+             patch('socket.socket', side_effect=AssertionError('network')):
+            with self.assertRaises(OpenAIProviderError):
+                runner.execute(self.root, 'HS-01', raw, digest(raw),
+                               send=lambda *args: self.fail('must not dispatch'))
+            loader.assert_called_once_with(env_path=self.root / '.env')
+        self.assertFalse(state.exists())
+        self.assertEqual(self.run_attempt(lambda *args: (200, self.response)), 'response_recorded')
+        self.assertFalse((state / 'STOP').exists())
+
+    def test_default_loader_after_approval_before_attempt(self):
+        """Resolve the shared environment/.env behavior only on approved execution."""
+        raw = canonical(self.approval)
+        calls = []
+        state = self.root / 'var/study2_step12c/terminal'
+
+        def load(**kwargs):
+            """Stand in for the tested loader without inspecting real credentials."""
+            self.assertFalse(state.exists())
+            self.assertEqual(kwargs, {'env_path': self.root / '.env'})
+            calls.append('credential')
+            return 'SYNTHETIC_KEY'
+
+        def send(wire, key, timeout):
+            """Check dispatch follows credential resolution and durable preparation."""
+            self.assertEqual(calls, ['credential'])
+            self.assertEqual(key, 'SYNTHETIC_KEY')
+            self.assertEqual((state / 'HS-01/provider-envelope.json').read_bytes(), wire)
+            calls.append('dispatch')
+            return 200, self.response
+
+        with patch.object(runner, 'load_selected', return_value=self.result), \
+             patch('src.extraction.llm.publications.openai_provider.load_openai_api_key', side_effect=load) as loader, \
+             patch('socket.socket', side_effect=AssertionError('network')):
+            invalid = canonical({**self.approval, 'authorized': False})
+            with self.assertRaises(ValueError):
+                runner.execute(self.root, 'HS-01', invalid, digest(invalid), send=send)
+            loader.assert_not_called()
+            self.assertEqual(runner.execute(self.root, 'HS-01', raw, digest(raw), send=send), 'response_recorded')
+        self.assertEqual(calls, ['credential', 'dispatch'])
+        self.assertNotIn('SYNTHETIC_KEY', ''.join(p.read_text() for p in (state / 'HS-01').iterdir()))
