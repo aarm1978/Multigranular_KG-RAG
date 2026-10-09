@@ -1,7 +1,9 @@
 # Study 2 Step 12C — Bounded semantic pilot plan candidate v0.1
 
 **DRAFT / NOT AUTHORIZED — researcher review required before execution.**
-Prepared 2026-10-09 against `02559039f348a638c6aeb86575c31ba1b93126a5` on
+Prepared 2026-10-09; offline provider preflight follows selection checkpoint
+`d091d9be476cb636bb614a88dcdc0dbf8e04ec4e`, originally based on
+`02559039f348a638c6aeb86575c31ba1b93126a5`, on
 `codex/publication-human-core-annotation-ui`.
 
 ## Purpose and authority
@@ -136,9 +138,11 @@ material is unavailable for evidence even when present in the trusted reader.
 | Field | Proposed value / approval state |
 |---|---|
 | Execution authorization / approver / approval timestamp | NOT AUTHORIZED / PENDING / PENDING |
-| Provider and exact versioned model ID | PENDING researcher approval |
-| Temperature, top-p, seed, reasoning effort, response format/API mode | PENDING approval and actual model support; no assumed defaults |
-| Maximum input tokens and output tokens per request | PENDING approval; include instructions, schema, inventories and source units in accounting |
+| Provider/API and configured model ID | Confirmed Publications configuration: OpenAI Responses API, `gpt-5.6-sol`; returned model/version unknown until an authorized response |
+| Reasoning / retention / tools / format | Confirmed `reasoning.effort=medium`, `store=false`, no tools; strict `text.format` JSON Schema where supported; synchronous prospective envelope |
+| Temperature, top-p, seed and other unsupported settings | Unset; support/values remain pending, no assumed defaults |
+| Maximum input tokens per request | PENDING approval; conservative allowances below include semantic input and response schema, with API overhead still unknown |
+| Prospective maximum output tokens | HS-01: 4096; GH-01: 3072; HUB-01: 8192, pending researcher approval |
 | Planned requests | 3 (HS-01, GH-01, HUB-01); approve individually |
 | Outer request limit | At most 2 per family / 6 total; additional slots require revised exact selection and approval |
 | Attempts, retries and concurrency | Proposed 1 attempt per selected request, 0 automatic retries, sequential execution; approval pending |
@@ -150,7 +154,7 @@ No request may be sent until every execution/budget field is approved and a
 conservative maximum cost fits both per-request and aggregate caps. Count failed
 or interrupted attempts against limits; an unknown billing outcome is a stop.
 Do not silently truncate selected context to fit a token cap. Stop for plan revision
-if the complete approved request cannot fit. No provider runner is implemented here.
+if the complete approved request cannot fit. No provider transport/runner is implemented here; the offline preflight only constructs envelopes.
 
 ## Request preservation and deterministic replay
 
@@ -165,8 +169,9 @@ if the complete approved request cannot fit. No provider runner is implemented h
    and `ciroh_hub-request/1.0.0` / `ciroh_hub-response/1.0.0`. Freeze the complete
    approved provider envelope separately (instructions, settings and schema), exact
    transmitted body bytes/hash and its association to the semantic request hash.
-   Request and provider-envelope hashes are distinct. Request hashes are pending
-   until final construction/approval; they are not fabricated in this draft.
+   Request and provider-envelope hashes are distinct. The provisional request/envelope hashes from offline construction are recorded
+   below; any approved setting change creates a new envelope hash. They establish
+   no association with a live response.
 3. If subsequently authorized, preserve raw response body bytes before parsing,
    exact model text, timestamps, actual returned provider/model/request metadata,
    finish reason, usage and charge information when available. Do not invent absent
@@ -247,8 +252,117 @@ and other frozen production dependencies remain separate.
 ## Decisions required before any live work
 
 Approve or revise the three exact selections and incomplete-input treatment;
-approve provider/model/settings, token and monetary caps, attempt limits and
+confirm execution using the specified provider/model configuration; approve remaining
+settings, token and monetary caps, attempt limits and
 artifact storage; approve review rubric/ceiling and decision procedure; separately
 authorize provider integration and execution. Context changes require a revised
 manifest and request hash, not silent expansion. This draft and its commit provide
 no live authorization. The tracked operational handoff remains unchanged.
+
+
+## Offline provider preflight (execution remains NOT AUTHORIZED)
+
+Implementation: `src/extraction/llm/pilot_preflight.py`; focused checks:
+`tests/test_pilot_provider_preflight.py`. Four new synthetic T1/T2 tests passed;
+no historical tests, provider calls, credentials or network access were used.
+The three local requests rebuilt with the exact original 22-unit manifest, order,
+owner IDs/classes and authority offsets/hashes. Corpus-byte hashes match the draft;
+reader diagnostics match the pinned scoped warning signatures. No context was
+resampled, added or replaced. GitHub and Hub remain input-incomplete; HydroShare
+retains explicit optional README absence. Computed-only acquisition integrity is
+not upgraded by this preflight. The handoff and accepted contracts are unchanged.
+
+### Structural schema compatibility and limits
+
+The accepted `responseContract` objects are field descriptions, not JSON Schemas.
+Preflight projects them to a closed root object with closed nested objects,
+`additionalProperties=false`, all properties required within each object variant,
+arrays, references, enums and nested `anyOf` alternatives. Optional endpoint,
+locator, contribution and source-specific fields are represented by omission
+variants, not inserted nulls. This avoids altering original responses to satisfy
+the parsers. GitHub unclassified/ambiguous purpose nulls retain their existing
+parser-supported treatment; invalid classification/null combinations remain local
+errors. Inventory alternatives use the existing profile, not Publication schemas.
+
+Offline checks establish valid Draft 2020-12 JSON Schema, the conservative strict
+object/required-field shape, and compatibility of every generated candidate-object
+variant with its unchanged family parser. They also check optional evidence fields,
+exact envelope hashes, drift rejection, immutability and local invalid-evidence
+isolation through replay. Required fields do not establish nonempty evidence,
+literal binding, trusted endpoints, contextual support or semantic truth. An empty
+or invalid evidence record remains a localized parser/validator finding, without
+invalidating identifiable siblings. A malformed global envelope remains a processing
+failure. No repair layer or generic candidate execution framework is added.
+
+The pure `build_responses_api_request()` constructor is reused from the accepted
+Publication provider module; its Publication-specific format name is replaced by
+the family response name. No Publication extraction schema, retry policy, key loader,
+transport or production orchestration is called. Input consists of the exact
+source-specific semantic request JSON, including its instructions and selected
+units. Provider field names/configuration follow that existing local adapter.
+**Remote schema acceptance, account/model access and model-specific strict-output
+support remain untested.** Network documentation lookup was intentionally omitted
+under this offline task. Strict mode must not silently fall back or change contracts
+if an authorized future call rejects the schema; preserve the error and stop.
+
+### Actual sizes and prospective ceilings
+
+Installed `tiktoken.encoding_for_model("gpt-5.6-sol")` raises `KeyError`; no verified
+compatible tokenizer mapping is available locally. No tokenizer files were fetched.
+The table therefore gives actual serialized UTF-8 byte sizes and a deliberately
+conservative **one-token-per-byte allowance for input plus schema**, not measured
+tokens, billing usage or an exact model count. Unknown provider framing/schema
+processing overhead is additional and requires a margin when approving input caps.
+
+| Request | Input bytes | Schema bytes | Exact envelope bytes | Conservative input+schema token allowance (not count) | Proposed output-token ceiling |
+|---|---:|---:|---:|---:|---:|
+| HS-01 | 14130 | 12374 | 28053 | 26504 | 4096 |
+| GH-01 | 28320 | 19313 | 50645 | 47633 | 3072 |
+| HUB-01 | 41104 | 18720 | 63500 | 59824 | 8192 |
+
+The larger envelope sizes include JSON escaping and the strict schema; source
+context was not expanded. The prospective output ceilings are small feasibility
+budgets: 4096 for the full HydroShare abstract, 3072 for the short GitHub description,
+and 8192 for the 20-unit Hub context with potential parent/dependent proposals.
+They are not target quotas or promises that all candidates fit. They allow more
+headroom for Hub's evidence/dependency records without copying a 32768-token
+production ceiling. Reasoning and visible output must fit the configured limit
+under actual provider behavior; no reasoning/output split is assumed. Truncation
+is an explicit incomplete-response finding and stops that attempt; no silent
+retry or token escalation. Monetary caps, actual prices and support for optional
+settings remain pending. No usage or cost is claimed.
+
+### Deterministic associations and ignored local artifacts
+
+All generated artifacts are under ignored `var/study2_step12c/preflight/` and are
+excluded from this commit. Each request directory contains `request-result.json`,
+`semantic-request.json`, `provider-input.txt`, `provider-envelope.json` and
+`preflight.json`. The semantic digest uses the accepted request contract's exact
+canonical serialization; input uses deterministic UTF-8 JSON; envelope bytes are
+separately serialized and hashed. An authorized sender must transmit the stored
+envelope bytes unchanged, not reserialize with an SDK. The semantic digest differs
+legitimately from the input digest because their Unicode escaping policies differ;
+the JSON values are the same. No network request has been transmitted.
+
+| Request | Semantic request SHA-256 | Provider input SHA-256 | Provider envelope SHA-256 |
+|---|---|---|---|
+| HS-01 | `66a3fd974108b18b58d0b6effed8924669558509502760e43699b2858b07f8c0` | `198cf18594357644ed2debd19aa455fce74a849b15a31f493f4dbdc979cd7878` | `a494d5d90bac2345b5c388d995ef1fa3bc9bfd18acc5f994d858d76a54061a6b` |
+| GH-01 | `bcece9e5d4752cb5804151fcf80c6b74864c62db5430acdc122cee642dea7d45` | `d694226746702b5fd4c11eaf4c82049aa4fb1a42e643bc134f22e8cb929c2344` | `86d5a652a64e94796e3ead05fb52ca883eec66cb475e4ee609f761dedb1bfba1` |
+| HUB-01 | `5a1db2a4da2c43d09c1aa52fdb993e58ef8b9e9600d6d8b3a8197380ff52ae45` | `8b9f0c4fb64ff2d3ae1faf02d7333ebe22f06a4fa92c58afdea8a551bf6ad252` | `efa6644eeb0cd41099469312b19ede2005d8d915c54dd1b552a38a01fb9ee5f3` |
+
+Proposed future layout, still requiring storage/execution approval:
+`var/study2_step12c/runs/<approved-run-id>/<request-id>/` with immutable
+`source-snapshot/` (exact selected-owner records, full authority text and reader
+results), `request-inputs/` (reconstructable family arguments, endpoint inventories,
+selected IDs and versions), the five preflight artifacts above, `response.raw`
+(exact HTTP body), `model-output.utf8` (one exact response text, no repairs),
+`provider-metadata.json` (only returned metadata/usage), and `replay/` (parse,
+validation, disposition JSON and hashes). Keep API headers/credentials out of
+artifacts. Record failures, refusals and incomplete responses separately rather
+than inventing candidate output. Researcher review lives in a distinct record.
+No response/run artifacts are fabricated by preflight.
+
+Approval still required: three requests and incomplete-source treatment, prospective
+output ceilings and input-overhead margin, monetary caps and approved pricing,
+optional supported settings, storage, attempt/review limits, and explicit live
+execution authorization. A future transport implementation needs separate approval.
