@@ -44,8 +44,13 @@ def load_legacy_selected(root, request_id):
     return result
 
 
-def load_selected(root, request_id):
+def load_selected(root, request_id, *, amendment=None, amendment_sha256=None):
     """Use pinned manifest preflight for every CLI ID; no legacy approval bypass."""
+    if amendment is not None or amendment_sha256 is not None:
+        if amendment is None or not amendment_sha256:
+            raise ValueError('amendment_path_and_digest_required')
+        from src.extraction.llm.wave_b_amendment import load_case as load_amended_case
+        return load_amended_case(root, request_id, Path(amendment), amendment_sha256)
     return load_case(root, request_id)
 
 
@@ -67,6 +72,8 @@ def verify_approval(raw, expected_digest, request_id, result):
         return result
     approval = json.loads(raw, object_pairs_hook=unique)
     version = 'step12c-terminal-approval/2' if 'calibrationManifestSha256' in result else 'step12c-terminal-approval/1'
+    if 'executionAmendmentSha256' in result:
+        version = 'step12c-terminal-approval/3'
     if approval.get('schemaVersion') != version or approval.get('authorized') is not True:
         raise ValueError('not_authorized')
     for field in ('approvalID','researcher','approvedAt','expiresAt','currency','pricingReference'):
@@ -78,7 +85,7 @@ def verify_approval(raw, expected_digest, request_id, result):
     if start.tzinfo is None or end.tzinfo is None or not start <= now < end:
         raise ValueError('approval_time_invalid')
     rows = approval.get('requests')
-    if not isinstance(rows, dict) or not rows or set(rows) - set(REQUEST_IDS if version.endswith('/2') else SELECTIONS) or request_id not in rows:
+    if not isinstance(rows, dict) or not rows or set(rows) - set(REQUEST_IDS if version in ('step12c-terminal-approval/2', 'step12c-terminal-approval/3') else SELECTIONS) or request_id not in rows:
         raise ValueError('request_not_approved')
     if any(not isinstance(row, dict) for row in rows.values()):
         raise ValueError('approval_request_malformed')
@@ -91,8 +98,20 @@ def verify_approval(raw, expected_digest, request_id, result):
     for key in ('semanticRequestSha256','providerEnvelopeSha256'):
         if selected.get(key) != result[key]:
             raise ValueError('approval_request_mismatch')
-    if version.endswith('/2'):
+    if version in ('step12c-terminal-approval/2', 'step12c-terminal-approval/3'):
         verify_wave_and_context(approval, request_id, result, now)
+    if version == 'step12c-terminal-approval/3':
+        from src.extraction.llm.wave_b_amendment import REQUEST_IDS as wave_b_ids, VERSION
+        if (set(rows) - set(wave_b_ids) or request_id not in wave_b_ids
+                or set(approval['waves']) != {'B'}
+                or approval.get('executionAmendmentSha256') != result['executionAmendmentSha256']
+                or selected.get('executionAmendmentSha256') != result['executionAmendmentSha256']
+                or approval.get('executionAmendmentVersion') != VERSION
+                or result.get('executionAmendmentVersion') != VERSION):
+            raise ValueError('amendment_approval_mismatch')
+        from src.extraction.llm.pilot_wave import CONTEXT_LIMIT
+        if selected['contextTokenLimit'] > CONTEXT_LIMIT:
+            raise ValueError('published_context_limit_exceeded')
     return approval
 
 
@@ -175,14 +194,19 @@ def transport(wire, key, timeout):
 
 
 def execute(root, request_id, approval_raw, approval_digest, *, timeout=1800, progress_interval=15,
-            send=transport, key_loader=None, progress=print, wave_token=None):
+            send=transport, key_loader=None, progress=print, wave_token=None,
+            amendment=None, amendment_sha256=None):
     """Dispatch exactly once after approval; ambiguous/crashed attempts block all IDs."""
     if request_id == 'HS-01':
         raise ValueError('historical_request_not_dispatchable')
     from src.extraction.llm.publications.openai_provider import extract_model_output, load_openai_api_key
     if not math.isfinite(timeout) or not math.isfinite(progress_interval) or timeout <= 0 or progress_interval <= 0:
         raise ValueError('invalid_timing')
-    result = load_selected(root, request_id)
+    route = {} if amendment is None and amendment_sha256 is None else dict(amendment=amendment, amendment_sha256=amendment_sha256)
+    result = load_selected(root, request_id, **route)
+    amendment_raw = Path(amendment).read_bytes() if amendment is not None else None
+    if amendment_raw is not None and digest(amendment_raw) != result['executionAmendmentSha256']:
+        raise ValueError('amendment_digest_mismatch')
     verify_approval(approval_raw, approval_digest, request_id, result)
     # Credential absence must not consume the single approved attempt.
     key = (key_loader or (lambda: load_openai_api_key(env_path=root / '.env')))()
@@ -219,13 +243,16 @@ def execute(root, request_id, approval_raw, approval_digest, *, timeout=1800, pr
     dispatched = False
     try:
         save(attempt / 'approval.json', approval_raw)
+        if amendment_raw is not None:
+            save(attempt / 'execution-amendment.json', amendment_raw)
         save(attempt / 'provider-envelope.json', result['wireBytes'])
         save(attempt / 'provider-input.txt', result['inputBytes'])
         save(attempt / 'semantic-request.json', result['semanticRequestBytes'])
         save(attempt / 'association.json', canonical({k:result[k] for k in
              ('semanticRequestSha256','providerEnvelopeSha256','providerInputSha256','schemaSha256',
               'calibrationManifestSha256','calibrationRequestID','calibrationWave','requestVersion',
-              'promptIdentifier','providerInputProjectionVersion') if k in result}))
+              'promptIdentifier','providerInputProjectionVersion','executionAmendmentSha256',
+              'executionAmendmentVersion') if k in result}))
         event('prepared', requestID=request_id, approvalSha256=approval_digest, timeoutSeconds=timeout)
         replies = queue.Queue()
 
@@ -285,21 +312,24 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('mode', choices=['dry-run','execute'])
     parser.add_argument('--request-id', required=True, choices=list(REQUEST_IDS))
+    parser.add_argument('--amendment', type=Path)
+    parser.add_argument('--amendment-sha256')
     parser.add_argument('--approval', type=Path)
     parser.add_argument('--approval-sha256')
     parser.add_argument('--timeout', type=float, default=1800)
     parser.add_argument('--progress-interval', type=float, default=15)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[3]
+    route = {} if args.amendment is None and args.amendment_sha256 is None else dict(amendment=args.amendment, amendment_sha256=args.amendment_sha256)
     if args.mode == 'dry-run':
-        result = load_selected(root,args.request_id)
+        result = load_selected(root,args.request_id, **route)
         print(json.dumps({k:v for k,v in result.items() if k.endswith('Sha256') or k in ('authorization','outputTokenCeiling','calibrationRequestID','calibrationWave',
                 'inputByteCount','wireByteCount','conservativeInputTokenAllowance','executionHold')},indent=2))
         return
     if args.approval is None or not args.approval_sha256:
         parser.error('execute requires --approval and --approval-sha256')
     print(execute(root,args.request_id,args.approval.read_bytes(),args.approval_sha256,
-                  timeout=args.timeout,progress_interval=args.progress_interval))
+                  timeout=args.timeout,progress_interval=args.progress_interval, **route))
 
 
 if __name__ == '__main__':

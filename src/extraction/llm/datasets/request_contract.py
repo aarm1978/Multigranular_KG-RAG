@@ -40,6 +40,32 @@ CLARIFICATION_INSTRUCTIONS = ('Distinguish an identifiable computational Tool fr
  'Do not infer a Workflow solely from filenames, directory arrangements or incidental installation '
  'instructions.')
 
+WAVE_B_REQUEST_VERSION = 'hydroshare-request/1.2.0'
+WAVE_B_PROMPT_IDENTIFIER = 'hydroshare-wave-b-clarification/0.1.0'
+# Approved prospective wording; never alter legacy instruction bytes.
+WAVE_B_INSTRUCTIONS = ('Evaluate entity identity and the resource-level relation independently. For usesTool or '
+ "usesModel, quote prose explicitly establishing this resource's use of the identified Tool or "
+ 'concrete model. A demonstration, possible future run, capability, or internal code dependency '
+ 'alone does not establish that relation. Multiple supplied fragments may jointly establish use '
+ 'when their contributions and connecting context are explicit; do not invent a missing '
+ 'connection. Source statements of use do not require runtime logs or external execution tests. '
+ 'mentionsTool and mentionsModel remain weaker alternatives only when the entity typing and the '
+ 'mention each have adequate independent evidence. Omit unsupported assertions; do not '
+ 'automatically downgrade or force a substitute predicate.',
+ 'Ground both model identity and its concrete subtype in the selected prose. A model-like '
+ 'filename, acronym, repository name, or ontology example alone does not establish which model the '
+ 'source describes. A named component or statistical technique does not by itself establish the '
+ 'subtype of the entire model. Preserve ambiguous or conflicting typing as an explicit ambiguity '
+ 'under the response contract, rather than guessing an abstract superclass or resolving it by '
+ 'outside knowledge. A described scientific Workflow need not imply verified execution.',
+ 'Propose Measurement only from selected README prose that individuates a specific observation '
+ 'through an observable with value/unit or an explicit observation identifier/conditions. '
+ "Descriptions of columns, identifier templates, variable lists, or a collection's possible "
+ 'records alone do not instantiate a Measurement. Do not invent a row, value, identifier or '
+ 'observation from a schema. No Measurement yield is required. Keep the approved distinction '
+ 'between a functionally identified notebook Tool and an auxiliary code artifact; neither '
+ 'automatically accept nor categorically exclude notebooks.')
+
 
 def _text(value: Any) -> bool:
     """Require nonempty exact strings without trimming caller content."""
@@ -104,6 +130,9 @@ def _finish(owner: dict, units: list[dict], selection: list[str], completeness: 
     if request_version == PROSPECTIVE_REQUEST_VERSION:
         body.update(schemaVersion=request_version, promptIdentifier=PROMPT_IDENTIFIER,
                     instructions=deepcopy(INSTRUCTIONS) + list(CLARIFICATION_INSTRUCTIONS))
+    if request_version == WAVE_B_REQUEST_VERSION:
+        body.update(schemaVersion=request_version, promptIdentifier=WAVE_B_PROMPT_IDENTIFIER,
+                    instructions=deepcopy(INSTRUCTIONS) + list(CLARIFICATION_INSTRUCTIONS) + list(WAVE_B_INSTRUCTIONS))
     try:
         digest = hashlib.sha256(_json(body).encode("utf-8")).hexdigest()
     except (TypeError, ValueError, RecursionError):
@@ -151,17 +180,21 @@ def parse_recorded_response(raw: bytes | str, *, request: Mapping[str, Any]) -> 
         return fail("trusted_request_not_ready")
     body = request.get("request")
     try:
-        if (not isinstance(body, Mapping) or body.get("schemaVersion") not in (REQUEST_VERSION, PROSPECTIVE_REQUEST_VERSION)
+        if (not isinstance(body, Mapping) or body.get("schemaVersion") not in (REQUEST_VERSION, PROSPECTIVE_REQUEST_VERSION, WAVE_B_REQUEST_VERSION)
                 or body.get("artifactFamily") != FAMILY
                 or hashlib.sha256(_json(body).encode()).hexdigest() != request.get("requestSha256")):
             return fail("trusted_request_contract_or_hash_mismatch")
     except (TypeError, ValueError, RecursionError):
         return fail("trusted_request_malformed")
-    if body["schemaVersion"] == PROSPECTIVE_REQUEST_VERSION:
-        if (body.get("promptIdentifier") != PROMPT_IDENTIFIER
-                or body.get("instructions") != INSTRUCTIONS + list(CLARIFICATION_INSTRUCTIONS)):
-            return fail("trusted_request_prompt_variant_mismatch")
-        result["requestContractVersion"] = PROSPECTIVE_REQUEST_VERSION
+    version = body["schemaVersion"]
+    expected_prompt = {REQUEST_VERSION: None, PROSPECTIVE_REQUEST_VERSION: PROMPT_IDENTIFIER,
+                       WAVE_B_REQUEST_VERSION: WAVE_B_PROMPT_IDENTIFIER}[version]
+    instructions = INSTRUCTIONS + (list(CLARIFICATION_INSTRUCTIONS) if version != REQUEST_VERSION else [])
+    if version == WAVE_B_REQUEST_VERSION:
+        instructions += list(WAVE_B_INSTRUCTIONS)
+    if (body.get("promptIdentifier") != expected_prompt or body.get("instructions") != instructions):
+        return fail("trusted_request_prompt_variant_mismatch")
+    result["requestContractVersion"] = version
     result["requestSha256"] = request["requestSha256"]
 
     def pairs(items: list) -> dict:
@@ -304,7 +337,7 @@ def build_request(*, accepted_owner_id: str, trusted_provenance: Mapping[str, An
     A computed-only digest remains computed-only; no acquisition claim is added.
     request_version is explicit opt-in; omission preserves the historical 1.0.0 body.
     """
-    if not isinstance(request_version, str) or request_version not in (REQUEST_VERSION, PROSPECTIVE_REQUEST_VERSION):
+    if not isinstance(request_version, str) or request_version not in (REQUEST_VERSION, PROSPECTIVE_REQUEST_VERSION, WAVE_B_REQUEST_VERSION):
         return {"status": "request_failed", "diagnostics": [{"reason": "unsupported_request_version"}]}
     from src.extraction.llm.datasets.source_units import AbstractSourceUnit, build_abstract_source_unit, bind_readme_evidence
 

@@ -61,14 +61,16 @@ def prepare_wave_a(root: Path, overhead: int = 4096) -> dict:
                      'Researcher must verify current account tier, surcharges, prices and overhead before authorization.'})
 
 
-def verify_wave(root: Path, wave: str, raw: bytes, sha256: str) -> dict:
+def verify_wave(root: Path, wave: str, raw: bytes, sha256: str, **route) -> dict:
     """Check every member before dispatch, retaining the existing v2 approval authority."""
+    if route and wave != 'B':
+        raise ValueError('amendment_wave_b_only')
     ids = wave_ids(wave)
     results = {}
     for rid in ids:
-        result = terminal.load_selected(root, rid)
+        result = terminal.load_selected(root, rid, **route)
         approval = terminal.verify_approval(raw, sha256, rid, result)
-        if (approval['schemaVersion'] != 'step12c-terminal-approval/2'
+        if (approval['schemaVersion'] != ('step12c-terminal-approval/3' if route else 'step12c-terminal-approval/2')
                 or set(approval['waves'][wave]['requestIDs']) != set(ids)):
             raise ValueError('complete_wave_approval_required')
         row = approval['requests'][rid]
@@ -89,6 +91,12 @@ def confirm_recorded(attempt: Path, result: dict, approval: bytes) -> str:
     for key in (*HASH_VERSION_FIELDS, 'calibrationManifestSha256', 'calibrationRequestID', 'calibrationWave'):
         if association.get(key) != result[key]:
             raise ValueError('recorded_association_mismatch')
+    if 'executionAmendmentSha256' in result:
+        for key in ('executionAmendmentSha256', 'executionAmendmentVersion'):
+            if association.get(key) != result[key]:
+                raise ValueError('recorded_amendment_mismatch')
+        if digest((attempt / 'execution-amendment.json').read_bytes()) != result['executionAmendmentSha256']:
+            raise ValueError('recorded_amendment_mismatch')
     raw = (attempt / 'response.raw').read_bytes()
     metadata = json.loads((attempt / 'provider-metadata.json').read_bytes())
     parsed = json.loads(raw)
@@ -109,9 +117,10 @@ def confirm_recorded(attempt: Path, result: dict, approval: bytes) -> str:
 
 
 def execute_wave(root: Path, wave: str, raw: bytes, sha256: str, *, timeout: float = 1800,
-                 progress_interval: float = 15, progress=print, **transport_options) -> Path:
+                 progress_interval: float = 15, progress=print, amendment=None, amendment_sha256=None, **transport_options) -> Path:
     """Invoke the existing executor sequentially; stop on the first nonconfirmed result."""
-    results = verify_wave(root, wave, raw, sha256)  # No credentials, locks or attempts yet.
+    route = {} if amendment is None and amendment_sha256 is None else dict(amendment=amendment, amendment_sha256=amendment_sha256)
+    results = verify_wave(root, wave, raw, sha256, **route)  # No credentials, locks or attempts yet.
     state = root / STATE_DIRECTORY
     state.mkdir(parents=True, exist_ok=True)
     lock = state / 'wave.lock'
@@ -121,6 +130,8 @@ def execute_wave(root: Path, wave: str, raw: bytes, sha256: str, *, timeout: flo
     summary = dict(schemaVersion='step12c-wave-transport/1', wave=wave, approvalSha256=sha256,
         manifestSha256=MANIFEST_SHA256, requestIDs=list(results), attempts=[],
         remainingUnattemptedIDs=list(results), status='preparing', semanticReview='not_run')
+    if route:
+        summary['executionAmendmentSha256'] = amendment_sha256
 
     def checkpoint():
         """Append a durable summary snapshot, including in-flight/ambiguous attempts."""
@@ -154,7 +165,7 @@ def execute_wave(root: Path, wave: str, raw: bytes, sha256: str, *, timeout: flo
             progress(f'{wave}: starting {rid}; {len(summary["remainingUnattemptedIDs"])} remain')
             try:
                 outcome = terminal.execute(root, rid, raw, sha256, timeout=timeout,
-                    progress_interval=progress_interval, progress=progress, wave_token=token, **transport_options)
+                    progress_interval=progress_interval, progress=progress, wave_token=token, **route, **transport_options)
                 entry['outcome'] = outcome
                 if outcome != 'response_recorded':
                     raise ValueError('response_not_confirmed')
@@ -200,6 +211,8 @@ def main():
     parser.add_argument('mode', choices=('prepare-wave-a', 'execute'))
     parser.add_argument('--output', type=Path)
     parser.add_argument('--wave', choices=('A', 'B', 'C'))
+    parser.add_argument('--amendment', type=Path)
+    parser.add_argument('--amendment-sha256')
     parser.add_argument('--approval', type=Path)
     parser.add_argument('--approval-sha256')
     parser.add_argument('--timeout', type=float, default=1800)
@@ -217,7 +230,8 @@ def main():
         if args.wave is None or args.approval is None or not args.approval_sha256:
             parser.error('execute requires --wave, --approval and --approval-sha256')
         print(execute_wave(root, args.wave, args.approval.read_bytes(), args.approval_sha256,
-                          timeout=args.timeout, progress_interval=args.progress_interval))
+                          timeout=args.timeout, progress_interval=args.progress_interval,
+                          amendment=args.amendment, amendment_sha256=args.amendment_sha256))
 
 
 if __name__ == '__main__':

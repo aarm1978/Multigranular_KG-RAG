@@ -16,6 +16,36 @@ REQUEST_VERSION = "ciroh_hub-request/1.0.0"
 RESPONSE_VERSION = "ciroh_hub-response/1.0.0"
 FAMILY = "ciroh_hub"
 
+WAVE_B_REQUEST_VERSION = 'ciroh_hub-request/1.1.0'
+WAVE_B_PROMPT_IDENTIFIER = 'ciroh-hub-wave-b-clarification/0.1.0'
+# Approved prospective wording; never alter legacy instruction bytes.
+WAVE_B_INSTRUCTIONS = ('Distinguish a substantive scientific/data-processing Workflow from access, navigation, '
+ 'installation or launch instructions. Such instructions may support a coherent task-directed '
+ 'Procedure without also supporting a Workflow. Do not duplicate a Procedure as a Workflow solely '
+ 'because it has multiple steps. A processing sequence can be described without evidence of '
+ 'execution or success.',
+ 'A Step needs an identified instructional action in its Procedure. An automatic consequence or '
+ 'resulting state is not by itself a separately instructed action. Do not invent a check, '
+ 'confirmation or command to turn that outcome into a Step. Use the stated action and sequence '
+ 'context, preserving incomplete instructions when hidden, dynamic or unselected content leaves a '
+ 'gap.',
+ 'When selected prose independently supports a Procedure/Step and a procedural Parameter or '
+ 'identifiable displayed Example, you may propose the parent, dependent and required attachment '
+ 'edges together as candidates. Supply separate evidence for each assertion and valid ordered '
+ 'parentPath references from this page through hasProcedure, optionally hasStep, to the '
+ "dependent's own attachment. Use the response contract's candidate_edge or trusted "
+ 'accepted_assertion references. These proposed paths are not accepted parents and do not satisfy '
+ 'semantic gates. If a parent or required relation is invalid or unresolved, its actual dependents '
+ 'remain held; independent candidates may survive. Do not invent a parent merely to enable '
+ 'Parameter or Example extraction.',
+ 'Parameter identity and procedural role require explanatory prose, including quoted wording/value '
+ 'when stated; a code key or argument alone is insufficient. Do not convert example values into '
+ 'defaults. A displayed fence may support only a literal possible Example with independently '
+ 'supported procedural attachment; never infer its execution, code semantics or parameters. No '
+ 'free-floating Parameters/Examples or nonempty output requirement is introduced. Parent semantic '
+ 'acceptance and all required relation/evidence gates remain pending until an independently '
+ 'authorized validation stage resolves them; never output attestations.')
+
 
 def _text(value: Any) -> bool:
     """Require nonempty exact strings without trimming caller content."""
@@ -49,7 +79,8 @@ def _schema() -> dict[str, Any]:
 
 
 def _finish(owner: dict, units: list[dict], selection: list[str], completeness: dict,
-            diagnostics: list, endpoints: Any, assertions: Any, extra: dict | None = None) -> dict:
+            diagnostics: list, endpoints: Any, assertions: Any, extra: dict | None = None,
+            request_version: str = REQUEST_VERSION) -> dict:
     """Snapshot trusted request context; caller inventories are never model output."""
     profile = get_profile(FAMILY)
     if not isinstance(endpoints, list) or not isinstance(assertions, list):
@@ -78,6 +109,9 @@ def _finish(owner: dict, units: list[dict], selection: list[str], completeness: 
         "sourceDiagnostics": deepcopy(diagnostics), "acceptedEndpoints": deepcopy(endpoints),
         "acceptedAssertions": deepcopy(assertions), "instructions": deepcopy(INSTRUCTIONS), "responseContract": _schema(),
         "semanticStatus": "not_evaluated", "kgAuthorization": False, **deepcopy(extra or {})}
+    if request_version == WAVE_B_REQUEST_VERSION:
+        body.update(schemaVersion=request_version, promptIdentifier=WAVE_B_PROMPT_IDENTIFIER,
+                    instructions=deepcopy(INSTRUCTIONS) + list(WAVE_B_INSTRUCTIONS))
     try:
         digest = hashlib.sha256(_json(body).encode("utf-8")).hexdigest()
     except (TypeError, ValueError, RecursionError):
@@ -125,12 +159,18 @@ def parse_recorded_response(raw: bytes | str, *, request: Mapping[str, Any]) -> 
         return fail("trusted_request_not_ready")
     body = request.get("request")
     try:
-        if (not isinstance(body, Mapping) or body.get("schemaVersion") != REQUEST_VERSION
+        if (not isinstance(body, Mapping) or body.get("schemaVersion") not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION)
                 or body.get("artifactFamily") != FAMILY
                 or hashlib.sha256(_json(body).encode()).hexdigest() != request.get("requestSha256")):
             return fail("trusted_request_contract_or_hash_mismatch")
     except (TypeError, ValueError, RecursionError):
         return fail("trusted_request_malformed")
+    version = body["schemaVersion"]
+    expected_prompt = WAVE_B_PROMPT_IDENTIFIER if version == WAVE_B_REQUEST_VERSION else None
+    instructions = INSTRUCTIONS + (list(WAVE_B_INSTRUCTIONS) if version == WAVE_B_REQUEST_VERSION else [])
+    if body.get("promptIdentifier") != expected_prompt or body.get("instructions") != instructions:
+        return fail("trusted_request_prompt_variant_mismatch")
+    result["requestContractVersion"] = version
     result["requestSha256"] = request["requestSha256"]
 
     def pairs(items: list) -> dict:
@@ -274,7 +314,8 @@ def build_request(page: Mapping[str, Any], reader_result: Mapping[str, Any], *, 
                   selected_unit_ids: list[str], input_complete: bool,
                   accepted_section_mapping: Mapping[str, Any] | None = None,
                   accepted_endpoints: list[Mapping[str, Any]] | None = None,
-                  accepted_assertions: list[Mapping[str, Any]] | None = None) -> dict[str, Any]:
+                  accepted_assertions: list[Mapping[str, Any]] | None = None,
+                  request_version: str = REQUEST_VERSION) -> dict[str, Any]:
     """Snapshot verified static MDX units, with fences only as Example context.
 
     Page replay and pure binders verify exact authority identity, original slices,
@@ -282,6 +323,8 @@ def build_request(page: Mapping[str, Any], reader_result: Mapping[str, Any], *, 
     request context; full MDX and hidden content are never expanded into a prompt.
     Source diagnostics/completeness remain separate from candidate outcomes.
     """
+    if not isinstance(request_version, str) or request_version not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION):
+        return {"status": "request_failed", "diagnostics": [{"reason": "unsupported_request_version"}]}
     from src.extraction.llm.documents.source_units import read_page_source_units
     from src.extraction.llm.documents.evidence_binding import bind_hub_evidence
     from src.extraction.llm.documents.example_context_binding import bind_example_context
@@ -330,4 +373,4 @@ def build_request(page: Mapping[str, Any], reader_result: Mapping[str, Any], *, 
          "reviewRequired": reader_result.get("reviewRequired")}, reader_result["diagnostics"],
         [] if accepted_endpoints is None else accepted_endpoints, [] if accepted_assertions is None else accepted_assertions,
         {"authorityMetadata": {k: deepcopy(v) for k, v in replay["authority"].items() if k != "text"},
-         "acceptedSectionMapping": deepcopy(accepted_section_mapping)})
+         "acceptedSectionMapping": deepcopy(accepted_section_mapping)}, request_version=request_version)

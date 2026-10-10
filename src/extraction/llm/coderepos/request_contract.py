@@ -16,6 +16,38 @@ REQUEST_VERSION = "github-request/1.0.0"
 RESPONSE_VERSION = "github-response/1.0.0"
 FAMILY = "github"
 
+WAVE_B_REQUEST_VERSION = 'github-request/1.1.0'
+WAVE_B_PROMPT_IDENTIFIER = 'github-wave-b-clarification/0.1.0'
+# Approved prospective wording; never alter legacy instruction bytes.
+WAVE_B_INSTRUCTIONS = ('A Function candidate must identify a named programming function or object-oriented method '
+ 'explicitly described in eligible prose, including its stated computational role. A scientific '
+ 'Method is not a software Function. Do not turn a repository goal, notebook task, API as a whole, '
+ 'or broad capability into a Function by inventing an action label. A mathematical function name '
+ 'alone does not establish software Function identity; use the prose context without examining '
+ 'code or inferring signatures. Preserve ambiguity when identity or granularity is unclear.',
+ 'Distinguish a named, prose-characterized Algorithm from a formula, distribution, model, broad '
+ 'method or Workflow. A formula or technique mention alone does not establish every one of those '
+ 'classes. A StatisticalModel needs its own named model identity under the frozen profile. A '
+ 'Workflow requires a substantive processing sequence. Do not create a GitHub-local Publication '
+ 'Method or use Algorithm as a fallback for an unsupported Method. Preserve conflicting subtype '
+ 'evidence rather than resolving it through names or background knowledge.',
+ 'Evaluate each hasPurpose category independently against the exact six frozen definitions and the '
+ "repository's own purpose. An external product's purpose, incidental example, dependency or "
+ 'keyword does not establish repository membership. scientific_experimentation requires that '
+ "supporting simulations, experiments, calibration or evaluation is central to the repository's "
+ 'purpose; it does not require proof that the repository executed experiments. Multiple categories '
+ 'need independent support for each assignment; one sufficiently explicit passage may support more '
+ 'than one. Reuse the exact controlled seed endpoints, never create new category nodes, and retain '
+ 'unclassified/ambiguous outcomes outside the KG.',
+ "Consider the repository's own identifiable software product when prose supports it; do not "
+ 'replace that identity with generic capability Functions. Independently quote an implementedBy '
+ 'relation only when the prose establishes that this exact repository implements or provides the '
+ 'source for the valid Tool/model. Its direction is Tool/model to Repository. uses and mentions '
+ 'retain their separate evidence criteria; use, a dependency or a link alone is not '
+ 'implementation. Do not force an own-product node, merge by name, infer external endpoints, or '
+ "turn dependency/upstream versions into the repository's ModelVersion. Preserve every existing "
+ 'ModelVersion and implementsMethod condition and unresolved outcome.')
+
 
 def _text(value: Any) -> bool:
     """Require nonempty exact strings without trimming caller content."""
@@ -48,7 +80,8 @@ def _schema() -> dict[str, Any]:
 
 
 def _finish(owner: dict, units: list[dict], selection: list[str], completeness: dict,
-            diagnostics: list, endpoints: Any, assertions: Any, extra: dict | None = None) -> dict:
+            diagnostics: list, endpoints: Any, assertions: Any, extra: dict | None = None,
+            request_version: str = REQUEST_VERSION) -> dict:
     """Snapshot trusted request context; caller inventories are never model output."""
     profile = get_profile(FAMILY)
     if not isinstance(endpoints, list) or not isinstance(assertions, list):
@@ -77,6 +110,9 @@ def _finish(owner: dict, units: list[dict], selection: list[str], completeness: 
         "sourceDiagnostics": deepcopy(diagnostics), "acceptedEndpoints": deepcopy(endpoints),
         "acceptedAssertions": deepcopy(assertions), "instructions": deepcopy(INSTRUCTIONS), "responseContract": _schema(),
         "semanticStatus": "not_evaluated", "kgAuthorization": False, **deepcopy(extra or {})}
+    if request_version == WAVE_B_REQUEST_VERSION:
+        body.update(schemaVersion=request_version, promptIdentifier=WAVE_B_PROMPT_IDENTIFIER,
+                    instructions=deepcopy(INSTRUCTIONS) + list(WAVE_B_INSTRUCTIONS))
     try:
         digest = hashlib.sha256(_json(body).encode("utf-8")).hexdigest()
     except (TypeError, ValueError, RecursionError):
@@ -124,12 +160,18 @@ def parse_recorded_response(raw: bytes | str, *, request: Mapping[str, Any]) -> 
         return fail("trusted_request_not_ready")
     body = request.get("request")
     try:
-        if (not isinstance(body, Mapping) or body.get("schemaVersion") != REQUEST_VERSION
+        if (not isinstance(body, Mapping) or body.get("schemaVersion") not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION)
                 or body.get("artifactFamily") != FAMILY
                 or hashlib.sha256(_json(body).encode()).hexdigest() != request.get("requestSha256")):
             return fail("trusted_request_contract_or_hash_mismatch")
     except (TypeError, ValueError, RecursionError):
         return fail("trusted_request_malformed")
+    version = body["schemaVersion"]
+    expected_prompt = WAVE_B_PROMPT_IDENTIFIER if version == WAVE_B_REQUEST_VERSION else None
+    instructions = INSTRUCTIONS + (list(WAVE_B_INSTRUCTIONS) if version == WAVE_B_REQUEST_VERSION else [])
+    if body.get("promptIdentifier") != expected_prompt or body.get("instructions") != instructions:
+        return fail("trusted_request_prompt_variant_mismatch")
+    result["requestContractVersion"] = version
     result["requestSha256"] = request["requestSha256"]
 
     def pairs(items: list) -> dict:
@@ -274,7 +316,8 @@ INSTRUCTIONS = ['Use only frozen profile inventory IDs, declaration names and si
 def build_request(reader_result: Mapping[str, Any], *, accepted_repository: Mapping[str, Any],
                   selected_unit_ids: list[str], input_complete: bool,
                   accepted_endpoints: list[Mapping[str, Any]] | None = None,
-                  accepted_assertions: list[Mapping[str, Any]] | None = None) -> dict[str, Any]:
+                  accepted_assertions: list[Mapping[str, Any]] | None = None,
+                  request_version: str = REQUEST_VERSION) -> dict[str, Any]:
     """Snapshot only selected verified README/prose/notebook-Markdown units.
 
     Uses the pure binder to verify each entire exact unit, never the file reader.
@@ -282,6 +325,8 @@ def build_request(reader_result: Mapping[str, Any], *, accepted_repository: Mapp
     it never asserts semantic coverage. Preserve frozen commit, case-sensitive
     path, raw-file/cell authority hashes, selection order and all read diagnostics.
     """
+    if not isinstance(request_version, str) or request_version not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION):
+        return {"status": "request_failed", "diagnostics": [{"reason": "unsupported_request_version"}]}
     from src.extraction.llm.coderepos.evidence_binding import bind_repository_evidence
     from src.extraction.llm.coderepos.purpose_validation import purpose_vocabulary
 
@@ -325,4 +370,4 @@ def build_request(reader_result: Mapping[str, Any], *, accepted_repository: Mapp
         {"inputComplete": complete, "callerInputComplete": input_complete,
          "readerInputComplete": reader_result.get("inputComplete"), "reads": deepcopy(reader_result["reads"])},
         reader_result["diagnostics"], endpoints, [] if accepted_assertions is None else accepted_assertions,
-        {"authorityMetadata": authorities, "purposeVocabulary": seeds})
+        {"authorityMetadata": authorities, "purposeVocabulary": seeds}, request_version=request_version)

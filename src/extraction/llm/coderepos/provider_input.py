@@ -6,6 +6,7 @@ from collections import Counter
 from typing import Any
 
 PROJECTION_VERSION = "github-provider-input/1.0.0"
+WAVE_B_PROJECTION_VERSION = "github-provider-input/1.1.0"
 # Only known reader metadata can be omitted. Unknown fields/reasons stay visible.
 AUDIT_FIELDS = frozenset({
     "artifactFamily", "repo_id", "full_name", "frozenCommitSha", "contractID",
@@ -90,13 +91,20 @@ def project_provider_input(request_result: dict, *, version: str) -> dict:
     unchanged. Completeness booleans never change; omissions summarize audit metadata
     only, never scientific text. Global/unknown warnings and all failures survive.
     """
-    if version != PROJECTION_VERSION or not isinstance(version, str):
+    if not isinstance(version, str) or version not in (PROJECTION_VERSION, WAVE_B_PROJECTION_VERSION):
         raise ValueError("unsupported_provider_input_projection")
     if not isinstance(request_result, dict) or request_result.get("status") != "request_ready":
         raise ValueError("projection_requires_ready_request")
+    expected_request_version = "github-request/1.0.0" if version == PROJECTION_VERSION else "github-request/1.1.0"
     body = request_result.get("request")
-    if not isinstance(body, dict) or body.get("artifactFamily") != "github" or body.get("schemaVersion") != "github-request/1.0.0":
+    if not isinstance(body, dict) or body.get("artifactFamily") != "github" or body.get("schemaVersion") != expected_request_version:
         raise ValueError("projection_request_contract_mismatch")
+    if version == WAVE_B_PROJECTION_VERSION:
+        from src.extraction.llm.coderepos.request_contract import parse_recorded_response, RESPONSE_VERSION
+        check = parse_recorded_response(_bytes({"schemaVersion": RESPONSE_VERSION,
+            "candidateNodes": [], "candidateEdges": [], "abstentions": []}), request=request_result)
+        if check["status"] == "processing_failed":
+            raise ValueError("projection_prompt_variant_mismatch")
     semantic = _bytes(body, ascii_only=True)
     digest = hashlib.sha256(semantic).hexdigest()
     if request_result.get("requestSha256") != digest:

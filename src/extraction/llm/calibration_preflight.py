@@ -70,7 +70,7 @@ def load_manifest(root: Path) -> dict:
     return manifest
 
 
-def construct_request(root: Path, row: dict, source: dict) -> dict:
+def construct_request(root: Path, row: dict, source: dict, *, inputs_only: bool = False) -> dict:
     """Use unchanged family builders, explicit versions and frozen inventories."""
     inventories = row['endpointInventories']
     shared = dict(selected_unit_ids=row['selectedSourceUnitIDs'],
@@ -92,22 +92,25 @@ def construct_request(root: Path, row: dict, source: dict) -> dict:
                 accepted_owner_id=owner, provenance={**provenance, 'sourceVerified': True}, sections=sections))
         if not readmes:
             readmes = [read_readme_source_units(None, accepted_owner_id=owner, provenance=provenance)]
-        return contract.build_request(accepted_owner_id=owner, trusted_provenance=provenance,
+        inputs = dict(accepted_owner_id=owner, trusted_provenance=provenance,
             abstract_results=[abstract], readme_results=readmes, request_version=row['requestVersion'],
             authorized_stubs=inventories['authorizedStubs'], **shared)
+        return inputs if inputs_only else contract.build_request(**inputs)
     if row['artifactFamily'] == 'github':
         from src.extraction.llm.coderepos import request_contract as contract
         from src.extraction.llm.coderepos.source_units import read_repository_sources
         reader = read_repository_sources(source, root / 'data/raw/coderepos')
         owner = {'canonicalArtifactID': f"github:repo:{source['repo_id']}", 'repo_id': source['repo_id'],
                  'full_name': source['full_name'], 'frozenCommitSha': source['archive']['frozen_commit_sha']}
-        return contract.build_request(reader, accepted_repository=owner, **shared)
+        inputs = dict(reader_result=reader, accepted_repository=owner, request_version=row['requestVersion'], **shared)
+        return inputs if inputs_only else contract.build_request(**inputs)
     if row['artifactFamily'] == 'ciroh_hub':
         from src.extraction.llm.documents import request_contract as contract
         from src.extraction.llm.documents.source_units import read_page_source_units
         mapping = row['acceptedSectionMapping']
-        return contract.build_request(source, read_page_source_units(source, accepted_section_mapping=mapping),
-            accepted_page_id=row['acceptedEndpoint']['id'], accepted_section_mapping=mapping, **shared)
+        inputs = dict(page=source, reader_result=read_page_source_units(source, accepted_section_mapping=mapping),
+            accepted_page_id=row['acceptedEndpoint']['id'], accepted_section_mapping=mapping, request_version=row['requestVersion'], **shared)
+        return inputs if inputs_only else contract.build_request(**inputs)
     raise ValueError('unsupported_manifest_family')
 
 
@@ -132,11 +135,9 @@ def verify_request(request: dict, row: dict) -> None:
             raise ValueError('selected_text_drift')
 
 
-def rebuild_request(root: Path, manifest: dict, request_id: str) -> dict:
-    """Inspect only one frozen owner and its accepted endpoint; fail on drift."""
-    wave_for(request_id)
-    row = next(r for r in manifest['requests'] if r['requestID'] == request_id)
-    for path, expected in {**manifest['authorityFiles'], **manifest['implementationFiles']}.items():
+def verified_source(root: Path, manifest: dict, row: dict) -> dict:
+    """Verify source/authority/endpoint bytes independently of implementation approval."""
+    for path, expected in manifest['authorityFiles'].items():
         _verified_bytes(root, path, expected)
     snapshot = row['sourceSnapshot']
     data = json.loads(_verified_bytes(root, snapshot['path'], snapshot['sha256']))
@@ -152,6 +153,16 @@ def rebuild_request(root: Path, manifest: dict, request_id: str) -> dict:
     if (len(matches) != 1 or matches[0].get('class') != endpoint['class']
             or digest(semantic_bytes(matches[0])) != endpoint['nodeRecordSha256']):
         raise ValueError('accepted_endpoint_drift')
+    return source
+
+
+def rebuild_request(root: Path, manifest: dict, request_id: str) -> dict:
+    """Inspect only one frozen owner and its accepted endpoint; fail on drift."""
+    wave_for(request_id)
+    row = next(r for r in manifest['requests'] if r['requestID'] == request_id)
+    for path, expected in {**manifest['authorityFiles'], **manifest['implementationFiles']}.items():
+        _verified_bytes(root, path, expected)
+    source = verified_source(root, manifest, row)
     request = construct_request(root, row, source)
     verify_request(request, row)
     if request_id in ORIGINAL_IDS:
