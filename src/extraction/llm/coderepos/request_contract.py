@@ -49,6 +49,21 @@ WAVE_B_INSTRUCTIONS = ('A Function candidate must identify a named programming f
  'ModelVersion and implementsMethod condition and unresolved outcome.')
 
 
+WAVE_C_REQUEST_VERSION = 'github-request/1.2.0'
+WAVE_C_PROMPT_IDENTIFIER = 'github-wave-c-role-purpose-clarification/0.1.0'
+# Final prospective clarification; the qualitative challenge cannot drive tuning.
+WAVE_C_INSTRUCTIONS = ('Distinguish repository-level usesModel/usesTool from tutorial demonstrations, optional '
+ 'capabilities and illustrative examples. A model shown as an example in a tutorial does not alone '
+ 'establish that the repository uses it in scientific processing. However, explicit '
+ 'source-grounded repository use remains admissible, including genuinely documented example '
+ 'execution; do not categorically exclude tutorials or require runtime logs. Evaluate mentions and '
+ 'uses separately.',
+ 'Assign each RepositoryPurpose category only when eligible prose supports that purpose of the '
+ "repository itself. An individual notebook's processing sequence does not automatically establish "
+ 'workflow_orchestration as a central repository purpose. Multiple categories require '
+ 'independently sufficient support, although one explicit passage may support several. Preserve '
+ 'the existing six-category vocabulary and unresolved classifications.')
+
 def _text(value: Any) -> bool:
     """Require nonempty exact strings without trimming caller content."""
     return isinstance(value, str) and bool(value.strip())
@@ -113,6 +128,9 @@ def _finish(owner: dict, units: list[dict], selection: list[str], completeness: 
     if request_version == WAVE_B_REQUEST_VERSION:
         body.update(schemaVersion=request_version, promptIdentifier=WAVE_B_PROMPT_IDENTIFIER,
                     instructions=deepcopy(INSTRUCTIONS) + list(WAVE_B_INSTRUCTIONS))
+    if request_version == WAVE_C_REQUEST_VERSION:
+        body.update(schemaVersion=request_version, promptIdentifier=WAVE_C_PROMPT_IDENTIFIER,
+                    instructions=deepcopy(INSTRUCTIONS) + list(WAVE_B_INSTRUCTIONS) + list(WAVE_C_INSTRUCTIONS))
     try:
         digest = hashlib.sha256(_json(body).encode("utf-8")).hexdigest()
     except (TypeError, ValueError, RecursionError):
@@ -160,15 +178,18 @@ def parse_recorded_response(raw: bytes | str, *, request: Mapping[str, Any]) -> 
         return fail("trusted_request_not_ready")
     body = request.get("request")
     try:
-        if (not isinstance(body, Mapping) or body.get("schemaVersion") not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION)
+        if (not isinstance(body, Mapping) or body.get("schemaVersion") not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION, WAVE_C_REQUEST_VERSION)
                 or body.get("artifactFamily") != FAMILY
                 or hashlib.sha256(_json(body).encode()).hexdigest() != request.get("requestSha256")):
             return fail("trusted_request_contract_or_hash_mismatch")
     except (TypeError, ValueError, RecursionError):
         return fail("trusted_request_malformed")
     version = body["schemaVersion"]
-    expected_prompt = WAVE_B_PROMPT_IDENTIFIER if version == WAVE_B_REQUEST_VERSION else None
-    instructions = INSTRUCTIONS + (list(WAVE_B_INSTRUCTIONS) if version == WAVE_B_REQUEST_VERSION else [])
+    expected_prompt = {REQUEST_VERSION: None, WAVE_B_REQUEST_VERSION: WAVE_B_PROMPT_IDENTIFIER,
+                       WAVE_C_REQUEST_VERSION: WAVE_C_PROMPT_IDENTIFIER}[version]
+    instructions = INSTRUCTIONS + (list(WAVE_B_INSTRUCTIONS) if version != REQUEST_VERSION else [])
+    if version == WAVE_C_REQUEST_VERSION:
+        instructions += list(WAVE_C_INSTRUCTIONS)
     if body.get("promptIdentifier") != expected_prompt or body.get("instructions") != instructions:
         return fail("trusted_request_prompt_variant_mismatch")
     result["requestContractVersion"] = version
@@ -325,7 +346,7 @@ def build_request(reader_result: Mapping[str, Any], *, accepted_repository: Mapp
     it never asserts semantic coverage. Preserve frozen commit, case-sensitive
     path, raw-file/cell authority hashes, selection order and all read diagnostics.
     """
-    if not isinstance(request_version, str) or request_version not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION):
+    if not isinstance(request_version, str) or request_version not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION, WAVE_C_REQUEST_VERSION):
         return {"status": "request_failed", "diagnostics": [{"reason": "unsupported_request_version"}]}
     from src.extraction.llm.coderepos.evidence_binding import bind_repository_evidence
     from src.extraction.llm.coderepos.purpose_validation import purpose_vocabulary

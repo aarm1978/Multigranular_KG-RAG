@@ -47,6 +47,20 @@ WAVE_B_INSTRUCTIONS = ('Distinguish a substantive scientific/data-processing Wor
  'authorized validation stage resolves them; never output attestations.')
 
 
+WAVE_C_REQUEST_VERSION = 'ciroh_hub-request/1.2.0'
+WAVE_C_PROMPT_IDENTIFIER = 'ciroh-hub-wave-c-step-tool-clarification/0.1.0'
+# Final prospective clarification; the qualitative challenge cannot drive tuning.
+WAVE_C_INSTRUCTIONS = ('A Step must represent a supported instructional action within a coherent Procedure. Lists of '
+ 'available capabilities, possible operations or automatic consequences do not by themselves '
+ 'constitute a sequence of instructed Steps. Narrative instructions are admissible; do not require '
+ 'imperative wording or numbered lists.',
+ 'Do not classify a data warehouse, storage system, infrastructure layer or generic services stack '
+ 'as Tool merely because it appears in a component hierarchy. Require independent evidence of an '
+ 'identifiable software Tool. Preserve valid hasComponent relations only when their endpoints are '
+ 'adequately typed. Do not invent alternative classes or activate excluded DataService targets.',
+ 'Preserve parent-dependent Example extraction, exact parentPath requirements and prose-grounded '
+ 'Parameter rules. Never promote proposed parent relationships to semantic acceptance.')
+
 def _text(value: Any) -> bool:
     """Require nonempty exact strings without trimming caller content."""
     return isinstance(value, str) and bool(value.strip())
@@ -112,6 +126,9 @@ def _finish(owner: dict, units: list[dict], selection: list[str], completeness: 
     if request_version == WAVE_B_REQUEST_VERSION:
         body.update(schemaVersion=request_version, promptIdentifier=WAVE_B_PROMPT_IDENTIFIER,
                     instructions=deepcopy(INSTRUCTIONS) + list(WAVE_B_INSTRUCTIONS))
+    if request_version == WAVE_C_REQUEST_VERSION:
+        body.update(schemaVersion=request_version, promptIdentifier=WAVE_C_PROMPT_IDENTIFIER,
+                    instructions=deepcopy(INSTRUCTIONS) + list(WAVE_B_INSTRUCTIONS) + list(WAVE_C_INSTRUCTIONS))
     try:
         digest = hashlib.sha256(_json(body).encode("utf-8")).hexdigest()
     except (TypeError, ValueError, RecursionError):
@@ -159,15 +176,18 @@ def parse_recorded_response(raw: bytes | str, *, request: Mapping[str, Any]) -> 
         return fail("trusted_request_not_ready")
     body = request.get("request")
     try:
-        if (not isinstance(body, Mapping) or body.get("schemaVersion") not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION)
+        if (not isinstance(body, Mapping) or body.get("schemaVersion") not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION, WAVE_C_REQUEST_VERSION)
                 or body.get("artifactFamily") != FAMILY
                 or hashlib.sha256(_json(body).encode()).hexdigest() != request.get("requestSha256")):
             return fail("trusted_request_contract_or_hash_mismatch")
     except (TypeError, ValueError, RecursionError):
         return fail("trusted_request_malformed")
     version = body["schemaVersion"]
-    expected_prompt = WAVE_B_PROMPT_IDENTIFIER if version == WAVE_B_REQUEST_VERSION else None
-    instructions = INSTRUCTIONS + (list(WAVE_B_INSTRUCTIONS) if version == WAVE_B_REQUEST_VERSION else [])
+    expected_prompt = {REQUEST_VERSION: None, WAVE_B_REQUEST_VERSION: WAVE_B_PROMPT_IDENTIFIER,
+                       WAVE_C_REQUEST_VERSION: WAVE_C_PROMPT_IDENTIFIER}[version]
+    instructions = INSTRUCTIONS + (list(WAVE_B_INSTRUCTIONS) if version != REQUEST_VERSION else [])
+    if version == WAVE_C_REQUEST_VERSION:
+        instructions += list(WAVE_C_INSTRUCTIONS)
     if body.get("promptIdentifier") != expected_prompt or body.get("instructions") != instructions:
         return fail("trusted_request_prompt_variant_mismatch")
     result["requestContractVersion"] = version
@@ -323,7 +343,7 @@ def build_request(page: Mapping[str, Any], reader_result: Mapping[str, Any], *, 
     request context; full MDX and hidden content are never expanded into a prompt.
     Source diagnostics/completeness remain separate from candidate outcomes.
     """
-    if not isinstance(request_version, str) or request_version not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION):
+    if not isinstance(request_version, str) or request_version not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION, WAVE_C_REQUEST_VERSION):
         return {"status": "request_failed", "diagnostics": [{"reason": "unsupported_request_version"}]}
     from src.extraction.llm.documents.source_units import read_page_source_units
     from src.extraction.llm.documents.evidence_binding import bind_hub_evidence

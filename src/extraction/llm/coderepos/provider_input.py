@@ -7,6 +7,7 @@ from typing import Any
 
 PROJECTION_VERSION = "github-provider-input/1.0.0"
 WAVE_B_PROJECTION_VERSION = "github-provider-input/1.1.0"
+WAVE_C_PROJECTION_VERSION = "github-provider-input/1.2.0"
 # Only known reader metadata can be omitted. Unknown fields/reasons stay visible.
 AUDIT_FIELDS = frozenset({
     "artifactFamily", "repo_id", "full_name", "frozenCommitSha", "contractID",
@@ -91,15 +92,16 @@ def project_provider_input(request_result: dict, *, version: str) -> dict:
     unchanged. Completeness booleans never change; omissions summarize audit metadata
     only, never scientific text. Global/unknown warnings and all failures survive.
     """
-    if not isinstance(version, str) or version not in (PROJECTION_VERSION, WAVE_B_PROJECTION_VERSION):
+    if not isinstance(version, str) or version not in (PROJECTION_VERSION, WAVE_B_PROJECTION_VERSION, WAVE_C_PROJECTION_VERSION):
         raise ValueError("unsupported_provider_input_projection")
     if not isinstance(request_result, dict) or request_result.get("status") != "request_ready":
         raise ValueError("projection_requires_ready_request")
-    expected_request_version = "github-request/1.0.0" if version == PROJECTION_VERSION else "github-request/1.1.0"
+    expected_request_version = {PROJECTION_VERSION: "github-request/1.0.0",
+        WAVE_B_PROJECTION_VERSION: "github-request/1.1.0", WAVE_C_PROJECTION_VERSION: "github-request/1.2.0"}[version]
     body = request_result.get("request")
     if not isinstance(body, dict) or body.get("artifactFamily") != "github" or body.get("schemaVersion") != expected_request_version:
         raise ValueError("projection_request_contract_mismatch")
-    if version == WAVE_B_PROJECTION_VERSION:
+    if version in (WAVE_B_PROJECTION_VERSION, WAVE_C_PROJECTION_VERSION):
         from src.extraction.llm.coderepos.request_contract import parse_recorded_response, RESPONSE_VERSION
         check = parse_recorded_response(_bytes({"schemaVersion": RESPONSE_VERSION,
             "candidateNodes": [], "candidateEdges": [], "abstentions": []}), request=request_result)

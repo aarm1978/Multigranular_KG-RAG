@@ -63,8 +63,8 @@ def prepare_wave_a(root: Path, overhead: int = 4096) -> dict:
 
 def verify_wave(root: Path, wave: str, raw: bytes, sha256: str, **route) -> dict:
     """Check every member before dispatch, retaining the existing v2 approval authority."""
-    if route and wave != 'B':
-        raise ValueError('amendment_wave_b_only')
+    if route and wave not in ('B', 'C'):
+        raise ValueError('amendment_wave_b_only_or_wave_c_only')
     ids = wave_ids(wave)
     results = {}
     for rid in ids:
@@ -95,6 +95,9 @@ def confirm_recorded(attempt: Path, result: dict, approval: bytes) -> str:
         for key in ('executionAmendmentSha256', 'executionAmendmentVersion'):
             if association.get(key) != result[key]:
                 raise ValueError('recorded_amendment_mismatch')
+        if ('priorExecutionAmendmentSha256' in result
+                and association.get('priorExecutionAmendmentSha256') != result['priorExecutionAmendmentSha256']):
+            raise ValueError('recorded_prior_amendment_mismatch')
         if digest((attempt / 'execution-amendment.json').read_bytes()) != result['executionAmendmentSha256']:
             raise ValueError('recorded_amendment_mismatch')
     raw = (attempt / 'response.raw').read_bytes()
@@ -132,6 +135,9 @@ def execute_wave(root: Path, wave: str, raw: bytes, sha256: str, *, timeout: flo
         remainingUnattemptedIDs=list(results), status='preparing', semanticReview='not_run')
     if route:
         summary['executionAmendmentSha256'] = amendment_sha256
+        first_result = next(iter(results.values()))
+        if 'priorExecutionAmendmentSha256' in first_result:
+            summary['priorExecutionAmendmentSha256'] = first_result['priorExecutionAmendmentSha256']
 
     def checkpoint():
         """Append a durable summary snapshot, including in-flight/ambiguous attempts."""

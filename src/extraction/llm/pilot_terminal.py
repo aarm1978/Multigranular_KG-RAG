@@ -101,14 +101,19 @@ def verify_approval(raw, expected_digest, request_id, result):
     if version in ('step12c-terminal-approval/2', 'step12c-terminal-approval/3'):
         verify_wave_and_context(approval, request_id, result, now)
     if version == 'step12c-terminal-approval/3':
-        from src.extraction.llm.wave_b_amendment import REQUEST_IDS as wave_b_ids, VERSION
-        if (set(rows) - set(wave_b_ids) or request_id not in wave_b_ids
-                or set(approval['waves']) != {'B'}
+        from src.extraction.llm.wave_b_amendment import wave_settings, PRIOR_AMENDMENT_SHA256
+        wave = result['calibrationWave']
+        settings = wave_settings(wave)
+        if (set(rows) - set(settings['ids']) or request_id not in settings['ids']
+                or set(approval['waves']) != {wave}
                 or approval.get('executionAmendmentSha256') != result['executionAmendmentSha256']
                 or selected.get('executionAmendmentSha256') != result['executionAmendmentSha256']
-                or approval.get('executionAmendmentVersion') != VERSION
-                or result.get('executionAmendmentVersion') != VERSION):
+                or approval.get('executionAmendmentVersion') != settings['version']
+                or result.get('executionAmendmentVersion') != settings['version']):
             raise ValueError('amendment_approval_mismatch')
+        if wave == 'C' and (approval.get('priorExecutionAmendmentSha256') != PRIOR_AMENDMENT_SHA256
+                or result.get('priorExecutionAmendmentSha256') != PRIOR_AMENDMENT_SHA256):
+            raise ValueError('prior_amendment_approval_mismatch')
         from src.extraction.llm.pilot_wave import CONTEXT_LIMIT
         if selected['contextTokenLimit'] > CONTEXT_LIMIT:
             raise ValueError('published_context_limit_exceeded')
@@ -252,7 +257,7 @@ def execute(root, request_id, approval_raw, approval_digest, *, timeout=1800, pr
              ('semanticRequestSha256','providerEnvelopeSha256','providerInputSha256','schemaSha256',
               'calibrationManifestSha256','calibrationRequestID','calibrationWave','requestVersion',
               'promptIdentifier','providerInputProjectionVersion','executionAmendmentSha256',
-              'executionAmendmentVersion') if k in result}))
+              'executionAmendmentVersion','priorExecutionAmendmentSha256') if k in result}))
         event('prepared', requestID=request_id, approvalSha256=approval_digest, timeoutSeconds=timeout)
         replies = queue.Queue()
 

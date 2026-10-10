@@ -1,4 +1,4 @@
-"""Explicit offline Wave B execution amendment; no authorization or transport."""
+"""Explicit offline Wave B/C execution amendments; no authorization or transport."""
 from __future__ import annotations
 
 import argparse
@@ -35,28 +35,59 @@ RUNTIME_FILES += tuple(f'src/extraction/llm/{family}/{name}.py'
 RUNTIME_FILES += tuple(f'src/extraction/llm/{family}/evidence_binding.py' for family in ('coderepos', 'documents'))
 
 
-def _old_bytes(root: Path, path: str) -> bytes | None:
+WAVE_C_VERSION = 'study2-step12c-wave-c-execution/1.0.0'
+WAVE_C_CHECKPOINT = '31e8d528c86b4915704cd68512a3d8e390c53d18'
+WAVE_C_REQUEST_IDS = tuple(f'{family}-{n:02d}' for family in ('HS', 'GH', 'HUB') for n in (8, 9, 10))
+WAVE_C_VERSIONS = {'hydroshare': 'hydroshare-request/1.2.0', 'github': 'github-request/1.2.0',
+                   'ciroh_hub': 'ciroh_hub-request/1.2.0'}
+PRIOR_AMENDMENT_PATH = 'docs/study2_step12c_wave_b_execution_amendment_v1.0.0.json'
+PRIOR_AMENDMENT_SHA256 = '0733e14e2ad0dfe13b158cdd3cad2b4867097c0406601cc09fb95061db6cfe60'
+
+
+def wave_settings(wave: str) -> dict:
+    """Route only the two explicitly versioned amendments; defaults never select C."""
+    if wave == 'B':
+        return dict(version=VERSION, ids=REQUEST_IDS, versions=VERSIONS, projection=PROJECTION,
+                    directory=PREFLIGHT_DIRECTORY, checkpoint=BASE_CHECKPOINT)
+    if wave == 'C':
+        return dict(version=WAVE_C_VERSION, ids=WAVE_C_REQUEST_IDS, versions=WAVE_C_VERSIONS,
+                    projection='github-provider-input/1.2.0',
+                    directory='var/study2_step12c/wave-c-preflight/1.0.0', checkpoint=WAVE_C_CHECKPOINT)
+    raise ValueError('unsupported_execution_wave')
+
+
+def prior_amendment(root: Path) -> dict:
+    """Read the exact accepted B record as provenance, not as current-code authorization."""
+    return json.loads(base._verified_bytes(root, PRIOR_AMENDMENT_PATH, PRIOR_AMENDMENT_SHA256))
+
+
+def _old_bytes(root: Path, path: str, checkpoint: str = BASE_CHECKPOINT) -> bytes | None:
     """Read committed baseline bytes, never the index or unrelated working changes."""
-    result = subprocess.run(['git', 'show', f'{BASE_CHECKPOINT}:{path}'], cwd=root,
+    result = subprocess.run(['git', 'show', f'{checkpoint}:{path}'], cwd=root,
                             capture_output=True, check=False)
     if result.returncode:
-        if path == 'src/extraction/llm/wave_b_amendment.py':
+        if checkpoint == BASE_CHECKPOINT and path == 'src/extraction/llm/wave_b_amendment.py':
             return None
         raise ValueError('baseline_implementation_missing:' + path)
     return result.stdout
 
 
-def implementation_record(root: Path, manifest: dict) -> dict:
+def implementation_record(root: Path, manifest: dict, *, wave: str = 'B') -> dict:
     """Explicitly record and verify historical pins before prospective compatibility."""
+    settings = wave_settings(wave)
+    prior = prior_amendment(root) if wave == 'C' else None
     old, new = {}, {}
     for path in sorted(set(RUNTIME_FILES) | set(manifest['implementationFiles'])):
-        raw = _old_bytes(root, path)
+        raw = _old_bytes(root, path) if wave == 'B' else _old_bytes(root, path, settings['checkpoint'])
         old[path] = digest(raw) if raw is not None else None
         new[path] = digest((root / path).read_bytes())
     for path, expected in manifest['implementationFiles'].items():
-        if old[path] != expected:
+        original = old[path] if prior is None else prior['implementation']['old'].get(path)
+        if original != expected:
             raise ValueError('historical_implementation_fingerprint_invalid:' + path)
-    return {'baselineCheckpoint': BASE_CHECKPOINT, 'old': old, 'new': new,
+    if prior is not None and old != prior['implementation']['new']:
+        raise ValueError('prior_amendment_implementation_mismatch')
+    return {'baselineCheckpoint': settings['checkpoint'], 'old': old, 'new': new,
             'changedFiles': [p for p in old if old[p] != new[p]]}
 
 
@@ -75,31 +106,33 @@ def legacy_request(root: Path, manifest: dict, request_id: str) -> tuple[dict, d
     return request, inputs
 
 
-def prospective_case(root: Path, manifest: dict, request_id: str) -> tuple[dict, dict]:
+def prospective_case(root: Path, manifest: dict, request_id: str, *, wave: str = 'B') -> tuple[dict, dict]:
     """Rebuild original selection, then change only approved instruction/version fields."""
-    if request_id not in REQUEST_IDS:
-        raise ValueError('amendment_wave_b_only')
+    settings = wave_settings(wave)
+    if request_id not in settings['ids']:
+        raise ValueError('amendment_wave_b_only' if wave == 'B' else 'amendment_wave_c_only')
     legacy, inputs = legacy_request(root, manifest, request_id)
     family = legacy['request']['artifactFamily']
     contract = importlib.import_module(f'src.extraction.llm.{DIRECTORIES[family]}.request_contract')
-    inputs['request_version'] = VERSIONS[family]
+    inputs['request_version'] = settings['versions'][family]
     request = contract.build_request(**inputs)
     if request.get('status') != 'request_ready':
         raise ValueError('prospective_request_not_ready')
     unchanged = lambda body: {k: v for k, v in body.items() if k not in ('schemaVersion', 'promptIdentifier', 'instructions')}
     if unchanged(request['request']) != unchanged(legacy['request']):
         raise ValueError('amendment_source_or_contract_drift')
-    projection = PROJECTION if family == 'github' else None
+    projection = settings['projection'] if family == 'github' else None
     result = build_preflight(request, output_ceiling=32768, projection_version=projection)
     previous = build_preflight(legacy, output_ceiling=32768, projection_version=base.projection_for(request_id))
     if result['schemaSha256'] != previous['schemaSha256']:
         raise ValueError('response_schema_drift')
     result.update(calibrationManifestSha256=base.MANIFEST_SHA256, calibrationRequestID=request_id,
-        calibrationWave='B', requestVersion=VERSIONS[family], promptIdentifier=contract.WAVE_B_PROMPT_IDENTIFIER,
+        calibrationWave=wave, requestVersion=settings['versions'][family], promptIdentifier=request['request']['promptIdentifier'],
         providerInputProjectionVersion=projection, unprojectedInputByteCount=len(canonical(request['request'])),
         conservativeInputTokenAllowance=result['inputByteCount'] + result['schemaByteCount'],
         allowanceMethod='one token per UTF-8 input/schema byte; not measured; additional approved overhead required',
-        executionHold='wave_a_clearance_amendment_context_budget_approval_pending')
+        executionHold=('wave_a_clearance_amendment_context_budget_approval_pending' if wave == 'B'
+                       else 'wave_a_b_clearance_amendment_context_budget_approval_pending'))
     return request, result
 
 
@@ -139,26 +172,31 @@ def verify_legacy_associations(root: Path, manifest: dict, *, replay: bool = Fal
     return rows
 
 
-def prepare(root: Path) -> dict:
+def prepare(root: Path, *, wave: str = 'B') -> dict:
     """Generate a reviewable immutable execution record; never create live approval."""
     manifest = base.load_manifest(root)
-    fingerprints = implementation_record(root, manifest)
-    legacy = verify_legacy_associations(root, manifest, replay=True)
+    settings = wave_settings(wave)
+    fingerprints = implementation_record(root, manifest) if wave == 'B' else implementation_record(root, manifest, wave=wave)
+    legacy = verify_legacy_associations(root, manifest, replay=True) if wave == 'B' else None
     rows = []
-    for rid in REQUEST_IDS:
+    for rid in settings['ids']:
         original = next(r for r in manifest['requests'] if r['requestID'] == rid)
-        request, result = prospective_case(root, manifest, rid)
+        request, result = prospective_case(root, manifest, rid, wave=wave)
         old_folder = root / base.PREFLIGHT_DIRECTORY / rid
         rows.append({'requestID': rid, 'baseSelectionRecordSha256': digest(base.semantic_bytes(original)),
             'originalSemanticRequestSha256': original['semanticRequestSha256'],
             'originalPreflightFileSha256': {p.name: digest(p.read_bytes()) for p in sorted(old_folder.iterdir()) if p.is_file()},
             'instructionsSha256': digest(base.semantic_bytes(request['request']['instructions'])),
             **{k: result[k] for k in ASSOCIATION_FIELDS}})
-    return {'schemaVersion': VERSION, 'status': 'OFFLINE PREPARED / NOT AUTHORIZED FOR LIVE EXECUTION',
-        'authorized': False, 'wave': 'B', 'baseManifestPath': base.MANIFEST_PATH,
+    return {'schemaVersion': settings['version'], 'status': 'OFFLINE PREPARED / NOT AUTHORIZED FOR LIVE EXECUTION',
+        'authorized': False, 'wave': wave, 'baseManifestPath': base.MANIFEST_PATH,
         'baseManifestSha256': base.MANIFEST_SHA256, 'implementation': fingerprints,
-        'authorityFiles': manifest['authorityFiles'], 'legacyWaveAAssociations': legacy, 'requests': rows,
-        'remainingApproval': ['Wave A researcher clearance', 'exact amendment digest', 'individual request hashes',
+        'authorityFiles': manifest['authorityFiles'], 'requests': rows,
+        **({'legacyWaveAAssociations': legacy} if wave == 'B' else {
+            'priorExecutionAmendmentPath': PRIOR_AMENDMENT_PATH,
+            'priorExecutionAmendmentSha256': PRIOR_AMENDMENT_SHA256,
+            'challengePolicy': 'Final qualitative challenge; no prompt tuning from Wave C; critical defects may block production, never silently retry or correct outputs.'}),
+        'remainingApproval': (['Wave A researcher clearance'] if wave == 'B' else ['Wave A researcher clearance', 'Wave B researcher clearance']) + ['exact amendment digest', 'individual request hashes',
             'individual and aggregate monetary reservations', 'context allowances and overhead', 'approval validity window'],
         'semanticAcceptance': 'not_evaluated', 'kgAuthorization': False}
 
@@ -170,20 +208,26 @@ def load_amendment(root: Path, path: Path, expected_sha256: str) -> tuple[dict, 
         raise ValueError('amendment_digest_mismatch')
     amendment = json.loads(raw)
     manifest = base.load_manifest(root)
-    if (amendment.get('schemaVersion') != VERSION or amendment.get('wave') != 'B'
+    settings = wave_settings(amendment.get('wave'))
+    wave = amendment['wave']
+    if (amendment.get('schemaVersion') != settings['version']
             or amendment.get('authorized') is not False
             or amendment.get('baseManifestSha256') != base.MANIFEST_SHA256
             or amendment.get('baseManifestPath') != base.MANIFEST_PATH
             or amendment.get('authorityFiles') != manifest['authorityFiles']
-            or [r.get('requestID') for r in amendment.get('requests', [])] != list(REQUEST_IDS)):
+            or [r.get('requestID') for r in amendment.get('requests', [])] != list(settings['ids'])):
         raise ValueError('amendment_manifest_or_scope_mismatch')
-    if amendment.get('implementation') != implementation_record(root, manifest):
+    if wave == 'C' and (amendment.get('priorExecutionAmendmentPath') != PRIOR_AMENDMENT_PATH
+            or amendment.get('priorExecutionAmendmentSha256') != PRIOR_AMENDMENT_SHA256):
+        raise ValueError('prior_amendment_association_mismatch')
+    current = implementation_record(root, manifest) if wave == 'B' else implementation_record(root, manifest, wave=wave)
+    if amendment.get('implementation') != current:
         raise ValueError('amendment_implementation_fingerprint_mismatch')
     for row in amendment['requests']:
         original = next(r for r in manifest['requests'] if r['requestID'] == row['requestID'])
         if (row['baseSelectionRecordSha256'] != digest(base.semantic_bytes(original))
                 or row['originalSemanticRequestSha256'] != original['semanticRequestSha256']
-                or row['requestVersion'] != VERSIONS[original['artifactFamily']]):
+                or row['requestVersion'] != settings['versions'][original['artifactFamily']]):
             raise ValueError('amendment_selection_or_version_mismatch')
     return manifest, amendment
 
@@ -191,19 +235,22 @@ def load_amendment(root: Path, path: Path, expected_sha256: str) -> tuple[dict, 
 def build_case(root: Path, request_id: str, path: Path, expected_sha256: str) -> tuple[dict, dict]:
     """Verify amendment association and reconstruct every transmitted byte for one ID."""
     manifest, amendment = load_amendment(root, path, expected_sha256)
-    request, result = prospective_case(root, manifest, request_id)
+    request, result = prospective_case(root, manifest, request_id, wave=amendment['wave'])
     row = next(r for r in amendment['requests'] if r['requestID'] == request_id)
     if any(result[k] != row[k] for k in ASSOCIATION_FIELDS) or row['instructionsSha256'] != digest(base.semantic_bytes(request['request']['instructions'])):
         raise ValueError('amendment_request_or_envelope_mismatch')
     for name, expected in row['originalPreflightFileSha256'].items():
         base._verified_bytes(root, f'{base.PREFLIGHT_DIRECTORY}/{request_id}/{name}', expected)
-    result.update(executionAmendmentSha256=expected_sha256, executionAmendmentVersion=VERSION)
+    result.update(executionAmendmentSha256=expected_sha256, executionAmendmentVersion=amendment['schemaVersion'])
+    if amendment['wave'] == 'C':
+        result['priorExecutionAmendmentSha256'] = PRIOR_AMENDMENT_SHA256
     return request, result
 
 
 def case_folder(root: Path, request_id: str, amendment_sha256: str) -> Path:
     """Artifacts are separate from historical files; attempts remain at original ID paths."""
-    return root / PREFLIGHT_DIRECTORY / amendment_sha256 / request_id
+    wave = base.wave_for(request_id)
+    return root / wave_settings(wave)['directory'] / amendment_sha256 / request_id
 
 
 def write_case(root: Path, request_id: str, path: Path, expected_sha256: str) -> dict:
@@ -238,25 +285,31 @@ def main() -> None:
     """Prepare a new unapproved record, or verify/write nine offline envelopes."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('mode', choices=('prepare', 'preflight', 'verify-legacy'))
+    parser.add_argument('--wave', choices=('B', 'C'), default='B')
     parser.add_argument('--amendment', type=Path, required=True)
     parser.add_argument('--amendment-sha256')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[3]
     if args.mode == 'prepare':
         from src.extraction.llm.pilot_terminal import save
-        raw = json.dumps(prepare(root), indent=2, ensure_ascii=True).encode() + b'\n'
+        raw = json.dumps(prepare(root, wave=args.wave), indent=2, ensure_ascii=True).encode() + b'\n'
         save(args.amendment, raw)
         print(digest(raw))
         return
     if not args.amendment_sha256:
         parser.error('explicit --amendment-sha256 required')
+    manifest, selected = load_amendment(root, args.amendment, args.amendment_sha256)
+    if selected['wave'] != args.wave:
+        raise ValueError('amendment_wave_mismatch')
     if args.mode == 'verify-legacy':
+        if args.wave != 'B':
+            raise ValueError('wave_c_has_no_historical_replay_command')
         manifest, amendment = load_amendment(root, args.amendment, args.amendment_sha256)
         if verify_legacy_associations(root, manifest, replay=True) != amendment['legacyWaveAAssociations']:
             raise ValueError('legacy_association_drift')
         print('12 legacy requests, envelopes and replay hashes match; no historical writes')
         return
-    for rid in REQUEST_IDS:
+    for rid in wave_settings(args.wave)['ids']:
         result = write_case(root, rid, args.amendment, args.amendment_sha256)
         print(json.dumps({'requestID': rid, **{k: result[k] for k in ASSOCIATION_FIELDS}}, sort_keys=True))
 
