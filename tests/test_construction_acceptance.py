@@ -208,8 +208,8 @@ class ConstructionAcceptanceTests(unittest.TestCase):
         result = self.run_case('ciroh_hub', f, payload)
         self.assertTrue(all(d['disposition'] == 'held' for d in self.decisions(result).values()))
 
-    def test_model_version_exact_duplicates_and_missing_authority(self):
-        """Only exact own-repository endpoint/assertion duplicates are suppressed."""
+    def test_model_version_endpoint_duplicates_are_not_identity_proof(self):
+        """Same-owner endpoint/assertion references remain held without identity proof."""
         f = self.fixture('github')
         payload = self.pair(f, 'A-C10', 'ModelVersion', 'C-C09', 'hasModelVersion')
         payload['candidateNodes'][0].update(productRepositoryID=f.owner, label='1.0')
@@ -221,7 +221,11 @@ class ConstructionAcceptanceTests(unittest.TestCase):
                                          'sourceID': f.owner, 'targetID': 'version-1'}]
         payload['candidateNodes'][0]['endpoint'] = {'referenceType': 'accepted_endpoint', 'referenceID': 'version-1'}
         result = self.run_case('github', f, payload, inputs)
-        self.assertTrue(all(d['disposition'] == 'suppressed_duplicate' for d in self.decisions(result).values()), self.decisions(result))
+        self.assertTrue(all(d['disposition'] == 'held' for d in self.decisions(result).values()), self.decisions(result))
+        self.assertEqual(self.decisions(result)['tool']['duplicateOf'], ['version-1'])
+        self.assertEqual(self.decisions(result)['edge']['duplicateOf'], [])
+        self.assertTrue(all('candidate_version_product_identity_not_established' in d['blockingReasons']
+                            for d in self.decisions(result).values()))
         self.assertFalse(result.to_record()['projection']['nodes'] or result.to_record()['projection']['edges'])
         self.assertTrue(result.to_record()['originalReplay']['finalRecords'][0]['validationRecord']['boundEvidence'])
         inputs['accepted_endpoints'][0]['productRepositoryID'] = 'github:repo:8'
@@ -351,3 +355,106 @@ class ConstructionAcceptanceTests(unittest.TestCase):
             result = self.run_case('ciroh_hub', f, payload).to_record()
             self.assertFalse(result['projection']['nodes'] or result['projection']['edges'])
             self.assertEqual(result['originalReplay']['finalRecords'][0]['originalCandidate']['evidence'], malformed)
+
+    def version_identity_case(self, quote):
+        """Build literal version evidence alongside an independent Tool assertion."""
+        from pathlib import Path
+        import tempfile
+        from src.extraction.llm.coderepos.source_units import read_repository_sources
+        f = self.fixture('github')
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        repo = {'repo_id': 7, 'name': 'Demo', 'full_name': 'Example/Demo',
+                'archive': {'frozen_commit_sha': 'a' * 40},
+                'readme': {'source_path': 'README.md', 'text': '# Guide\n\n' + quote + '\n\n' + f.quote},
+                'files': {'downloaded': []}}
+        reader = read_repository_sources(repo, Path(temporary.name))
+        version_uid, tool_uid = [u['sourceUnitID'] for u in reader['sourceUnits']]
+        payload = f.payload()
+        for row in payload['candidateNodes'] + payload['candidateEdges']:
+            row['evidence'][0]['sourceUnitID'] = tool_uid
+        version = deepcopy(payload['candidateNodes'][0])
+        version.update(candidateID='version', inventoryId='A-C10', **{'class': 'ModelVersion'},
+                       label='1.0', productRepositoryID=f.owner,
+                       endpoint={'referenceType': 'accepted_endpoint', 'referenceID': 'deterministic-version'},
+                       evidence=[{'sourceUnitID': version_uid, 'evidenceText': quote}])
+        edge = deepcopy(payload['candidateEdges'][0])
+        edge.update(candidateID='version-edge', inventoryId='C-C09', relation='hasModelVersion',
+                    target={'referenceType': 'candidate_node', 'referenceID': 'version'},
+                    evidence=deepcopy(version['evidence']))
+        payload['candidateNodes'].append(version)
+        payload['candidateEdges'].append(edge)
+        inputs = deepcopy(f.inputs)
+        inputs.update(reader_result=reader, selected_unit_ids=[version_uid, tool_uid],
+            accepted_endpoints=[{'endpointID': 'deterministic-version', 'inventoryId': 'A-C10',
+                'class': 'ModelVersion', 'productRepositoryID': f.owner,
+                'identityRegime': 'structured_version_literal',
+                'attributes': {'sourceRepoId': 7, 'version': '1.0', 'softwareName': 'Demo',
+                               'toolId': 'deterministic-product', 'sourceType': 'software_metadata',
+                               'sourcePath': 'pyproject.toml'}}],
+            accepted_assertions=[{'assertionID': 'deterministic-version-edge', 'inventoryId': 'C-C09',
+                'relation': 'hasModelVersion', 'sourceID': f.owner, 'targetID': 'deterministic-version',
+                'attributes': {'toolId': 'deterministic-product', 'softwareName': 'Demo'}}])
+        return f, payload, inputs
+
+    def test_version_mismatch_and_dependent_edges_preserve_provenance(self):
+        """A quoted 2.0 must not be suppressed as deterministic 1.0 by reference."""
+        from src.extraction.llm.coderepos import offline_pipeline, request_contract
+        f, payload, inputs = self.version_identity_case('This repository provides Demo version 2.0.')
+        for label in ('1.0', '2.0'):
+            payload['candidateNodes'][1]['label'] = label
+            before = deepcopy((payload, inputs))
+            raw = canonical(payload)
+            request = request_contract.build_request(**inputs)
+            replay = offline_pipeline.replay_recorded_response(raw, request_inputs=inputs,
+                expected_request_sha256=request['requestSha256'])
+            result = self.run_case('github', f, payload, inputs)
+            decisions = self.decisions(result)
+            self.assertEqual(decisions['version']['disposition'], 'held')
+            self.assertEqual(decisions['version-edge']['disposition'], 'held')
+            self.assertEqual(decisions['tool']['disposition'], 'accepted')
+            self.assertEqual(decisions['edge']['disposition'], 'accepted')
+            self.assertEqual(result.to_record()['originalReplay'], json.loads(replay.report_json))
+            self.assertEqual(result.to_record()['originalReplaySha256'], replay.report_sha256)
+            original = next(r for r in result.to_record()['originalReplay']['finalRecords'] if r['candidateID'] == 'version')
+            self.assertTrue(original['validationRecord']['suppressedDuplicate'])
+            self.assertEqual(original['validationRecord']['duplicateOf'], ['deterministic-version'])
+            self.assertEqual(before, (payload, inputs))
+            self.assertEqual(result, self.run_case('github', f, payload, inputs))
+
+    def test_apparent_version_match_missing_or_ambiguous_identity_stays_held(self):
+        """Even matching prose/attributes lack a frozen evidence-to-product binding."""
+        for quote in ('This repository provides Demo version 1.0.',
+                      'Demo version 1.0 and Demo version 2.0 are described here.'):
+            f, payload, inputs = self.version_identity_case(quote)
+            for defect in ('none', 'missing_attributes', 'missing_assertion', 'contradictory_product'):
+                context = deepcopy(inputs)
+                if defect == 'missing_attributes':
+                    del context['accepted_endpoints'][0]['attributes']
+                elif defect == 'missing_assertion':
+                    context['accepted_assertions'] = []
+                elif defect == 'contradictory_product':
+                    context['accepted_assertions'][0]['attributes']['toolId'] = 'another-product'
+                result = self.run_case('github', f, payload, context)
+                for cid in ('version', 'version-edge'):
+                    decision = self.decisions(result)[cid]
+                    self.assertEqual(decision['disposition'], 'held')
+                    self.assertIn('candidate_version_product_identity_not_established', decision['blockingReasons'])
+                self.assertEqual(len(result.to_record()['projection']['nodes']), 1)
+                self.assertEqual(len(result.to_record()['projection']['edges']), 1)
+
+    def test_direct_version_edge_cannot_bypass_identity_hold(self):
+        """A direct accepted-endpoint edge remains held despite an upstream duplicate."""
+        for quote in ('This repository provides Demo version 1.0.',
+                      'This repository provides Demo version 2.0.'):
+            f, payload, inputs = self.version_identity_case(quote)
+            payload['candidateNodes'].pop()
+            payload['candidateEdges'][1]['target'] = {
+                'referenceType': 'accepted_endpoint', 'referenceID': 'deterministic-version'}
+            result = self.run_case('github', f, payload, inputs)
+            decision = self.decisions(result)['version-edge']
+            self.assertEqual(decision['disposition'], 'held')
+            self.assertEqual(decision['duplicateOf'], ['deterministic-version-edge'])
+            original = next(r for r in result.to_record()['originalReplay']['finalRecords'] if r['candidateID'] == 'version-edge')
+            self.assertTrue(original['validationRecord']['suppressedDuplicate'])
+            self.assertEqual(len(result.to_record()['projection']['edges']), 1)

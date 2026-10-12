@@ -59,7 +59,8 @@ def project_replay(replay: Any) -> AcceptanceReport:
     monotone removal then closes the set over every dependency and duplicate.
     New ModelVersion identities remain held: Step 12's prose label supplies no
     exact structured-version identity or complete deterministic comparison set.
-    Proven exact endpoint/assertion duplicates are retained as corroboration only.
+    ModelVersion endpoint/assertion duplicate references are provenance only:
+    the frozen contract does not bind candidate evidence to structured identity.
     """
     if digest(replay.report_json.encode()) != replay.report_sha256:
         raise ValueError("replay integrity mismatch")
@@ -158,24 +159,22 @@ def project_replay(replay: Any) -> AcceptanceReport:
                     or endpoint.get("inventoryId") != "A-C07"
                     or (c.get("resolvedSource") or {}).get("endpointID") != owner.get("endpointID")):
                 blocked.append("approved_category_endpoint_required")
-        if row["kind"] == "edge" and c.get("resolvedSource") and c.get("resolvedTarget"):
+        if (row["kind"] == "edge" and c.get("resolvedSource") and c.get("resolvedTarget")
+                and not (family == "github" and identifier == "C-C09")):
             exact_duplicates[cid] = sorted(aid for aid, a in assertions.items()
                 if (a["inventoryId"], a["sourceID"], a["targetID"]) ==
                    (identifier, c["resolvedSource"]["endpointID"], c["resolvedTarget"]["endpointID"]))
-        # No label-to-version or name-based identity inference. The existing
-        # validator proves exact duplicates against trusted inventories only.
         if family == "github" and identifier in {"A-C10", "C-C09"}:
-            duplicates = exact_duplicates.get(cid) or c.get("duplicateOf", [])
-            exact = bool(duplicates) and (bool(exact_duplicates.get(cid)) or c.get("suppressedDuplicate") is True)
-            if identifier == "A-C10":
-                exact = exact and all(d in external and external[d].get("productRepositoryID") == owner.get("endpointID")
-                                     and external[d].get("inventoryId") == "A-C10" for d in duplicates)
-                exact = exact and candidate.get("productRepositoryID") == owner.get("endpointID")
-            else:
-                exact = exact and all(d in assertions and assertions[d].get("sourceID") == owner.get("endpointID")
-                                     and assertions[d].get("inventoryId") == "C-C09" for d in duplicates)
-            if not exact:
-                blocked.append("exact_deterministic_version_comparison_unavailable")
+            # Trusted deterministic version/toolId attributes identify the stored
+            # version, not the assertion made by the candidate's bound prose.
+            # The frozen candidate contract has no independently verified mapping
+            # from that evidence to structured version/product identity. Matching
+            # labels, quoted tokens, selected endpoint IDs or assertion triples
+            # cannot supply that missing comparison (even for a direct edge to an
+            # accepted endpoint). Preserve original duplicateOf/findings as
+            # provenance; never promote them to construction duplicate proof.
+            blocked.append("exact_deterministic_version_comparison_unavailable")
+            blocked.append("candidate_version_product_identity_not_established")
         if row["kind"] == "node":
             if not c.get("resolvedEndpoint"):
                 blocked.append("endpoint_unresolved")
