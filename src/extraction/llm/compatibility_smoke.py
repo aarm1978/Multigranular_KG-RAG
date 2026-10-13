@@ -32,6 +32,20 @@ FAMILIES = ('hydroshare', 'github', 'ciroh_hub')
 PINS = ('semanticRequestSha256', 'providerEnvelopeSha256', 'providerInputSha256', 'schemaSha256')
 
 
+def select_manifest(root: Path, relative: str, sha256: str) -> None:
+    """Pin a distinct prospective manifest; its digest fixes the permanent run state."""
+    global MANIFEST, MANIFEST_SHA256, STATE
+    path = (root / relative).resolve()
+    if (not path.is_relative_to((root / 'var/study2_step13').resolve())
+            or len(sha256) != 64 or any(c not in '0123456789abcdef' for c in sha256)
+            or digest(path.read_bytes()) != sha256):
+        raise ValueError('prospective_manifest_pin_invalid')
+    if sha256 == 'bee79a4d0f4ea23318ab19069af9c5b0af43cb4012492077136be7269cdf0245':
+        raise ValueError('historical_manifest_requires_original_state')
+    MANIFEST, MANIFEST_SHA256 = str(path.relative_to(root.resolve())), sha256
+    STATE = 'var/study2_step13/compatibility-smoke/' + sha256
+
+
 def strict_json(raw: bytes) -> Any:
     """Reject duplicate keys and nonfinite numbers in authorizations and responses."""
     def pairs(items):
@@ -301,11 +315,17 @@ def main() -> None:
     """Expose explicit dry-run/draft/execute modes; default is offline dry-run."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('mode', nargs='?', choices=('dry-run', 'draft', 'execute'), default='dry-run')
+    parser.add_argument('--manifest')
+    parser.add_argument('--manifest-sha256')
     parser.add_argument('--approval', type=Path)
     parser.add_argument('--approval-sha256')
     parser.add_argument('--draft-path', type=Path)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[3]
+    if args.manifest is not None or args.manifest_sha256 is not None:
+        if not args.manifest or not args.manifest_sha256:
+            parser.error('prospective run requires both --manifest and --manifest-sha256')
+        select_manifest(root, args.manifest, args.manifest_sha256)
     if args.mode == 'execute':
         if args.approval is None or not args.approval_sha256:
             parser.error('execute requires independently pinned --approval and --approval-sha256')
