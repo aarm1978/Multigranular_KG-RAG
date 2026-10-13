@@ -203,6 +203,18 @@ def record_response(root: Path, attempt: Path, row: dict, files: dict, status: i
     parsed = strict_json(raw)
     metadata = {k: parsed.get(k) for k in ('id', 'model', 'status', 'created_at', 'usage', 'incomplete_details', 'error')}
     persist(attempt / 'provider-metadata.json', canonical(metadata))
+    # Account for genuine usage before any later technical processing can fail.
+    usage = parsed.get('usage')
+    usage = usage if isinstance(usage, dict) else {}
+    input_tokens, output_tokens = usage.get('input_tokens'), usage.get('output_tokens')
+    approved = approval['requests'][row['requestID']]
+    estimate = None
+    if all(type(n) is int and n >= 0 for n in (input_tokens, output_tokens)):
+        estimate = (input_tokens * money(approval['inputUSDPerMillionTokens'])
+                    + output_tokens * money(approval['outputUSDPerMillionTokens'])) / 1000000
+        persist(attempt / 'cost-record.json', canonical({'approvedRateUndiscountedCostUSD': str(estimate),
+            'reservedMaximumCostUSD': str(approved['reservedMaximumCost']), 'actualBilledCost': None,
+            'basis': 'Approved rates applied to genuine usage; cached discounts not assumed.'}))
     if status != 200:
         raise ValueError('provider_response_failed')
     validate_provider_response(parsed)
@@ -226,20 +238,9 @@ def record_response(root: Path, attempt: Path, row: dict, files: dict, status: i
     persist(attempt / 'schema-check.json', canonical({'canonicalSchemaConformant': valid_schema, 'schemaSha256': row['schemaSha256']}))
     if not valid_schema or record['status'] != 'projection_completed':
         raise ValueError('schema_or_replay_failure')
-    if any(r['finalDisposition'] in {'processing_failed', 'rejected_invalid_assertion', 'failed_source_or_evidence_binding', 'needs_review'}
-           for r in record['originalReplay']['finalRecords']):
-        raise ValueError('original_replay_failure')
-    usage = parsed.get('usage') or {}
-    input_tokens, output_tokens = usage.get('input_tokens'), usage.get('output_tokens')
-    approved = approval['requests'][row['requestID']]
     if (any(type(n) is not int or n < 0 for n in (input_tokens, output_tokens))
             or input_tokens > approved['inputTokenAllowance'] or output_tokens > approved['outputTokenCeiling']):
         raise ValueError('usage_missing_or_exceeds_allowance')
-    estimate = (input_tokens * money(approval['inputUSDPerMillionTokens'])
-                + output_tokens * money(approval['outputUSDPerMillionTokens'])) / 1000000
-    persist(attempt / 'cost-record.json', canonical({'approvedRateUndiscountedCostUSD': str(estimate),
-        'reservedMaximumCostUSD': str(approved['reservedMaximumCost']), 'actualBilledCost': None,
-        'basis': 'Approved rates applied to genuine usage; cached discounts not assumed.'}))
     if estimate > money(approved['reservedMaximumCost']):
         raise ValueError('cost_reservation_exceeded')
 

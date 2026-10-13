@@ -119,6 +119,47 @@ class CompatibilitySmokeTests(unittest.TestCase):
         self.assertEqual(self.send.call_count, 3)
         self.assertNotIn('synthetic-secret-never-persist', ''.join(p.read_text() for p in (self.root / smoke.STATE).rglob('*') if p.is_file()))
 
+    def test_candidate_failures_preserved_without_stopping_sequence(self):
+        """Mixed dispositions and zero accepted yield do not override acceptance."""
+        dispositions = ['accepted', 'rejected_invalid_assertion', 'needs_review',
+                        'failed_source_or_evidence_binding', 'held', 'processing_failed']
+        expected = []
+        def mixed(*args, **kwargs):
+            """Include a mixed first response and only held candidates thereafter."""
+            record = self.synthetic_replay(*args, **kwargs).to_record()
+            records = [{'candidateID': str(i), 'finalDisposition': value}
+                       for i, value in enumerate(dispositions if not expected else ['held'])]
+            record['originalReplay']['finalRecords'] = records
+            expected.append(records)
+            wire = canonical(record)
+            return SimpleNamespace(report_json=wire.decode(), report_sha256=digest(wire), to_record=lambda: record)
+        self.replay.side_effect = mixed
+        self.execute()
+        self.assertEqual(self.send.call_count, 3)
+        for rid, records in zip(smoke.IDS, expected):
+            folder = self.root / smoke.STATE / rid
+            self.assertEqual(json.loads((folder / 'replay-report.json').read_bytes())['finalRecords'], records)
+            self.assertTrue((folder / 'completed.json').exists())
+        with self.assertRaisesRegex(ValueError, 'no_redispatch'): self.execute()
+        self.assertEqual(self.send.call_count, 3)
+
+    def test_usage_overage_preserves_cost_before_stop(self):
+        """Genuine over-budget usage is recorded even though continuation is denied."""
+        def overage(*args):
+            """Return actual counts above the approved allowance and reserve."""
+            status, raw = self.response(*args)
+            parsed = json.loads(raw); parsed['usage']['input_tokens'] = 2000000
+            return status, canonical(parsed)
+        self.send.side_effect = overage
+        with self.assertRaises(RuntimeError): self.execute()
+        folder = self.root / smoke.STATE / smoke.IDS[0]
+        cost = json.loads((folder / 'cost-record.json').read_bytes())
+        self.assertEqual(cost['approvedRateUndiscountedCostUSD'], '2.00001')
+        self.assertIsNone(cost['actualBilledCost'])
+        self.assertEqual(json.loads((folder / 'provider-metadata.json').read_bytes())['usage']['input_tokens'], 2000000)
+        with self.assertRaises(ValueError): self.execute()
+        self.assertEqual(self.send.call_count, 1)
+
     def test_uncertain_transport_stops_and_consumes_batch(self):
         """Timeout or interruption leaves intent, STOP and a permanent no-resend barrier."""
         self.send.side_effect = TimeoutError('uncertain')
@@ -214,6 +255,8 @@ class CompatibilitySmokeTests(unittest.TestCase):
             return SimpleNamespace(report_json=wire.decode(), report_sha256=digest(wire), to_record=lambda: result)
         self.replay.side_effect = failed
         with self.assertRaises(RuntimeError): self.execute()
+        cost = json.loads((self.root / smoke.STATE / smoke.IDS[0] / 'cost-record.json').read_bytes())
+        self.assertEqual(cost['approvedRateUndiscountedCostUSD'], '0.00002')
         self.assertTrue((self.root / smoke.STATE / smoke.IDS[0] / 'acceptance-report.json').exists())
         self.assertEqual(self.send.call_count, 1)
 
@@ -228,6 +271,9 @@ class CompatibilitySmokeTests(unittest.TestCase):
         row = deepcopy(self.rows[0]); row['semanticRequestSha256'] = request['requestSha256']
         attempt = self.root / 'integration'; attempt.mkdir()
         payload = fixture.payload()
+        bad = deepcopy(payload['candidateNodes'][0])
+        bad.update(candidateID='bad-evidence', evidence=[{'sourceUnitID': fixture.uid, 'evidenceText': 'fabricated literal'}])
+        payload['candidateNodes'].append(bad)
         raw = canonical({'id': 'synthetic-integration', 'model': 'gpt-5.6-sol', 'status': 'completed',
             'usage': {'input_tokens': 10, 'output_tokens': 5},
             'output': [{'type': 'message', 'content': [{'type': 'output_text', 'text': canonical(payload).decode()}]}]})
@@ -239,6 +285,8 @@ class CompatibilitySmokeTests(unittest.TestCase):
         self.assertEqual(replay['requestAssociation'], 'matched_caller_supplied_digest')
         self.assertEqual(replay['expectedRequestSha256'], request['requestSha256'])
         self.assertEqual(result['status'], 'projection_completed')
+        self.assertEqual(next(r for r in replay['finalRecords'] if r['candidateID'] == 'bad-evidence')['finalDisposition'],
+                         'failed_source_or_evidence_binding')
         self.assertEqual(len(result['projection']['nodes']), 1)
         self.assertEqual(len(result['projection']['edges']), 1)
         self.send.assert_not_called()
@@ -247,6 +295,8 @@ class CompatibilitySmokeTests(unittest.TestCase):
         """A processable but structurally nonconformant response cannot continue."""
         self.files[smoke.IDS[0]]['canonical-schema.json'] = canonical({'type': 'object', 'required': ['missing']})
         with self.assertRaises(RuntimeError): self.execute()
+        cost = json.loads((self.root / smoke.STATE / smoke.IDS[0] / 'cost-record.json').read_bytes())
+        self.assertEqual(cost['approvedRateUndiscountedCostUSD'], '0.00002')
         folder = self.root / smoke.STATE / smoke.IDS[0]
         self.assertFalse(json.loads((folder / 'schema-check.json').read_bytes())['canonicalSchemaConformant'])
         self.assertTrue((folder / 'acceptance-report.json').exists())
@@ -267,5 +317,7 @@ class CompatibilitySmokeTests(unittest.TestCase):
             return status, canonical(parsed)
         self.send.side_effect = incomplete
         with self.assertRaises(RuntimeError): self.execute()
+        cost = json.loads((self.root / smoke.STATE / smoke.IDS[0] / 'cost-record.json').read_bytes())
+        self.assertEqual(cost['approvedRateUndiscountedCostUSD'], '0.00002')
         self.assertTrue((self.root / smoke.STATE / smoke.IDS[0] / 'provider-metadata.json').exists())
         self.assertEqual(self.send.call_count, 1)
