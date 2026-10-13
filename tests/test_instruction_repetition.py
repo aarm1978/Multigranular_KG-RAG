@@ -48,4 +48,3 @@ class InstructionRepetitionTests(unittest.TestCase):
                     expected_request_sha256=new['requestSha256'], conformance_version=VERSION, schema_version=SCHEMA_VERSION).to_record()
                 self.assertEqual(result['status'], 'projection_completed')
                 self.assertEqual(result['originalReplay']['requestAssociation'], 'matched_caller_supplied_digest')
-
