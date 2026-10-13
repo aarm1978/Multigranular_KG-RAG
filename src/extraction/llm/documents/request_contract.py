@@ -47,6 +47,9 @@ WAVE_B_INSTRUCTIONS = ('Distinguish a substantive scientific/data-processing Wor
  'authorized validation stage resolves them; never output attestations.')
 
 
+REPETITION_REQUEST_VERSION = "ciroh_hub-request/1.2.2"
+REPETITION_PROMPT_IDENTIFIER = "ciroh-hub-instruction-repetition/0.1.0"
+
 LOCATOR_REQUEST_VERSION = "ciroh_hub-request/1.2.1"
 LOCATOR_PROMPT_IDENTIFIER = "ciroh-hub-locator-anchor-clarification/0.1.0"
 LOCATOR_INSTRUCTIONS = ('If evidenceText occurs exactly once in the selected source unit, OMIT locatorAnchor. Otherwise, provide a longer exact contiguous substring from that same unit, occurring exactly once and containing evidenceText exactly once. Never use file paths, line numbers, section IDs, URLs or invented locations as locatorAnchor. Never modify evidenceText.',)
@@ -130,12 +133,15 @@ def _finish(owner: dict, units: list[dict], selection: list[str], completeness: 
     if request_version == WAVE_B_REQUEST_VERSION:
         body.update(schemaVersion=request_version, promptIdentifier=WAVE_B_PROMPT_IDENTIFIER,
                     instructions=deepcopy(INSTRUCTIONS) + list(WAVE_B_INSTRUCTIONS))
-    if request_version in (WAVE_C_REQUEST_VERSION, LOCATOR_REQUEST_VERSION):
+    if request_version in (WAVE_C_REQUEST_VERSION, LOCATOR_REQUEST_VERSION, REPETITION_REQUEST_VERSION):
         body.update(schemaVersion=request_version, promptIdentifier=WAVE_C_PROMPT_IDENTIFIER,
                     instructions=deepcopy(INSTRUCTIONS) + list(WAVE_B_INSTRUCTIONS) + list(WAVE_C_INSTRUCTIONS))
-    if request_version == LOCATOR_REQUEST_VERSION:
+    if request_version in (LOCATOR_REQUEST_VERSION, REPETITION_REQUEST_VERSION):
         body.update(promptIdentifier=LOCATOR_PROMPT_IDENTIFIER)
         body["instructions"] += list(LOCATOR_INSTRUCTIONS)
+    if request_version == REPETITION_REQUEST_VERSION:
+        body.update(promptIdentifier=REPETITION_PROMPT_IDENTIFIER,
+                    zzRepeatedInstructions=deepcopy(body["instructions"]))
     try:
         digest = hashlib.sha256(_json(body).encode("utf-8")).hexdigest()
     except (TypeError, ValueError, RecursionError):
@@ -183,7 +189,7 @@ def parse_recorded_response(raw: bytes | str, *, request: Mapping[str, Any]) -> 
         return fail("trusted_request_not_ready")
     body = request.get("request")
     try:
-        if (not isinstance(body, Mapping) or body.get("schemaVersion") not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION, WAVE_C_REQUEST_VERSION, LOCATOR_REQUEST_VERSION)
+        if (not isinstance(body, Mapping) or body.get("schemaVersion") not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION, WAVE_C_REQUEST_VERSION, LOCATOR_REQUEST_VERSION, REPETITION_REQUEST_VERSION)
                 or body.get("artifactFamily") != FAMILY
                 or hashlib.sha256(_json(body).encode()).hexdigest() != request.get("requestSha256")):
             return fail("trusted_request_contract_or_hash_mismatch")
@@ -192,12 +198,15 @@ def parse_recorded_response(raw: bytes | str, *, request: Mapping[str, Any]) -> 
     version = body["schemaVersion"]
     expected_prompt = {REQUEST_VERSION: None, WAVE_B_REQUEST_VERSION: WAVE_B_PROMPT_IDENTIFIER,
                        WAVE_C_REQUEST_VERSION: WAVE_C_PROMPT_IDENTIFIER,
-                       LOCATOR_REQUEST_VERSION: LOCATOR_PROMPT_IDENTIFIER}[version]
+                       LOCATOR_REQUEST_VERSION: LOCATOR_PROMPT_IDENTIFIER,
+                       REPETITION_REQUEST_VERSION: REPETITION_PROMPT_IDENTIFIER}[version]
     instructions = INSTRUCTIONS + (list(WAVE_B_INSTRUCTIONS) if version != REQUEST_VERSION else [])
-    if version in (WAVE_C_REQUEST_VERSION, LOCATOR_REQUEST_VERSION):
+    if version in (WAVE_C_REQUEST_VERSION, LOCATOR_REQUEST_VERSION, REPETITION_REQUEST_VERSION):
         instructions += list(WAVE_C_INSTRUCTIONS)
-    if version == LOCATOR_REQUEST_VERSION:
+    if version in (LOCATOR_REQUEST_VERSION, REPETITION_REQUEST_VERSION):
         instructions += list(LOCATOR_INSTRUCTIONS)
+    if version == REPETITION_REQUEST_VERSION and body.get("zzRepeatedInstructions") != instructions:
+        return fail("trusted_request_prompt_variant_mismatch")
     if body.get("promptIdentifier") != expected_prompt or body.get("instructions") != instructions:
         return fail("trusted_request_prompt_variant_mismatch")
     result["requestContractVersion"] = version
@@ -353,7 +362,7 @@ def build_request(page: Mapping[str, Any], reader_result: Mapping[str, Any], *, 
     request context; full MDX and hidden content are never expanded into a prompt.
     Source diagnostics/completeness remain separate from candidate outcomes.
     """
-    if not isinstance(request_version, str) or request_version not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION, WAVE_C_REQUEST_VERSION, LOCATOR_REQUEST_VERSION):
+    if not isinstance(request_version, str) or request_version not in (REQUEST_VERSION, WAVE_B_REQUEST_VERSION, WAVE_C_REQUEST_VERSION, LOCATOR_REQUEST_VERSION, REPETITION_REQUEST_VERSION):
         return {"status": "request_failed", "diagnostics": [{"reason": "unsupported_request_version"}]}
     from src.extraction.llm.documents.source_units import read_page_source_units
     from src.extraction.llm.documents.evidence_binding import bind_hub_evidence
