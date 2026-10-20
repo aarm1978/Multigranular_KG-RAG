@@ -15,6 +15,93 @@ by explicit reasoning rather than citation). Citations are NOT invented here; pl
 mark where literature support must be added. This doubles as a checklist of what still
 needs grounding.
 
+## Manuscript reporting checkpoint — Human Core GPT-6.1 selection (2026-10-20)
+
+**Status:** Researcher decision recorded for later Study 2 manuscript/dissertation
+writing (Step 18); **not** a manuscript draft, new confirmatory evaluation, or
+authorization to dispatch the full corpus. On 2026-10-20, the researcher
+selected `gpt-6.1-sol` as the **prospective Publications semantic-production
+model** for Step 13, and decided to **report its Human Core N=5 findings in
+the manuscript alongside the historical GPT-5.6 results**, rather than
+reporting only GPT-5.6.
+
+### Results to bring into the manuscript
+
+The five original Human Core units and frozen reference support are shared:
+**118 nodes and 61 relations**. The original GPT-5.6 Step 7B strict
+evaluation is **confirmatory**; the subsequent GPT-6.1 strict evaluation is
+explicitly **POST-HOC MODEL SENSITIVITY**, using the unchanged matcher and
+Human Core. Both models' semantic-recovery and source-support rates are
+**secondary, researcher-confirmed post-hoc analyses**, not substitutions
+for strict precision/recall/F1.
+
+| Measure | GPT-5.6 Sol | GPT-6.1 Sol |
+|---|---:|---:|
+| Strict node TP / FP / FN | 30 / 79 / 88 | 32 / 95 / 86 |
+| Strict node F1 | 0.264317 | 0.261224 |
+| Strict relation TP / FP / FN | 6 / 62 / 55 | 7 / 60 / 54 |
+| Strict relation F1 | 0.093023 | 0.109375 |
+| Human Core node semantic recovery (one-to-one) | 64/118 = 54.2373% | 78/118 = 66.1017% |
+| Human Core relation semantic recovery (one-to-one) | 33/61 = 54.0984% | 41/61 = 67.2131% |
+| Source-supported node predictions | 103/109 = 94.4954% | 120/127 = 94.4882% |
+| Source-supported relation predictions | 66/68 = 97.0588% | 65/67 = 97.0149% |
+
+**Interpretation:** GPT-6.1 yields 14 additional researcher-confirmed
+semantic correspondences among Human Core nodes and eight among relations,
+with essentially unchanged source-support rates. The strict *node* F1 is
+slightly lower for GPT-6.1; its strict *relation* F1 is slightly higher.
+Do **not** describe GPT-6.1 as uniformly better on all strict metrics.
+
+**Critical reporting boundaries:**
+- Semantic recovery measures one-to-one correspondence with Human Core;
+  **it is not a revised strict Recall or F1**.
+- Source-supported prediction rate asks whether each assertion is supported
+  **as proposed** (including typing and relation endpoints), even when Human
+  Core omitted it; **it is not conventional gold-referenced Precision**.
+- The secondary judgments used **ChatGPT-assisted exhaustive
+  pre-adjudication with researcher confirmation of grouped recommendations
+  and escalated cases**. The researcher did **not** independently and blindly
+  re-annotate every GPT-6.1 prediction. Preserve this provenance when writing
+  the paper; do not describe it as an independent blinded human evaluation.
+- N=5 was a deliberately bounded Human Core. No statistical significance,
+  equivalence, full-corpus generalization or demonstrated causal improvement
+  follows from these descriptive comparisons.
+- Preserve the original confirmatory GPT-5.6 Step 7 closure, strict results,
+  fixed Human Core, ontology and matching contract; **do not reopen Step 7C**.
+  GPT-6.1 results are a model-selection/post-hoc sensitivity companion.
+- The choice of GPT-6.1 for prospective Publications production additionally
+  considers the earlier paired smoke's lower observed API cost and higher
+  latency. This note does **not** authorize an API run or set a monetary cap;
+  later Step 13 production preparation should estimate cost and satisfy the
+  already-approved execution-manifest budget/STOP provisions minimally.
+
+### Exact source artifacts to reuse at manuscript time
+
+- GPT-5.6 corrected strict Step 7B:
+  `data/curation/papers/m2/human_core_gold/publication_human_core_n5_corrected_evaluation_step7b_pre_freeze_v1.0.0.json`
+- GPT-5.6 researcher-reviewed secondary sensitivity:
+  `data/curation/papers/m2/human_core_gold/publication_human_core_n5_corrected_evaluation_posthoc_semantic_equivalence_researcher_review_v1.0.0.json`
+- GPT-6.1 strict post-hoc model sensitivity:
+  `data/curation/papers/m2/publication_human_core_n5_gpt61_extraction/gpt61_posthoc_strict_evaluation_v1.0.0.json`
+- GPT-6.1 researcher-reviewed secondary sensitivity and its provenance ledger:
+  `data/curation/papers/m2/publication_human_core_n5_gpt61_extraction/gpt61_posthoc_secondary_researcher_review_v1.0.0.json`
+  and
+  `data/curation/papers/m2/publication_human_core_n5_gpt61_extraction/gpt61_posthoc_researcher_judgment_ledger_v1.0.0.json`
+- Frozen secondary review criteria:
+  `docs/publication_human_core_posthoc_semantic_equivalence_sensitivity_protocol_v0.1.1.md`.
+- GPT-6.1 strict evaluation was committed as `22309460`;
+  GPT-6.1 reviewed secondary results as `238e1f8`.
+  Keep the corresponding Markdown summaries as report-ready references.
+
+**Writing follow-up (not now):** When drafting the Study 2 evaluation
+section, present both models in one explicitly labeled comparative table,
+identify GPT-5.6's confirmatory status and GPT-6.1's post-hoc status, and
+discuss strict vs. semantically grounded coverage separately. Make the
+production-model choice traceable to these observations, not a claim of
+statistically established superiority.
+
+---
+
 ## SciERC post-run failure-handling decision — 2026-10-06
 
 The researcher explicitly approved
