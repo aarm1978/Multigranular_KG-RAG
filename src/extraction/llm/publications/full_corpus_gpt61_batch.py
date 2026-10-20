@@ -152,6 +152,8 @@ def summary(log: Any) -> dict:
                    if 'submitted' in log.jobs[jid])
     elapsed = time.time() - log.started_at if log.started_at else 0
     return dict(completed=complete, failed=failed, pending=len(log.entries)-complete-failed,
+                operationalQueueCapacity=log.queue_capacity,
+                initialOperationalQueueCapacity=log.manifest['queuedTokenLimit'],
                 expectedTotalUSD=sum(e['estimatedCostUSD'] for e in log.entries.values()),
                 cumulativeUsagePricedUSD=log.spent, actualFullyCategorizedUSD=log.exact_cost,
                 actualUSD=log.spent if not log.conservative_costs and not log.unknown_usage else None,
@@ -272,10 +274,12 @@ def reconcile_results(log: Any, jid: str, process: Any, record: Any) -> None:
 
 
 def make_job(log: Any, api: Any, rebuild: Any, native: Any, fingerprint: Any,
-             capacity: int, count_limit: int) -> str | None:
+             capacity: int, count_limit: int, allowed: set | None = None) -> str | None:
     """JIT-build only the next capacity-bounded file, preserving each complete request."""
     items, lines, size, tokens = [], [], 0, 0
     for rid, entry in log.entries.items():
+        if allowed is not None and rid not in allowed:
+            continue
         state = log.state.get(rid)
         if state not in (None, 'prepared', 'retry'):
             continue
@@ -287,7 +291,7 @@ def make_job(log: Any, api: Any, rebuild: Any, native: Any, fingerprint: Any,
             log.append('token_count', rid, dict(provider=counted, bodySha256=fingerprint(p)['bodySha256']))
         n = 2 if log.state[rid] == 'retry' else 1
         item, line = input_line(p, n, fingerprint)
-        require(log.tokens[rid] <= log.manifest['queuedTokenLimit'], 'SINGLE_REQUEST_EXCEEDS_ACCOUNT_QUEUE_LIMIT')
+        require(log.tokens[rid] <= log.queue_capacity, 'SINGLE_REQUEST_EXCEEDS_OPERATIONAL_QUEUE_CAPACITY')
         require(len(line) <= MAX_BYTES, 'SINGLE_REQUEST_EXCEEDS_FILE_LIMIT')
         if tokens + log.tokens[rid] > capacity or size + len(line) > MAX_BYTES:
             break
@@ -313,8 +317,13 @@ def make_job(log: Any, api: Any, rebuild: Any, native: Any, fingerprint: Any,
 
 
 def cycle(log: Any, api: Any, rebuild: Any, process: Any, record: Any,
-          native: Any, fingerprint: Any) -> str:
+          native: Any, fingerprint: Any, pilot_only: bool = False) -> str:
     """Recover, collect, measure, then fill available capacity; one durable writer only."""
+    allowed = set(list(log.entries)[:100]) if pilot_only else None
+    if pilot_only:
+        require(len(allowed) == 100, 'PILOT_REQUIRES_FIRST_100_PRODUCTION_REQUESTS')
+        require(all('settled' in ev or all(i['rid'] in allowed for i in log.job(jid, 'plan')['items'])
+                    for jid, ev in log.jobs.items()), 'OUT_OF_PILOT_JOB_ALREADY_PLANNED_STOP')
     for jid, ev in list(log.jobs.items()):
         if 'settled' in ev:
             continue
@@ -338,6 +347,8 @@ def cycle(log: Any, api: Any, rebuild: Any, process: Any, record: Any,
         return 'draining_failure' if any('submitted' in e and 'settled' not in e for e in log.jobs.values()) else 'technical_stop'
     if baseline.anomaly(log):
         return 'draining_anomaly' if any('submitted' in e and 'settled' not in e for e in log.jobs.values()) else 'cost_anomaly_stop'
+    if pilot_only and all(log.state.get(r) == 'completion' for r in allowed):
+        return 'pilot_complete'
     if all(log.state.get(r) == 'completion' for r in log.entries):
         return 'complete'
     # Other producers have unknown reservations; wait rather than invent their free capacity.
@@ -345,7 +356,7 @@ def cycle(log: Any, api: Any, rebuild: Any, process: Any, record: Any,
     if any(b['status'] not in TERMINAL and b['id'] not in own_ids for b in api.listing('batches')):
         return 'waiting_foreign_batches'
     while True:
-        capacity = log.manifest['queuedTokenLimit'] - log.reserved_tokens()
+        capacity = log.queue_capacity - log.reserved_tokens()
         if capacity <= 0:
             break
         measured = len(log.costed_requests)
@@ -358,7 +369,7 @@ def cycle(log: Any, api: Any, rebuild: Any, process: Any, record: Any,
                 break
         else:
             count_limit = MAX_REQUESTS
-        jid = make_job(log, api, rebuild, native, fingerprint, capacity, count_limit)
+        jid = make_job(log, api, rebuild, native, fingerprint, capacity, count_limit, allowed)
         if jid is None:
             break
         if not submit(log, jid, api):
@@ -381,7 +392,7 @@ def manifest(parent: dict, stream: Any, limit: int, compatibility: bool) -> dict
     return dict(version='publications-gpt61-batch/1.0.0', parentPreflightSha256=baseline.PARENT_SHA,
                 generatorPins=stream.versions(), localAdapterPins=baseline.PINS,
                 implementationPins={str(p.relative_to(ROOT)): sha256_bytes(p.read_bytes()) for p in paths},
-                queuedTokenLimit=limit, capacitySource='Researcher Platform Settings / Limits; exact JIT input counts',
+                queuedTokenLimit=limit, capacitySource='Researcher-supplied operational capacity; not a verified account limit',
                 requests=requests, pricing=PRICING, meaningfulSampleRequests=SAMPLE,
                 maximumAttemptsPerRequest=2, transport='batch', compatibilityOnly=compatibility,
                 diagnosticResultsImported=False, streamingResultsImported=False, kgAuthorized=False)
@@ -400,13 +411,24 @@ def offline_status(root: Path) -> dict:
     return value['summary']
 
 
+def increase_capacity(log: Any, capacity: int) -> None:
+    """Append an operational increase; retain manifest, prior events and Batch identities."""
+    require(type(capacity) is int and capacity >= log.queue_capacity, 'CAPACITY_DECREASE_FORBIDDEN')
+    if capacity == log.queue_capacity:
+        return
+    log.append('capacity_increase', None, dict(previous=log.queue_capacity, new=capacity,
+               source='researcher_supplied_operational_capacity', manifestSha256=log.pin,
+               unixTime=time.time()))
+
+
 def main() -> None:
-    """Only --check and --live use the network, exclusively in the researcher terminal."""
+    """Only check/live/pilot modes use the network, exclusively in the researcher terminal."""
     parser = argparse.ArgumentParser(description=__doc__)
     modes = parser.add_mutually_exclusive_group(required=True)
-    for mode in ('estimate', 'status', 'check', 'live'):
+    for mode in ('estimate', 'status', 'check', 'live', 'pilot-only'):
         modes.add_argument('--' + mode, action='store_true')
-    parser.add_argument('--queued-token-limit', type=int, help='Actual GPT-6.1 Batch limit from Platform Settings, saved by --check')
+    modes.add_argument('--increase-queue-capacity', type=int, metavar='TOKENS', help='Offline append-only operational capacity increase')
+    parser.add_argument('--queued-token-limit', type=int, help='Initial operational capacity saved by --check; may be provisional')
     parser.add_argument('--poll-seconds', type=int, default=60)
     args = parser.parse_args()
     require(args.poll_seconds >= 5, 'POLL_INTERVAL_TOO_SHORT')
@@ -425,7 +447,7 @@ def main() -> None:
     if args.estimate:
         print(json.dumps(estimate(parent, limit), indent=2))
         return
-    require(type(limit) is int and limit > 0, 'ACCOUNT_BATCH_LIMIT_REQUIRED: use --check --queued-token-limit <actual Settings value>')
+    require(type(limit) is int and limit > 0, 'INITIAL_OPERATIONAL_CAPACITY_REQUIRED: use --check --queued-token-limit <tokens>')
     root = CHECK if args.check else RUN
     mf = manifest(parent, stream, limit, args.check)
     data = canonical_json(mf) + b'\n'
@@ -435,7 +457,7 @@ def main() -> None:
 
     Journal = batch_journal(native, lambda p, e: verify_variant(p, e, stream), stream.fingerprint,
                             verify_outcome, verify_receipt)
-    if args.live:
+    if args.live or args.pilot_only:
         require(saved.exists(), 'RUN_ONE_REQUEST_BATCH_COMPATIBILITY_CHECK_FIRST')
         expected = canonical_json(manifest(parent, stream, limit, True)) + b'\n'
         require(saved.read_bytes() == expected, 'COMPATIBILITY_MANIFEST_DRIFT')
@@ -445,14 +467,20 @@ def main() -> None:
                     not checked.unknown_usage, 'COMPATIBILITY_NOT_ACCEPTED')
     root.mkdir(parents=True, exist_ok=True)
     path = root / 'run-manifest.json'
+    if args.increase_queue_capacity is not None:
+        require(path.exists(), 'INITIALIZE_PRODUCTION_BEFORE_CAPACITY_INCREASE')
     if path.exists():
         require(path.read_bytes() == data, 'BATCH_MANIFEST_DRIFT')
-    api = batch_transport.BatchAPI(baseline.provider.load_openai_api_key())
     with Journal(root / 'execution.jsonl', data, sha256_bytes(data)) as log:
         if path.exists():
             require(path.read_bytes() == data, 'BATCH_MANIFEST_DRIFT')
         else:
             replace_atomic(path, data)
+        if args.increase_queue_capacity is not None:
+            increase_capacity(log, args.increase_queue_capacity)
+            save_status(log)
+            return
+        api = batch_transport.BatchAPI(baseline.provider.load_openai_api_key())
         with patch.object(socket, 'socket', side_effect=RuntimeError('OFFLINE_JIT_CONTEXT')):
             env, routing = stream.load()
         rows = {r['sourceUnitID']: r for r in routing['records']}
@@ -478,10 +506,11 @@ def main() -> None:
         try:
             while True:
                 disposition = cycle(log, api, rebuild, process,
-                    lambda row, p, bid, n: response_record(row, p, paired, bid, n), native, stream.fingerprint)
+                    lambda row, p, bid, n: response_record(row, p, paired, bid, n), native, stream.fingerprint,
+                    pilot_only=args.pilot_only)
                 status = save_status(log)
                 print(disposition, flush=True)
-                if disposition in ('complete', 'cost_anomaly_stop', 'technical_stop'):
+                if disposition in ('complete', 'pilot_complete', 'cost_anomaly_stop', 'technical_stop'):
                     if disposition == 'technical_stop':
                         raise ValueError('TECHNICAL_STOP: inspect preserved request errors')
                     return

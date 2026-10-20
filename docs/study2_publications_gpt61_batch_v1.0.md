@@ -25,10 +25,22 @@ Use Anaconda base Python from the repository root. Module:
 - `--estimate`: offline repricing; optionally supply `--queued-token-limit N`.
 - `--status`: offline atomic snapshot, including snapshot age.
 - `--check --queued-token-limit N`: researcher-terminal one-request Batch check;
-  N is the actual model's **Batch queued input-token** limit in Platform Settings,
-  not the synchronous TPM limit. This saved numeric setting is capacity, not an
-  approval document or monetary budget. Rerun the same command to resume.
+  N is an operational queued-input-token capacity, not synchronous TPM or a
+  verified account-limit claim. The researcher provisionally selected **1,000,000**
+  tokens pending the lab's actual limit. Rerun the same command to resume.
+- `--pilot-only`: run exactly the first 100 entries of the original production
+  queue, with native processing and bounded retries, then stop. This uses the
+  full production manifest/journal; it never prepares or schedules request 101.
+  Restart with the same command. Existing out-of-scope unsettled jobs cause STOP.
 - `--live`: one unattended start/resume command after the compatibility check.
+  After the pilot, this continues at request 101 without replaying pilot outputs.
+- `--increase-queue-capacity N`: offline, locked, append-only increase of the
+  production operational capacity after obtaining the lab limit. The event records
+  old/new values, source, timestamp and unchanged manifest hash. Equal-value
+  repetition is a no-op; decreases are rejected. Prior journal entries, scientific
+  queue, completed outputs, custom IDs, file IDs and Batch IDs remain unchanged.
+  Subsequent `--live` automatically uses the increased capacity. Stop the local
+  writer before changing capacity; remote jobs need not be cancelled.
 
 Existing key loading is reused only by researcher-terminal network modes. No
 admin key, new credential setup, distributed service or approval machinery is
@@ -39,7 +51,8 @@ Files are automatically packed at at most 190,000,000 bytes (below 200 MB) and
 50,000 requests. Exact schema-aware input-token counts are requested JIT using
 `/v1/responses/input_tokens`, persisted with the body hash, and reused on restart.
 Only count-relevant body fields are sent to that non-generation endpoint. Token
-counts bound aggregate outstanding reservations against N. Unrelated outstanding
+counts bound aggregate outstanding reservations against the current journaled
+operational capacity. Unrelated outstanding
 batches cause a capacity wait because their input-token reservation is unknown;
 use an otherwise idle project for predictable throughput. No whole-corpus set of
 individual request files is precreated. JSONL input/output files and one durable

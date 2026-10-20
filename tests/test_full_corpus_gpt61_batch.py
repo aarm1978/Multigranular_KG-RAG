@@ -158,10 +158,135 @@ class BatchControllerTests(unittest.TestCase):
             record['cost'] = dict(estimatedUSD=1, basis='reported_cache_details')
         return record
 
-    def cycle(self, log, process=None, record=None):
+    def cycle(self, log, process=None, record=None, pilot_only=False):
         """Invoke the actual scheduler with no network-capable callback."""
         return run.cycle(log, self.api, lambda e: deepcopy(self.prepared[e['identity']['requestID']]),
-                         process or self.process, record or self.record, self.native, self.stream.fingerprint)
+                         process or self.process, record or self.record, self.native, self.stream.fingerprint, pilot_only)
+
+    def pilot_queue(self):
+        """Extend the fixture beyond request 100 to detect unintended corpus dispatch."""
+        for n in range(3, 105):
+            rid = 'request-' + str(n)
+            p = deepcopy(self.prepared['request-0'])
+            p['request'].update(requestID=rid, requestInputSha256=rid)
+            self.prepared[rid] = p
+            self.entries.append(dict(identity=self.stream.fingerprint(p), estimatedCostUSD=1))
+        self.mf['queuedTokenLimit'] = 500
+
+    def finish_pilot(self, log):
+        """Bound pilot fixture cycles, retaining the real production scheduler."""
+        for _ in range(10):
+            if self.cycle(log, pilot_only=True) == 'pilot_complete':
+                return
+        self.fail('pilot failed to complete')
+
+    def test_pilot_exact_100_restart_then_full_production(self):
+        """Pilot output stays production output; normal continuation starts at request 101."""
+        self.pilot_queue()
+        with self.journal() as log:
+            self.cycle(log, pilot_only=True)
+            self.assertEqual(len(log.assignments), 50)
+        with self.journal() as log:
+            self.finish_pilot(log)
+            self.assertEqual(set(log.state), set(list(self.prepared)[:100]))
+            self.assertTrue(all(s == 'completion' for s in log.state.values()))
+            self.assertEqual(len(log.receipts), 100)
+        pilot_bytes = (self.root / 'execution.jsonl').read_bytes()
+        creates = self.api.creates
+        with self.journal() as log:
+            self.assertEqual(self.cycle(log, pilot_only=True), 'pilot_complete')
+        self.assertEqual(self.api.creates, creates)
+        self.assertEqual((self.root / 'execution.jsonl').read_bytes(), pilot_bytes)
+        with self.journal() as log:
+            self.finish(log)
+            self.assertEqual(len(log.receipts), 105)
+            self.assertEqual(log.spent, 105)
+        self.assertEqual(len(self.processed), 105)
+        self.assertTrue((self.root / 'execution.jsonl').read_bytes().startswith(pilot_bytes))
+        self.assertEqual(self.api.creates, creates + 1)
+
+    def test_capacity_increase_preserves_manifest_jobs_and_restart(self):
+        """A provisional-to-confirmed increase is a monotone, idempotent journal event."""
+        self.pilot_queue()
+        original_manifest = run.canonical_json(self.mf)
+        with self.journal() as log:
+            self.cycle(log, pilot_only=True)
+            old_job = log.job('job-000001', 'submitted')
+            pin = log.pin
+        prefix = (self.root / 'execution.jsonl').read_bytes()
+        with self.journal() as log:
+            run.increase_capacity(log, 1000)
+            seq = log.seq
+            run.increase_capacity(log, 1000)
+            self.assertEqual(log.seq, seq)
+            with self.assertRaisesRegex(ValueError, 'DECREASE'):
+                run.increase_capacity(log, 500)
+            self.assertEqual(log.pin, pin)
+            self.assertEqual(run.canonical_json(log.manifest), original_manifest)
+            self.assertEqual(log.job('job-000001', 'submitted'), old_job)
+        self.assertTrue((self.root / 'execution.jsonl').read_bytes().startswith(prefix))
+        with self.journal() as log:
+            self.assertEqual(log.queue_capacity, 1000)
+            self.assertEqual(log.manifest['queuedTokenLimit'], 500)
+            self.finish_pilot(log)
+            self.finish(log)
+            self.assertEqual(len(log.receipts), 105)
+        events = [json.loads(line)['record'] for line in (self.root / 'execution.jsonl').read_bytes().splitlines()]
+        changes = [e['payload'] for e in events if e['event'] == 'capacity_increase']
+        self.assertEqual(len(changes), 1)
+        self.assertEqual((changes[0]['previous'], changes[0]['new']), (500, 1000))
+        self.assertEqual(changes[0]['manifestSha256'], pin)
+        self.assertEqual(len(self.processed), 105)
+
+    def test_pilot_retries_stay_inside_first_100(self):
+        """Technical retries do not consume the pilot scope or admit request 101."""
+        self.pilot_queue()
+        self.api.expired = True
+        self.api.status = 'expired'
+        with self.journal() as log:
+            self.cycle(log, pilot_only=True)
+            self.cycle(log, pilot_only=True)
+            self.api.expired = False
+            self.api.status = 'completed'
+            self.finish_pilot(log)
+            self.assertEqual(len(log.receipts), 150)
+            self.assertEqual(set(log.state), set(list(self.prepared)[:100]))
+            self.assertTrue(all(s == 'completion' for s in log.state.values()))
+
+    def test_pilot_refuses_preexisting_out_of_scope_job(self):
+        """Pilot cannot submit or silently adopt a previously planned full-corpus job."""
+        self.pilot_queue()
+        with self.journal() as log:
+            self.finish_pilot(log)
+            self.cycle(log)
+            creates = self.api.creates
+            with self.assertRaisesRegex(ValueError, 'OUT_OF_PILOT_JOB'):
+                self.cycle(log, pilot_only=True)
+            self.assertEqual(self.api.creates, creates)
+
+    def test_capacity_cli_is_offline_and_keeps_initial_manifests(self):
+        """The real CLI replays an increase without requiring credentials or rewriting manifests."""
+        check, production = self.root / 'check', self.root / 'production'
+        check.mkdir()
+        production.mkdir()
+        initial = 1000000
+        check_bytes = run.canonical_json(run.manifest(self.parent, self.stream, initial, True)) + b'\n'
+        prod_bytes = run.canonical_json(run.manifest(self.parent, self.stream, initial, False)) + b'\n'
+        (check / 'run-manifest.json').write_bytes(check_bytes)
+        (production / 'run-manifest.json').write_bytes(prod_bytes)
+        with self.Journal(production / 'execution.jsonl', prod_bytes, run.sha256_bytes(prod_bytes)):
+            pass
+        with patch.object(run, 'CHECK', check), patch.object(run, 'RUN', production), \
+             patch.object(run.baseline, 'dependencies', return_value=(self.paired, self.stream, self.native, self.parent)), \
+             patch.object(run.baseline.provider, 'load_openai_api_key', side_effect=AssertionError('NO_CREDENTIAL_ACCESS')), \
+             patch.object(run.sys, 'argv', ['batch', '--increase-queue-capacity', '2000000']):
+            run.main()
+            data = (production / 'execution.jsonl').read_bytes()
+            run.main()
+            self.assertEqual((production / 'execution.jsonl').read_bytes(), data)
+            self.assertEqual(run.offline_status(production)['operationalQueueCapacity'], 2000000)
+        self.assertEqual((check / 'run-manifest.json').read_bytes(), check_bytes)
+        self.assertEqual((production / 'run-manifest.json').read_bytes(), prod_bytes)
 
     def finish(self, log):
         """Bound fixture cycles so a scheduling deadlock fails the test."""

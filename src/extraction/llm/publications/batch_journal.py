@@ -26,6 +26,7 @@ def batch_journal(native: Any, verify: Any, fingerprint: Any, outcome_verify: An
             self.tokens = {}
             self.exact_cost = 0.0
             self.conservative_costs = 0
+            self.queue_capacity = self.manifest['queuedTokenLimit']
 
         def job(self, jid: str, event: str) -> dict:
             """Read a job event by durable offset."""
@@ -43,6 +44,12 @@ def batch_journal(native: Any, verify: Any, fingerprint: Any, outcome_verify: An
                         generatorPins=self.manifest['generatorPins']), 'HEADER_DRIFT')
                 return
             require(self.seq > 0, 'MISSING_HEADER')
+            if event == 'capacity_increase':
+                require(rid is None and pay['previous'] == self.queue_capacity and
+                        type(pay['new']) is int and pay['new'] > self.queue_capacity and
+                        pay['source'] == 'researcher_supplied_operational_capacity' and
+                        pay['manifestSha256'] == self.pin, 'INVALID_CAPACITY_INCREASE')
+                return
             if event in ('plan', 'upload_intent', 'uploaded', 'submit_intent', 'submitted', 'snapshot', 'downloads', 'settled'):
                 if event == 'plan':
                     require(rid not in self.jobs and pay['items'], 'DUPLICATE_OR_EMPTY_JOB')
@@ -59,8 +66,8 @@ def batch_journal(native: Any, verify: Any, fingerprint: Any, outcome_verify: An
                         require(cid == sha256_bytes(canonical_json(dict(identity=item['identity'], attempt=n,
                                 transport='batch-v1'))), 'CUSTOM_ID_DRIFT')
                         total += self.tokens[r]
-                    require(total == pay['tokens'] and total <= self.manifest['queuedTokenLimit'], 'TOKEN_CAPACITY')
-                    require(total + self.reserved_tokens() <= self.manifest['queuedTokenLimit'], 'AGGREGATE_TOKEN_CAPACITY')
+                    require(total == pay['tokens'] and total <= self.queue_capacity, 'TOKEN_CAPACITY')
+                    require(total + self.reserved_tokens() <= self.queue_capacity, 'AGGREGATE_TOKEN_CAPACITY')
                 else:
                     require(rid in self.jobs, 'UNKNOWN_BATCH_JOB')
                     job = self.jobs[rid]
@@ -110,6 +117,9 @@ def batch_journal(native: Any, verify: Any, fingerprint: Any, outcome_verify: An
             self.seq, self.head = rec['seq'], digest
             event, rid, pay = rec['event'], rec['requestID'], rec['payload']
             if event == 'header':
+                return
+            if event == 'capacity_increase':
+                self.queue_capacity = pay['new']
                 return
             if event in ('plan', 'upload_intent', 'uploaded', 'submit_intent', 'submitted', 'snapshot', 'downloads', 'settled'):
                 self.jobs.setdefault(rid, {})[event] = offset
