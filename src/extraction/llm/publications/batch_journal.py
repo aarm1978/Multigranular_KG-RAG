@@ -1,0 +1,153 @@
+"""Batch state transitions on the existing locked, staged, hash-chained journal."""
+from __future__ import annotations
+from typing import Any
+from .resumable_production_journal import journal_class, require
+from .request_builder import canonical_json, sha256_bytes
+
+TERMINAL = {'completed', 'expired', 'failed', 'cancelled'}
+ACTIVE = {'validating', 'in_progress', 'finalizing', 'cancelling'}
+
+
+def batch_journal(native: Any, verify: Any, fingerprint: Any, outcome_verify: Any,
+                  receipt_verify: Any = None) -> type:
+    """Reuse v0.2 framing/locking and v1 staging/recovery; isolate Batch transitions."""
+    base = journal_class(native, verify, outcome_verify)
+
+    class BatchJournal(base):
+        """Index requests and jobs without retaining full corpus outputs in memory."""
+
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            """Initialize compact indexes and inherited cost counters."""
+            super().__init__(*args, **kwargs)
+            self.jobs = {}
+            self.assignments = {}
+            self.receipts = {}
+            self.outcomes = {}
+            self.tokens = {}
+            self.exact_cost = 0.0
+            self.conservative_costs = 0
+
+        def job(self, jid: str, event: str) -> dict:
+            """Read a job event by durable offset."""
+            return self.payload_at(self.jobs[jid][event])
+
+        def number(self, rid: str) -> int:
+            """Identify the current native attempt without changing scientific request IDs."""
+            return max((n for r, n in self.assignments if r == rid), default=0)
+
+        def validate_event(self, rec: dict) -> None:
+            """Fail closed on duplicate scheduling, mismatched receipts, or native drift."""
+            event, rid, pay = rec['event'], rec['requestID'], rec['payload']
+            if event == 'header':
+                require(self.seq == 0 and rid is None and pay == dict(manifestSha256=self.pin,
+                        generatorPins=self.manifest['generatorPins']), 'HEADER_DRIFT')
+                return
+            require(self.seq > 0, 'MISSING_HEADER')
+            if event in ('plan', 'upload_intent', 'uploaded', 'submit_intent', 'submitted', 'snapshot', 'downloads', 'settled'):
+                if event == 'plan':
+                    require(rid not in self.jobs and pay['items'], 'DUPLICATE_OR_EMPTY_JOB')
+                    require(len(pay['items']) <= 50000 and 0 < pay['bytes'] <= 190000000, 'BATCH_FILE_LIMIT')
+                    seen = set()
+                    total = 0
+                    for item in pay['items']:
+                        r, n, cid = item['rid'], item['number'], item['custom_id']
+                        require(cid not in seen and (r, n) not in self.assignments, 'DUPLICATE_ASSIGNMENT')
+                        seen.add(cid)
+                        require(r in self.tokens and self.state[r] in ('prepared', 'retry'), 'REQUEST_NOT_READY')
+                        require(n == (2 if self.state[r] == 'retry' else 1), 'RETRY_NUMBER_DRIFT')
+                        require(item['identity'] == fingerprint(self.prepared(r)), 'BATCH_IDENTITY_DRIFT')
+                        require(cid == sha256_bytes(canonical_json(dict(identity=item['identity'], attempt=n,
+                                transport='batch-v1'))), 'CUSTOM_ID_DRIFT')
+                        total += self.tokens[r]
+                    require(total == pay['tokens'] and total <= self.manifest['queuedTokenLimit'], 'TOKEN_CAPACITY')
+                    require(total + self.reserved_tokens() <= self.manifest['queuedTokenLimit'], 'AGGREGATE_TOKEN_CAPACITY')
+                else:
+                    require(rid in self.jobs, 'UNKNOWN_BATCH_JOB')
+                    job = self.jobs[rid]
+                    before = {'upload_intent': 'plan', 'uploaded': 'upload_intent', 'submit_intent': 'uploaded',
+                              'submitted': 'submit_intent', 'snapshot': 'submitted', 'downloads': 'snapshot', 'settled': 'downloads'}[event]
+                    require(before in job and (event == 'snapshot' or event not in job), 'BATCH_TRANSITION')
+                    if event in ('submitted', 'snapshot'):
+                        require(pay['input_file_id'] == self.job(rid, 'uploaded')['id'] and
+                                pay['metadata'] == self.job(rid, 'submit_intent')['metadata'] and
+                                pay['endpoint'] == '/v1/responses' and pay['status'] in ACTIVE | TERMINAL, 'BATCH_REMOTE_BINDING')
+                        if event == 'snapshot':
+                            require(pay['id'] == self.job(rid, 'submitted')['id'], 'BATCH_ID_DRIFT')
+                    if event == 'downloads':
+                        require(self.job(rid, 'snapshot')['status'] in TERMINAL, 'NONTERMINAL_RESULTS')
+                    if event == 'settled':
+                        require(all((i['rid'], i['number']) in self.outcomes for i in self.job(rid, 'plan')['items']), 'MISSING_OUTCOMES')
+                return
+            require(rid in self.entries, 'UNKNOWN_REQUEST')
+            if event == 'prepared':
+                require(rid not in self.state, 'REPREPARATION')
+                verify(native.unbundle(pay), self.entries[rid])
+            elif event == 'token_count':
+                require(self.state.get(rid) == 'prepared' and rid not in self.tokens, 'TOKEN_COUNT_TRANSITION')
+                require(pay['bodySha256'] == fingerprint(self.prepared(rid))['bodySha256'] and
+                        type(pay['provider']['input_tokens']) is int and pay['provider']['input_tokens'] > 0, 'TOKEN_COUNT_BINDING')
+            elif event in ('receipt', 'outcome'):
+                n = pay['number']
+                key = (rid, n)
+                require(key in self.assignments, 'UNSUBMITTED_RESULT')
+                jid, item = self.assignments[key]
+                require('downloads' in self.jobs[jid], 'RESULT_BEFORE_DOWNLOADS')
+                if event == 'receipt':
+                    require(key not in self.receipts and pay['row']['custom_id'] == item['custom_id'], 'DUPLICATE_OR_WRONG_RESULT')
+                    require(pay['batchID'] == self.job(jid, 'submitted')['id'], 'RESULT_BATCH_ID_DRIFT')
+                    if receipt_verify is not None:
+                        receipt_verify(self.prepared(rid), pay)
+                else:
+                    require(key in self.receipts and key not in self.outcomes, 'OUTCOME_TRANSITION')
+                    receipt = self.payload_at(self.receipts[key])
+                    require(pay['receiptSha256'] == sha256_bytes(canonical_json(receipt)), 'OUTCOME_RECEIPT_DRIFT')
+                    outcome_verify(self.prepared(rid), receipt, pay['native'], n)
+            else:
+                raise ValueError('UNKNOWN_BATCH_EVENT')
+
+        def accept(self, rec: dict, digest: str, offset: int) -> None:
+            """Rebuild indexes and account once per durable receipt, independent of result order."""
+            self.seq, self.head = rec['seq'], digest
+            event, rid, pay = rec['event'], rec['requestID'], rec['payload']
+            if event == 'header':
+                return
+            if event in ('plan', 'upload_intent', 'uploaded', 'submit_intent', 'submitted', 'snapshot', 'downloads', 'settled'):
+                self.jobs.setdefault(rid, {})[event] = offset
+                if event == 'plan':
+                    for item in pay['items']:
+                        self.assignments[item['rid'], item['number']] = (rid, item)
+                        self.state[item['rid']] = 'pending'
+                if event == 'submit_intent':
+                    self.started_at = self.started_at or pay['unixTime']
+                return
+            if event == 'prepared':
+                self.offsets[rid] = {'prepared': offset}
+                self.state[rid] = 'prepared'
+            elif event == 'token_count':
+                self.tokens[rid] = pay['provider']['input_tokens']
+            elif event == 'receipt':
+                key = rid, pay['number']
+                self.receipts[key] = offset
+                amount = pay['cost']['estimatedUSD']
+                if amount is None:
+                    self.unknown_usage.add(key)
+                else:
+                    self.spent += amount
+                    if pay['cost']['basis'] == 'reported_cache_details':
+                        self.exact_cost += amount
+                    elif amount:
+                        self.conservative_costs += 1
+                    if rid not in self.costed_requests and pay['providerResponse'] is not None:
+                        self.costed_requests.add(rid)
+                        self.estimated_processed += self.entries[rid]['estimatedCostUSD']
+                self.state[rid] = 'received'
+            elif event == 'outcome':
+                self.outcomes[rid, pay['number']] = offset
+                out = pay['native']
+                self.state[rid] = 'completion' if out['processable'] else 'retry' if out['retryEligible'] else 'failed'
+
+        def reserved_tokens(self) -> int:
+            """Reserve the whole job until its terminal result files are reconciled."""
+            return sum(self.job(j, 'plan')['tokens'] for j, events in self.jobs.items() if 'settled' not in events)
+
+    return BatchJournal
