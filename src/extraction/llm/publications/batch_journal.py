@@ -50,6 +50,27 @@ def batch_journal(native: Any, verify: Any, fingerprint: Any, outcome_verify: An
                         pay['source'] == 'researcher_supplied_operational_capacity' and
                         pay['manifestSha256'] == self.pin, 'INVALID_CAPACITY_INCREASE')
                 return
+            if event in ('upload_error', 'submission_error'):
+                intent = 'upload_intent' if event == 'upload_error' else 'submit_intent'
+                require(intent in self.jobs[rid] and pay['intentSha256'] ==
+                        sha256_bytes(canonical_json(self.job(rid, intent))), 'HTTP_ERROR_INTENT_DRIFT')
+                return
+            if event == 'submission_rejected':
+                job = self.jobs[rid]
+                require('submit_intent' in job and 'submitted' not in job and 'submission_rejected' not in job,
+                        'INVALID_SUBMISSION_REJECTION')
+                require(pay['capacity'] == self.queue_capacity and pay['status'] in (400, 429) and
+                        pay['body']['error']['code'] in ('token_limit_exceeded', 'batch_queue_limit_exceeded'),
+                        'NOT_DEFINITIVE_CAPACITY_REJECTION')
+                return
+            if event == 'capacity_retry':
+                require('submission_rejected' in self.jobs[rid] and
+                        (pay['trigger'] == 'submit_all_restart' or
+                         (pay['trigger'] == 'capacity_increase' and
+                          self.queue_capacity > self.job(rid, 'submission_rejected')['capacity'])) and
+                        pay['rejectionSha256'] == sha256_bytes(canonical_json(self.job(rid, 'submission_rejected'))),
+                        'CAPACITY_RETRY_REQUIRES_INCREASE')
+                return
             if event in ('plan', 'upload_intent', 'uploaded', 'submit_intent', 'submitted', 'snapshot', 'downloads', 'settled'):
                 if event == 'plan':
                     require(rid not in self.jobs and pay['items'], 'DUPLICATE_OR_EMPTY_JOB')
@@ -118,8 +139,19 @@ def batch_journal(native: Any, verify: Any, fingerprint: Any, outcome_verify: An
             event, rid, pay = rec['event'], rec['requestID'], rec['payload']
             if event == 'header':
                 return
+            if event in ('upload_error', 'submission_error'):
+                return  # Evidence remains in the chain; the original intent is still uncertain.
             if event == 'capacity_increase':
                 self.queue_capacity = pay['new']
+                return
+            if event == 'submission_rejected':
+                self.jobs[rid][event] = offset
+                return
+            if event == 'capacity_retry':
+                # Only indexes advance; all prior intent/rejection bytes remain immutable.
+                self.jobs[rid].pop('submission_rejected')
+                self.jobs[rid].pop('submit_intent')
+                self.jobs[rid][event] = offset
                 return
             if event in ('plan', 'upload_intent', 'uploaded', 'submit_intent', 'submitted', 'snapshot', 'downloads', 'settled'):
                 self.jobs.setdefault(rid, {})[event] = offset

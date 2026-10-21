@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import argparse
 import base64
+from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
+import fcntl
 import json
 import math
 from pathlib import Path
@@ -28,6 +30,8 @@ PRICING = {**baseline.PRICING, 'inputUSDPerMillion': 1, 'cachedUSDPerMillion': .
 MAX_BYTES = 190_000_000  # Below the documented 200 MB limit, in decimal bytes.
 MAX_REQUESTS = 50_000
 SAMPLE = 100
+# Completed under f18be5a; capacity and implementation provenance remain historical.
+HISTORICAL_CHECK_MANIFEST = 'c8bb6c0a609c50e42351ebdf77fc5af7f99a2dee9a35276f838eea65bf1edb0c'
 
 
 def variant(original: dict, paired: Any) -> dict:
@@ -140,7 +144,7 @@ def estimate(parent: dict, limit: int | None = None) -> dict:
     return dict(requests=len(parent['requests']), pricing=PRICING, costUSD=costs,
                 estimatedInputTokens=tokens, queuedTokenLimit=limit,
                 approximateCapacityWaves=math.ceil(tokens / limit) if limit else None,
-                assumptions='No cache savings/retries; conservative 30m cache-write input pricing. Count exact schema-aware input tokens JIT in the researcher terminal. One-request compatibility and 100-request measured ramp precede scaling; each batch has its own 24h window. Corpus ETA depends on account capacity, actual batch latency, JIT/token counting, native processing and retries; no corpus-wide 24h promise.')
+                assumptions='No cache savings/retries; conservative 30m cache-write input pricing. Count exact schema-aware input tokens JIT in the researcher terminal. The historical compatibility check is separate. Only --live retains the 100-request ramp; --submit-all bypasses it. Each batch has its own 24h window; already accepted spend cannot be prevented by the later anomaly diagnostic. Corpus ETA depends on account capacity, actual batch latency, JIT/token counting, native processing and retries; no corpus-wide 24h promise.')
 
 
 def summary(log: Any) -> dict:
@@ -150,13 +154,20 @@ def summary(log: Any) -> dict:
     outstanding = [log.job(j, 'submitted')['id'] for j, ev in log.jobs.items() if 'submitted' in ev and 'settled' not in ev]
     unpriced = sum(key not in log.receipts for key, (jid, _) in log.assignments.items()
                    if 'submitted' in log.jobs[jid])
+    uncertain = sum(len(log.job(j, 'plan')['items']) for j, ev in log.jobs.items()
+                    if 'submit_intent' in ev and 'submitted' not in ev and 'submission_rejected' not in ev)
     elapsed = time.time() - log.started_at if log.started_at else 0
+    submitted = {rid for (rid, _), (jid, _) in log.assignments.items() if 'submitted' in log.jobs[jid]}
     return dict(completed=complete, failed=failed, pending=len(log.entries)-complete-failed,
+                preparedRequests=len(log.offsets), exactCountedRequests=len(log.tokens),
+                submittedRequests=len(submitted), unsentRequests=len(log.entries)-len(submitted),
+                outstandingRequests=unpriced, outstandingBatches=len(outstanding),
+                uncertainSubmissionRequests=uncertain, disposition=getattr(log, 'disposition', None),
                 operationalQueueCapacity=log.queue_capacity,
                 initialOperationalQueueCapacity=log.manifest['queuedTokenLimit'],
                 expectedTotalUSD=sum(e['estimatedCostUSD'] for e in log.entries.values()),
                 cumulativeUsagePricedUSD=log.spent, actualFullyCategorizedUSD=log.exact_cost,
-                actualUSD=log.spent if not log.conservative_costs and not log.unknown_usage else None,
+                actualUSD=log.spent if not log.conservative_costs and not log.unknown_usage and not unpriced and not uncertain else None,
                 conservativeCostAttempts=log.conservative_costs, unknownUsageAttempts=len(log.unknown_usage),
                 submittedAttemptsAwaitingUsage=unpriced,
                 correspondingEstimatedUSD=log.estimated_processed, costAnomalyStop=baseline.anomaly(log),
@@ -181,10 +192,16 @@ def check_batch_binding(log: Any, jid: str, remote: dict) -> None:
             remote.get('endpoint') == '/v1/responses', 'RECOVERED_BATCH_BINDING_DRIFT')
 
 
-def submit(log: Any, jid: str, api: Any) -> bool:
+def submit(log: Any, jid: str, api: Any, retry_rejected: bool = False) -> bool:
     """Reconcile durable POST intents; never repeat an uncertain upload or submission."""
     ev = log.jobs[jid]
     plan = log.job(jid, 'plan')
+    if 'submission_rejected' in ev:
+        rejection = log.job(jid, 'submission_rejected')
+        require(retry_rejected or log.queue_capacity > rejection['capacity'],
+                'PROVIDER_CAPACITY_STOP; resume with --submit-all after capacity becomes available')
+        log.append('capacity_retry', jid, dict(rejectionSha256=sha256_bytes(canonical_json(rejection)),
+                   trigger='submit_all_restart' if retry_rejected else 'capacity_increase'))
     if 'submit_intent' not in ev:
         own_ids = {log.job(j, 'submitted')['id'] for j, events in log.jobs.items() if 'submitted' in events}
         if any(b['status'] not in TERMINAL and b['id'] not in own_ids for b in api.listing('batches')):
@@ -199,7 +216,12 @@ def submit(log: Any, jid: str, api: Any) -> bool:
             require(sha256_bytes(api.content(uploaded['id'])) == plan['sha256'], 'REMOTE_INPUT_HASH_DRIFT')
         else:
             log.append('upload_intent', jid, dict(filename=path.name, sha256=plan['sha256']))
-            uploaded = api.upload(path)
+            try:
+                uploaded = api.upload(path)
+            except batch_transport.HTTPFailure as exc:
+                log.append('upload_error', jid, dict(exc.evidence,
+                    intentSha256=sha256_bytes(canonical_json(log.job(jid, 'upload_intent')))))
+                raise
         require(uploaded['filename'] == path.name and uploaded['bytes'] == plan['bytes'], 'UPLOAD_BINDING_DRIFT')
         log.append('uploaded', jid, uploaded)
     if 'submitted' not in ev:
@@ -208,10 +230,22 @@ def submit(log: Any, jid: str, api: Any) -> bool:
             require(len(matches) == 1, 'UNCERTAIN_SUBMISSION_STOP; no unique remote batch, no blind resubmit')
             submitted = matches[0]
         else:
-            require(not log.unknown_usage and not baseline.anomaly(log), 'COST_OR_USAGE_STOP')
+            require(not log.unknown_usage and not baseline.anomaly(log) and
+                    not any(s == 'failed' for s in log.state.values()), 'COST_OR_USAGE_STOP')
             metadata = dict(run=log.pin, job=jid, input_sha256=plan['sha256'])
+            if 'capacity_retry' in ev:
+                metadata['capacity_retry'] = str(log.seq)
             log.append('submit_intent', jid, dict(metadata=metadata, unixTime=time.time()))
-            submitted = api.create(log.job(jid, 'uploaded')['id'], metadata)
+            try:
+                submitted = api.create(log.job(jid, 'uploaded')['id'], metadata)
+            except batch_transport.CapacityRejected as exc:
+                log.append('submission_rejected', jid, dict(exc.evidence, capacity=log.queue_capacity,
+                                                          unixTime=time.time()))
+                raise
+            except batch_transport.HTTPFailure as exc:
+                log.append('submission_error', jid, dict(exc.evidence,
+                    intentSha256=sha256_bytes(canonical_json(log.job(jid, 'submit_intent')))))
+                raise
         check_batch_binding(log, jid, submitted)
         log.append('submitted', jid, submitted)
     return True
@@ -274,21 +308,32 @@ def reconcile_results(log: Any, jid: str, process: Any, record: Any) -> None:
 
 
 def make_job(log: Any, api: Any, rebuild: Any, native: Any, fingerprint: Any,
-             capacity: int, count_limit: int, allowed: set | None = None) -> str | None:
+             capacity: int, count_limit: int, allowed: set | None = None, count_workers: int = 1) -> str | None:
     """JIT-build only the next capacity-bounded file, preserving each complete request."""
     items, lines, size, tokens = [], [], 0, 0
-    for rid, entry in log.entries.items():
-        if allowed is not None and rid not in allowed:
-            continue
+    eligible = [(r, e) for r, e in log.entries.items() if (allowed is None or r in allowed)
+                and log.state.get(r) in (None, 'prepared', 'retry')][:min(MAX_REQUESTS, count_limit)]
+    for index, (rid, entry) in enumerate(eligible):
         state = log.state.get(rid)
-        if state not in (None, 'prepared', 'retry'):
-            continue
         if state is None:
             log.append('prepared', rid, native.bundle(rebuild(entry)))
         p = log.prepared(rid)
         if rid not in log.tokens:
-            counted = api.count(p['body'])
-            log.append('token_count', rid, dict(provider=counted, bodySha256=fingerprint(p)['bodySha256']))
+            # Build sequentially before starting read-only workers (JIT blocks sockets).
+            # At most one window is retained; only this main thread writes the journal.
+            window = []
+            for r, e in eligible[index:index + count_workers]:
+                if r in log.tokens:
+                    continue
+                if r not in log.state:
+                    log.append('prepared', r, native.bundle(rebuild(e)))
+                prepared = log.prepared(r)
+                window.append((r, prepared))
+            with ThreadPoolExecutor(max_workers=count_workers) as pool:
+                futures = [pool.submit(api.count, prepared['body']) for _, prepared in window]
+                for (r, prepared), future in zip(window, futures):
+                    log.append('token_count', r, dict(provider=future.result(),
+                               bodySha256=fingerprint(prepared)['bodySha256']))
         n = 2 if log.state[rid] == 'retry' else 1
         item, line = input_line(p, n, fingerprint)
         require(log.tokens[rid] <= log.queue_capacity, 'SINGLE_REQUEST_EXCEEDS_OPERATIONAL_QUEUE_CAPACITY')
@@ -299,6 +344,8 @@ def make_job(log: Any, api: Any, rebuild: Any, native: Any, fingerprint: Any,
         lines.append(line)
         tokens += log.tokens[rid]
         size += len(line)
+        if len(items) % 100 == 0:
+            save_status(log)
         if len(items) >= min(MAX_REQUESTS, count_limit):
             break
     if not items:
@@ -314,6 +361,65 @@ def make_job(log: Any, api: Any, rebuild: Any, native: Any, fingerprint: Any,
         replace_atomic(path, data)
     log.append('plan', jid, dict(filename=filename, sha256=digest, bytes=len(data), tokens=tokens, items=items))
     return jid
+
+
+def collect_once(log: Any, api: Any, process: Any, record: Any) -> list:
+    """Reconcile every known job once, retaining per-job errors; never perform a POST."""
+    errors = []
+    for jid, ev in list(log.jobs.items()):
+        if 'settled' in ev or 'submission_rejected' in ev:
+            continue
+        try:
+            if 'submitted' not in ev and 'submit_intent' in ev:
+                matches = [b for b in api.listing('batches') if b.get('metadata') == log.job(jid, 'submit_intent')['metadata']]
+                require(len(matches) == 1, 'UNCERTAIN_SUBMISSION_STOP; no unique remote batch')
+                check_batch_binding(log, jid, matches[0])
+                log.append('submitted', jid, matches[0])
+            if 'submitted' not in ev:
+                continue
+            if 'downloads' not in ev:
+                remote = api.retrieve(log.job(jid, 'submitted')['id'])
+                check_batch_binding(log, jid, remote)
+                if 'snapshot' not in ev or log.job(jid, 'snapshot') != remote:
+                    log.append('snapshot', jid, remote)
+                if remote['status'] in TERMINAL:
+                    download(log, jid, remote, api)
+            if 'downloads' in ev:
+                reconcile_results(log, jid, process, record)
+        except (ValueError, OSError) as exc:
+            if log.poisoned:
+                raise
+            errors.append(dict(job=jid, reason=str(exc)))
+    return errors
+
+
+def submit_all(log: Any, api: Any, rebuild: Any, native: Any, fingerprint: Any,
+               count_workers: int = 8) -> str:
+    """Fill admissible capacity once, bypassing only the measured-ramp gate; never collect."""
+    require(1 <= count_workers <= 16, 'INVALID_COUNT_WORKERS')
+    for jid, ev in list(log.jobs.items()):
+        if 'submitted' not in ev:
+            # Recovery of uncertain acknowledgements is safe; new POSTs remain gated.
+            if 'submit_intent' not in ev and (log.unknown_usage or baseline.anomaly(log) or
+                                            any(s == 'failed' for s in log.state.values())):
+                return 'cost_or_technical_stop'
+            if not submit(log, jid, api, retry_rejected=True):
+                return 'waiting_foreign_batches'
+    if log.unknown_usage or any(s == 'failed' for s in log.state.values()):
+        return 'technical_stop'
+    if baseline.anomaly(log):
+        return 'cost_anomaly_stop'
+    while log.reserved_tokens() < log.queue_capacity:
+        jid = make_job(log, api, rebuild, native, fingerprint,
+                       log.queue_capacity - log.reserved_tokens(), MAX_REQUESTS,
+                       count_workers=count_workers)
+        if jid is None:
+            break
+        if not submit(log, jid, api):
+            return 'waiting_foreign_batches'
+        save_status(log)
+    ready = any(log.state.get(r) in (None, 'prepared', 'retry') for r in log.entries)
+    return 'operational_capacity_full' if ready else 'all_admissible_submitted'
 
 
 def cycle(log: Any, api: Any, rebuild: Any, process: Any, record: Any,
@@ -421,18 +527,39 @@ def increase_capacity(log: Any, capacity: int) -> None:
                unixTime=time.time()))
 
 
+def verify_compatibility(Journal: Any, native: Any, parent: dict, stream: Any) -> None:
+    """Read-only replay of the completed historical check, independent of production capacity."""
+    data = (CHECK / 'run-manifest.json').read_bytes()
+    saved = batch_transport.decode(data)
+    expected = canonical_json(manifest(parent, stream, saved['queuedTokenLimit'], True)) + b'\n'
+    require(data == expected or sha256_bytes(data) == HISTORICAL_CHECK_MANIFEST,
+            'COMPATIBILITY_MANIFEST_DRIFT')
+    checked = Journal(CHECK / 'execution.jsonl', data, sha256_bytes(data))
+    require(not checked.staging.exists(), 'COMPATIBILITY_RECOVERY_REQUIRED')
+    with checked.path.open('rb') as handle:
+        fcntl.flock(handle, fcntl.LOCK_SH | fcntl.LOCK_NB)
+        checked.file = handle
+        if checked.checkpoint.exists():
+            checked.anchor = native.decode(checked.checkpoint.read_bytes())
+        native.Journal.replay(checked)  # No write-ahead recovery or checkpoint writes.
+        require(len(checked.state) == 1 and all(s == 'completion' for s in checked.state.values()) and
+                not checked.unknown_usage, 'COMPATIBILITY_NOT_ACCEPTED')
+
+
 def main() -> None:
-    """Only check/live/pilot modes use the network, exclusively in the researcher terminal."""
+    """Expose offline inspection and explicit researcher-terminal execution modes."""
     parser = argparse.ArgumentParser(description=__doc__)
     modes = parser.add_mutually_exclusive_group(required=True)
-    for mode in ('estimate', 'status', 'check', 'live', 'pilot-only'):
+    for mode in ('estimate', 'status', 'check', 'live', 'pilot-only', 'submit-all', 'collect'):
         modes.add_argument('--' + mode, action='store_true')
     modes.add_argument('--increase-queue-capacity', type=int, metavar='TOKENS', help='Offline append-only operational capacity increase')
-    parser.add_argument('--queued-token-limit', type=int, help='Initial operational capacity saved by --check; may be provisional')
+    parser.add_argument('--queued-token-limit', type=int, help='Operational outstanding input-token capacity; increases are journaled')
+    parser.add_argument('--count-workers', type=int, default=8, help='Submit-all read-only token-count concurrency (1–16)')
     parser.add_argument('--poll-seconds', type=int, default=60)
     args = parser.parse_args()
     require(args.poll_seconds >= 5, 'POLL_INTERVAL_TOO_SHORT')
     require(args.queued_token_limit is None or args.queued_token_limit > 0, 'INVALID_ACCOUNT_CAPACITY')
+    require(1 <= args.count_workers <= 16, 'INVALID_COUNT_WORKERS')
     if args.status:
         print(json.dumps(offline_status(RUN), indent=2))
         return
@@ -440,15 +567,17 @@ def main() -> None:
         paired, stream, native, parent = baseline.dependencies()
     saved = CHECK / 'run-manifest.json'
     limit = args.queued_token_limit
-    if saved.exists():
-        previous = baseline.read(saved)
-        require(limit is None or limit == previous['queuedTokenLimit'], 'PINNED_CAPACITY_DRIFT')
-        limit = previous['queuedTokenLimit']
+    root = CHECK if args.check else RUN
+    path = root / 'run-manifest.json'
+    if path.exists():
+        limit = baseline.read(path)['queuedTokenLimit']
+    elif limit is None and saved.exists():
+        limit = baseline.read(saved)['queuedTokenLimit']
     if args.estimate:
-        print(json.dumps(estimate(parent, limit), indent=2))
+        print(json.dumps(estimate(parent, args.queued_token_limit or limit), indent=2))
         return
     require(type(limit) is int and limit > 0, 'INITIAL_OPERATIONAL_CAPACITY_REQUIRED: use --check --queued-token-limit <tokens>')
-    root = CHECK if args.check else RUN
+    require(not args.collect or path.exists(), 'NO_PRODUCTION_JOURNAL_TO_COLLECT')
     mf = manifest(parent, stream, limit, args.check)
     data = canonical_json(mf) + b'\n'
     def verify_receipt(p: dict, receipt: dict) -> None:
@@ -457,14 +586,13 @@ def main() -> None:
 
     Journal = batch_journal(native, lambda p, e: verify_variant(p, e, stream), stream.fingerprint,
                             verify_outcome, verify_receipt)
-    if args.live or args.pilot_only:
+    if args.live or args.pilot_only or args.submit_all:
         require(saved.exists(), 'RUN_ONE_REQUEST_BATCH_COMPATIBILITY_CHECK_FIRST')
-        expected = canonical_json(manifest(parent, stream, limit, True)) + b'\n'
-        require(saved.read_bytes() == expected, 'COMPATIBILITY_MANIFEST_DRIFT')
-        # Verify durable completion, not merely the convenient status snapshot.
-        with Journal(CHECK / 'execution.jsonl', expected, sha256_bytes(expected)) as checked:
-            require(len(checked.state) == 1 and all(s == 'completion' for s in checked.state.values()) and
-                    not checked.unknown_usage, 'COMPATIBILITY_NOT_ACCEPTED')
+        verify_compatibility(Journal, native, parent, stream)
+    if args.check and saved.exists() and sha256_bytes(saved.read_bytes()) == HISTORICAL_CHECK_MANIFEST:
+        verify_compatibility(Journal, native, parent, stream)
+        print('Historical compatibility complete; preserved without a new call.')
+        return
     root.mkdir(parents=True, exist_ok=True)
     path = root / 'run-manifest.json'
     if args.increase_queue_capacity is not None:
@@ -476,6 +604,8 @@ def main() -> None:
             require(path.read_bytes() == data, 'BATCH_MANIFEST_DRIFT')
         else:
             replace_atomic(path, data)
+        if args.queued_token_limit is not None:
+            increase_capacity(log, args.queued_token_limit)
         if args.increase_queue_capacity is not None:
             increase_capacity(log, args.increase_queue_capacity)
             save_status(log)
@@ -504,6 +634,17 @@ def main() -> None:
                 return native_process(p, receipt, n, first, paired, stream)
 
         try:
+            if args.submit_all:
+                log.disposition = submit_all(log, api, rebuild, native, stream.fingerprint, args.count_workers)
+                print(log.disposition, flush=True)
+                return
+            if args.collect:
+                errors = collect_once(log, api, process,
+                    lambda row, p, bid, n: response_record(row, p, paired, bid, n))
+                print(json.dumps(dict(collectionErrors=errors)), flush=True)
+                log.disposition = dict(collectionErrors=errors)
+                require(not errors, 'COLLECTION_ERRORS: inspect preserved per-job evidence')
+                return
             while True:
                 disposition = cycle(log, api, rebuild, process,
                     lambda row, p, bid, n: response_record(row, p, paired, bid, n), native, stream.fingerprint,
@@ -515,6 +656,9 @@ def main() -> None:
                         raise ValueError('TECHNICAL_STOP: inspect preserved request errors')
                     return
                 time.sleep(args.poll_seconds)
+        except (ValueError, OSError) as exc:
+            log.disposition = str(exc)
+            raise
         finally:
             if not log.poisoned:
                 save_status(log)

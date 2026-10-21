@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import json
+import io
 from pathlib import Path
 import socket
 import tempfile
@@ -179,6 +180,189 @@ class BatchControllerTests(unittest.TestCase):
             if self.cycle(log, pilot_only=True) == 'pilot_complete':
                 return
         self.fail('pilot failed to complete')
+
+    def submit_all(self, log, workers=8):
+        """Run the new submit-only scheduler with a simulated provider."""
+        return run.submit_all(log, self.api, lambda e: deepcopy(self.prepared[e['identity']['requestID']]),
+                              self.native, self.stream.fingerprint, workers)
+
+    def test_submit_all_bypasses_ramp_collect_is_separate_and_idempotent(self):
+        """Every original entry passes request 100 without collecting; restart preserves all IDs."""
+        self.pilot_queue()
+        self.mf['queuedTokenLimit'] = 15_000_000_000
+        with patch.object(run, 'MAX_REQUESTS', 40), self.journal() as log:
+            with patch.object(self.api, 'retrieve', side_effect=AssertionError('SUBMIT_MUST_NOT_COLLECT')):
+                self.assertEqual(self.submit_all(log), 'all_admissible_submitted')
+            self.assertEqual(len(log.assignments), 105)
+            self.assertEqual(len(log.receipts), 0)
+            self.assertIsNone(run.summary(log)['actualUSD'])
+            order = [i['rid'] for j in log.jobs for i in log.job(j, 'plan')['items']]
+            self.assertEqual(order, list(self.prepared))
+        prefix = (self.root / 'execution.jsonl').read_bytes()
+        with self.journal() as log:
+            self.submit_all(log)
+            self.assertEqual(self.api.creates, 3)
+            self.assertEqual(self.api.counts, 105)
+            with patch.object(self.api, 'create', side_effect=AssertionError('COLLECT_MUST_NOT_SUBMIT')), \
+                 patch.object(self.api, 'upload', side_effect=AssertionError('COLLECT_MUST_NOT_UPLOAD')):
+                self.assertEqual(run.collect_once(log, self.api, self.process, self.record), [])
+                seq = log.seq
+                self.assertEqual(run.collect_once(log, self.api, self.process, self.record), [])
+                self.assertEqual(log.seq, seq)
+            self.assertEqual(run.summary(log)['completed'], 105)
+            self.assertEqual(log.spent, 105)
+        self.assertTrue((self.root / 'execution.jsonl').read_bytes().startswith(prefix))
+
+    def test_submit_only_capacity_stop_then_continue_after_collect(self):
+        """Finite operational capacity yields unsent counts, then collection releases capacity."""
+        with self.journal() as log:
+            self.assertEqual(self.submit_all(log), 'operational_capacity_full')
+            self.assertEqual(run.summary(log)['unsentRequests'], 1)
+            self.api.status = 'in_progress'
+            self.assertEqual(run.collect_once(log, self.api, self.process, self.record), [])
+            self.assertEqual(len(log.receipts), 0)
+            self.api.status = 'completed'
+            run.collect_once(log, self.api, self.process, self.record)
+            self.submit_all(log)
+            self.assertEqual(self.api.creates, 2)
+
+    def test_expired_collect_defers_bounded_retry_until_submit(self):
+        """Collect never retries even when expiration makes a native retry eligible."""
+        self.mf['queuedTokenLimit'] = 100
+        self.api.expired, self.api.status = True, 'expired'
+        with self.journal() as log:
+            self.submit_all(log)
+            run.collect_once(log, self.api, self.process, self.record)
+            self.assertEqual(self.api.creates, 1)
+            self.assertTrue(all(s == 'retry' for s in log.state.values()))
+            self.submit_all(log)
+            run.collect_once(log, self.api, self.process, self.record)
+            self.assertEqual(self.submit_all(log), 'technical_stop')
+            self.assertEqual(self.api.creates, 2)
+
+    def test_definitive_capacity_rejection_stops_then_explicit_resume(self):
+        """A rejected POST is durable, distinct from uncertainty, and never blindly repeated."""
+        error = run.batch_transport.CapacityRejected(429, {'error': {'code': 'token_limit_exceeded'}})
+        with self.journal() as log, patch.object(self.api, 'create', side_effect=error):
+            with self.assertRaises(run.batch_transport.CapacityRejected):
+                self.submit_all(log)
+            self.assertIn('submission_rejected', log.jobs['job-000001'])
+        with self.journal() as log:
+            with self.assertRaisesRegex(ValueError, 'PROVIDER_CAPACITY_STOP'):
+                run.submit(log, 'job-000001', self.api)
+            self.assertEqual(run.collect_once(log, self.api, self.process, self.record), [])
+            run.increase_capacity(log, 15_000_000_000)
+            self.submit_all(log)
+            self.assertEqual(self.api.uploads, 2)
+            self.assertEqual(self.api.creates, 2)
+            self.assertEqual(log.queue_capacity, 15_000_000_000)
+
+    def test_collect_recovers_uncertain_submission_without_post(self):
+        """Lost create acknowledgement can be adopted by collect without dispatch."""
+        self.api.lose_create = True
+        with self.journal() as log:
+            with self.assertRaises(OSError):
+                self.submit_all(log)
+            self.assertIsNone(run.summary(log)['actualUSD'])
+            self.assertEqual(run.summary(log)['uncertainSubmissionRequests'], 2)
+        with self.journal() as log, patch.object(self.api, 'create', side_effect=AssertionError('NO_POST')):
+            self.assertEqual(run.collect_once(log, self.api, self.process, self.record), [])
+            self.assertEqual(len(log.receipts), 2)
+            self.assertEqual(self.api.creates, 1)
+
+    def test_collect_continues_other_jobs_after_missing_results(self):
+        """One defective job cannot hide available evidence from later jobs."""
+        self.mf['queuedTokenLimit'] = 100
+        with patch.object(run, 'MAX_REQUESTS', 1), self.journal() as log:
+            self.submit_all(log)
+            self.api.omit = True
+            self.api.retrieve('batch-1')
+            self.api.omit = False
+            errors = run.collect_once(log, self.api, self.process, self.record)
+            self.assertEqual(len(errors), 1)
+            self.assertIn('MISSING_BATCH_RESULTS', errors[0]['reason'])
+            self.assertEqual(len(log.receipts), 2)
+            self.assertEqual(self.api.creates, 3)
+
+    def test_token_window_interruption_reuses_durable_counts(self):
+        """Only acknowledged read-only counts are repeated; nothing is submitted early."""
+        self.mf['queuedTokenLimit'] = 100
+        def count(body):
+            if body['input'] == 'fail':
+                raise OSError('count interrupted')
+            return dict(object='response.input_tokens', input_tokens=10)
+        self.prepared['request-1']['body']['input'] = 'fail'
+        self.entries[1]['identity'] = self.stream.fingerprint(self.prepared['request-1'])
+        with self.journal() as log, patch.object(self.api, 'count', side_effect=count):
+            with self.assertRaises(OSError):
+                self.submit_all(log)
+            self.assertEqual(set(log.tokens), {'request-0'})
+            self.assertEqual(self.api.creates, 0)
+        with self.journal() as log:
+            self.submit_all(log)
+            self.assertEqual(self.api.counts, 2)
+
+    def test_uncertain_http_evidence_is_preserved_without_retry(self):
+        """HTTP errors retain their bytes and cannot authorize another mutating POST."""
+        failure = run.batch_transport.HTTPFailure(500, b'{"error":"uncertain"}')
+        with self.journal() as log, patch.object(self.api, 'create', side_effect=failure):
+            with self.assertRaises(run.batch_transport.HTTPFailure):
+                self.submit_all(log)
+            self.assertIsNone(run.summary(log)['actualUSD'])
+        events = [json.loads(line)['record'] for line in (self.root / 'execution.jsonl').read_bytes().splitlines()]
+        evidence = next(e['payload'] for e in events if e['event'] == 'submission_error')
+        self.assertEqual(evidence['bodyBase64'], failure.evidence['bodyBase64'])
+        with self.journal() as log:
+            with self.assertRaisesRegex(ValueError, 'UNCERTAIN_SUBMISSION'):
+                self.submit_all(log)
+            self.assertEqual(self.api.creates, 0)
+
+    def test_submit_all_anomaly_stops_later_retry_dispatch(self):
+        """The diagnostic cannot prevent accepted spend but blocks subsequent dispatch."""
+        with self.journal() as log:
+            self.submit_all(log)
+            def expensive(*args):
+                receipt = self.record(*args)
+                receipt['cost']['estimatedUSD'] = 3
+                return receipt
+            run.collect_once(log, self.api, self.process, expensive)
+            self.assertEqual(self.submit_all(log), 'cost_anomaly_stop')
+            self.assertEqual(self.api.creates, 1)
+
+    def test_historical_compatibility_is_read_only_and_capacity_independent(self):
+        """The authentic 1M check validates without modifying any historical file."""
+        before = {p: run.sha256_bytes(p.read_bytes()) for p in run.CHECK.rglob('*') if p.is_file()}
+        Journal = batch_journal(self.native, lambda p, e: run.verify_variant(p, e, self.stream),
+                                self.stream.fingerprint, run.verify_outcome,
+                                lambda p, r: run.require(r == run.response_record(r['row'], p, self.paired,
+                                                        r['batchID'], r['number']), 'RECEIPT_DRIFT'))
+        run.verify_compatibility(Journal, self.native, self.parent, self.stream)
+        manifest = run.manifest(self.parent, self.stream, 15_000_000_000, False)
+        self.assertEqual(len(manifest['requests']), 10893)
+        self.assertEqual(manifest['queuedTokenLimit'], 15_000_000_000)
+        self.assertIn('not a verified account limit', manifest['capacitySource'])
+        self.assertEqual(before, {p: run.sha256_bytes(p.read_bytes()) for p in run.CHECK.rglob('*') if p.is_file()})
+
+    def test_cli_modes_bind_production_capacity_without_mutating_check(self):
+        """Real CLI wiring accepts 15B, resumes the same manifest, and separates callbacks."""
+        production = self.root / 'production'
+        with patch.object(run, 'RUN', production), \
+             patch.object(run.baseline, 'dependencies', return_value=(self.paired, self.stream, self.native, self.parent)), \
+             patch.object(run.baseline.provider, 'load_openai_api_key', return_value='offline-dummy'), \
+             patch.object(run.batch_transport, 'BatchAPI', return_value=self.api), \
+             patch.object(self.stream, 'load', return_value=({}, {'records': []})), \
+             patch.object(run, 'submit_all', return_value='all_admissible_submitted') as submit, \
+             patch.object(run, 'collect_once', return_value=[]) as collect:
+            with patch.object(run.sys, 'argv', ['batch', '--submit-all', '--queued-token-limit', '15000000000']):
+                run.main()
+                run.main()
+            self.assertEqual(submit.call_count, 2)
+            collect.assert_not_called()
+            self.assertEqual(run.baseline.read(production / 'run-manifest.json')['queuedTokenLimit'], 15_000_000_000)
+            with patch.object(run.sys, 'argv', ['batch', '--collect']):
+                run.main()
+            self.assertEqual(submit.call_count, 2)
+            self.assertEqual(collect.call_count, 1)
 
     def test_pilot_exact_100_restart_then_full_production(self):
         """Pilot output stays production output; normal continuation starts at request 101."""
@@ -543,6 +727,20 @@ class BatchTransportTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'UNCERTAIN'):
                 api.create('file-x', {'run': 'fixture'})
         self.assertEqual(call.call_count, 1)
+
+    def test_capacity_http_rejection_is_distinct_from_uncertain_http(self):
+        """Only explicit queued-token errors classify as definitive capacity rejection."""
+        from urllib.error import HTTPError
+        api = run.batch_transport.BatchAPI('offline-dummy')
+        for code, expected in [('token_limit_exceeded', run.batch_transport.CapacityRejected),
+                               ('rate_limit_exceeded', run.batch_transport.HTTPFailure)]:
+            raw = run.canonical_json({'error': {'code': code}})
+            error = HTTPError('https://offline.invalid', 429, 'fixture', {}, io.BytesIO(raw))
+            with patch.object(run.batch_transport, 'urlopen', side_effect=error) as call:
+                with self.assertRaises(expected) as raised:
+                    api.create('file-x', {'run': 'fixture'})
+            self.assertEqual(call.call_count, 1)
+            self.assertEqual(raised.exception.evidence['status'], 429)
 
     def test_recovery_listing_paginates(self):
         """Recovery checks all pages instead of concluding absence prematurely."""

@@ -19,6 +19,52 @@ original request in an isolated compatibility journal, never production-relabell
 
 ## Operation
 
+### Prospective submit-now / collect-later decision (2026-10-20)
+
+The researcher now authorizes submitting all 10,893 production requests before
+reviewing the first 100 results. `--submit-all --queued-token-limit 15000000000`
+bypasses only the measured-ramp gate, fills currently admissible capacity and
+exits without collecting or waiting for extraction results. The 15B input-token
+capacity is an explicitly **unverified Grow-tier assumption**, recorded in the
+production manifest; it is not a provider limit claim or an output/dollar cap.
+`--collect` reconciles known jobs once and exits, including while jobs are still
+running. It never submits retries or new requests. Repeat either command safely;
+after collection, submit-all can dispatch the existing bounded native retries.
+`--status` remains offline. The laptop may be shut down after submission exits.
+
+The completed compatibility Batch `batch_6ad7d7c3054c81908ab8240d1e58b284`
+remains separate at its original 1M capacity ($0.05093675 reported usage cost).
+Its manifest and journal are verified read-only; the accepted historical manifest
+hash pins its original implementation provenance. No compatibility rerun or
+production import is required. Production capacity can be increased through
+`--queued-token-limit N` on restart or the existing offline append-only command;
+the initial manifest and all earlier entries remain unchanged.
+
+An explicit HTTP queue-token rejection is journaled and stops further submission.
+A later submit-all invocation can retry that definitively rejected creation once
+with the same uploaded file and fresh attempt metadata, after capacity is available;
+an operational capacity increase remains append-only. Another rejection stops again.
+Ambiguous POST failures still require unique remote reconciliation, never blind
+resubmission. Collection preserves errors per job and continues reconciling other
+known jobs. Pending or unknown usage is never reported as an exact final invoice.
+
+The relative >2x diagnostic remains active for later dispatch/retry decisions.
+**It cannot prevent spending from batches already accepted by OpenAI.** There is
+no absolute monetary cutoff. The earlier 100-result ramp below still applies to
+`--live`; `--pilot-only` remains limited to the original first 100 requests.
+
+Submit-all counts tokens in bounded windows of eight read-only calls by default
+(`--count-workers 1` through `16`), after sequential JIT preparation. One writer
+persists counts in original queue order with exact body hashes; durable counts are
+reused on restart. A local offline measurement of the retained per-request
+authority verification was approximately 1.1 seconds, or about 3.4 hours for the
+corpus **before** additional JIT, fsync, network counting and upload time. Count
+network waiting scales approximately as 10,893 × mean count latency / workers,
+plus rate-limit backoff. No live latency measurement or preparation-time guarantee
+is claimed. Remote Batch processing continues while the laptop is off; collection
+and native validation require the local machine later. The $491.80 pooled estimate
+and $414.37–$590.79 normal scenarios below remain unchanged.
+
 Use Anaconda base Python from the repository root. Module:
 `src.extraction.llm.publications.full_corpus_gpt61_batch`.
 

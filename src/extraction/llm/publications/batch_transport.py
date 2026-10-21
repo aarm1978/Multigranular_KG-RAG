@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import base64
 import time
 import uuid
 from pathlib import Path
@@ -28,6 +29,24 @@ def decode(data: bytes) -> Any:
     return json.loads(data, object_pairs_hook=unique)
 
 
+class CapacityRejected(ValueError):
+    """An explicit queue-capacity HTTP rejection, not an uncertain POST outcome."""
+
+    def __init__(self, status: int, body: dict) -> None:
+        """Retain the provider's rejection evidence for the append-only journal."""
+        self.evidence = dict(status=status, body=body)
+        super().__init__('PROVIDER_QUEUE_CAPACITY_REJECTED: ' + json.dumps(body))
+
+
+class HTTPFailure(ValueError):
+    """Retain an HTTP error without asserting that a mutating POST was unexecuted."""
+
+    def __init__(self, status: int, raw: bytes) -> None:
+        """Preserve exact response bytes, excluding authentication headers."""
+        self.evidence = dict(status=status, bodyBase64=base64.b64encode(raw).decode('ascii'))
+        super().__init__('BATCH_HTTP_%s; durable intent requires reconciliation for POST' % status)
+
+
 class BatchAPI:
     """Use existing credentials; retries are limited to read-only/token-count operations."""
 
@@ -45,8 +64,17 @@ class BatchAPI:
                 with urlopen(req, timeout=120) as response:
                     return response.read()
             except HTTPError as exc:
+                raw = exc.read()
+                if method == 'POST' and path == '/batches' and exc.code in (400, 429):
+                    try:
+                        body = decode(raw)
+                    except (ValueError, OSError):
+                        body = {}
+                    error = body.get('error') if isinstance(body, dict) else None
+                    if isinstance(error, dict) and error.get('code') in ('token_limit_exceeded', 'batch_queue_limit_exceeded'):
+                        raise CapacityRejected(exc.code, body) from None
                 if not safe or exc.code not in (429, 500, 502, 503, 504) or attempt == 4:
-                    raise ValueError('BATCH_HTTP_%s; durable intent requires reconciliation for POST' % exc.code) from None
+                    raise HTTPFailure(exc.code, raw) from None
                 delay = exc.headers.get('Retry-After', '')
                 time.sleep(min(60, float(delay) if delay.isdigit() else 2 ** attempt))
             except (URLError, TimeoutError, OSError):
