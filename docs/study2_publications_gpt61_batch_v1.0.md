@@ -19,6 +19,33 @@ original request in an isolated compatibility journal, never production-relabell
 
 ## Operation
 
+### Interrupted upload recovery (2026-10-21)
+
+`--submit-all` now uses a **20,000,000-byte** ceiling for new JSONL files. The
+explicit `unsubmitted-upload-repack/1.0` migration accepts the exact production
+manifest created under `69da8f0` (SHA-256
+`04fd1a5ada9c632d557ef97979aaea237954c4b330f425b3ec4ff487661a9656`).
+All non-implementation manifest fields must still match. The old manifest is
+never rewritten: a journal event binds its original implementation pins to the
+new implementation pins and packing ceiling. Restart checks that same migration.
+
+For the oversized plan with no Batch creation attempt, an append-only
+supersession event preserves the plan/hash/upload intent, releases its local
+reservation, and makes its cached bundles/counts eligible for repacking. A
+possibly uploaded file remains an inert, unsubmitted input file; no remote
+deletion, upload-absence inference, or invented Batch ID occurs. No plan with a
+submission intent, submission acknowledgement, or prior creation retry can be
+superseded. Previously submitted jobs retain their ordinary reconciliation.
+
+The authentic interrupted state has 2,488 cached preparations/counts; 2,485 are
+in the 189,958,676-byte file reserving 40,394,392 input tokens, and three were
+prefetched outside that file. All are reused without JIT reconstruction or new
+token-count calls. Journal replay still verifies stored integrity and identities.
+Migration, supersession, and repacking can each resume after interruption with
+the same ordinary submit-all command. Collection remains submission-free. The
+source journal, old input file, compatibility evidence and original manifest are
+retained; the existing staged append recovery applies to the new events too.
+
 ### Prospective submit-now / collect-later decision (2026-10-20)
 
 The researcher now authorizes submitting all 10,893 production requests before
@@ -93,7 +120,7 @@ admin key, new credential setup, distributed service or approval machinery is
 introduced. Account capacity cannot be established by public docs or offline code.
 The account must expose Batch/Files/token-count endpoints to that existing key.
 
-Files are automatically packed at at most 190,000,000 bytes (below 200 MB) and
+New files are automatically packed at at most 20,000,000 bytes (below 200 MB) and
 50,000 requests. Exact schema-aware input-token counts are requested JIT using
 `/v1/responses/input_tokens`, persisted with the body hash, and reused on restart.
 Only count-relevant body fields are sent to that non-generation endpoint. Token

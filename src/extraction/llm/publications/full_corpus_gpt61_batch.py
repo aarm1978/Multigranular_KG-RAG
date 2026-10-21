@@ -27,11 +27,12 @@ POLICY = ROOT / 'docs/study2_publications_gpt61_batch_v1.0.md'
 PRICING = {**baseline.PRICING, 'inputUSDPerMillion': 1, 'cachedUSDPerMillion': .05,
            'cacheWriteUSDPerMillion': 1.25, 'outputUSDPerMillion': 5,
            'reference': 'https://developers.openai.com/api/docs/pricing', 'transport': 'batch'}
-MAX_BYTES = 190_000_000  # Below the documented 200 MB limit, in decimal bytes.
+MAX_BYTES = 20_000_000  # Operational upload ceiling; provider permits up to 200 MB.
 MAX_REQUESTS = 50_000
 SAMPLE = 100
 # Completed under f18be5a; capacity and implementation provenance remain historical.
 HISTORICAL_CHECK_MANIFEST = 'c8bb6c0a609c50e42351ebdf77fc5af7f99a2dee9a35276f838eea65bf1edb0c'
+RECOVERABLE_RUN_MANIFEST = '04fd1a5ada9c632d557ef97979aaea237954c4b330f425b3ec4ff487661a9656'
 
 
 def variant(original: dict, paired: Any) -> dict:
@@ -163,6 +164,7 @@ def summary(log: Any) -> dict:
                 submittedRequests=len(submitted), unsentRequests=len(log.entries)-len(submitted),
                 outstandingRequests=unpriced, outstandingBatches=len(outstanding),
                 uncertainSubmissionRequests=uncertain, disposition=getattr(log, 'disposition', None),
+                supersededUnsubmittedJobs=[j for j, ev in log.jobs.items() if 'superseded' in ev],
                 operationalQueueCapacity=log.queue_capacity,
                 initialOperationalQueueCapacity=log.manifest['queuedTokenLimit'],
                 expectedTotalUSD=sum(e['estimatedCostUSD'] for e in log.entries.values()),
@@ -195,6 +197,7 @@ def check_batch_binding(log: Any, jid: str, remote: dict) -> None:
 def submit(log: Any, jid: str, api: Any, retry_rejected: bool = False) -> bool:
     """Reconcile durable POST intents; never repeat an uncertain upload or submission."""
     ev = log.jobs[jid]
+    require('superseded' not in ev, 'SUPERSEDED_JOB_IS_INERT')
     plan = log.job(jid, 'plan')
     if 'submission_rejected' in ev:
         rejection = log.job(jid, 'submission_rejected')
@@ -367,7 +370,7 @@ def collect_once(log: Any, api: Any, process: Any, record: Any) -> list:
     """Reconcile every known job once, retaining per-job errors; never perform a POST."""
     errors = []
     for jid, ev in list(log.jobs.items()):
-        if 'settled' in ev or 'submission_rejected' in ev:
+        if 'settled' in ev or 'submission_rejected' in ev or 'superseded' in ev:
             continue
         try:
             if 'submitted' not in ev and 'submit_intent' in ev:
@@ -397,7 +400,10 @@ def submit_all(log: Any, api: Any, rebuild: Any, native: Any, fingerprint: Any,
                count_workers: int = 8) -> str:
     """Fill admissible capacity once, bypassing only the measured-ramp gate; never collect."""
     require(1 <= count_workers <= 16, 'INVALID_COUNT_WORKERS')
+    recover_unsubmitted(log)
     for jid, ev in list(log.jobs.items()):
+        if 'superseded' in ev:
+            continue
         if 'submitted' not in ev:
             # Recovery of uncertain acknowledgements is safe; new POSTs remain gated.
             if 'submit_intent' not in ev and (log.unknown_usage or baseline.anomaly(log) or
@@ -431,7 +437,7 @@ def cycle(log: Any, api: Any, rebuild: Any, process: Any, record: Any,
         require(all('settled' in ev or all(i['rid'] in allowed for i in log.job(jid, 'plan')['items'])
                     for jid, ev in log.jobs.items()), 'OUT_OF_PILOT_JOB_ALREADY_PLANNED_STOP')
     for jid, ev in list(log.jobs.items()):
-        if 'settled' in ev:
+        if 'settled' in ev or 'superseded' in ev:
             continue
         # Reconcile uncertain POSTs even during an anomaly; do not create new work.
         safe_dispatch = not log.unknown_usage and not baseline.anomaly(log) and not any(s == 'failed' for s in log.state.values())
@@ -527,6 +533,58 @@ def increase_capacity(log: Any, capacity: int) -> None:
                unixTime=time.time()))
 
 
+def migration_manifest(saved: bytes, current: dict) -> bytes:
+    """Permit only the exact interrupted run, with all non-implementation fields unchanged."""
+    expected = canonical_json(current) + b'\n'
+    if saved == expected:
+        return saved
+    require(sha256_bytes(saved) == RECOVERABLE_RUN_MANIFEST, 'BATCH_MANIFEST_DRIFT')
+    previous = batch_transport.decode(saved)
+    prospective = deepcopy(current)
+    prospective['implementationPins'] = previous['implementationPins']
+    require(canonical_json(prospective) + b'\n' == saved, 'MIGRATION_SCIENTIFIC_MANIFEST_DRIFT')
+    return saved
+
+
+def migrate_implementation(log: Any, current: dict) -> None:
+    """Append prospective code provenance without rewriting the immutable run manifest."""
+    if log.manifest['implementationPins'] == current['implementationPins']:
+        return
+    payload = dict(version='unsubmitted-upload-repack/1.0', manifestSha256=log.pin,
+                   previousImplementationPins=log.manifest['implementationPins'],
+                   implementationPins=current['implementationPins'], maxNewFileBytes=20000000)
+    if log.migration is not None:
+        require(log.payload_at(log.migration) == payload, 'MIGRATED_IMPLEMENTATION_DRIFT')
+    else:
+        log.append('implementation_migration', None, payload)
+
+
+def supersede_unsubmitted(log: Any, jid: str) -> None:
+    """Retire an oversized plan only when no Batch creation was ever attempted."""
+    ev = log.jobs[jid]
+    if 'superseded' in ev:
+        return
+    require(not any(e in ev for e in ('submit_intent', 'submitted', 'capacity_retry', 'submission_rejected')),
+            'CANNOT_SUPERSEDE_POTENTIALLY_SUBMITTED_JOB')
+    plan = log.job(jid, 'plan')
+    require(sha256_bytes((log.path.parent / plan['filename']).read_bytes()) == plan['sha256'], 'SEALED_INPUT_DRIFT')
+    require(log.migration is not None, 'RECOVERY_MIGRATION_REQUIRED')
+    log.append('superseded', jid, dict(planSha256=sha256_bytes(canonical_json(plan)),
+               migrationSha256=sha256_bytes(canonical_json(log.payload_at(log.migration))),
+               remoteFileDisposition='possibly_uploaded_inert_unsubmitted_input',
+               releasedInputTokens=plan['tokens']))
+
+
+def recover_unsubmitted(log: Any) -> None:
+    """Idempotently repack only migrated, oversized, never-submitted plans."""
+    if log.migration is None:
+        return
+    for jid, ev in list(log.jobs.items()):
+        if (not any(e in ev for e in ('superseded', 'submit_intent', 'submitted', 'capacity_retry', 'submission_rejected'))
+                and log.job(jid, 'plan')['bytes'] > 20000000):
+            supersede_unsubmitted(log, jid)
+
+
 def verify_compatibility(Journal: Any, native: Any, parent: dict, stream: Any) -> None:
     """Read-only replay of the completed historical check, independent of production capacity."""
     data = (CHECK / 'run-manifest.json').read_bytes()
@@ -598,12 +656,13 @@ def main() -> None:
     if args.increase_queue_capacity is not None:
         require(path.exists(), 'INITIALIZE_PRODUCTION_BEFORE_CAPACITY_INCREASE')
     if path.exists():
-        require(path.read_bytes() == data, 'BATCH_MANIFEST_DRIFT')
+        data = migration_manifest(path.read_bytes(), mf)
     with Journal(root / 'execution.jsonl', data, sha256_bytes(data)) as log:
         if path.exists():
             require(path.read_bytes() == data, 'BATCH_MANIFEST_DRIFT')
         else:
             replace_atomic(path, data)
+        migrate_implementation(log, mf)
         if args.queued_token_limit is not None:
             increase_capacity(log, args.queued_token_limit)
         if args.increase_queue_capacity is not None:

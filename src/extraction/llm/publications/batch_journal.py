@@ -27,6 +27,7 @@ def batch_journal(native: Any, verify: Any, fingerprint: Any, outcome_verify: An
             self.exact_cost = 0.0
             self.conservative_costs = 0
             self.queue_capacity = self.manifest['queuedTokenLimit']
+            self.migration = None
 
         def job(self, jid: str, event: str) -> dict:
             """Read a job event by durable offset."""
@@ -44,6 +45,28 @@ def batch_journal(native: Any, verify: Any, fingerprint: Any, outcome_verify: An
                         generatorPins=self.manifest['generatorPins']), 'HEADER_DRIFT')
                 return
             require(self.seq > 0, 'MISSING_HEADER')
+            if event == 'implementation_migration':
+                require(rid is None and self.migration is None and
+                        pay['version'] == 'unsubmitted-upload-repack/1.0' and
+                        pay['manifestSha256'] == self.pin and
+                        pay['previousImplementationPins'] == self.manifest['implementationPins'] and
+                        pay['maxNewFileBytes'] == 20000000 and
+                        set(pay['implementationPins']) == set(pay['previousImplementationPins']),
+                        'INVALID_IMPLEMENTATION_MIGRATION')
+                return
+            if event == 'superseded':
+                job = self.jobs[rid]
+                require(self.migration is not None and 'plan' in job and
+                        not any(e in job for e in ('superseded', 'submit_intent', 'submitted',
+                                                  'capacity_retry', 'submission_rejected')),
+                        'CANNOT_SUPERSEDE_POTENTIALLY_SUBMITTED_JOB')
+                plan = self.job(rid, 'plan')
+                require(plan['bytes'] > 20000000 and
+                        pay == dict(planSha256=sha256_bytes(canonical_json(plan)),
+                                    migrationSha256=sha256_bytes(canonical_json(self.payload_at(self.migration))),
+                                    remoteFileDisposition='possibly_uploaded_inert_unsubmitted_input',
+                                    releasedInputTokens=plan['tokens']), 'SUPERSESSION_BINDING_DRIFT')
+                return
             if event == 'capacity_increase':
                 require(rid is None and pay['previous'] == self.queue_capacity and
                         type(pay['new']) is int and pay['new'] > self.queue_capacity and
@@ -74,7 +97,8 @@ def batch_journal(native: Any, verify: Any, fingerprint: Any, outcome_verify: An
             if event in ('plan', 'upload_intent', 'uploaded', 'submit_intent', 'submitted', 'snapshot', 'downloads', 'settled'):
                 if event == 'plan':
                     require(rid not in self.jobs and pay['items'], 'DUPLICATE_OR_EMPTY_JOB')
-                    require(len(pay['items']) <= 50000 and 0 < pay['bytes'] <= 190000000, 'BATCH_FILE_LIMIT')
+                    ceiling = 20000000 if self.migration is not None else 190000000
+                    require(len(pay['items']) <= 50000 and 0 < pay['bytes'] <= ceiling, 'BATCH_FILE_LIMIT')
                     seen = set()
                     total = 0
                     for item in pay['items']:
@@ -92,6 +116,7 @@ def batch_journal(native: Any, verify: Any, fingerprint: Any, outcome_verify: An
                 else:
                     require(rid in self.jobs, 'UNKNOWN_BATCH_JOB')
                     job = self.jobs[rid]
+                    require('superseded' not in job, 'SUPERSEDED_JOB_IS_INERT')
                     before = {'upload_intent': 'plan', 'uploaded': 'upload_intent', 'submit_intent': 'uploaded',
                               'submitted': 'submit_intent', 'snapshot': 'submitted', 'downloads': 'snapshot', 'settled': 'downloads'}[event]
                     require(before in job and (event == 'snapshot' or event not in job), 'BATCH_TRANSITION')
@@ -138,6 +163,15 @@ def batch_journal(native: Any, verify: Any, fingerprint: Any, outcome_verify: An
             self.seq, self.head = rec['seq'], digest
             event, rid, pay = rec['event'], rec['requestID'], rec['payload']
             if event == 'header':
+                return
+            if event == 'implementation_migration':
+                self.migration = offset
+                return
+            if event == 'superseded':
+                self.jobs[rid][event] = offset
+                for item in self.job(rid, 'plan')['items']:
+                    self.assignments.pop((item['rid'], item['number']))
+                    self.state[item['rid']] = 'prepared' if item['number'] == 1 else 'retry'
                 return
             if event in ('upload_error', 'submission_error'):
                 return  # Evidence remains in the chain; the original intent is still uncertain.
@@ -190,6 +224,7 @@ def batch_journal(native: Any, verify: Any, fingerprint: Any, outcome_verify: An
 
         def reserved_tokens(self) -> int:
             """Reserve the whole job until its terminal result files are reconciled."""
-            return sum(self.job(j, 'plan')['tokens'] for j, events in self.jobs.items() if 'settled' not in events)
+            return sum(self.job(j, 'plan')['tokens'] for j, events in self.jobs.items()
+                       if 'settled' not in events and 'superseded' not in events)
 
     return BatchJournal

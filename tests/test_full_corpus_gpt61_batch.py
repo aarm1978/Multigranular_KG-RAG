@@ -364,6 +364,124 @@ class BatchControllerTests(unittest.TestCase):
             self.assertEqual(submit.call_count, 2)
             self.assertEqual(collect.call_count, 1)
 
+    def test_pinned_recovery_manifest_changes_only_implementation_provenance(self):
+        """The exact authentic manifest is retained; scientific or unknown-version drift fails."""
+        saved = (run.RUN / 'run-manifest.json').read_bytes()
+        current = run.manifest(self.parent, self.stream, 15_000_000_000, False)
+        self.assertEqual(run.migration_manifest(saved, current), saved)
+        changed = deepcopy(current)
+        changed['requests'][0]['estimatedCostUSD'] += 1
+        with self.assertRaisesRegex(ValueError, 'SCIENTIFIC_MANIFEST_DRIFT'):
+            run.migration_manifest(saved, changed)
+        with self.assertRaisesRegex(ValueError, 'BATCH_MANIFEST_DRIFT'):
+            run.migration_manifest(saved + b' ', current)
+
+    def test_supersession_refuses_creation_intent_and_is_idempotent(self):
+        """An uncertain Batch POST remains subject to existing remote reconciliation."""
+        self.mf['implementationPins'] = {'fixture': 'a' * 64}
+        current = deepcopy(self.mf)
+        current['implementationPins'] = {'fixture': 'b' * 64}
+        self.api.lose_create = True
+        with self.journal() as log:
+            with self.assertRaises(OSError):
+                self.submit_all(log)
+            run.migrate_implementation(log, current)
+            with self.assertRaisesRegex(ValueError, 'CANNOT_SUPERSEDE'):
+                run.supersede_unsubmitted(log, 'job-000001')
+            seq = log.seq
+            run.migrate_implementation(log, current)
+            run.recover_unsubmitted(log)
+            self.assertEqual(log.seq, seq)
+        with self.journal() as log:
+            run.migrate_implementation(log, current)
+            self.submit_all(log)
+            self.assertEqual(self.api.creates, 1)
+
+    def test_cli_resume_migrates_original_manifest_once_without_rewriting_it(self):
+        """Ordinary submit-all binds new code to the original run through an appended event."""
+        saved = (run.RUN / 'run-manifest.json').read_bytes()
+        production = self.root / 'legacy'
+        production.mkdir()
+        (production / 'run-manifest.json').write_bytes(saved)
+        with patch.object(run, 'RUN', production), \
+             patch.object(run.baseline, 'dependencies', return_value=(self.paired, self.stream, self.native, self.parent)), \
+             patch.object(run.baseline.provider, 'load_openai_api_key', return_value='offline-dummy'), \
+             patch.object(run.batch_transport, 'BatchAPI', return_value=self.api), \
+             patch.object(self.stream, 'load', return_value=({}, {'records': []})), \
+             patch.object(run, 'submit_all', return_value='fixture_no_dispatch'), \
+             patch.object(run.sys, 'argv', ['batch', '--submit-all', '--queued-token-limit', '15000000000']):
+            run.main()
+            prefix = (production / 'execution.jsonl').read_bytes()
+            run.main()
+        self.assertEqual((production / 'execution.jsonl').read_bytes(), prefix)
+        self.assertEqual((production / 'run-manifest.json').read_bytes(), saved)
+        events = [json.loads(line)['record']['event'] for line in prefix.splitlines()]
+        self.assertEqual(events, ['header', 'implementation_migration'])
+
+    def test_2488_cached_preparations_repack_without_reconstruction_or_counts(self):
+        """Reuse all cached records, release exactly 40,394,392 tokens, preserve the old prefix."""
+        self.entries.clear()
+        self.prepared.clear()
+        for n in range(2488):
+            rid = 'cached-%04d' % n
+            p = dict(request=dict(requestID=rid, requestInputSha256=rid), schema={}, binding={},
+                     providerInput=b'fixture', body=dict(model='gpt-6.1-sol', reasoning={'effort': 'medium'},
+                     store=False, max_output_tokens=32768, input='x' * 8100, text={'format': {'schema': {}}}))
+            self.prepared[rid] = p
+            self.entries.append(dict(identity=self.stream.fingerprint(p), estimatedCostUSD=1))
+        self.mf.update(queuedTokenLimit=15_000_000_000, implementationPins={'fixture': 'a' * 64})
+        current = deepcopy(self.mf)
+        current['implementationPins'] = {'fixture': 'b' * 64}
+        manifest_bytes = run.canonical_json(self.mf) + b'\n'
+        (self.root / 'run-manifest.json').write_bytes(manifest_bytes)
+        with self.journal() as log:
+            for index, (rid, p) in enumerate(self.prepared.items()):
+                log.append('prepared', rid, self.native.bundle(p))
+                tokens = (40394392 // 2485 + (index < 40394392 % 2485)
+                          if index < 2485 else 45073 // 3 + (index == 2485))
+                log.append('token_count', rid, dict(provider={'input_tokens': tokens},
+                           bodySha256=self.stream.fingerprint(p)['bodySha256']))
+            with patch.object(run, 'MAX_BYTES', 190_000_000):
+                jid = run.make_job(log, self.api, None, self.native, self.stream.fingerprint,
+                                   log.queue_capacity, 2485)
+            self.assertGreater(log.job(jid, 'plan')['bytes'], 20_000_000)
+            self.api.lose_upload = True
+            with self.assertRaises(OSError):
+                run.submit(log, jid, self.api)
+            self.assertEqual(log.seq, 4979)
+            self.assertEqual(log.reserved_tokens(), 40394392)
+        original = (self.root / 'execution.jsonl').read_bytes()
+        # Interrupt after the migration event, before supersession.
+        with self.journal() as log:
+            run.migrate_implementation(log, current)
+        with self.journal() as log:
+            run.migrate_implementation(log, current)
+            run.recover_unsubmitted(log)
+            self.assertEqual(log.reserved_tokens(), 0)
+            self.assertEqual(len(log.tokens), 2488)
+            self.assertEqual(len(log.offsets), 2488)
+            self.assertEqual(log.assignments, {})
+            seq = log.seq
+            run.recover_unsubmitted(log)
+            self.assertEqual(log.seq, seq)
+        with self.journal() as log, \
+             patch.object(self.api, 'count', side_effect=AssertionError('NO_RECOUNT')):
+            with patch.object(run, 'save_status'):
+                run.submit_all(log, self.api, lambda e: self.fail('NO_RECONSTRUCTION'), self.native,
+                               self.stream.fingerprint)
+            self.assertEqual(len(log.assignments), 2488)
+            self.assertEqual(self.api.creates, 2)
+            self.assertTrue(all(log.job(j, 'plan')['bytes'] <= 20_000_000
+                                for j, ev in log.jobs.items() if 'superseded' not in ev))
+        with self.journal() as log, patch.object(run, 'save_status'):
+            self.submit_all(log)
+            self.assertEqual(self.api.creates, 2)
+            self.assertEqual(run.collect_once(log, self.api, self.process, self.record), [])
+            self.assertEqual(len(log.outcomes), 2488)
+        self.assertTrue((self.root / 'execution.jsonl').read_bytes().startswith(original))
+        self.assertEqual((self.root / 'run-manifest.json').read_bytes(), manifest_bytes)
+        self.assertEqual(self.api.counts, 0)
+
     def test_pilot_exact_100_restart_then_full_production(self):
         """Pilot output stays production output; normal continuation starts at request 101."""
         self.pilot_queue()
