@@ -69,18 +69,21 @@ def estimate() -> dict:
         for owner in sources.owners(ROOT, data):
             family = owner['family']
             stats = totals.setdefault(family, dict(owners=0, readerUnits=0, selectedUniqueUnits=0,
-                selectedUnitOccurrences=0, requests=0, heldUnits=0, incompleteOwners=0,
+                selectedUnitOccurrences=0, requests=0, heldUnits=0, excludedUnits=0, incompleteOwners=0,
                 sourceFailureDiagnostics=0, reviewDiagnostics=0, emptyOwners=0,
                 costUSD={k: 0.0 for k in ('low', 'pooled', 'high', 'outputCeiling')}))
             stats['owners'] += 1
             stats['readerUnits'] += len(owner['units'])
+            excluded = owner.get('excludedSourceUnitIDs', [])
+            stats['excludedUnits'] += len(excluded)
             stats['emptyOwners'] += not owner['units']
             stats['sourceFailureDiagnostics'] += sum(d.get('status') == 'failed_source_or_evidence_binding'
                 or d.get('disposition') == 'failed_source_or_evidence_binding' for d in owner['diagnostics'])
             stats['reviewDiagnostics'] += sum(d.get('status') == 'needs_review' for d in owner['diagnostics'])
             record = {k: owner[k] for k in ('family', 'ownerID', 'sourceRecordSha256',
                 'endpointRecordSha256', 'diagnostics', 'inputComplete', 'rawSourcePins')}
-            record.update(readerSourceUnitIDs=[u['sourceUnitID'] for u in owner['units']], groups=[])
+            record.update(readerSourceUnitIDs=[u['sourceUnitID'] for u in owner['units']],
+                          excludedSourceUnitIDs=excluded, groups=[])
             accounted, selected = [], set()
             for p, group in queue.requests(owner):
                 accounted.extend(group['primarySourceUnitIDs'])
@@ -104,7 +107,10 @@ def estimate() -> dict:
                     for scenario, amount in cost['costUSD'].items():
                         stats['costUSD'][scenario] += amount
                 record['groups'].append(group)
-            require(accounted == record['readerSourceUnitIDs'], 'SOURCE_COVERAGE_GAP_OR_DUPLICATION')
+            require(len(excluded) == len(set(excluded)) and set(excluded) <= set(record['readerSourceUnitIDs']),
+                    'INVALID_PRODUCTION_EXCLUSION')
+            require(accounted == [uid for uid in record['readerSourceUnitIDs'] if uid not in set(excluded)],
+                    'SOURCE_COVERAGE_GAP_OR_DUPLICATION')
             stats['selectedUniqueUnits'] += len(selected)
             stats['incompleteOwners'] += not record['inputComplete']
             coverage.append(record)

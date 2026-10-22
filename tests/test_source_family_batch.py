@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 from src.extraction.llm import source_family_batch as run
 from src.extraction.llm import source_family_queue as queue
+from src.extraction.llm import source_family_inputs as sources
 from src.extraction.llm import full_corpus_source_family_batch as cli
 from test_full_corpus_gpt61_batch import FakeAPI
 
@@ -189,6 +190,96 @@ class FamilyBatchTests(unittest.TestCase):
             self.assertTrue(all(v['completed'] == 1 for v in status['families'].values()))
 
 
+class ReadmeAuthorityTests(unittest.TestCase):
+    """Synthetic exact-binding checks; never read corpus data or contact providers."""
+
+    def setUp(self):
+        """Create three frozen-shaped attestations and prohibit network access."""
+        blocker = patch.object(socket, 'socket', side_effect=AssertionError('NO_NETWORK'))
+        blocker.start()
+        self.addCleanup(blocker.stop)
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+        self.rows = []
+        self.provenance = dict(snapshotID='sha256:' + 'a' * 64, sourceVersion='frozen-version')
+        for rid in ('HS-03', 'HS-04', 'HS-07'):
+            unit = dict(resource_id=rid, source_path='README.md', sourceField='README',
+                sourceUnitID=rid + ':original', authorityTextSha256=run.digest((rid + ' original text').encode()),
+                sourceVerification='caller_attested', acquisitionIntegrityStatus='not_independently_verified',
+                **self.provenance)
+            self.rows.append(dict(requestID=rid, artifactFamily='hydroshare', owner=dict(resource_id=rid),
+                sourceSnapshot=dict(sha256='a' * 64), orderedUnits=[unit]))
+        wire = run.canonical(dict(requests=self.rows))
+        target = self.root / sources.MANIFEST_PATH
+        target.parent.mkdir(parents=True)
+        target.write_bytes(wire)
+        pin = patch.object(sources, 'MANIFEST_SHA256', run.digest(wire))
+        pin.start()
+        self.addCleanup(pin.stop)
+        self.bindings = sources.accepted_readme_bindings(self.root)
+
+    def test_all_three_exact_bindings_preserve_caller_attestation(self):
+        """Every accepted identity is usable without upgrading acquisition provenance."""
+        for row in self.rows:
+            rid = row['requestID']
+            reader = sources.production_readme(dict(source_file='README.md', readme_text_raw=rid + ' original text'),
+                                               rid, self.provenance, self.bindings)
+            self.assertTrue(reader['inputComplete'])
+            self.assertEqual(len(reader['sourceUnits']), 1)
+            self.assertEqual(reader['authority']['sourceVerification'], 'caller_attested')
+            self.assertEqual(reader['authority']['acquisitionIntegrityStatus'], 'not_independently_verified')
+            self.assertEqual(reader['authority']['integrityStatus'], 'computed_only')
+            self.assertIsNone(reader['authority']['expectedAuthorityTextSha256'])
+            self.assertEqual(reader['productionAuthority']['acceptedBinding']['originalSourceUnitID'], rid + ':original')
+
+    def test_unverified_identity_hash_snapshot_and_version_fail_closed(self):
+        """A matching name, local text or different owner's attestation is insufficient."""
+        for owner, path, text, provenance in (
+                ('unverified', 'README.md', 'HS-03 original text', self.provenance),
+                ('HS-03', 'other.md', 'HS-03 original text', self.provenance),
+                ('HS-03', 'README.md', 'changed text', self.provenance),
+                ('HS-03', 'README.md', 'HS-03 original text', {**self.provenance, 'snapshotID': 'different'}),
+                ('HS-03', 'README.md', 'HS-03 original text', {**self.provenance, 'sourceVersion': 'different'})):
+            with self.subTest(owner=owner, path=path, text=text, provenance=provenance):
+                result = sources.production_readme(dict(source_file=path, readme_text_raw=text),
+                                                   owner, provenance, self.bindings)
+                self.assertEqual(result['sourceUnits'], [])
+                self.assertFalse(result['inputComplete'])
+                self.assertEqual(result['diagnostics'][0]['reason'], 'readme_source_not_verified')
+                self.assertEqual(result['diagnostics'][0]['source_path'], path)
+                self.assertEqual(result['diagnostics'][0]['status'], 'failed_source_or_evidence_binding')
+
+    def test_manifest_drift_is_not_new_authority(self):
+        """An edited attestation manifest cannot extend the production allowlist."""
+        (self.root / sources.MANIFEST_PATH).write_text('{}')
+        with self.assertRaisesRegex(Exception, 'README_BINDING_MANIFEST_DRIFT'):
+            sources.accepted_readme_bindings(self.root)
+
+    def test_unverified_readme_keeps_abstract_request_incomplete(self):
+        """Source failures survive through owner accounting and the native request builder."""
+        source = dict(resource_id='unverified', abstract='Verified frozen abstract.',
+            system_metadata=dict(date_last_updated='frozen-version'),
+            documentation=dict(readme_files=[dict(source_file='README.md', readme_text_raw='Unverified text.')]))
+        data = dict(hydroshare=dict(records=[source], sourceSha256='a' * 64,
+            graph=dict(nodes=[dict(id='unverified', **{'class': 'DatasetResource'})], edges=[])))
+        original = deepcopy(data)
+        with patch.object(sources, 'catalog', return_value=([], [])):
+            owner = next(sources.owners(self.root, data))
+        self.assertEqual(data, original)
+        self.assertFalse(owner['inputComplete'])
+        self.assertEqual([u['sourceField'] for u in owner['units']], ['abstract'])
+        groups = list(queue.requests(owner))
+        self.assertEqual(len(groups), 1)
+        prepared = groups[0][0]
+        self.assertIsNotNone(prepared)
+        request = prepared['semanticRequest']['request']
+        self.assertFalse(request['sourceCompleteness']['inputComplete'])
+        self.assertEqual(request['sourceDiagnostics'][0]['authorityDecision'], 'no_accepted_readme_binding')
+        self.assertNotIn('Unverified text.', prepared['body']['input'])
+        run.verify_prepared(prepared, {'identity': run.fingerprint(prepared)})
+
+
 class PackagingTests(unittest.TestCase):
     """Focused source-context correction tests with all sockets blocked."""
 
@@ -231,6 +322,30 @@ class PackagingTests(unittest.TestCase):
         self.assertEqual(len(held), 1)
         self.assertIsNone(held[0][0])
         self.assertEqual(held[0][1]['primarySourceUnitIDs'], ['abstract', 'readme'])
+
+    def test_confirmed_license_exclusion_preserves_reader_and_document_context(self):
+        """The prospective overlay excludes exact legal authorities without editing readers."""
+        units = [dict(sourceUnitID=str(n), text='Original authority text.', path=path,
+                      cellIndex=None, startOffsetInAuthority=0)
+                 for n, path in enumerate(('README.md', 'ODbl.md', 'docs/guide.md'))]
+        reader = dict(sourceUnits=units, authorities=[dict(path=u['path'], cellIndex=None,
+            text=u['text'], rawFileSha256='dddcdfa70ce72d0e964160d2f16ddb22501256089dbf9c775e3eced0d031e658')
+            for u in units])
+        original = deepcopy(reader)
+        for owner_id in ('github:repo:1052799392', 'github:repo:706266756', 'github:repo:1052790271'):
+            exclusions = sources.github_production_exclusions(owner_id, reader)
+            self.assertEqual(exclusions[0]['status'], 'not_attempted_authorized_exclusion')
+            self.assertEqual(exclusions[0]['sourceUnitIDs'], ['1'])
+            owner = self.owner('github', units, authorities=reader['authorities'])
+            owner['excludedSourceUnitIDs'] = exclusions[0]['sourceUnitIDs']
+            groups = self.package(owner)
+            self.assertEqual([g['documentPath'] for _, g in groups], ['README.md', 'docs/guide.md'])
+            self.assertFalse(any(g['exceptionalSplit'] for _, g in groups))
+        self.assertEqual(reader, original)
+        self.assertEqual(sources.github_production_exclusions('github:repo:other', reader), [])
+        reader['authorities'][1]['rawFileSha256'] = 'changed'
+        with self.assertRaisesRegex(Exception, 'INSPECTED_ODBL_AUTHORITY_DRIFT'):
+            sources.github_production_exclusions('github:repo:706266756', reader)
 
     def test_small_github_documents_are_never_combined_by_repository(self):
         """Separate autonomous files stay separate even when the whole repository fits."""

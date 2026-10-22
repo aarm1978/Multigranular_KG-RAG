@@ -40,7 +40,8 @@ def fits(units: list) -> bool:
 
 def blocks(owner: dict) -> list[list]:
     """Select resource/page contexts or separate autonomous GitHub documents."""
-    units = owner['units']
+    excluded = set(owner.get('excludedSourceUnitIDs', []))
+    units = [u for u in owner['units'] if u['sourceUnitID'] not in excluded]
     if owner['family'] != 'github':
         return [units] if units else []
     # The reader emits each authority and its notebook cells in source order.
