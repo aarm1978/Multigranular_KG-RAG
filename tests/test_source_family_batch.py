@@ -188,41 +188,154 @@ class FamilyBatchTests(unittest.TestCase):
             self.assertEqual(set(status['families']), set(run.conformance.DIRECTORIES))
             self.assertTrue(all(v['completed'] == 1 for v in status['families'].values()))
 
-    def test_packaging_accounts_for_oversized_units_without_dropping_owner(self):
-        """Intact native units either fit or receive individual explicit holds."""
-        p, _ = self.fixture('github')
-        inputs = run.unpack_inputs(p['requestInputs'])
-        units = inputs['reader_result']['sourceUnits']
-        owner = dict(family='github', ownerID='github:repo:7', units=units, inputs=inputs,
-                     sourceRecordSha256='source-pin', endpointRecordSha256='endpoint-pin')
-        with patch.dict(queue.SIZING, maxSelectedUnits=1):
-            groups = list(queue.requests(owner))
+
+class PackagingTests(unittest.TestCase):
+    """Focused source-context correction tests with all sockets blocked."""
+
+    def setUp(self):
+        """Prevent genuine provider operations in every packaging test."""
+        blocker = patch.object(socket, 'socket', side_effect=AssertionError('NO_NETWORK'))
+        blocker.start()
+        self.addCleanup(blocker.stop)
+
+    def owner(self, family, units, headings=None, authorities=None):
+        """Create minimal trusted structural context for deterministic packaging tests."""
+        return dict(family=family, ownerID='owner', units=units,
+            sourceRecordSha256='source-pin', endpointRecordSha256='endpoint-pin',
+            inputs=dict(page=dict(headings=headings or []),
+                        reader_result=dict(authorities=authorities or [])))
+
+    def package(self, owner):
+        """Stub only native construction; expose exact selected original units as the envelope."""
+        from types import SimpleNamespace
+        def build(**inputs):
+            """Mirror the native success boundary without judging source evidence."""
+            return dict(status='request_ready', selected=inputs['selected_unit_ids'])
+        def prepare(request, inputs):
+            """Retain selected original records so input/output size guards are exercised."""
+            return dict(body=dict(units=[u for u in owner['units'] if u['sourceUnitID'] in request['selected']]))
+        with patch.object(queue.importlib, 'import_module', return_value=SimpleNamespace(build_request=build)), \
+             patch.object(queue.adapter, 'prepare', side_effect=prepare):
+            return list(queue.requests(owner))
+
+    def test_resource_combines_abstract_and_readmes(self):
+        """HydroShare preserves its resource-wide context regardless of field boundaries."""
+        units = [dict(sourceUnitID='abstract', text='Abstract description.', sourceField='abstract'),
+                 dict(sourceUnitID='readme', text='Verified README description.', sourceField='README')]
+        owner = self.owner('hydroshare', units)
+        groups = self.package(owner)
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(groups[0][1]['selectedSourceUnitIDs'], ['abstract', 'readme'])
+        with patch.dict(queue.SIZING, maxSelectedTextBytes=10):
+            held = self.package(owner)
+        self.assertEqual(len(held), 1)
+        self.assertIsNone(held[0][0])
+        self.assertEqual(held[0][1]['primarySourceUnitIDs'], ['abstract', 'readme'])
+
+    def test_small_github_documents_are_never_combined_by_repository(self):
+        """Separate autonomous files stay separate even when the whole repository fits."""
+        units = [dict(sourceUnitID=str(n), text='Descriptive text.', path=path,
+                      cellIndex=None, startOffsetInAuthority=0)
+                 for n, path in enumerate(('README.md', 'docs/guide.md'))]
+        owner = self.owner('github', units, authorities=[dict(path=u['path'], cellIndex=None,
+                           text=u['text']) for u in units])
+        original = deepcopy(owner)
+        groups = self.package(owner)
+        self.assertEqual([g['documentPath'] for _, g in groups], ['README.md', 'docs/guide.md'])
+        self.assertEqual([g['selectedSourceUnitIDs'] for _, g in groups], [['0'], ['1']])
+        self.assertFalse(any(g['exceptionalSplit'] for _, g in groups))
+        self.assertEqual(owner, original)
+        self.assertEqual(groups, self.package(owner))
+
+    def test_notebook_cells_stay_together_by_default(self):
+        """Autonomous notebook context includes every admitted Markdown cell."""
+        units = [dict(sourceUnitID=str(n), text='Markdown prose.', path='guide.ipynb',
+                      cellIndex=n, startOffsetInAuthority=0) for n in range(3)]
+        owner = self.owner('github', units, authorities=[dict(path='guide.ipynb', cellIndex=n,
+                           text='Markdown prose.') for n in range(3)])
+        groups = self.package(owner)
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(groups[0][1]['selectedSourceUnitIDs'], ['0', '1', '2'])
+
+    def test_large_unit_count_pages_and_both_resources_pages_remain_whole(self):
+        """217 intact units and 50KB of content are manageable, including Example context."""
+        units = [dict(sourceUnitID=str(n), text='Descriptive content. ' * 12, headingOrdinal=1,
+                      contentKind='fenced_snippet' if n == 0 else 'static_visible_context',
+                      eligibility='possible_example_context' if n == 0 else 'static_visible_context') for n in range(217)]
+        for path in ('src/pages/resources/RESOURCES_PAGE_DOCUMENTATION.mdx',
+                     'src/pages/community_products/RESOURCES_PAGE_DOCUMENTATION.mdx'):
+            owner = self.owner('ciroh_hub', units, headings=[dict(ordinal=1, parent_heading_ordinal=None)])
+            owner['inputs']['page']['source_path'] = path
+            original = deepcopy(owner)
+            groups = self.package(owner)
+            self.assertEqual(len(groups), 1)
+            self.assertEqual(groups[0][0]['body']['units'], units)
+            self.assertFalse(groups[0][1]['exceptionalSplit'])
+            self.assertEqual(owner, original)
+
+    def test_exceptional_page_split_retains_complete_procedure_ancestor(self):
+        """Split only an oversized tree and repeat original parent/Example context unchanged."""
+        units = [dict(sourceUnitID='parent', text='p' * 10, headingOrdinal=1, contentKind='fenced_snippet'),
+                 dict(sourceUnitID='step1', text='a' * 30, headingOrdinal=2),
+                 dict(sourceUnitID='step2', text='b' * 30, headingOrdinal=3)]
+        owner = self.owner('ciroh_hub', units, headings=[dict(ordinal=1, parent_heading_ordinal=None),
+            dict(ordinal=2, parent_heading_ordinal=1), dict(ordinal=3, parent_heading_ordinal=1)])
+        with patch.dict(queue.SIZING, maxSelectedTextBytes=50):
+            groups = self.package(owner)
+        self.assertEqual(len(groups), 2)
+        self.assertTrue(all(g['exceptionalSplit'] for _, g in groups))
+        self.assertEqual([uid for _, g in groups for uid in g['primarySourceUnitIDs']], ['parent', 'step1', 'step2'])
+        self.assertEqual(groups[1][1]['selectedSourceUnitIDs'], ['parent', 'step2'])
+        self.assertEqual(groups[1][1]['repeatedContextUnitIDs'], ['parent'])
+        self.assertTrue(all(g['omittedAncestorContextUnitIDs'] == [] for _, g in groups))
+        self.assertEqual(groups[1][0]['body']['units'][0], units[0])
+
+    def test_unsafe_ancestor_is_held_explicitly_never_silently_trimmed(self):
+        """An indivisible oversized parent is reported; descendants never lose its context."""
+        units = [dict(sourceUnitID='parent', text='p' * 60, headingOrdinal=1),
+                 dict(sourceUnitID='child', text='c' * 10, headingOrdinal=2)]
+        owner = self.owner('ciroh_hub', units, headings=[dict(ordinal=1, parent_heading_ordinal=None),
+            dict(ordinal=2, parent_heading_ordinal=1)])
+        with patch.dict(queue.SIZING, maxSelectedTextBytes=50):
+            groups = self.package(owner)
+        self.assertTrue(all(p is None for p, _ in groups))
+        self.assertTrue(all(g['omittedAncestorContextUnitIDs'] == [] for _, g in groups))
+        self.assertEqual(groups[-1][1]['selectedSourceUnitIDs'], ['parent', 'child'])
+        self.assertIn('required_context', groups[-1][1]['holdReason'])
+
+    def test_exceptional_document_split_uses_heading_subtrees_and_envelope_guard(self):
+        """Full-envelope pressure can split coherent sections, retaining parent prose."""
+        text = '# Guide\nintro\n## First\n' + 'a' * 30 + '\n## Second\n' + 'b' * 30 + '\n'
+        units = [dict(sourceUnitID=key, text=value, path='README.md', cellIndex=None,
+                      startOffsetInAuthority=text.index(value))
+                 for key, value in (('intro', 'intro'), ('first', 'a' * 30), ('second', 'b' * 30))]
+        owner = self.owner('github', units, authorities=[dict(path='README.md', cellIndex=None, text=text)])
+        # Both sections fit the output margin, but together exceed this envelope margin.
+        two_size = len(run.canonical(dict(units=units[:2])))
+        with patch.dict(queue.SIZING, maxEnvelopeBytes=two_size + 5):
+            groups = self.package(owner)
         self.assertEqual(len(groups), 2)
         self.assertTrue(all(p is not None for p, _ in groups))
-        self.assertEqual([g['primarySourceUnitIDs'][0] for _, g in groups], [u['sourceUnitID'] for u in units])
-        from src.extraction.llm.coderepos.source_units import read_repository_sources
-        reader = read_repository_sources(dict(repo_id=7, name='Demo', full_name='Example/Demo',
-            archive={'frozen_commit_sha': 'a' * 40}, files={'downloaded': []},
-            readme=dict(source_path='README.md', text='# Guide\n\nA short description.\n\nA much longer scientific tool description.\n')), self.root)
-        units = reader['sourceUnits']
-        owner['units'] = units
-        owner['inputs']['reader_result'] = reader
-        sizes = [len(u['text'].encode()) for u in units]
-        with patch.dict(queue.SIZING, maxSelectedTextBytes=min(sizes)):
-            groups = list(queue.requests(owner))
-        self.assertEqual(sum(p is not None for p, _ in groups), 1)
-        self.assertEqual(sum(p is None for p, _ in groups), 1)
-        self.assertEqual([uid for _, g in groups for uid in g['primarySourceUnitIDs']],
-                         [u['sourceUnitID'] for u in units])
+        self.assertEqual(groups[1][1]['selectedSourceUnitIDs'], ['intro', 'second'])
+        self.assertTrue(all(g['splitReason'] == 'complete_envelope_exceeds_input_safety_margin' for _, g in groups))
 
-    def test_large_ancestor_does_not_hold_independent_descendant(self):
-        """Unsafe ancestor context is omitted explicitly rather than cascading owner holds."""
-        units = [dict(sourceUnitID='parent', text='a' * 25000, headingOrdinal=1, contentKind='prose'),
-                 dict(sourceUnitID='child', text='A documented action.', headingOrdinal=2, contentKind='prose')]
-        owner = dict(family='ciroh_hub', units=units, inputs=dict(page=dict(headings=[
-            dict(ordinal=1, parent_heading_ordinal=None), dict(ordinal=2, parent_heading_ordinal=1)])))
-        self.assertEqual(queue.context(owner, units[1:]), units[1:])
-        self.assertEqual(queue.ancestor_units(owner, units[1:]), units[:1])
+    def test_native_builder_preserves_complete_document_and_hashes(self):
+        """The real accepted request builder receives the full verified document."""
+        from test_coderepos_semantic_offline_pipeline import OfflineReplayTests
+        fixture = OfflineReplayTests()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        inputs = deepcopy(fixture.inputs)
+        inputs['request_version'] = 'github-request/1.2.0'
+        units = inputs['reader_result']['sourceUnits']
+        owner = self.owner('github', units)
+        owner['inputs'] = inputs
+        groups = list(queue.requests(owner))
+        self.assertEqual(len(groups), 1)
+        prepared, coverage = groups[0]
+        self.assertEqual(prepared['semanticRequest']['request']['sourceUnits'], units)
+        self.assertEqual(coverage['selectedSourceUnitIDs'], [u['sourceUnitID'] for u in units])
+        run.verify_prepared(prepared, {'identity': run.fingerprint(prepared)})
 
 
 if __name__ == '__main__':
