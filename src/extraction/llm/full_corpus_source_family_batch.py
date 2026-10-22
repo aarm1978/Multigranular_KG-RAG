@@ -46,7 +46,25 @@ def implementation_pins() -> dict:
                  'openai_provider.py', 'production_acceptance.py', 'deterministic_evidence_binding.py'):
         paths.append(ROOT / 'src/extraction/llm/publications' / name)
     paths.extend([adapter.acceptance.POLICY_PATH, ROOT / 'src/ontology/ontology_spec.yaml'])
+    paths.append(adapter.batch.OPERATIONAL_COMPATIBILITY)
     return {str(p.relative_to(ROOT)): adapter.digest(p.read_bytes()) for p in sorted(set(paths))}
+
+
+def operational_compatibility(previous: dict, current: dict) -> dict | None:
+    """Verify the explicit old-to-new operational pin bridge; preserve every scientific pin."""
+    if previous == current:
+        return None
+    authority = json.loads(adapter.batch.OPERATIONAL_COMPATIBILITY.read_bytes())
+    old, new = authority['sourceFamilyPreviousPins'], authority['sourceFamilyCurrentPins']
+    expected = dict(previous)
+    for path, digest in old.items():
+        require(previous.get(path) == digest, 'IMPLEMENTATION_DRIFT:' + path)
+        expected[path] = new[path]
+    policy = str(adapter.batch.OPERATIONAL_COMPATIBILITY.relative_to(ROOT))
+    expected[policy] = adapter.digest(adapter.batch.OPERATIONAL_COMPATIBILITY.read_bytes())
+    require(expected == current, 'IMPLEMENTATION_DRIFT')
+    return dict(version=authority['version'], previousImplementationPins=previous,
+                implementationPins=current, compatibility='operational_only_scientific_queue_unchanged')
 
 
 def seal(path: Path, data: bytes) -> None:
@@ -130,7 +148,7 @@ def estimate() -> dict:
 def load_queue() -> dict:
     """Verify sealed source/code pins before any future provider operation."""
     result = json.loads((BASE / 'queue-manifest.json').read_bytes())
-    require(result['implementationPins'] == implementation_pins(), 'IMPLEMENTATION_DRIFT')
+    operational_compatibility(result['implementationPins'], implementation_pins())
     for relative, expected in result['sourcePins'].items():
         require(adapter.digest((ROOT / relative).read_bytes()) == expected, 'SOURCE_SNAPSHOT_DRIFT:' + relative)
     return result
@@ -197,6 +215,10 @@ def operate(args: argparse.Namespace) -> dict:
     with offline():
         parent = load_queue()
         paired, native, pins = adapter.infrastructure()
+        migration = operational_compatibility(parent['implementationPins'], implementation_pins())
+        if migration is not None:
+            seal(BASE / 'operational-compatibility-v1.json', adapter.canonical(dict(migration,
+                 queueSha256=adapter.digest((BASE / 'queue-manifest.json').read_bytes()))) + b'\n')
     root = BASE / 'production'
     path = root / 'run-manifest.json'
     saved = json.loads(path.read_bytes()) if path.exists() else None
@@ -267,12 +289,18 @@ def main() -> None:
     """Keep estimate/status offline; all genuine calls require explicit terminal modes."""
     parser = argparse.ArgumentParser(description=__doc__)
     modes = parser.add_mutually_exclusive_group(required=True)
-    for name in ('estimate', 'status', 'check', 'submit-all', 'collect'):
+    for name in ('estimate', 'status', 'check', 'submit-all', 'collect', 'verify-operational-compatibility'):
         modes.add_argument('--' + name, action='store_true')
     parser.add_argument('--queued-token-limit', type=int)
     parser.add_argument('--count-workers', type=int, default=8, choices=range(1, 17))
     args = parser.parse_args()
-    if args.estimate:
+    if args.verify_operational_compatibility:
+        with offline():
+            parent = load_queue()
+            migration = operational_compatibility(parent['implementationPins'], implementation_pins())
+            print(json.dumps(dict(requests=len(parent['requests']), scientificQueueUnchanged=True,
+                                  migration=migration, readOnly=True), indent=2))
+    elif args.estimate:
         result = estimate()
         print(json.dumps(dict(families=result['summary'], pricing=result['pricing'],
                              overallCostUSD={k: sum(f['costUSD'][k] for f in result['summary'].values())

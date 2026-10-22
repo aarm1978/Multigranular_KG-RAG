@@ -19,6 +19,60 @@ original request in an isolated compatibility journal, never production-relabell
 
 ## Operation
 
+### Generic delivery recovery (2026-10-22)
+
+`--recovery-preview` is offline and read-only. It replays the original journal
+under a shared lock, validates its hash chain, identities and head anchor, and
+partitions the original 10,893-request queue. On this multi-GB journal it can take
+several minutes; it never calls the provider or repairs/appends journal events.
+`--status` continues to read the last atomic snapshot, including its age.
+
+`publications-delivery-recovery/1.0` appends a second implementation migration,
+linked to the unchanged `unsubmitted-upload-repack/1.0` event and original run
+manifest. New transport deliveries carry a distinct custom ID/delivery ordinal
+and explicit `nativeAttempt`; the scientific request/body stays identical.
+Historical framing's `attemptID`/`number` indexes deliveries, while `nativeAttempt`
+and the unchanged native outcome identify the scientific processing attempt.
+Neither prior receipts/outcomes nor unknown billing records are erased.
+
+The Publications-only policy recognizes explicit `credit_balance_exhausted`
+nonexecution (including the observed HTTP 429 body containing only that error)
+and explicit `batch_expired` nonexecution. These do not consume a native attempt.
+Other missing-usage errors remain execution uncertainty. Native retries still
+use the frozen two-attempt controller. Terminal processing failures remain
+review-required and do not block unrelated eligible requests. Accepted extractions
+are protected from further dispatch. Unknown historical charges remain unknown;
+relative cost-anomaly safeguards continue to gate later submissions.
+
+Definitive HTTP 400 `billing_hard_limit_reached` and existing explicit queue-token
+rejections require a complete read-only remote identity reconciliation and sealed
+input hash check. An accepted match is adopted; an absent match plus the exact
+rejection permits a separately journaled creation identity using the same uploaded
+file. Another billing rejection stops the command. Uncertain POSTs still cannot
+be blindly retried. `--collect` never dispatches, including for billing recovery.
+
+Local read-only inspection through anchored journal sequence 34238 confirmed:
+7,210 protected completions, 1,134 credit failures, four native retries (provider
+output ceiling), two terminal exceptions, and 2,543 without confirmed submission.
+Thus **3,681 unique requests are conditionally eligible**, after credits return
+and rejected creation is reconciled; the two terminal exceptions are excluded.
+The 268 requests in job-000034 are included once in the 2,543. All 8,624 stored
+bundles/counts are reusable. Recorded usage-priced cost is $346.303257; 1,134
+historical billing amounts remain unknown, so this is not a verified invoice.
+Terminal request suffix `d9591537f42d622a29942f8d` has `RELATION_SCOPE_MISMATCH`;
+`3a365c8b95ccb0bca956f9d1` has duplicate evidence-span IDs and evidence-binding
+failures. Both remain excluded from automatic retry under the existing protocol.
+
+Source-family behavior remains on the original journal/policy. The exact
+old-to-new operational pin bridge is recorded in
+`study2_publications_batch_recovery_compatibility_v1.json`; unknown code/source
+drift still fails. It includes only the shared runner, source-family CLI bridge,
+and a Python 3.9 postponed-annotations import fix. The existing source-family
+queue and run manifests are never regenerated. Future family execution seals an
+operational compatibility sidecar before provider work; the family command
+`--verify-operational-compatibility` verifies it offline without writing anything.
+README attestation and ODbL exclusion authorities remain unchanged.
+
 ### Interrupted upload recovery (2026-10-21)
 
 `--submit-all` now uses a **20,000,000-byte** ceiling for new JSONL files. The

@@ -1,4 +1,5 @@
 """Opt-in Step 11 format conformance; originals and legacy pipelines stay immutable."""
+from __future__ import annotations
 from copy import deepcopy
 import importlib
 import json

@@ -168,7 +168,15 @@ class FamilyBatchTests(unittest.TestCase):
             (folder / name).write_bytes(wire)
             entries.append(dict(identity=run.fingerprint(p), family=p['semanticRequest']['request']['artifactFamily'],
                 estimatedCostUSD=.1, bundleFile=name, bundleSha256=run.digest(wire), rawSourcePins={}))
-        parent = dict(requests=entries, implementationPins={}, pricing=run.batch.PRICING, sizing=queue.SIZING)
+        previous = dict(cli.implementation_pins())
+        previous.pop(str(run.batch.OPERATIONAL_COMPATIBILITY.relative_to(cli.ROOT)))
+        previous.update(json.loads(run.batch.OPERATIONAL_COMPATIBILITY.read_bytes())['sourceFamilyPreviousPins'])
+        parent = dict(requests=entries, implementationPins=previous, pricing=run.batch.PRICING, sizing=queue.SIZING)
+        (self.root / 'queue-manifest.json').write_bytes(run.canonical(parent) + b'\n')
+        production = self.root / 'production'
+        production.mkdir()
+        original_manifest = run.canonical(cli.manifest(parent, self.pins, 100)) + b'\n'
+        (production / 'run-manifest.json').write_bytes(original_manifest)
         args = argparse.Namespace(check=True, submit_all=False, collect=False, queued_token_limit=100, count_workers=1)
         with patch.object(cli, 'BASE', self.root), patch.object(cli, 'load_queue', return_value=parent), \
              patch.object(run, 'infrastructure', return_value=(self.paired, self.native, self.pins)), \
@@ -188,6 +196,42 @@ class FamilyBatchTests(unittest.TestCase):
             status = json.loads((self.root / 'production/status.json').read_bytes())['summary']
             self.assertEqual(set(status['families']), set(run.conformance.DIRECTORIES))
             self.assertTrue(all(v['completed'] == 1 for v in status['families'].values()))
+            self.assertEqual((production / 'run-manifest.json').read_bytes(), original_manifest)
+            bridge = json.loads((self.root / 'operational-compatibility-v1.json').read_bytes())
+            self.assertEqual(bridge['previousImplementationPins'], previous)
+
+
+class OperationalCompatibilityTests(unittest.TestCase):
+    """A finite exact pin bridge preserves previously sealed source-family queues."""
+
+    def test_exact_bridge_and_fail_closed_scientific_pins(self):
+        """Only the reviewed operational hashes migrate; unknown drift remains fatal."""
+        authority = json.loads(run.batch.OPERATIONAL_COMPATIBILITY.read_bytes())
+        current = cli.implementation_pins()
+        previous = dict(current)
+        previous.pop(str(run.batch.OPERATIONAL_COMPATIBILITY.relative_to(cli.ROOT)))
+        previous.update(authority['sourceFamilyPreviousPins'])
+        report = cli.operational_compatibility(previous, current)
+        self.assertEqual(report['previousImplementationPins'], previous)
+        self.assertEqual(report['implementationPins'], current)
+        for path in ('src/extraction/llm/source_family_inputs.py', 'src/extraction/llm/format_conformance.py',
+                     'src/extraction/llm/publications/full_corpus_gpt61_batch.py'):
+            changed = dict(current)
+            changed[path] = 'f' * 64
+            with self.assertRaisesRegex(ValueError, 'IMPLEMENTATION_DRIFT'):
+                cli.operational_compatibility(previous, changed)
+        self.assertIsNone(cli.operational_compatibility(current, current))
+
+    def test_previously_sealed_queue_remains_byte_identical(self):
+        """Exercise the accessible queue read-only; no regeneration, sidecar or runtime writes."""
+        path = cli.BASE / 'queue-manifest.json'
+        if not path.exists():
+            self.skipTest('Ignored source-family queue unavailable; synthetic bridge test still applies')
+        before = path.read_bytes()
+        with cli.offline():
+            saved = cli.load_queue()
+        self.assertEqual(path.read_bytes(), before)
+        self.assertEqual(saved, json.loads(before))
 
 
 class ReadmeAuthorityTests(unittest.TestCase):

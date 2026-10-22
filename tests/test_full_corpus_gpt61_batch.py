@@ -416,7 +416,13 @@ class BatchControllerTests(unittest.TestCase):
         self.assertEqual((production / 'execution.jsonl').read_bytes(), prefix)
         self.assertEqual((production / 'run-manifest.json').read_bytes(), saved)
         events = [json.loads(line)['record']['event'] for line in prefix.splitlines()]
-        self.assertEqual(events, ['header', 'implementation_migration'])
+        self.assertEqual(events, ['header', 'implementation_migration', 'recovery_migration'])
+        with patch.object(run, 'RUN', production), \
+             patch.object(run.baseline, 'dependencies', return_value=(self.paired, self.stream, self.native, self.parent)), \
+             patch.object(run.baseline.provider, 'load_openai_api_key', side_effect=AssertionError('PREVIEW_IS_OFFLINE')), \
+             patch.object(run.sys, 'argv', ['batch', '--recovery-preview']):
+            run.main()
+        self.assertEqual((production / 'execution.jsonl').read_bytes(), prefix)
 
     def test_2488_cached_preparations_repack_without_reconstruction_or_counts(self):
         """Reuse all cached records, release exactly 40,394,392 tokens, preserve the old prefix."""

@@ -24,6 +24,7 @@ from .request_builder import canonical_json, sha256_bytes, PROJECT_ROOT as ROOT
 RUN = ROOT / 'var/study2_step13/publications-gpt61-batch/v1'
 CHECK = ROOT / 'var/study2_step13/publications-gpt61-batch/compatibility-v1'
 POLICY = ROOT / 'docs/study2_publications_gpt61_batch_v1.0.md'
+OPERATIONAL_COMPATIBILITY = ROOT / 'docs/study2_publications_batch_recovery_compatibility_v1.json'
 PRICING = {**baseline.PRICING, 'inputUSDPerMillion': 1, 'cachedUSDPerMillion': .05,
            'cacheWriteUSDPerMillion': 1.25, 'outputUSDPerMillion': 5,
            'reference': 'https://developers.openai.com/api/docs/pricing', 'transport': 'batch'}
@@ -156,10 +157,11 @@ def summary(log: Any) -> dict:
     unpriced = sum(key not in log.receipts for key, (jid, _) in log.assignments.items()
                    if 'submitted' in log.jobs[jid])
     uncertain = sum(len(log.job(j, 'plan')['items']) for j, ev in log.jobs.items()
-                    if 'submit_intent' in ev and 'submitted' not in ev and 'submission_rejected' not in ev)
+                    if 'submit_intent' in ev and 'submitted' not in ev and 'submission_rejected' not in ev
+                    and not (hasattr(log, 'creation_rejection') and log.creation_rejection(j)))
     elapsed = time.time() - log.started_at if log.started_at else 0
     submitted = {rid for (rid, _), (jid, _) in log.assignments.items() if 'submitted' in log.jobs[jid]}
-    return dict(completed=complete, failed=failed, pending=len(log.entries)-complete-failed,
+    result = dict(completed=complete, failed=failed, pending=len(log.entries)-complete-failed,
                 preparedRequests=len(log.offsets), exactCountedRequests=len(log.tokens),
                 submittedRequests=len(submitted), unsentRequests=len(log.entries)-len(submitted),
                 outstandingRequests=unpriced, outstandingBatches=len(outstanding),
@@ -175,6 +177,10 @@ def summary(log: Any) -> dict:
                 correspondingEstimatedUSD=log.estimated_processed, costAnomalyStop=baseline.anomaly(log),
                 outstandingBatchIDs=outstanding, reservedInputTokens=log.reserved_tokens(),
                 elapsedSeconds=elapsed, observedRequestsPerHour=complete * 3600 / elapsed if elapsed else None)
+    if hasattr(log, 'category'):
+        from .batch_recovery import recovery_counts
+        result['recovery'] = recovery_counts(log)
+    return result
 
 
 def save_status(log: Any) -> dict:
@@ -194,10 +200,20 @@ def check_batch_binding(log: Any, jid: str, remote: dict) -> None:
             remote.get('endpoint') == '/v1/responses', 'RECOVERED_BATCH_BINDING_DRIFT')
 
 
+def dispatch_blocked(log: Any) -> bool:
+    """Use opt-in Publications recovery policy; retain source-family and legacy STOP rules."""
+    if hasattr(log, 'recovery_blocked'):
+        return log.recovery_blocked()
+    return bool(log.unknown_usage or any(s == 'failed' for s in log.state.values()))
+
+
 def submit(log: Any, jid: str, api: Any, retry_rejected: bool = False) -> bool:
     """Reconcile durable POST intents; never repeat an uncertain upload or submission."""
     ev = log.jobs[jid]
     require('superseded' not in ev, 'SUPERSEDED_JOB_IS_INERT')
+    if hasattr(log, 'reconcile_creation'):
+        if log.reconcile_creation(jid, api, retry_rejected):
+            return False
     plan = log.job(jid, 'plan')
     if 'submission_rejected' in ev:
         rejection = log.job(jid, 'submission_rejected')
@@ -233,11 +249,12 @@ def submit(log: Any, jid: str, api: Any, retry_rejected: bool = False) -> bool:
             require(len(matches) == 1, 'UNCERTAIN_SUBMISSION_STOP; no unique remote batch, no blind resubmit')
             submitted = matches[0]
         else:
-            require(not log.unknown_usage and not baseline.anomaly(log) and
-                    not any(s == 'failed' for s in log.state.values()), 'COST_OR_USAGE_STOP')
+            require(not dispatch_blocked(log) and not baseline.anomaly(log), 'COST_OR_USAGE_STOP')
             metadata = dict(run=log.pin, job=jid, input_sha256=plan['sha256'])
             if 'capacity_retry' in ev:
                 metadata['capacity_retry'] = str(log.seq)
+            if 'creation_redelivery' in ev:
+                metadata['creation_delivery'] = str(log.seq)
             log.append('submit_intent', jid, dict(metadata=metadata, unixTime=time.time()))
             try:
                 submitted = api.create(log.job(jid, 'uploaded')['id'], metadata)
@@ -248,6 +265,8 @@ def submit(log: Any, jid: str, api: Any, retry_rejected: bool = False) -> bool:
             except batch_transport.HTTPFailure as exc:
                 log.append('submission_error', jid, dict(exc.evidence,
                     intentSha256=sha256_bytes(canonical_json(log.job(jid, 'submit_intent')))))
+                if hasattr(log, 'creation_rejection') and log.creation_rejection(jid):
+                    raise ValueError('BILLING_UNAVAILABLE: billing_hard_limit_reached; rejection preserved, restore credits before resuming') from exc
                 raise
         check_batch_binding(log, jid, submitted)
         log.append('submitted', jid, submitted)
@@ -301,9 +320,17 @@ def reconcile_results(log: Any, jid: str, process: Any, record: Any) -> None:
         if (rid, n) in log.outcomes:
             continue
         receipt = log.payload_at(log.receipts[rid, n])
-        first = log.payload_at(log.outcomes[rid, 1])['native']['attempt'] if n == 2 else None
-        outcome = process(log.prepared(rid), receipt, n, first)
-        log.append('outcome', rid, dict(number=n, receiptSha256=sha256_bytes(canonical_json(receipt)), native=outcome), n)
+        if 'nativeAttempt' in i:
+            from .batch_recovery import nonexecution, nonexecution_outcome
+            native_number = i['nativeAttempt']
+            first = log.payload_at(log.native_first[rid])['native']['attempt'] if native_number == 2 else None
+            outcome = nonexecution_outcome(receipt) if nonexecution(receipt) else process(log.prepared(rid), receipt, native_number, first)
+            extra = dict(nativeAttempt=native_number)
+        else:
+            first = log.payload_at(log.outcomes[rid, 1])['native']['attempt'] if n == 2 else None
+            outcome = process(log.prepared(rid), receipt, n, first)
+            extra = {}
+        log.append('outcome', rid, dict(number=n, receiptSha256=sha256_bytes(canonical_json(receipt)), native=outcome, **extra), n)
     require(set(rows) == set(expected), 'MISSING_BATCH_RESULTS_STOP; persisted partial results, no inferred retry')
     require(log.job(jid, 'snapshot')['status'] in ('completed', 'expired'), 'FAILED_OR_CANCELLED_BATCH_STOP')
     if 'settled' not in log.jobs[jid]:
@@ -315,7 +342,7 @@ def make_job(log: Any, api: Any, rebuild: Any, native: Any, fingerprint: Any,
     """JIT-build only the next capacity-bounded file, preserving each complete request."""
     items, lines, size, tokens = [], [], 0, 0
     eligible = [(r, e) for r, e in log.entries.items() if (allowed is None or r in allowed)
-                and log.state.get(r) in (None, 'prepared', 'retry')][:min(MAX_REQUESTS, count_limit)]
+                and (log.ready(r) if hasattr(log, 'ready') else log.state.get(r) in (None, 'prepared', 'retry'))][:min(MAX_REQUESTS, count_limit)]
     for index, (rid, entry) in enumerate(eligible):
         state = log.state.get(rid)
         if state is None:
@@ -338,7 +365,7 @@ def make_job(log: Any, api: Any, rebuild: Any, native: Any, fingerprint: Any,
                     log.append('token_count', r, dict(provider=future.result(),
                                bodySha256=fingerprint(prepared)['bodySha256']))
         n = 2 if log.state[rid] == 'retry' else 1
-        item, line = input_line(p, n, fingerprint)
+        item, line = log.delivery_line(p, fingerprint) if hasattr(log, 'delivery_line') else input_line(p, n, fingerprint)
         require(log.tokens[rid] <= log.queue_capacity, 'SINGLE_REQUEST_EXCEEDS_OPERATIONAL_QUEUE_CAPACITY')
         require(len(line) <= MAX_BYTES, 'SINGLE_REQUEST_EXCEEDS_FILE_LIMIT')
         if tokens + log.tokens[rid] > capacity or size + len(line) > MAX_BYTES:
@@ -373,6 +400,8 @@ def collect_once(log: Any, api: Any, process: Any, record: Any) -> list:
         if 'settled' in ev or 'submission_rejected' in ev or 'superseded' in ev:
             continue
         try:
+            if hasattr(log, 'reconcile_creation') and log.reconcile_creation(jid, api, False):
+                continue
             if 'submitted' not in ev and 'submit_intent' in ev:
                 matches = [b for b in api.listing('batches') if b.get('metadata') == log.job(jid, 'submit_intent')['metadata']]
                 require(len(matches) == 1, 'UNCERTAIN_SUBMISSION_STOP; no unique remote batch')
@@ -406,12 +435,11 @@ def submit_all(log: Any, api: Any, rebuild: Any, native: Any, fingerprint: Any,
             continue
         if 'submitted' not in ev:
             # Recovery of uncertain acknowledgements is safe; new POSTs remain gated.
-            if 'submit_intent' not in ev and (log.unknown_usage or baseline.anomaly(log) or
-                                            any(s == 'failed' for s in log.state.values())):
+            if 'submit_intent' not in ev and (dispatch_blocked(log) or baseline.anomaly(log)):
                 return 'cost_or_technical_stop'
             if not submit(log, jid, api, retry_rejected=True):
                 return 'waiting_foreign_batches'
-    if log.unknown_usage or any(s == 'failed' for s in log.state.values()):
+    if dispatch_blocked(log):
         return 'technical_stop'
     if baseline.anomaly(log):
         return 'cost_anomaly_stop'
@@ -424,7 +452,7 @@ def submit_all(log: Any, api: Any, rebuild: Any, native: Any, fingerprint: Any,
         if not submit(log, jid, api):
             return 'waiting_foreign_batches'
         save_status(log)
-    ready = any(log.state.get(r) in (None, 'prepared', 'retry') for r in log.entries)
+    ready = any(log.ready(r) if hasattr(log, 'ready') else log.state.get(r) in (None, 'prepared', 'retry') for r in log.entries)
     return 'operational_capacity_full' if ready else 'all_admissible_submitted'
 
 
@@ -494,7 +522,8 @@ def manifest(parent: dict, stream: Any, limit: int, compatibility: bool) -> dict
     from . import batch_journal as journal_module
     from . import resumable_production_journal as staging
     paths = (Path(__file__), Path(batch_transport.__file__), Path(journal_module.__file__),
-             Path(staging.__file__), Path(baseline.__file__), POLICY)
+             Path(staging.__file__), Path(baseline.__file__), POLICY,
+             Path(__file__).with_name('batch_recovery.py'), OPERATIONAL_COMPATIBILITY)
     requests = deepcopy(parent['requests'][:1] if compatibility else parent['requests'])
     for entry in requests:
         inputs = entry['cost']['inputTokenEstimates']['pooled']
@@ -608,7 +637,7 @@ def main() -> None:
     """Expose offline inspection and explicit researcher-terminal execution modes."""
     parser = argparse.ArgumentParser(description=__doc__)
     modes = parser.add_mutually_exclusive_group(required=True)
-    for mode in ('estimate', 'status', 'check', 'live', 'pilot-only', 'submit-all', 'collect'):
+    for mode in ('estimate', 'status', 'check', 'live', 'pilot-only', 'submit-all', 'collect', 'recovery-preview'):
         modes.add_argument('--' + mode, action='store_true')
     modes.add_argument('--increase-queue-capacity', type=int, metavar='TOKENS', help='Offline append-only operational capacity increase')
     parser.add_argument('--queued-token-limit', type=int, help='Operational outstanding input-token capacity; increases are journaled')
@@ -651,6 +680,14 @@ def main() -> None:
         verify_compatibility(Journal, native, parent, stream)
         print('Historical compatibility complete; preserved without a new call.')
         return
+    if not args.check:
+        from . import batch_recovery as recovery
+        Journal = recovery.journal_type(Journal, verify_outcome, stream.fingerprint)
+    if args.recovery_preview:
+        require(path.exists(), 'NO_PRODUCTION_JOURNAL_TO_PREVIEW')
+        data = migration_manifest(path.read_bytes(), mf)
+        print(json.dumps(recovery.preview(Journal, native, root / 'execution.jsonl', data, mf), indent=2))
+        return
     root.mkdir(parents=True, exist_ok=True)
     path = root / 'run-manifest.json'
     if args.increase_queue_capacity is not None:
@@ -662,7 +699,14 @@ def main() -> None:
             require(path.read_bytes() == data, 'BATCH_MANIFEST_DRIFT')
         else:
             replace_atomic(path, data)
-        migrate_implementation(log, mf)
+        if args.check:
+            migrate_implementation(log, mf)
+        else:
+            legacy = deepcopy(mf)
+            legacy['implementationPins'] = baseline.read(OPERATIONAL_COMPATIBILITY)['publicationsLegacyPins']
+            if log.migration is None and log.manifest['implementationPins'] != mf['implementationPins']:
+                migrate_implementation(log, legacy)
+            recovery.migrate(log, mf)
         if args.queued_token_limit is not None:
             increase_capacity(log, args.queued_token_limit)
         if args.increase_queue_capacity is not None:
