@@ -416,7 +416,8 @@ class BatchControllerTests(unittest.TestCase):
         self.assertEqual((production / 'execution.jsonl').read_bytes(), prefix)
         self.assertEqual((production / 'run-manifest.json').read_bytes(), saved)
         events = [json.loads(line)['record']['event'] for line in prefix.splitlines()]
-        self.assertEqual(events, ['header', 'implementation_migration', 'recovery_migration'])
+        self.assertEqual(events, ['header', 'implementation_migration', 'recovery_migration',
+                                  'terminal_usage_isolation_migration'])
         with patch.object(run, 'RUN', production), \
              patch.object(run.baseline, 'dependencies', return_value=(self.paired, self.stream, self.native, self.parent)), \
              patch.object(run.baseline.provider, 'load_openai_api_key', side_effect=AssertionError('PREVIEW_IS_OFFLINE')), \

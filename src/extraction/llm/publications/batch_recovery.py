@@ -14,6 +14,9 @@ from .request_builder import canonical_json, sha256_bytes
 from .resumable_production_journal import require
 
 VERSION = 'publications-delivery-recovery/1.0'
+ISOLATION_VERSION = 'publications-terminal-usage-isolation/1.0'
+RECOVERY_PATH = 'src/extraction/llm/publications/batch_recovery.py'
+PREVIOUS_RECOVERY_SHA256 = '1b15dabe6d9aeb3dbb0ddc3d3a595b27df4c0ae9c5affc6c0f21d9cf76e75a7e'
 NONEXECUTION = {'credit_balance_exhausted', 'batch_expired'}
 CATEGORIES = ('completed_protected', 'never_prepared', 'prepared_not_submitted', 'creation_rejected',
               'provider_nonexecution', 'native_retry', 'terminal_review', 'ambiguous_transport', 'submitted_unsettled')
@@ -52,6 +55,8 @@ def journal_type(base: type, verify_outcome: Any, fingerprint: Any) -> type:
         def __init__(self, *args: Any, **kwargs: Any) -> None:
             super().__init__(*args, **kwargs)
             self.recovery_migration = None
+            self.isolation_migration = None
+            self.isolation_enabled = False
             self.latest = {}
             self.nonexecutions = {}
             self.accepted = set()
@@ -103,13 +108,40 @@ def journal_type(base: type, verify_outcome: Any, fingerprint: Any) -> type:
         def ready(self, rid: str) -> bool:
             """Require terminal delivery evidence before reusing a scientific request."""
             key = rid, self.number(rid)
+            if self.isolated_unknown_usage() and self.category(rid) != 'native_retry':
+                return False
             return self.category(rid) in ('never_prepared', 'prepared_not_submitted',
                                           'provider_nonexecution', 'native_retry') and (
                 key not in self.assignments or 'settled' in self.jobs[self.assignments[key][0]])
 
         def recovery_blocked(self) -> bool:
-            """Keep unknown execution blocking; confirmed nonexecution billing remains unknown."""
-            return bool(self.unknown_usage - self.nonexecutions.keys())
+            """Isolate only settled overload holds; never erase unknown execution/billing."""
+            return bool(self.unknown_usage - self.nonexecutions.keys() - self.isolated_unknown_usage())
+
+        def isolated_unknown_usage(self) -> set:
+            """Permit unrelated native retries only; the error request stays terminal and unpriced."""
+            if not self.isolation_enabled:
+                return set()
+            isolated = set()
+            for key in self.unknown_usage - self.nonexecutions.keys():
+                rid, number = key
+                if (self.number(rid) != number or self.category(rid) != 'terminal_review'
+                        or key not in self.receipts or key not in self.outcomes):
+                    continue
+                receipt = self.payload_at(self.receipts[key])
+                outcome = self.payload_at(self.outcomes[key])['native']
+                response = receipt['row'].get('response') or {}
+                body = response.get('body')
+                if (response.get('status_code') == 503 and receipt['row'].get('error') is None
+                        and isinstance(body, dict) and set(body) == {'error'}
+                        and isinstance(body['error'], dict) and body['error'].get('code') == 'server_is_overloaded'
+                        and receipt.get('rawModelOutputBase64') is None and receipt.get('usage') is None
+                        and receipt['cost']['estimatedUSD'] is None
+                        and outcome.get('transportHold') == 'UNKNOWN_USAGE'
+                        and outcome.get('processable') is False and outcome.get('retryEligible') is False
+                        and outcome.get('productionResult') is None):
+                    isolated.add(key)
+            return isolated
 
         def native_number(self, rid: str) -> int:
             """A native retry requires the frozen first processing failure, never a billing error."""
@@ -130,6 +162,16 @@ def journal_type(base: type, verify_outcome: Any, fingerprint: Any) -> type:
         def validate_event(self, rec: dict) -> None:
             """Validate additive events fully, delegating every historical transition unchanged."""
             event, rid, pay = rec['event'], rec['requestID'], rec['payload']
+            if event == 'terminal_usage_isolation_migration':
+                require(rid is None and self.recovery_migration is not None and self.isolation_migration is None,
+                        'ISOLATION_MIGRATION_TRANSITION')
+                previous = self.payload_at(self.recovery_migration)
+                require(pay['version'] == ISOLATION_VERSION and pay['manifestSha256'] == self.pin and
+                        pay['previousMigrationSha256'] == sha256_bytes(canonical_json(previous)) and
+                        pay['previousImplementationPins'] == previous['implementationPins'],
+                        'ISOLATION_MIGRATION_BINDING_DRIFT')
+                verify_isolation_pins(pay['previousImplementationPins'], pay['implementationPins'])
+                return
             if event == 'recovery_migration':
                 previous = self.payload_at(self.migration) if self.migration is not None else None
                 require(self.seq > 0 and rid is None and self.recovery_migration is None and
@@ -185,10 +227,13 @@ def journal_type(base: type, verify_outcome: Any, fingerprint: Any) -> type:
         def accept(self, rec: dict, digest: str, offset: int) -> None:
             """Index new records without deleting historical costs, receipts or failed outcomes."""
             event, rid, pay = rec['event'], rec['requestID'], rec['payload']
-            if event in ('recovery_migration', 'creation_absence', 'creation_redelivery'):
+            if event in ('recovery_migration', 'terminal_usage_isolation_migration', 'creation_absence', 'creation_redelivery'):
                 self.seq, self.head = rec['seq'], digest
                 if event == 'recovery_migration':
                     self.recovery_migration = offset
+                elif event == 'terminal_usage_isolation_migration':
+                    self.isolation_migration = offset
+                    self.isolation_enabled = True
                 else:
                     self.jobs[rid][event] = offset
                     if event == 'creation_redelivery':
@@ -267,10 +312,23 @@ def recovery_counts(log: Any) -> dict:
                 cachedPrepared=len(log.offsets), cachedTokenCounts=len(log.tokens),
                 historicalUnknownUsageAttempts=len(log.unknown_usage),
                 unresolvedExecutionUsageAttempts=len(log.unknown_usage - log.nonexecutions.keys()),
+                isolatedTerminalUnknownUsageAttempts=len(log.isolated_unknown_usage()),
+                dispatchBlockedByExecutionUsage=log.recovery_blocked(),
+                dispatchScope='native_retries_only' if log.isolated_unknown_usage() else 'existing_recovery_policy',
                 usagePricedUSD=log.spent, finalInvoiceVerified=False,
                 billingRecoverable=sum(log.nonexecutions.get(log.latest.get(r)) == 'credit_balance_exhausted'
                     and log.category(r) == 'provider_nonexecution' for r in log.entries),
                 rejectedCreationJobs=[j for j in log.jobs if log.creation_rejection(j)])
+
+
+def verify_isolation_pins(previous: dict, current: dict) -> None:
+    """Permit only the pinned predecessor's Publications-only recovery module change."""
+    if previous == current:
+        return
+    require(previous.get(RECOVERY_PATH) == PREVIOUS_RECOVERY_SHA256 and
+            {k: v for k, v in previous.items() if k != RECOVERY_PATH} ==
+            {k: v for k, v in current.items() if k != RECOVERY_PATH} and RECOVERY_PATH in current,
+            'ISOLATION_IMPLEMENTATION_DRIFT')
 
 
 def migrate(log: Any, current: dict, read_only: bool = False) -> None:
@@ -285,9 +343,21 @@ def migrate(log: Any, current: dict, read_only: bool = False) -> None:
                    previousImplementationPins=old['implementationPins'] if old else log.manifest['implementationPins'],
                    implementationPins=current['implementationPins'])
     if log.recovery_migration is not None:
-        require(log.payload_at(log.recovery_migration) == payload, 'RECOVERY_IMPLEMENTATION_DRIFT')
+        historical = log.payload_at(log.recovery_migration)
+        payload['implementationPins'] = historical['implementationPins']
+        require(historical == payload, 'RECOVERY_IMPLEMENTATION_DRIFT')
     elif not read_only:
         log.append('recovery_migration', None, payload)
+    verify_isolation_pins(payload['implementationPins'], current['implementationPins'])
+    isolation = dict(version=ISOLATION_VERSION, manifestSha256=log.pin,
+        previousMigrationSha256=sha256_bytes(canonical_json(payload)),
+        previousImplementationPins=payload['implementationPins'], implementationPins=current['implementationPins'])
+    if log.isolation_migration is not None:
+        require(log.payload_at(log.isolation_migration) == isolation, 'ISOLATION_IMPLEMENTATION_DRIFT')
+    elif not read_only:
+        log.append('terminal_usage_isolation_migration', None, isolation)
+    # Preview applies the validated prospective policy in memory only.
+    log.isolation_enabled = True
 
 
 def preview(Journal: type, native: Any, path: Any, data: bytes, current: dict) -> dict:
@@ -301,4 +371,9 @@ def preview(Journal: type, native: Any, path: Any, data: bytes, current: dict) -
             log.anchor = native.decode(log.checkpoint.read_bytes())
         native.Journal.replay(log)
         migrate(log, current, read_only=True)
-        return dict(recovery_counts(log), journalSeq=log.seq, journalHead=log.head, readOnly=True)
+        from . import full_corpus_gpt61_batch as batch
+        return dict(recovery_counts(log), journalSeq=log.seq, journalHead=log.head, readOnly=True,
+                    compatibilityMigrationRequired=log.isolation_migration is None,
+                    compatibilityMigrationVersion=ISOLATION_VERSION, costAnomalyStop=batch.baseline.anomaly(log),
+                    schedulableNativeRetries=sum(log.ready(r) and log.category(r) == 'native_retry' for r in log.entries)
+                    if not log.recovery_blocked() and not batch.baseline.anomaly(log) else 0)

@@ -132,6 +132,126 @@ class RecoveryTests(unittest.TestCase):
             self.assertEqual(self.submit(log), 'technical_stop')
             self.assertEqual(self.api.creates, 1)
 
+    def test_settled_overload_isolates_only_six_native_retries(self):
+        """Real journal scheduling preserves unknown billing, accepted work and attempt limits."""
+        template = deepcopy(self.prepared['request-0'])
+        for n in range(3, 9):
+            rid = 'request-' + str(n)
+            p = deepcopy(template)
+            p['request'].update(requestID=rid, requestInputSha256=rid)
+            self.prepared[rid] = p
+            self.entries.append(dict(identity=self.stream.fingerprint(p), estimatedCostUSD=1))
+        self.mf['requests'] = self.entries
+        def process(p, receipt, n, first):
+            rid = p['request']['requestID']
+            result = dict(cid=receipt['row']['custom_id'], n=n, processable=rid == 'request-1',
+                          retryEligible=rid not in ('request-0', 'request-1', 'request-2') and n == 1,
+                          attempt={'attemptNumber': n}, productionResult=None)
+            if rid == 'request-0':
+                result['transportHold'] = 'UNKNOWN_USAGE'
+            return result
+        original = self.api.retrieve
+        def retrieve(bid):
+            remote = original(bid)
+            fid = remote['output_file_id']
+            rows = [json.loads(line) for line in self.api.contents[fid].splitlines()]
+            for row in rows:
+                if row['custom_id'] == overload_cid:
+                    row['response'] = dict(status_code=503, body={'error': {'code': 'server_is_overloaded',
+                        'message': 'Our servers are currently overloaded. Please try again later.'}})
+            self.api.contents[fid] = b''.join(run.canonical_json(r) + b'\n' for r in rows)
+            return remote
+        with self.journal() as log:
+            self.submit(log)
+            overload_cid = log.assignments['request-0', 1][1]['custom_id']
+            with patch.object(self.api, 'retrieve', side_effect=retrieve):
+                self.assertEqual(self.collect(log, process=process), [])
+            receipt = deepcopy(log.payload_at(log.receipts['request-0', 1]))
+            self.assertIsNone(receipt['cost']['estimatedUSD'])
+            self.assertIsNone(recovery.nonexecution(receipt))
+            self.assertEqual(recovery.recovery_counts(log)['nativeRetryEligible'], 6)
+            self.assertEqual(log.isolated_unknown_usage(), {('request-0', 1)})
+            self.assertFalse(log.ready('request-0'))
+            # Even an otherwise eligible never-submitted request cannot use this exception.
+            self.assertFalse(log.ready('unrelated-new-request'))
+            for change in ('code', 'status', 'output', 'usage', 'unsettled', 'retry'):
+                changed = deepcopy(receipt)
+                if change == 'code': changed['row']['response']['body']['error']['code'] = 'server_error'
+                if change == 'status': changed['row']['response']['status_code'] = 500
+                if change == 'output': changed['row']['response']['body']['output'] = []
+                if change == 'usage': changed['usage'] = {}
+                read = log.payload_at
+                offset = log.receipts['request-0', 1]
+                jid = log.assignments['request-0', 1][0]
+                events = deepcopy(log.jobs[jid])
+                if change == 'unsettled': log.jobs[jid].pop('settled')
+                if change == 'retry': log.outcome_flags['request-0', 1] = True
+                with patch.object(log, 'payload_at', side_effect=lambda off: changed if off == offset else read(off)):
+                    self.assertTrue(log.recovery_blocked(), change)
+                log.jobs[jid] = events
+                log.outcome_flags['request-0', 1] = False
+            with patch.object(run.baseline, 'anomaly', return_value=True):
+                self.assertEqual(self.submit(log), 'cost_anomaly_stop')
+            prefix = (self.root / 'execution.jsonl').read_bytes()
+        with self.journal() as log:
+            self.submit(log)
+            plan = log.job('job-000002', 'plan')
+            self.assertEqual({i['rid'] for i in plan['items']}, {'request-' + str(i) for i in range(3, 9)})
+            self.assertTrue(all(i['nativeAttempt'] == 2 for i in plan['items']))
+            self.collect(log, process=process)
+            self.submit(log)
+            self.assertEqual(self.api.creates, 2)
+            self.assertEqual(log.accepted, {'request-1'})
+            self.assertEqual(log.category('request-0'), 'terminal_review')
+            self.assertEqual(log.payload_at(log.receipts['request-0', 1]), receipt)
+            self.assertEqual(log.unknown_usage, {('request-0', 1)})
+            self.assertEqual(recovery.recovery_counts(log)['nativeRetryEligible'], 0)
+        self.assertTrue((self.root / 'execution.jsonl').read_bytes().startswith(prefix))
+
+    def test_isolation_migration_chains_frozen_recovery_pins(self):
+        """New pin provenance is append-only and cannot authorize unrelated implementation drift."""
+        self.mf['implementationPins'][recovery.RECOVERY_PATH] = recovery.PREVIOUS_RECOVERY_SHA256
+        data = run.canonical_json(self.mf) + b'\n'
+        path = self.root / 'execution.jsonl'
+        with self.Journal(path, data, run.sha256_bytes(data)) as log:
+            old = dict(version=recovery.VERSION, manifestSha256=log.pin, previousMigrationSha256=None,
+                       previousImplementationPins=self.mf['implementationPins'], implementationPins=self.mf['implementationPins'])
+            log.append('recovery_migration', None, old)
+        before = path.read_bytes()
+        current = deepcopy(self.mf)
+        current['implementationPins'][recovery.RECOVERY_PATH] = 'b' * 64
+        preview = recovery.preview(self.Journal, self.native, path, data, current)
+        self.assertTrue(preview['compatibilityMigrationRequired'])
+        self.assertEqual(path.read_bytes(), before)
+        with self.Journal(path, data, run.sha256_bytes(data)) as log:
+            recovery.migrate(log, current)
+            self.assertEqual(log.payload_at(log.recovery_migration), old)
+            seq = log.seq
+            recovery.migrate(log, current)
+            self.assertEqual(log.seq, seq)
+        self.assertTrue(path.read_bytes().startswith(before))
+        self.assertFalse(recovery.preview(self.Journal, self.native, path, data, current)['compatibilityMigrationRequired'])
+        current['implementationPins']['fixture'] = 'changed'
+        with self.assertRaisesRegex(ValueError, 'ISOLATION_IMPLEMENTATION_DRIFT'):
+            recovery.preview(self.Journal, self.native, path, data, current)
+
+    def test_current_population_protects_all_10882_accepted_results(self):
+        """Synthetic population conservation complements authentic read-only journal replay."""
+        with self.journal() as log:
+            log.entries = {str(i): {} for i in range(10893)}
+            log.accepted = {str(i) for i in range(10882)}
+            log.jobs = {'settled': {'submitted': 1, 'settled': 2}}
+            for i in range(10882, 10893):
+                key = str(i), 1
+                log.current_delivery[str(i)] = 1
+                log.assignments[key] = ('settled', {})
+                log.outcomes[key] = 10
+                log.outcome_flags[key] = i < 10888
+            counts = recovery.recovery_counts(log)
+            self.assertEqual([counts[k] for k in ('queueRequests', 'completedProtected', 'nativeRetryEligible',
+                                                 'terminalReviewRequired')], [10893, 10882, 6, 5])
+            self.assertTrue(all(not log.ready(rid) for rid in log.accepted))
+
     def test_nonexecution_requires_exact_evidence_without_model_output(self):
         """An error-like code cannot override returned model output or a success status."""
         row = dict(response=dict(status_code=429, body={'error': {'code': 'credit_balance_exhausted'}}), error=None)
