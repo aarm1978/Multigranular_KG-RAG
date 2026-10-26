@@ -93,9 +93,16 @@ def inventory(log: Any) -> tuple[dict, list]:
             require(outcome.get('processable') is True, 'LATEST_ACCEPTED_OUTCOME_MISSING:' + rid)
             result = outcome['productionResult']
             projection = result['acceptedSemanticProjection']
-            require(projection['requestID'] == rid and
-                    str(projection['sourceArtifactID']) == str(entry['paperID']) and
-                    projection['sourceUnitID'] == entry['sourceUnitID'], 'PROJECTION_SOURCE_DRIFT:' + rid)
+            request = log.prepared(rid)['request']
+            # Inventory publication IDs and canonical artifact IDs are distinct identities.
+            require(request['requestID'] == rid and
+                    str(request['sourcePublicationID']) == str(entry['paperID']) and
+                    request['sourceUnit']['sourceUnitID'] == entry['sourceUnitID'],
+                    'REQUEST_MANIFEST_SOURCE_DRIFT:' + rid)
+            require(projection['requestID'] == request['requestID'] and
+                    projection['sourceArtifactID'] == request['sourceArtifactID'] and
+                    projection['sourceUnitID'] == request['sourceUnit']['sourceUnitID'],
+                    'PROJECTION_SOURCE_DRIFT:' + rid)
             nodes, edges = projection['acceptedNodes'], projection['acceptedEdges']
             classes.update(n['className'] for n in nodes)
             relations.update(e['relationName'] for e in edges)
@@ -111,7 +118,7 @@ def inventory(log: Any) -> tuple[dict, list]:
             sidecar = result.get('unresolvedIdentitySidecar')
             require(sidecar is not None, 'MISSING_UNRESOLVED_SIDECAR:' + rid)
             from src.extraction.llm.publications.production_acceptance import derive_unresolved_identity_sidecar
-            require(sidecar == derive_unresolved_identity_sidecar(result['attemptSelection'], log.prepared(rid)['request']),
+            require(sidecar == derive_unresolved_identity_sidecar(result['attemptSelection'], request),
                     'UNRESOLVED_SIDECAR_DRIFT:' + rid)
             collections['unresolvedIdentitySidecarRecords'] += len(sidecar['records'])
         else:

@@ -19,7 +19,9 @@ class FixtureLog:
         self.latest = {rid: (rid, 1) for rid in self.entries}
         self.outcomes = {key: key for key in self.latest.values()}
         self.receipts = {key: key[0] for key in self.latest.values()}
-        self.projection = dict(requestID='a', sourceArtifactID='p', sourceUnitID='u1',
+        self.request = dict(requestID='a', sourcePublicationID='p', sourceArtifactID='canonical-p',
+                            sourceUnit={'sourceUnitID': 'u1'})
+        self.projection = dict(requestID='a', sourceArtifactID='canonical-p', sourceUnitID='u1',
                                acceptedNodes=[], acceptedEdges=[dict(relationName='uses',
                                sourceEndpoint={'referenceType': 'paper'}, targetEndpoint={'referenceType': 'external'})])
 
@@ -29,7 +31,7 @@ class FixtureLog:
 
     def prepared(self, rid):
         """Expose the fixture request for sidecar comparison."""
-        return {'request': {}}
+        return {'request': self.request}
 
     def payload_at(self, key):
         """Return fixture outcomes or recorded overload evidence."""
@@ -53,9 +55,12 @@ class VerificationTests(unittest.TestCase):
     def test_inventory(self, _derive):
         """Do not equate requests with units or external endpoints with orphans."""
         log = FixtureLog()
+        self.assertNotEqual(log.entries['a']['paperID'], log.projection['sourceArtifactID'])
         before = copy.deepcopy(log.__dict__)
         report, exceptions = inventory(log)
         self.assertEqual(report['requests'], 3)
+        self.assertEqual(set(report['coverage']['paperID']), {'p'})
+        _derive.assert_called_with(unittest.mock.ANY, log.request)
         self.assertEqual(report['coverageDenominators']['sourceUnitID'],
                          {'uniqueTotal': 2, 'partial': 1, 'uncovered': 1})
         self.assertEqual(report['acceptedEdges'], 1)
@@ -69,11 +74,31 @@ class VerificationTests(unittest.TestCase):
         self.assertEqual(inventory(log), (report, exceptions))
 
     def test_source_drift(self):
-        """Wrong source association must stop rather than silently repair."""
-        log = FixtureLog()
-        log.projection['sourceUnitID'] = 'wrong'
-        with self.assertRaisesRegex(ValueError, 'PROJECTION_SOURCE_DRIFT'):
-            inventory(log)
+        """Independently reject each wrong projection identity."""
+        for field in ('requestID', 'sourceArtifactID', 'sourceUnitID'):
+            with self.subTest(field=field):
+                log = FixtureLog()
+                log.projection[field] = 'wrong'
+                with self.assertRaisesRegex(ValueError, 'PROJECTION_SOURCE_DRIFT'):
+                    inventory(log)
+
+    def test_request_manifest_drift(self):
+        """Keep publication ownership and source-unit bindings separate from canonical IDs."""
+        for field in ('requestID', 'sourcePublicationID', 'sourceUnitID'):
+            with self.subTest(field=field):
+                log = FixtureLog()
+                target = log.request['sourceUnit'] if field == 'sourceUnitID' else log.request
+                target[field] = 'wrong'
+                with self.assertRaisesRegex(ValueError, 'REQUEST_MANIFEST_SOURCE_DRIFT'):
+                    inventory(log)
+
+    @patch('src.extraction.llm.publications.full_corpus_gpt61_batch.verify_outcome',
+           side_effect=ValueError('NATIVE_RESPONSE_BINDING_DRIFT'))
+    def test_native_integrity_failure_propagates(self, native_check):
+        """The reporting correction cannot bypass native provenance validation."""
+        with self.assertRaisesRegex(ValueError, 'NATIVE_RESPONSE_BINDING_DRIFT'):
+            checked_outcome({}, {}, {}, 1)
+        native_check.assert_called_once_with({}, {}, {}, 1)
 
     @patch('src.extraction.llm.publications.production_acceptance.derive_unresolved_identity_sidecar',
            return_value={'records': ['different']})
