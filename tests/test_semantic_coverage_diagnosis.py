@@ -107,6 +107,8 @@ class DiagnosisTests(unittest.TestCase):
                          record=dict(reason=reason,sourceLine=line,authorityTextSha256=d.sha(text),page_key='page'))
                      for reason,line in [('uncertain_component_visibility',1),('uncertain_admonition_visibility',3)]]
         (reports/'exceptions.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in diagnostics))
+        sealed = dict(family='ciroh_hub',ownerID=owner,diagnostics=[r['record'] for r in diagnostics])
+        (reports/'family-owner.jsonl').write_text(json.dumps(dict(family='ciroh_hub',ownerID=owner,sealedCoverage=sealed))+'\n')
         return reports,unit
 
     def test_end_to_end_synthetic_read_only_and_partial_materialization(self):
@@ -164,6 +166,9 @@ class DiagnosisTests(unittest.TestCase):
                  record=dict(reason='structural_review',sourceUnitIDs=['missing'],sourceLine=2))
         with (reports/'exceptions.jsonl').open('a') as handle:
             handle.write(json.dumps(row)+'\n')
+        sealed=json.loads((reports/'family-owner.jsonl').read_text())
+        sealed['sealedCoverage']['diagnostics'].append(row['record'])
+        (reports/'family-owner.jsonl').write_text(json.dumps(sealed)+'\n')
         records,_=d.analyze(self.repo,reports)
         result=next(r for r in records['ciroh_hub'] if r.get('linkedReaderUnitsWithoutMetadata'))
         self.assertEqual(result['coverageState'],'reader_admitted_metadata_unavailable')
@@ -187,6 +192,78 @@ class DiagnosisTests(unittest.TestCase):
             reader.get('github','github:repo:1',{**meta,'rawFileSha256':'bad'})
         with self.assertRaisesRegex(ValueError,'UNSAFE_RAW_PATH'):
             reader.get('github','github:repo:1',dict(path='../escape.md'))
+
+    def test_exact_diagnostic_reconciliation_missing_unexpected_duplicate(self):
+        """Every original field and owner matters; reordered keys are identical."""
+        reports,_=self.fixture()
+        owners=reports/'family-owner.jsonl'
+        exceptions=reports/'exceptions.jsonl'
+        original=exceptions.read_text()
+        rows=[json.loads(line) for line in original.splitlines()]
+        self.assertEqual(len(d.reconciled_diagnostics(owners,exceptions)),2)
+        variants=[(rows[:1],'missing=1'), (rows+[rows[0]],'duplicated=1'),
+                  (rows+[{**rows[0],'ownerID':'other-owner'}],'unexpected=1'),
+                  ([{**rows[0],'record':{**rows[0]['record'],'sourceLine':99}},rows[1]],'unexpected=1')]
+        for variant, message in variants:
+            with self.subTest(message=message):
+                exceptions.write_text(''.join(json.dumps(row)+'\n' for row in variant))
+                with self.assertRaisesRegex(ValueError,message):
+                    d.analyze(self.repo,reports)
+        exceptions.write_text(original)
+        rows[0]['record']=dict(reversed(list(rows[0]['record'].items())))
+        exceptions.write_text(''.join(json.dumps(row)+'\n' for row in rows))
+        _,summary=d.analyze(self.repo,reports)
+        self.assertEqual(summary['inputHashes'][str(owners.relative_to(self.repo))],d.file_hash(owners))
+        # Historical multiplicity is authoritative, not an invented fixed count.
+        sealed=json.loads(owners.read_text())
+        sealed['sealedCoverage']['diagnostics'].append(rows[0]['record'])
+        owners.write_text(json.dumps(sealed)+'\n')
+        exceptions.write_text(original+json.dumps(rows[0])+'\n')
+        self.assertEqual(len(d.reconciled_diagnostics(owners,exceptions)),3)
+
+    def test_reconciliation_is_family_specific_and_ignores_other_record_types(self):
+        """Equal owner strings or reasons do not conflate families or replay records."""
+        reports,_=self.fixture()
+        owners=reports/'family-owner.jsonl';exceptions=reports/'exceptions.jsonl'
+        hub=json.loads(owners.read_text())
+        gh=deepcopy(hub);gh['family']='github';gh['sealedCoverage']['family']='github'
+        owners.write_text(json.dumps(hub)+'\n'+json.dumps(gh)+'\n')
+        with self.assertRaisesRegex(ValueError,'missing=2'):
+            d.reconciled_diagnostics(owners,exceptions)
+        with exceptions.open('a') as handle:
+            for record in gh['sealedCoverage']['diagnostics']:
+                handle.write(json.dumps(dict(recordType='source_diagnostic',family='github',ownerID=gh['ownerID'],record=record))+'\n')
+            handle.write(json.dumps(dict(recordType='replay_diagnostics',family='github'))+'\n')
+            handle.write(json.dumps(dict(recordType='source_diagnostic',family='hydroshare'))+'\n')
+        self.assertEqual(len(d.reconciled_diagnostics(owners,exceptions)),4)
+
+    def test_affected_tables_union_across_causes_and_separate_unknowns(self):
+        """Rank exact documents/owners by unions; unknown spans never become zero loss."""
+        def record(owner,path,spans,reason,cell=None):
+            return dict(recordType='source_diagnostic',family='github',ownerID=owner,path=path,
+                cellIndex=cell,authorityTextSha256='hash',mechanism=reason,originalDiagnostic={'reason':reason},
+                derivedCoordinates={'startOffsetInAuthority':0,'endOffsetInAuthority':20},
+                unrepresentedInReaderSpans=spans,reportReference={'file':'exceptions.jsonl','line':1})
+        items=[record('a','doc|one.md',[[0,10]],'first'),record('a','doc|one.md',[[5,15]],'second'),
+               record('a','doc|one.md',[[0,10]],'first'),record('a','other.md',[[0,3]],'first'),
+               record('b','page',[[0,17]],'first')]
+        unknown=record('c',None,[],'unclosed_wrapper');unknown['derivedCoordinates']=None
+        items.append(unknown)
+        tables=d.affected_tables(items)
+        self.assertEqual([r['ownerID'] for r in tables['owners']['measured']],['a','b'])
+        self.assertEqual(tables['owners']['measured'][0]['deduplicatedUnrepresentedCharacters'],18)
+        docs=tables['documents']['measured']
+        self.assertEqual([r['deduplicatedUnrepresentedCharacters'] for r in docs],[17,15,3])
+        self.assertEqual(tables['owners']['unmeasurable'][0]['ownerID'],'c')
+        self.assertEqual(tables['owners']['unmeasurable'][0]['unmeasurableRecords'],1)
+        self.assertEqual(docs[1]['path'],'doc|one.md')
+        self.assertEqual({c['originalReason'] for c in docs[1]['causes']},{'first','second'})
+        self.assertEqual(docs[1]['causes'][0]['reportReference']['file'],'exceptions.jsonl')
+        self.assertIn('doc\\|one.md','\n'.join(d.affected_markdown(tables)))
+        limited=d.affected_tables(items,limit=1)
+        self.assertEqual(len(limited['documents']['measured']),1)
+        self.assertEqual(limited['documents']['totalMeasuredGroups'],3)
+        self.assertEqual(tables,d.affected_tables(list(reversed(items))))
 
 
 if __name__=='__main__':

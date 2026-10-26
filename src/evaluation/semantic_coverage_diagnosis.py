@@ -344,6 +344,100 @@ def review_sample(records: list, limit: int, difficult: bool = False) -> list:
     return result
 
 
+def reconciled_diagnostics(owner_path: Path, exception_path: Path) -> list:
+    """Compare exact diagnostic multisets per owner, preserving sealed multiplicity."""
+    expected, observed, owners = Counter(), Counter(), set()
+    result = []
+
+    def identity(family: str, owner: str, record: dict) -> tuple:
+        """Use every original field; key order is not diagnostic identity."""
+        return family, owner, json.dumps(record, sort_keys=True, ensure_ascii=False, allow_nan=False)
+
+    for _, row in rows(owner_path):
+        family, owner = row['family'], row['ownerID']
+        if family not in CORPORA:
+            continue
+        require((family, owner) not in owners, 'DUPLICATE_SEALED_OWNER')
+        owners.add((family, owner))
+        sealed = row['sealedCoverage']
+        require((sealed['family'], sealed['ownerID']) == (family, owner), 'SEALED_OWNER_IDENTITY_DRIFT')
+        for record in sealed['diagnostics']:
+            expected[identity(family, owner, record)] += 1
+    for number, row in rows(exception_path):
+        if row.get('family') not in CORPORA or row.get('recordType') != 'source_diagnostic':
+            continue
+        observed[identity(row['family'], row['ownerID'], row['record'])] += 1
+        result.append((number, row))
+    missing = sum((expected - observed).values())
+    unexpected = sum(n for key, n in observed.items() if key not in expected)
+    duplicated = sum(max(0, n - expected[key]) for key, n in observed.items() if key in expected)
+    require(not (missing or unexpected or duplicated),
+            f'SOURCE_DIAGNOSTIC_RECONCILIATION_FAILED: missing={missing}, unexpected={unexpected}, duplicated={duplicated}')
+    return result
+
+
+def affected_tables(records: list, limit: int = 10) -> dict:
+    """Rank structural spans across causes without counting overlaps twice."""
+    groups = {'owners': {}, 'documents': {}}
+    for r in records:
+        if r['recordType'] != 'source_diagnostic' or r['mechanism'] == 'authority_or_duplicate_bookkeeping':
+            continue
+        unknown = r.get('derivedCoordinates') is None or r.get('coverageMeasurementIncomplete', False)
+        spans = [] if unknown else r.get('unrepresentedInReaderSpans', [])
+        if not unknown and not spans:
+            continue
+        authority = (r['path'], r.get('cellIndex'), r.get('authorityTextSha256'))
+        for kind, key in [('owners', (r['ownerID'],)), ('documents', (r['ownerID'], r['path']))]:
+            group = groups[kind].setdefault(key, dict(ownerID=r['ownerID'], paths=set(), spans=defaultdict(list),
+                                                     unmeasurableRecords=0, causes=[]))
+            group['paths'].add(r['path'])
+            group['spans'][authority].extend(spans)
+            group['unmeasurableRecords'] += int(unknown)
+            group['causes'].append(dict(mechanism=r['mechanism'], originalReason=r['originalDiagnostic'].get('reason'),
+                path=r['path'], cellIndex=r.get('cellIndex'), authorityTextSha256=r.get('authorityTextSha256'),
+                reportReference=r.get('reportReference'), unmeasurable=bool(unknown),
+                measuredUnrepresentedSpans=merge(spans)))
+    result = dict(limitPerTable=limit, interpretation='Structural triage, not scientific loss; unions are per owner/path/hash/cell across causes.')
+    for kind, groups_by_key in groups.items():
+        items = []
+        for key, group in groups_by_key.items():
+            items.append(dict(ownerID=group['ownerID'], paths=sorted(group['paths'], key=lambda p: p or ''),
+                **({'path': key[1]} if kind == 'documents' else {}),
+                deduplicatedUnrepresentedCharacters=sum(b-a for spans in group['spans'].values() for a,b in merge(spans)),
+                unmeasurableRecords=group['unmeasurableRecords'],
+                causes=sorted(group['causes'], key=lambda c: json.dumps(c, sort_keys=True))))
+        tie = lambda item: (item['ownerID'], item.get('path') or '')
+        measured = sorted((i for i in items if i['deduplicatedUnrepresentedCharacters']),
+                          key=lambda i: (-i['deduplicatedUnrepresentedCharacters'], *tie(i)))
+        unknown = sorted((i for i in items if i['unmeasurableRecords']),
+                         key=lambda i: (-i['unmeasurableRecords'], *tie(i)))
+        result[kind] = dict(measured=measured[:limit], unmeasurable=unknown[:limit],
+                            totalMeasuredGroups=len(measured), totalUnmeasurableGroups=len(unknown))
+    return result
+
+
+def affected_markdown(tables: dict) -> list:
+    """Render bounded tables while retaining exact identities and cause labels."""
+    def cell(value) -> str:
+        """Escape Markdown delimiters without changing stored JSON identities."""
+        return str(value).replace('\\', '\\\\').replace('|', '\\|').replace('\n', '<br>')
+
+    lines = ['', tables['interpretation'], '']
+    for kind in ('owners', 'documents'):
+        for view, title in [('measured', 'Measured unrepresented spans'), ('unmeasurable', 'Unmeasurable cases')]:
+            data = tables[kind]
+            total = data['totalMeasuredGroups' if view == 'measured' else 'totalUnmeasurableGroups']
+            lines.extend([f'### {title}: {kind} (top {len(data[view])} of {total})', '',
+                '| Owner | Paths/pages | Unrepresented characters | Unmeasurable records | Causes |', '|---|---|---:|---:|---|'])
+            for item in data[view]:
+                paths = '<br>'.join(cell(p) if p is not None else '(unresolved path)' for p in item['paths'])
+                causes = '<br>'.join(cell(m) for m in sorted({c['mechanism'] for c in item['causes']}))
+                lines.append(f"| {cell(item['ownerID'])} | {paths} | {item['deduplicatedUnrepresentedCharacters']} | {item['unmeasurableRecords']} | {causes} |")
+            lines.append('')
+    lines.append('Exact diagnostic file/line, original reason, path/page, hash/cell and measured spans are retained in summary.json affectedTables causes.')
+    return lines
+
+
 def summarize(records: list) -> dict:
     """Count diagnostic occurrences separately from unique owners/files and span unions."""
     mechanisms = {}
@@ -365,14 +459,15 @@ def summarize(records: list) -> dict:
     return dict(componentContextStates=dict(Counter(r['componentContext']['pageContextState'] for r in records if 'componentContext' in r)),
                 coverageStates=dict(Counter(r['coverageState'] for r in records if 'coverageState' in r)),
                 records=len(records), sourceDiagnosticRecords=sum(r['recordType']=='source_diagnostic' for r in records),
-                owners=len({r['ownerID'] for r in records}), mechanisms=mechanisms,
+                owners=len({r['ownerID'] for r in records}), mechanisms=mechanisms, affectedTables=affected_tables(records),
                 spanDenominator='per mechanism, owner, authority hash and notebook cell; mechanisms may overlap; unrepresented is not eligibility or scientific absence')
 
 
 def analyze(repo: Path, reports: Path) -> tuple[dict, dict]:
     """Join existing report rows to pinned sources; never open a queue or a bundle."""
-    inputs = [reports / name for name in ('verification.json', 'source-unit-coverage.jsonl', 'exceptions.jsonl')]
+    inputs = [reports / name for name in ('verification.json', 'source-unit-coverage.jsonl', 'exceptions.jsonl', 'family-owner.jsonl')]
     hashes = {str(p.relative_to(repo)): file_hash(p) for p in inputs}
+    diagnostic_rows = reconciled_diagnostics(inputs[3], inputs[2])
     verification = json.loads(inputs[0].read_text())
     corpora = {}
     for family, path in CORPORA.items():
@@ -422,7 +517,7 @@ def analyze(repo: Path, reports: Path) -> tuple[dict, dict]:
             selectedRequestIDs=unit['selectedRequestIDs'], acceptedEvidenceReferences=unit['acceptedEvidenceReferences'],
             processingIncomplete=unit['processingIncomplete'], reportReference=dict(file=inputs[1].name, line=number)))
     diagnostics = []
-    for number, row in rows(inputs[2]):
+    for number, row in diagnostic_rows:
         family = row.get('family')
         if family not in CORPORA or row.get('recordType') != 'source_diagnostic':
             continue
@@ -513,6 +608,7 @@ def run(repo: Path, reports: Path, output: Path) -> None:
             for label, count in stats['mechanisms'].items():
                 lines.append(f"| {label} | {count['records']} | {count['owners']} | {count['filesOrPages']} | {count['deduplicatedDiagnosticCharacters']} | {count['deduplicatedUnrepresentedCharacters']} |")
             lines.extend(['', stats['spanDenominator'], ''])
+            lines.extend(affected_markdown(stats['affectedTables']))
         lines.append('See review.json for at most 36 diverse literal examples and 12 difficult cases. Counts are structural triage only.')
         (folder / 'summary.md').write_text('\n'.join(lines) + '\n')
         require(not output.exists(), 'OUTPUT_ALREADY_EXISTS')
