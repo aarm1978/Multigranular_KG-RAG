@@ -29,8 +29,8 @@ from src.extraction.llm.pilot_preflight import canonical, digest
 from src.extraction.llm.publications.resumable_production_journal import require
 
 ROOT = Path(__file__).resolve().parents[2]
-VERSION = 'ciroh_hub-full-content-paired-pilot/0.1.0'
-BASE = Path('var/study2_step13/hub-full-content-paired-pilot/v1')
+VERSION = 'ciroh_hub-full-content-paired-pilot/0.2.0'
+BASE = Path('var/study2_step13/hub-full-content-paired-pilot/v2')
 ORIGINAL = Path('var/study2_step13/source-families-gpt61-batch/v1')
 REPORTS = Path('var/study2_step13/source-family-production-verification/v1')
 CORPUS = 'data/interim/documents/ciroh_hub_corpus.json'
@@ -52,17 +52,16 @@ INSTRUCTIONS = (
  'Literal source localization and scientific evidence eligibility are separate. You may propose a candidate '
  'quotation from complete materialized content using the full-page sourceUnitID. Exact quotation presence '
  'does not establish static visibility, scientific admissibility, acceptance, or KG authorization. '
- 'Quotations outside originally verified units are candidate_source_located_visibility_unverified and held '
- 'for scientific review; they are not accepted evidence. Do not assert eligibility or supply gate attestations.',
- 'The verifiedSourceUnitIndex supplies unchanged original unit IDs and Unicode ranges. Prefer those IDs '
- 'when a quotation lies entirely inside that unit. Otherwise use the full-page ID. Quotes and locatorAnchor '
+ 'All proposals remain held pending independent evidence and scientific review. Do not assert eligibility or supply gate attestations.',
+ 'Use only the prospective full-page sourceUnitID for every model-authored citation. You may propose an exact '
+ 'quotation from anywhere in the complete materialized document. Quotes and locatorAnchor '
  'must be exact; an anchor must uniquely locate the quote within the referenced authority. Never fabricate '
  'coordinates, normalize quotations, or infer repository attribution from component props or following text.',
  'All existing ontology, independent evidence, Procedure/Step, parentPath, Example/Parameter and abstention '
  'requirements remain. Never interpret code as scientific semantics or infer Parameter identity from keys. '
  'Hidden, dynamic, uncertain or excluded regions cannot automatically support accepted claims. '
- 'Section IDs are available only from the independently verified unit index, never from guessed headings. '
- 'All outputs remain exploratory and outside the KG, including candidates with verified literal bindings.',
+ 'Do not invent Section IDs or infer them from headings; Section verification is performed independently after response. '
+ 'All outputs remain exploratory and outside the KG.',
 )
 
 
@@ -121,7 +120,9 @@ def locate_fragment(inputs: dict, fragment: dict) -> dict:
     quote={k:fragment[k] for k in ('evidenceText','locatorAnchor') if k in fragment}
     units={u['sourceUnitID']:u for u in reader['sourceUnits']}
     uid=fragment.get('sourceUnitID')
-    unit=units.get(uid) if isinstance(uid,str) else None
+    if uid!=full_unit_id(page):
+        return {**result,'status':'unresolved','diagnostics':['FULL_PAGE_CITATION_REQUIRED']}
+    unit=None
     full_binding=None
     if unit is None:
         if uid!=full_unit_id(page):
@@ -156,6 +157,25 @@ def locate_fragment(inputs: dict, fragment: dict) -> dict:
         'dependencyPolicy':'unchanged existing parent/evidence gates; no candidate or dependency accepted by this locator'}
 
 
+def pilot_instructions(inherited: list) -> list:
+    """Reconcile only source-selection wording in a private prospective copy."""
+    require(inherited[4:6]==contract.INSTRUCTIONS[4:6], 'INHERITED_SOURCE_INSTRUCTIONS_DRIFT')
+    result=deepcopy(inherited)
+    result[4]='The complete exact content_mdx is literal quotation authority. Any location may be cited with the full-page sourceUnitID; exact presence is not scientific eligibility. Never fabricate Section IDs or Docusaurus anchors.'
+    result[5]='Comments, dynamic expressions and uncertain material may be quoted for exploratory review, but cannot automatically establish accepted evidence. Do not invent unmaterialized content. Displayed code never establishes code semantics or Parameter identity.'
+    return [text.replace('hidden, dynamic or unselected content', 'hidden, dynamic or unavailable content')
+                 .replace('When selected prose independently supports', 'When document prose independently supports') for text in result]
+
+
+def validate_citation_schema(body: dict, uid: str) -> None:
+    """Check the actual unchanged provider fragment schema with a full-page ID."""
+    from jsonschema import Draft202012Validator
+    schema=body['text']['format']['schema']
+    Draft202012Validator.check_schema(schema)
+    fragment=schema['$defs']['fragment']
+    Draft202012Validator(fragment).validate(dict(sourceUnitID=uid,evidenceText='Exact literal quotation'))
+
+
 def build(owner: dict, template: dict) -> dict:
     """Create a separately versioned prompt using the historical provider schema."""
     inputs=owner['inputs'];reader=verified_reader(inputs);page=inputs['page'];text=page['content_mdx']
@@ -166,23 +186,25 @@ def build(owner: dict, template: dict) -> dict:
     # Reuse the unchanged trusted inventory/profile builder; this is not its historical evidence route.
     base=contract._finish(dict(endpointID=owner['ownerID'],inventoryId='A-DC01',**{'class':'DocumentationPage'},
         page_key=page['page_key'],canonical_url=page['canonical_url']),[unit],[unit['sourceUnitID']],
-        dict(fullAuthorityComplete=True,scientificEligibilityComplete=False),reader['diagnostics'],
+        dict(fullAuthorityComplete=True,scientificEligibilityComplete=False),[],
         inputs['accepted_endpoints'],inputs['accepted_assertions'],request_version=contract.WAVE_C_REQUEST_VERSION)
     require(base['status']=='request_ready','TRUSTED_INVENTORY_REJECTED')
     payload=base['request']
     require(payload['targetProfile']==template['semanticRequest']['request']['targetProfile'],'TARGET_PROFILE_DRIFT')
     payload.update(schemaVersion=VERSION,promptIdentifier=VERSION,contextSelection='complete_exact_content_mdx; no semantic prefiltering',
-        instructions=payload['instructions']+list(INSTRUCTIONS),
-        verifiedSourceUnitIndex=[{k:v for k,v in u.items() if k!='text'} for u in reader['sourceUnits']],
+        instructions=pilot_instructions(payload['instructions'])+list(INSTRUCTIONS),
         scientificEligibility='not_evaluated',pilotOnly=True)
+    payload.pop('sourceDiagnostics')
     request_sha=digest(contract._json(payload).encode())
     semantic=dict(status='request_ready',request=payload,requestSha256=request_sha,diagnostics=[])
     body=deepcopy(template['body']);body['input']=contract._json(payload)
     require(body['model']=='gpt-6.1-sol' and body['reasoning']=={'effort':'medium'} and
         body['max_output_tokens']==32768 and body['text']['format']['strict'] is True and body['store'] is False,'COMPARISON_SETTINGS_DRIFT')
+    validate_citation_schema(body,unit['sourceUnitID'])
     return dict(request={'requestID':'ciroh_hub-pilot:'+request_sha},semanticRequest=semantic,
-        requestInputs=deepcopy(inputs),body=body,binding=dict(version=VERSION,
+        requestInputs={**deepcopy(inputs),'request_version':VERSION},body=body,binding=dict(version=VERSION,
             providerEnvelopeSha256=digest(canonical(body)),providerInputSha256=digest(body['input'].encode()),
+            responseProcessingRoute='pilot_only; historical request builder/parser must reject this version',
             providerSchemaSha256=digest(canonical(body['text'])),contentSha256=page['content_sha256'],
             targetProfileSha256=digest(canonical(payload['targetProfile'])),kgAuthorization=False))
 
@@ -195,6 +217,10 @@ def prepare(output: Path, repo: Path=ROOT) -> dict:
     require(subprocess.run(['git','check-ignore','-q',str(output/'queue-manifest.json')],cwd=repo).returncode==0,'OUTPUT_MUST_BE_IGNORED')
     report_path=repo/REPORTS/'verification.json';report=json.loads(report_path.read_text())
     pins={str(report_path.relative_to(repo)):file_hash(report_path)}
+    prior_path=repo/BASE.parent/'v1/queue-manifest.json'
+    prior=json.loads(prior_path.read_text())
+    require(prior['version']=='ciroh_hub-full-content-paired-pilot/0.1.0' and prior['predeclaredURLs']==list(URLS),'V1_COMPARISON_DRIFT')
+    pins[str(prior_path.relative_to(repo))]=file_hash(prior_path)
     loaded={}
     for name in (CORPUS,GRAPH):
         require(file_hash(repo/name)==report['persistedSourcePins'][name],'SOURCE_PIN_DRIFT:'+name)
@@ -242,12 +268,21 @@ def prepare(output: Path, repo: Path=ROOT) -> dict:
         bundles.append((name,wire));lines.append(line)
     require(len(records)==len({r['identity']['requestID'] for r in records})==8,'EIGHT_UNIQUE_REQUESTS_REQUIRED')
     require(not {r['identity']['requestID'] for r in records}&{e['identity']['requestID'] for e in original['requests']},'HISTORICAL_REQUEST_COLLISION')
+    previous={r['pageURL']:r for r in prior['requests']}
+    require(set(previous)==set(URLS) and len(prior['requests'])==8,'V1_PAGE_SET_DRIFT')
+    for record in records:
+        old=previous[record['pageURL']]
+        require(old['contentSha256']==record['contentSha256'],'V1_SOURCE_AUTHORITY_DRIFT')
+        record['v1Comparison']=dict(payloadBytes=old['payloadBytes'],payloadBytesDelta=record['payloadBytes']-old['payloadBytes'],
+            costUSD=old['cost']['costUSD'],costUSDDelta={k:record['cost']['costUSD'][k]-old['cost']['costUSD'][k] for k in old['cost']['costUSD']})
     implementation={name:file_hash(repo/name) for name in original['implementationPins']}
     implementation[str(Path(__file__).relative_to(repo))]=file_hash(Path(__file__))
     manifest=dict(version=VERSION,predeclaredURLs=list(URLS),requests=records,inputPins=pins,
         implementationPins=implementation,model=template['body']['model'],settings={k:template['body'][k] for k in ('reasoning','max_output_tokens','store')},
         providerSchemaSha256=digest(canonical(template['body']['text'])),pricing=batch.batch.PRICING,
         costUSD={k:sum(r['cost']['costUSD'][k] for r in records) for k in ('low','pooled','high','outputCeiling')},
+        v1Comparison=dict(queueSha256=pins[str(prior_path.relative_to(repo))],costUSD=prior['costUSD'],
+            totalPayloadBytes=sum(r['payloadBytes'] for r in prior['requests']),totalPayloadBytesV2=sum(r['payloadBytes'] for r in records)),
         scientificEligibility='not_evaluated',kgAuthorization=False,providerCalls=0,
         executionScope='offline preparation only; historical adapter.process must not receive this version',
         executionReuse='existing Batch input_line, transport, journal, durable receipts, usage and bounded retries; no new executor',

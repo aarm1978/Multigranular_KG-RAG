@@ -8,6 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from src.evaluation import hub_full_content_pilot as p
+from src.extraction.llm.pilot_preflight import strict_schema
 
 
 class PilotTests(unittest.TestCase):
@@ -33,7 +34,7 @@ class PilotTests(unittest.TestCase):
         """Use a synthetic strict schema; original production schema is only copied."""
         return dict(semanticRequest={'request':{'targetProfile':p.sources.profile_for('ciroh_hub')}},
             body=dict(model='gpt-6.1-sol',reasoning={'effort':'medium'},max_output_tokens=32768,store=False,
-                      text={'format':{'strict':True,'type':'json_schema','schema':{'type':'object'}}},input='old'))
+                      text={'format':{'strict':True,'type':'json_schema','schema':strict_schema(p.contract._schema(),p.sources.profile_for('ciroh_hub'))}},input='old'))
 
     def test_complete_context_unchanged_profile_settings_schema_and_identity(self):
         """Include hidden syntax and embedded instructions verbatim, without admission."""
@@ -105,7 +106,7 @@ class PilotTests(unittest.TestCase):
         """Code stays literal Example context; no inferred Parameter or acceptance."""
         inputs=self.inputs('Run this scientific procedure.\n\n```python\nparameter = 5\n```\n')
         fence=next(u for u in inputs['reader_result']['sourceUnits'] if u['contentKind']=='fenced_snippet')
-        result=p.locate_fragment(inputs,dict(sourceUnitID=fence['sourceUnitID'],evidenceText='parameter = 5'))
+        result=p.locate_fragment(inputs,dict(sourceUnitID=p.full_unit_id(inputs['page']),evidenceText='parameter = 5'))
         self.assertEqual(result['originalBinderResult']['status'],'example_context_bound')
         self.assertIn('accepted_procedure_or_step_parent',result['originalBinderResult']['pendingGates'])
         self.assertEqual(result['disposition'],'held');self.assertFalse(result['kgAuthorization'])
@@ -130,6 +131,42 @@ class PilotTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'OUTPUT_ALREADY_EXISTS'):
                 p.prepare(target,repo)
             self.assertEqual((target/'preserve').read_text(),'original')
+
+    def test_v2_payload_has_no_original_selection_metadata(self):
+        """Only the complete document is model-visible; reader provenance stays private."""
+        inputs=self.inputs();result=p.build(dict(ownerID=inputs['accepted_page_id'],inputs=inputs),self.template())
+        payload=json.loads(result['body']['input'])
+        self.assertEqual(len(payload['sourceUnits']),1)
+        self.assertEqual(payload['selectedSourceUnitIDs'],[p.full_unit_id(inputs['page'])])
+        for field in ('verifiedSourceUnitIndex','sourceDiagnostics','reader_result','acceptedSectionMapping'):
+            self.assertNotIn(field,payload)
+        for unit in inputs['reader_result']['sourceUnits']:
+            self.assertNotIn(unit['sourceUnitID'],result['body']['input'])
+        self.assertEqual(result['requestInputs']['reader_result'],inputs['reader_result'])
+        instructions=' '.join(payload['instructions'])
+        for wording in ('verifiedSourceUnitIndex','Selected static-visible','hidden, dynamic or unselected content','originally verified units'):
+            self.assertNotIn(wording,instructions)
+        self.assertIn('anywhere in the complete materialized document',instructions)
+        self.assertEqual(p.VERSION,'ciroh_hub-full-content-paired-pilot/0.2.0')
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(ValueError,'PILOT_ISOLATION_REQUIRED'):
+                p.prepare(Path(temporary)/p.BASE.parent/'v1',Path(temporary))
+
+    def test_full_page_schema_and_historical_parser_guard(self):
+        """New full-page citations fit the schema; legacy parsing cannot accept v2."""
+        inputs=self.inputs();result=p.build(dict(ownerID=inputs['accepted_page_id'],inputs=inputs),self.template())
+        p.validate_citation_schema(result['body'],p.full_unit_id(inputs['page']))
+        response=dict(schemaVersion=p.contract.RESPONSE_VERSION,candidateNodes=[],candidateEdges=[],abstentions=[])
+        parsed=p.contract.parse_recorded_response(json.dumps(response),request=result['semanticRequest'])
+        self.assertEqual(parsed['status'],'processing_failed')
+        self.assertEqual(parsed['diagnostics'][0]['reason'],'trusted_request_contract_or_hash_mismatch')
+        rebuilt=p.contract.build_request(**result['requestInputs'],selected_unit_ids=[p.full_unit_id(inputs['page'])])
+        self.assertEqual(rebuilt['status'],'request_failed')
+        self.assertEqual(rebuilt['diagnostics'][0]['reason'],'unsupported_request_version')
+        old=inputs['reader_result']['sourceUnits'][0]['sourceUnitID']
+        located=p.locate_fragment(inputs,dict(sourceUnitID=old,evidenceText='Visible'))
+        self.assertEqual(located['status'],'unresolved')
+        self.assertEqual(located['diagnostics'],['FULL_PAGE_CITATION_REQUIRED'])
 
 
 if __name__=='__main__':unittest.main()
