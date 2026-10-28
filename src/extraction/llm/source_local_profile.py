@@ -12,9 +12,9 @@ import yaml
 from src.extraction.llm import semantic_target_profiles as legacy
 from src.extraction.llm.pilot_preflight import canonical, digest
 
-VERSION = 'study2-source-local-semantics/0.4.0'
-INVENTORY = Path(__file__).with_name('nonpublication_semantic_v04.yaml')
-POLICY_PATH = Path(__file__).resolve().parents[3] / 'docs/study2_source_local_semantics_v0.4.md'
+VERSION = 'study2-source-local-semantics/0.4.1'
+INVENTORY = Path(__file__).with_name('nonpublication_semantic_v041.yaml')
+POLICY_PATH = Path(__file__).resolve().parents[3] / 'docs/study2_source_local_semantics_v0.4.1.md'
 
 
 def inventory() -> dict:
@@ -89,6 +89,10 @@ def coverage(family: str, schema: dict) -> dict:
             if declaration is None:return False
         raise ValueError('cyclic_endpoint_inheritance')
     available={*profile['entities'],profile['ownerClassID']}
+    generic=next(r for r in spec['relations'] if r['id']=='D-26')
+    if ('D-26' in profile['relations'] or not matches(profile['ownerClassID'],generic['domain'])
+            or any(i not in profile['entities'] or not matches(i,generic['range']) for i in profile['genericOccurrenceTargets'])):
+        raise ValueError('invalid_pipeline_derived_occurrence_route')
     for identifier,record in profile['relations'].items():
         declaration=record['declaration']
         if any(not any(matches(c,declaration[side]) for c in available) for side in ('domain','range')):

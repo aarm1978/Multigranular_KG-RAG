@@ -405,11 +405,18 @@ def validate_hub_candidates(
             binding = (evidence_binder or binder)(page, view, uid, [{k: fragment[k] for k in ("evidenceText", "locatorAnchor") if k in fragment}],
                 accepted_page_id=accepted_page_id, accepted_section_mapping=accepted_section_mapping)
             rec["evidenceBindings"].append({"fragmentIndex": index, "originalFragment": deepcopy(fragment), "binding": binding})
+            if (profile_version == "study2-source-local-semantics/0.4.1"
+                    and binding["status"] == "example_context_bound" and identifier not in {"A-DC08", "C-DC12"}):
+                binding = {**binding, "status": "needs_review", "evidenceSpans": [],
+                    "diagnostics": [{"reason": "possible_example_context_only", "status": "needs_review"}]}
+                rec["evidenceBindings"][-1]["binding"] = binding
             if binding["status"] in {"evidence_bound", "example_context_bound"}:
                 rec["boundEvidence"].extend({**deepcopy(s), "fragmentIndex": index} for s in binding["evidenceSpans"])
                 if binding["status"] == "example_context_bound":
                     rec["contextDisposition"] = "possible_example_context"
-                if unit and unit["contentKind"] in {"prose", "list_text", "table_text", "component_text"}:
+                if (unit and unit["contentKind"] in {"prose", "list_text", "table_text", "component_text"}) or (
+                        profile_version == "study2-source-local-semantics/0.4.1" and binding.get("admissibilityVersion") == "hub-full-authority-admissibility/0.4.1"
+                        and binding.get("explanatoryProse") is True):
                     parameter_prose_bound = True
             else:
                 for diagnostic in binding["diagnostics"]:

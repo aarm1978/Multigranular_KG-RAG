@@ -16,6 +16,7 @@ from jsonschema import Draft202012Validator
 
 from src.extraction.llm import semantic_target_profiles as profiles
 from src.extraction.llm import source_local_profile as policy
+from src.extraction.llm.source_local_prompts import instructions as family_instructions
 from src.extraction.llm.pilot_preflight import canonical, digest, check_strict_structure
 from src.extraction.llm.format_conformance import canonical_response_schema, SCHEMA_VERSION
 from src.extraction.llm.publications.deterministic_evidence_binding import bind_evidence_spans
@@ -150,7 +151,7 @@ def build(templates: list[dict], *, deterministic_endpoints: list[dict] | None =
         seeds = [dict(endpointID=e['nodeID'], inventoryId=e['inventoryId'], **{'class':e['class']}) for e in purpose_vocabulary()]
         inputs['accepted_endpoints'] = _unique(inputs['accepted_endpoints'] + seeds, 'endpointID')
     body.update(schemaVersion=VERSION,contractID=VERSION,promptIdentifier=VERSION,targetProfile=profile,
-                instructions=deepcopy(INSTRUCTIONS),acceptedEndpoints=deepcopy(inputs['accepted_endpoints']),
+                instructions=family_instructions(family, INSTRUCTIONS),acceptedEndpoints=deepcopy(inputs['accepted_endpoints']),
                 acceptedAssertions=deepcopy(inputs['accepted_assertions']),
                 deferredSourceRecords=deepcopy(deferred_records or []),
                 deterministicCatalogAuthority=deepcopy(deterministic_catalog_authority),kgAuthorization=False)
@@ -177,7 +178,7 @@ def prepare_request(request: dict, inputs: dict) -> dict:
     body=request['request'];family=body['artifactFamily']
     require(request['status']=='request_ready' and body['contractID']==VERSION,'PROSPECTIVE_REQUEST_REQUIRED')
     require(body['targetProfile']==profiles.get_profile(family,version=VERSION),'PROSPECTIVE_PROFILE_DRIFT')
-    require(body['schemaVersion']==VERSION and body['instructions']==INSTRUCTIONS
+    require(body['schemaVersion']==VERSION and body['instructions']==family_instructions(family, INSTRUCTIONS)
             and body['responseContract']==response_contract(family),'PROSPECTIVE_CONTRACT_DRIFT')
     if family=='github':
         require(body['sourceUnits']==inputs['prospectiveReader']['sourceUnits'],'FULL_DOCUMENT_CONTEXT_DRIFT')
@@ -189,9 +190,9 @@ def prepare_request(request: dict, inputs: dict) -> dict:
     require(body['executableCoverage']==policy.coverage(family,schema),'EXECUTABLE_COVERAGE_DRIFT')
     envelope=deepcopy(inputs['prospectiveTransportTemplate'])
     envelope.update(input=wire.decode(),model='gpt-6.1-sol',reasoning={'effort':'medium'},store=False)
-    envelope['text']={'format':{'type':'json_schema','name':family+'_source_local_v04','strict':True,'schema':schema}}
+    envelope['text']={'format':{'type':'json_schema','name':family+'_source_local_v041','strict':True,'schema':schema}}
     require('tools' not in envelope and envelope['max_output_tokens']==32768,'TRANSPORT_CONFIGURATION_DRIFT')
-    return dict(request={'requestID':family+':v04:'+request['requestSha256']},semanticRequest=deepcopy(request),
+    return dict(request={'requestID':family+':v041:'+request['requestSha256']},semanticRequest=deepcopy(request),
         requestInputs=pack_inputs(inputs),body=envelope,
         binding=dict(version=VERSION,providerEnvelopeSha256=digest(canonical(envelope)),providerInputSha256=digest(wire),
             schemaSha256=digest(canonical(schema)),sourceSha256=digest(canonical(body['sourceUnits'])),
@@ -200,24 +201,9 @@ def prepare_request(request: dict, inputs: dict) -> dict:
 
 
 def _hub_binder(inputs: dict):
-    """Bind the full MDX authority, retaining independent visibility holds."""
-    from src.evaluation.hub_full_content_pilot import locate_fragment
-    def bind(page, reader, uid, spans, **kwargs):
-        """Delegate localization and static/example evidence checks without filtering input."""
-        result = dict(status='evidence_bound',evidenceSpans=[],diagnostics=[])
-        for span in spans:
-            found = locate_fragment(inputs,dict(sourceUnitID=uid,**span))
-            if found['status'] != 'verified_unit_literal_bound':
-                result.update(status='needs_review',diagnostics=[dict(reason='full_content_visibility_unverified',detail=found)])
-                continue
-            original = found['originalBinderResult']
-            if original['status'] == 'example_context_bound':
-                result['status'] = 'example_context_bound'
-            for evidence in original['evidenceSpans']:
-                result['evidenceSpans'].append({**evidence,'verifiedSourceUnitID':evidence['sourceUnitID'],
-                    'sourceUnitID':uid,'fullAuthorityLocation':found['fullPageLiteralLocation']})
-        return result
-    return bind
+    """Bind admissible full-page regions independently of historical selected units."""
+    from src.extraction.llm.source_local_hub_evidence import binder
+    return binder(inputs)
 
 
 def native_validation(prepared: dict, payload: dict) -> dict:
@@ -440,13 +426,54 @@ def replay(prepared: dict, raw: bytes, *, expected_request_sha256: str) -> dict:
                     basis='exact_deferred_value_in_bound_same_owner_evidence; association_only_not_promotion'))
     report['abstentions']=deepcopy(payload['abstentions'])
     report['zeroYield']=not (report['projection']['nodes'] or report['projection']['edges'])
-    # Derive only explicitly approved, independently bound occurrence fallback edges.
-    report['derivedMentions']=[]
-    connected={e['resolvedTarget']['endpointID'] for e in report['projection']['edges']}
-    for n in report['projection']['nodes']:
-        if n['originalCandidate']['inventoryId'] in body['targetProfile']['genericOccurrenceTargets'] and n['resolvedEndpoint']['endpointID'] not in connected:
-            report['derivedMentions'].append(dict(inventoryId='D-26',relation='mentions',sourceID=body['owner']['endpointID'],
-                targetID=n['resolvedEndpoint']['endpointID'],boundEvidence=deepcopy(n['boundEvidence']),
-                derivation=VERSION,acceptedOccurrenceReference=n['sourceLocalCandidateID'],kgAuthorization=False))
+    report['derivedConstructionInput'] = derived_construction_input(body, report, validation)
+    report['derivedMentions'] = deepcopy(report['derivedConstructionInput']['assertions'])
+    report['derivedConstructionInputSha256'] = digest(canonical(report['derivedConstructionInput']))
+    report['zeroYield'] = report['zeroYield'] and not report['derivedMentions']
     report['reportSha256']=digest(canonical(report))
     return report
+
+
+def derived_construction_input(body: dict, report: dict, validation: dict) -> dict:
+    """Emit explicit source-local D-26 construction inputs, never model assertions.
+
+    Inputs supplement the native accepted projection under its exact hash. Every
+    derived edge depends on a mechanically admitted occurrence and exact source
+    containment. Reused endpoints can contribute independently validated evidence.
+    """
+    owner=body['owner']['endpointID'];units={u['sourceUnitID']:u for u in body['sourceUnits']}
+    decisions={d['candidateID']:d for d in report['decisions']}
+    admitted={'accepted','suppressed_duplicate'}
+    connected=set()
+    triples=[(e['sourceID'],e['targetID']) for e in body['acceptedAssertions']]
+    for c in validation['candidateChecks']:
+        if c['kind']=='edge' and decisions[c['candidateID']]['disposition'] in admitted:
+            triples.append((c['resolvedSource']['endpointID'],c['resolvedTarget']['endpointID']))
+    for source,target in triples:
+        if source==owner:connected.add(target)
+        if target==owner:connected.add(source)
+    derived={}
+    for c in validation['candidateChecks']:
+        decision=decisions[c['candidateID']]
+        if (c['kind']!='node' or decision['disposition'] not in admitted
+                or c['originalCandidate']['inventoryId'] not in body['targetProfile']['genericOccurrenceTargets']):continue
+        target=c['resolvedEndpoint']['endpointID']
+        if target in connected:continue
+        evidence=c['boundEvidence']
+        require(evidence and all(e['sourceUnitID'] in units and e['evidenceText'] in units[e['sourceUnitID']]['text'] for e in evidence),'DERIVED_OCCURRENCE_CONTAINMENT_FAILURE')
+        aid=body['artifactFamily']+':derived-edge:'+digest(canonical([VERSION,owner,'D-26',target]))
+        row=derived.setdefault(aid,dict(assertionID=aid,inventoryId='D-26',relation='mentions',
+            resolvedSource=deepcopy(body['owner']),resolvedTarget=deepcopy(c['resolvedEndpoint']),sourceID=owner,targetID=target,
+            boundEvidence=[],supportingOccurrences=[],sourceContainment=[],derivation=VERSION,
+            acceptanceBasis='pipeline_derived_from_admitted_source_local_occurrence',kgAuthorization=False))
+        row['supportingOccurrences'].append(dict(candidateID=c['candidateID'],sourceLocalCandidateID=c['sourceLocalCandidateID'],
+            constructionDecision=deepcopy(decision),replaySha256=report['originalReplaySha256']))
+        for e in evidence:
+            if e not in row['boundEvidence']:row['boundEvidence'].append(deepcopy(e))
+            u=units[e['sourceUnitID']];containment=dict(ownerID=owner,sourceUnitID=e['sourceUnitID'],sourceTextSha256=digest(u['text'].encode()))
+            if containment not in row['sourceContainment']:row['sourceContainment'].append(containment)
+    return dict(schemaVersion='source-local-derived-construction-input/0.4.1',
+        requiredAcceptedProjectionSha256=report['projectionSha256'],requestSha256=report['originalReplay']['requestSha256'],
+        responseSha256=report['originalReplay']['responseSha256'],owner=deepcopy(body['owner']),
+        assertions=[derived[k] for k in sorted(derived)],kgAuthorization=False,
+        consumptionRule='Supplement only the matching accepted projection; deduplicate exact assertionID/triple; do not align endpoints or construct a KG.')

@@ -77,7 +77,7 @@ def project_replay(replay: Any, *, policy_version: str | None = None) -> Accepta
                 or body.get("targetProfile") != get_profile(family, version=policy_version)):
             raise ValueError("prospective_policy_or_profile_mismatch")
         policy_id, policy_path = prospective.VERSION, prospective.POLICY_PATH
-    elif body.get("contractID") == "study2-source-local-semantics/0.4.0":
+    elif str(body.get("contractID", "")).startswith("study2-source-local-semantics/"):
         raise ValueError("explicit_prospective_acceptance_required")
     rows = {r["candidateID"]: r for r in original["finalRecords"]}
     checks = {cid: r.get("validationRecord") or {} for cid, r in rows.items()}

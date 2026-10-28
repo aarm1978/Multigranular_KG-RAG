@@ -42,7 +42,7 @@ def unpack_inputs(inputs: dict) -> dict:
 
 def prepare(request: dict, inputs: dict) -> dict:
     """Pin the accepted semantic request separately from the new model envelope."""
-    if request['request'].get('contractID') == 'study2-source-local-semantics/0.4.0':
+    if request['request'].get('contractID') == 'study2-source-local-semantics/0.4.1':
         from src.extraction.llm.source_local_semantics import prepare_request
         return prepare_request(request, inputs)
     family = request['request']['artifactFamily']
@@ -106,7 +106,7 @@ def process(p: dict, receipt: dict, number: int, first: dict | None = None,
         code = 'TOKEN_LIMIT' if (body.get('incomplete_details') or {}).get('reason') == 'max_output_tokens' else None
     elif body.get('status') == 'completed' and receipt.get('rawModelOutputBase64') is not None:
         raw = base64.b64decode(receipt['rawModelOutputBase64'], validate=True)
-        if p['binding'].get('version') == 'study2-source-local-semantics/0.4.0':
+        if p['binding'].get('version') == 'study2-source-local-semantics/0.4.1':
             from src.extraction.llm.source_local_semantics import replay
             report = replay(p, raw, expected_request_sha256=p['semanticRequest']['requestSha256'])
         else:
@@ -121,7 +121,7 @@ def process(p: dict, receipt: dict, number: int, first: dict | None = None,
             code = 'INVALID_JSON'
     processable = report is not None and report['status'] == 'projection_completed'
     policy_id, policy_path = acceptance.POLICY_ID, acceptance.POLICY_PATH
-    if p['binding'].get('version') == 'study2-source-local-semantics/0.4.0':
+    if p['binding'].get('version') == 'study2-source-local-semantics/0.4.1':
         from src.extraction.llm.source_local_profile import VERSION, POLICY_PATH
         policy_id, policy_path = VERSION, POLICY_PATH
     attempt = dict(attemptNumber=number, requestInputSha256=p['semanticRequest']['requestSha256'],

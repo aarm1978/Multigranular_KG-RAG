@@ -22,7 +22,7 @@ from src.extraction.llm import source_family_queue as sizing
 from src.extraction.llm.pilot_preflight import canonical, digest
 
 ROOT=Path(__file__).resolve().parents[2]
-BASE=Path('var/study2_step13/source-local-semantic-pilot/v04')
+BASE=Path('var/study2_step13/source-local-semantic-pilot/v041')
 ORIGINAL=Path('var/study2_step13/source-families-gpt61-batch/v1')
 RECOVERY=Path('var/study2_step13/hydroshare-readme-recovery/v2')
 RECOVERY_SHA='57dab8abb6c4a78dbe6c22d184032872ae68764520e150c25de2ff40b084014c'
@@ -69,7 +69,7 @@ def implementation_pins(repo: Path) -> dict:
     for base in ('src/extraction/llm','src/evaluation'):
         # Hashing files is not execution; scope includes transitive dynamic adapter imports.
         paths.update(p for p in (repo/base).rglob('*.py'))
-    paths.update([repo/'src/ontology/ontology_spec.yaml',policy.INVENTORY,policy.POLICY_PATH])
+    paths.update([repo/'src/ontology/ontology_spec.yaml',repo/'docs/study2_source_local_semantics_v0.4.md',policy.INVENTORY,policy.POLICY_PATH])
     return {str(p.relative_to(repo)):digest(p.read_bytes()) for p in sorted(paths)}
 
 
