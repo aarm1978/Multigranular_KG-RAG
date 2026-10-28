@@ -42,6 +42,9 @@ def unpack_inputs(inputs: dict) -> dict:
 
 def prepare(request: dict, inputs: dict) -> dict:
     """Pin the accepted semantic request separately from the new model envelope."""
+    if request['request'].get('contractID') == 'study2-source-local-semantics/0.4.0':
+        from src.extraction.llm.source_local_semantics import prepare_request
+        return prepare_request(request, inputs)
     family = request['request']['artifactFamily']
     require(family in conformance.DIRECTORIES, 'UNSUPPORTED_FAMILY')
     require(request['request']['schemaVersion'] == family + '-request/1.2.0', 'PROMPT_VERSION_DRIFT')
@@ -103,18 +106,26 @@ def process(p: dict, receipt: dict, number: int, first: dict | None = None,
         code = 'TOKEN_LIMIT' if (body.get('incomplete_details') or {}).get('reason') == 'max_output_tokens' else None
     elif body.get('status') == 'completed' and receipt.get('rawModelOutputBase64') is not None:
         raw = base64.b64decode(receipt['rawModelOutputBase64'], validate=True)
-        sealed = acceptance.replay_and_project(raw,
-            family=p['semanticRequest']['request']['artifactFamily'],
-            request_inputs=unpack_inputs(p['requestInputs']),
-            expected_request_sha256=p['semanticRequest']['requestSha256'],
-            conformance_version=conformance.VERSION, schema_version=conformance.SCHEMA_VERSION)
-        report = sealed.to_record()
+        if p['binding'].get('version') == 'study2-source-local-semantics/0.4.0':
+            from src.extraction.llm.source_local_semantics import replay
+            report = replay(p, raw, expected_request_sha256=p['semanticRequest']['requestSha256'])
+        else:
+            sealed = acceptance.replay_and_project(raw,
+                family=p['semanticRequest']['request']['artifactFamily'],
+                request_inputs=unpack_inputs(p['requestInputs']),
+                expected_request_sha256=p['semanticRequest']['requestSha256'],
+                conformance_version=conformance.VERSION, schema_version=conformance.SCHEMA_VERSION)
+            report = sealed.to_record()
         reasons = report['originalReplay']['parseResult']['diagnostics']
         if any(r.get('reason') == 'response_invalid_json' for r in reasons):
             code = 'INVALID_JSON'
     processable = report is not None and report['status'] == 'projection_completed'
+    policy_id, policy_path = acceptance.POLICY_ID, acceptance.POLICY_PATH
+    if p['binding'].get('version') == 'study2-source-local-semantics/0.4.0':
+        from src.extraction.llm.source_local_profile import VERSION, POLICY_PATH
+        policy_id, policy_path = VERSION, POLICY_PATH
     attempt = dict(attemptNumber=number, requestInputSha256=p['semanticRequest']['requestSha256'],
-        providerInputSha256=p['binding']['providerInputSha256'], authorityBundleID=acceptance.POLICY_ID,
+        providerInputSha256=p['binding']['providerInputSha256'], authorityBundleID=policy_id,
         requestedModel='gpt-6.1-sol', reasoningEffort='medium', maxOutputTokens=32768,
         modelAuthorableSchemaSha256=p['binding']['schemaSha256'], provider='openai',
         toolConfiguration='none', store=False,
@@ -141,7 +152,7 @@ def process(p: dict, receipt: dict, number: int, first: dict | None = None,
                 attemptSelection=selection, productionResult=report,
                 productionResultSha256=digest(canonical(report)) if report is not None else None,
                 provenance=dict(identity=fingerprint(p), responseSha256=digest(canonical(receipt)),
-                                policySha256=digest(acceptance.POLICY_PATH.read_bytes())))
+                                policySha256=digest(policy_path.read_bytes())))
 
 
 def infrastructure() -> tuple[Any, Any, dict]:

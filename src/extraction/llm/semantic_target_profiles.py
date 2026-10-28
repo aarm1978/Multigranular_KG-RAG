@@ -97,13 +97,16 @@ def _policy(family: str, identifier: str) -> dict[str, Any]:
     return policy
 
 
-def get_profile(family: str, *, ontology: Mapping[str, Any] | None = None) -> dict[str, Any]:
+def get_profile(family: str, *, ontology: Mapping[str, Any] | None = None, version: str | None = None) -> dict[str, Any]:
     """Return a detached deterministic scope projection, not a new authority.
 
     Optional supplied ontology must equal the frozen declaration document. This
     fails closed on altered signatures, class IDs or inheritance while keeping the
     specification as the sole source of those definitions.
     """
+    if version is not None:
+        from src.extraction.llm.source_local_profile import get_profile as prospective_profile
+        return prospective_profile(family, version=version, ontology=ontology)
     if family not in ENTITY_IDS:
         raise ValueError(f"Unsupported source family: {family}")
     spec = load_ontology()
@@ -138,6 +141,7 @@ def check_target(
     family: str, identifier: str, *, model_authored: bool = True,
     relation_name: str | None = None, source_class_id: str | None = None,
     target_class_id: str | None = None, gates: Mapping[str, Any] | None = None,
+    version: str | None = None,
 ) -> dict[str, Any]:
     """Check declared scope, signatures and explicit caller-attested gate flags.
 
@@ -147,7 +151,7 @@ def check_target(
     Endpoint/seed inspection requires model_authored=False. Unsupported IDs remain
     forbidden even when they occur elsewhere in the ontology.
     """
-    profile = get_profile(family)
+    profile = get_profile(family, version=version)
     result: dict[str, Any] = {"structuralScopePass": False, "semanticAcceptance": False,
                               "kgAuthorization": False, "reasons": [], "missingGates": []}
     record = profile["entities"].get(identifier) or profile["relations"].get(identifier)

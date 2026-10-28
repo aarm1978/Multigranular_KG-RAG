@@ -20,6 +20,7 @@ def validate_repository_candidates(
     reader_result: Mapping[str, Any], payload: Mapping[str, Any], *,
     accepted_repository: Mapping[str, Any], accepted_endpoints: list[Mapping[str, Any]] | None = None,
     accepted_assertions: list[Mapping[str, Any]] | None = None,
+    profile_version: str | None = None, evidence_binder: Any = None, purpose_checker: Any = None,
 ) -> dict[str, Any]:
     """Validate identifiable candidates; isolate only their actual dependencies.
 
@@ -87,7 +88,7 @@ def validate_repository_candidates(
     result["source"] = deepcopy(accepted_repository)
     result["sourceDiagnostics"] = deepcopy(reader_result["diagnostics"])
     result["inputComplete"] = reader_result.get("inputComplete") is True and not reader_result["diagnostics"]
-    profile = get_profile("github")
+    profile = get_profile("github", version=profile_version)
     vocabulary = purpose_vocabulary()
     result["vocabularyRecords"] = vocabulary
     owner = accepted_repository["canonicalArtifactID"]
@@ -124,7 +125,7 @@ def validate_repository_candidates(
         name = relation if isinstance(relation, str) else None
         key = identifier, model, name, source, target
         if key not in cache:
-            cache[key] = check_target("github", identifier, model_authored=model, relation_name=name,
+            cache[key] = check_target("github", identifier, version=profile_version, model_authored=model, relation_name=name,
                                       source_class_id=source, target_class_id=target)
         return deepcopy(cache[key])
 
@@ -246,7 +247,7 @@ def validate_repository_candidates(
                     finding("fragment_contribution_missing_or_malformed", fragmentIndex=index)
                 uid = fragment["sourceUnitID"]
                 quote = {k: fragment[k] for k in ("evidenceText", "locatorAnchor") if k in fragment}
-                binding = bind_repository_evidence(reader_result, uid, [quote], accepted_repository=accepted_repository)
+                binding = (evidence_binder or bind_repository_evidence)(reader_result, uid, [quote], accepted_repository=accepted_repository)
                 record["evidenceBindings"].append({"fragmentIndex": index, "originalFragment": deepcopy(fragment), "binding": binding})
                 if binding["status"] != "evidence_bound":
                     for diagnostic in binding["diagnostics"]:
@@ -265,7 +266,7 @@ def validate_repository_candidates(
                         "sourceUnitID": uid, "inventoryId": identifier, "relation": row.get("relation"),
                         "categoryKey": row.get("categoryKey"), "targetID": target_id, "evidence": [quote],
                         **{k: row[k] for k in ("classification", "reason") if k in row}}
-                    delegated = validate_purpose_candidates(projection, uid, [legacy], accepted_repository=accepted_repository)
+                    delegated = (purpose_checker or validate_purpose_candidates)(projection, uid, [legacy], accepted_repository=accepted_repository)
                     record.setdefault("purposeChecks", []).append({"fragmentIndex": index, "result": delegated,
                         "diagnosticProjection": "only after scoped source/evidence verification"})
                     for diagnostic in delegated["diagnostics"]:

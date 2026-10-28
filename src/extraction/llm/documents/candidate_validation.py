@@ -193,6 +193,7 @@ def validate_hub_candidates(
     accepted_page_id: str, accepted_section_mapping: Mapping[str, Any] | None = None,
     accepted_endpoints: list[Mapping[str, Any]] | None = None,
     accepted_assertions: list[Mapping[str, Any]] | None = None,
+    profile_version: str | None = None, evidence_binder: Any = None,
 ) -> dict[str, Any]:
     """Check a page-local batch without accepting semantics or writing assertions.
 
@@ -257,7 +258,7 @@ def validate_hub_candidates(
     result["sourceDiagnostics"] = deepcopy(reader_result["diagnostics"])
     replay = read_page_source_units(page, accepted_section_mapping=accepted_section_mapping)
     result["inputComplete"] = not reader_result["diagnostics"] and reader_result["sourceUnits"] == replay["sourceUnits"]
-    profile = get_profile("ciroh_hub")
+    profile = get_profile("ciroh_hub", version=profile_version)
     endpoints = {accepted_page_id: {"endpointID": accepted_page_id, "inventoryId": "A-DC01", "class": "DocumentationPage"}}
     if any(v is not None and not isinstance(v, list) for v in (accepted_endpoints, accepted_assertions)):
         return stop("trusted_inventory_malformed")
@@ -277,7 +278,7 @@ def validate_hub_candidates(
             kwargs["relation_name"] = None
         key = (identifier, *sorted(kwargs.items()))
         if key not in scope_cache:
-            scope_cache[key] = check_target("ciroh_hub", identifier, **kwargs)
+            scope_cache[key] = check_target("ciroh_hub", identifier, version=profile_version, **kwargs)
         return deepcopy(scope_cache[key])
 
     assertions = {}
@@ -401,7 +402,7 @@ def validate_hub_candidates(
             view = {**reader_result, "diagnostics": scoped}
             fence = unit and unit["contentKind"] == "fenced_snippet"
             binder = bind_example_context if fence and identifier in {"A-DC08", "C-DC12"} else bind_hub_evidence
-            binding = binder(page, view, uid, [{k: fragment[k] for k in ("evidenceText", "locatorAnchor") if k in fragment}],
+            binding = (evidence_binder or binder)(page, view, uid, [{k: fragment[k] for k in ("evidenceText", "locatorAnchor") if k in fragment}],
                 accepted_page_id=accepted_page_id, accepted_section_mapping=accepted_section_mapping)
             rec["evidenceBindings"].append({"fragmentIndex": index, "originalFragment": deepcopy(fragment), "binding": binding})
             if binding["status"] in {"evidence_bound", "example_context_bound"}:

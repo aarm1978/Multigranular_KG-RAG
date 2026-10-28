@@ -50,7 +50,7 @@ class AcceptanceReport:
         return json.loads(self.report_json)
 
 
-def project_replay(replay: Any) -> AcceptanceReport:
+def project_replay(replay: Any, *, policy_version: str | None = None) -> AcceptanceReport:
     """Apply the approved policy to one sealed, independently associated replay.
 
     This is a trusted pipeline interface, not an ingestion boundary for arbitrary
@@ -69,6 +69,16 @@ def project_replay(replay: Any) -> AcceptanceReport:
     if family not in DIRECTORIES:
         raise ValueError("unsupported replay family")
     body = original.get("requestResult", {}).get("request", {})
+    policy_id, policy_path = POLICY_ID, POLICY_PATH
+    if policy_version is not None:
+        from src.extraction.llm import source_local_profile as prospective
+        from src.extraction.llm.semantic_target_profiles import get_profile
+        if (policy_version != prospective.VERSION or body.get("contractID") != policy_version
+                or body.get("targetProfile") != get_profile(family, version=policy_version)):
+            raise ValueError("prospective_policy_or_profile_mismatch")
+        policy_id, policy_path = prospective.VERSION, prospective.POLICY_PATH
+    elif body.get("contractID") == "study2-source-local-semantics/0.4.0":
+        raise ValueError("explicit_prospective_acceptance_required")
     rows = {r["candidateID"]: r for r in original["finalRecords"]}
     checks = {cid: r.get("validationRecord") or {} for cid, r in rows.items()}
     owner = body.get("owner", {})
@@ -173,8 +183,13 @@ def project_replay(replay: Any) -> AcceptanceReport:
             # cannot supply that missing comparison (even for a direct edge to an
             # accepted endpoint). Preserve original duplicateOf/findings as
             # provenance; never promote them to construction duplicate proof.
-            blocked.append("exact_deterministic_version_comparison_unavailable")
-            blocked.append("candidate_version_product_identity_not_established")
+            proof = None
+            if policy_version is not None:
+                from src.extraction.llm.source_local_semantics import _version_proof
+                proof = _version_proof(body, candidate, c)
+            if not proof or proof != c.get("versionIdentityProof"):
+                blocked.append("exact_deterministic_version_comparison_unavailable")
+                blocked.append("candidate_version_product_identity_not_established")
         if row["kind"] == "node":
             if not c.get("resolvedEndpoint"):
                 blocked.append("endpoint_unresolved")
@@ -222,7 +237,7 @@ def project_replay(replay: Any) -> AcceptanceReport:
             duplicates[cid] = [seen_edges[key]]
         else:
             seen_edges[key] = cid
-    projection = {"policyID": POLICY_ID, "policySha256": digest(POLICY_PATH.read_bytes()),
+    projection = {"policyID": policy_id, "policySha256": digest(policy_path.read_bytes()),
         "artifactFamily": family, "owner": owner, "replaySha256": replay.report_sha256,
         "requestSha256": original.get("requestSha256"), "responseSha256": original.get("responseSha256"),
         "sourceSnapshot": original.get("sourceSnapshot"), "nodes": [], "edges": [], "externalEndpoints": [],
@@ -251,7 +266,7 @@ def project_replay(replay: Any) -> AcceptanceReport:
                 used_external.update(c[k]["endpointID"] for k in ("resolvedSource", "resolvedTarget")
                                      if c[k]["endpointID"] in external)
     projection["externalEndpoints"] = [external[e] for e in sorted(used_external)]
-    report = {"schemaVersion": "study2-offline-construction-acceptance/0.1.0",
+    report = {"schemaVersion": policy_id if policy_version else "study2-offline-construction-acceptance/0.1.0",
         "status": "processing_blocked" if global_blocks else "projection_completed",
         "blockingReasons": global_blocks, "projection": projection, "projectionSha256": digest(canonical(projection)),
         "decisions": decisions, "originalReplay": original, "originalReplaySha256": replay.report_sha256,

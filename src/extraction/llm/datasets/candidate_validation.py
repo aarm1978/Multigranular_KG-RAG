@@ -204,6 +204,7 @@ def validate_dataset_candidates(
     accepted_endpoints: list[Mapping[str, Any]] | None = None,
     authorized_stubs: list[Mapping[str, Any]] | None = None,
     accepted_assertions: list[Mapping[str, Any]] | None = None,
+    profile_version: str | None = None, evidence_binder: Any = None,
 ) -> dict[str, Any]:
     """Validate an identifiable HydroShare batch, without semantic/KG acceptance.
 
@@ -267,7 +268,7 @@ def validate_dataset_candidates(
     if any(v is not None and not isinstance(v, list) for v in
            (abstract_units, readme_results, accepted_endpoints, authorized_stubs, accepted_assertions)):
         return stop("trusted_collection_malformed")
-    profile = get_profile("hydroshare")
+    profile = get_profile("hydroshare", version=profile_version)
     snapshot, version = trusted_provenance["snapshotID"], trusted_provenance.get("sourceVersion")
     result["source"] = {"resource_id": accepted_owner_id, "snapshotID": snapshot, "sourceVersion": version}
     scope_cache: dict[tuple, dict[str, Any]] = {}
@@ -278,7 +279,7 @@ def validate_dataset_candidates(
         name = relation if isinstance(relation, str) else None
         key = identifier, model, name, source, target
         if key not in scope_cache:
-            scope_cache[key] = check_target("hydroshare", identifier, model_authored=model,
+            scope_cache[key] = check_target("hydroshare", identifier, version=profile_version, model_authored=model,
                 relation_name=name, source_class_id=source, target_class_id=target)
         return deepcopy(scope_cache[key])
 
@@ -424,7 +425,7 @@ def validate_dataset_candidates(
         else:
             source, target = resolve(row.get("source")), resolve(row.get("target"))
             record["resolvedSource"], record["resolvedTarget"] = source, target
-            if source is not None and source["endpointID"] != accepted_owner_id:
+            if profile_version is None and source is not None and source["endpointID"] != accepted_owner_id:
                 finding("source_endpoint_owner_or_direction_mismatch")
             profile_check = scope(identifier, relation=row.get("relation"),
                 source=source["inventoryId"] if source else None, target=target["inventoryId"] if target else None)
