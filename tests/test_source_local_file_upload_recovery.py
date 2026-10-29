@@ -233,6 +233,89 @@ class FileRecoveryTests(unittest.TestCase):
         self.assertEqual(self.api.posts, 1)
         self.assertEqual(original.read_bytes(), b'original evidence')
 
+    def test_sdk_stream_configuration_and_numbered_authorization(self):
+        """SDK upload streams exact bytes once after reconciliation and durable authorization."""
+        import sys
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+        self.binding['jobID'] = 'job-000003'
+        self.api.fail = True
+        with self.assertRaises(ValueError): self.run_recovery()
+        originals = {p.name: p.read_bytes() for p in self.sidecar.iterdir()}
+        retry = self.sidecar / 'sdk-retry-000002'
+        client = Mock()
+        def create(**kwargs):
+            self.assertTrue((retry / 'intent.json').exists())
+            auth = json.loads((retry / 'authorization.json').read_bytes())
+            self.assertEqual(auth['maxRetries'], 0)
+            self.assertEqual(auth['sdkVersion'], '1.109.1')
+            filename, stream, media_type = kwargs['file']
+            self.assertEqual(filename, self.path.name)
+            self.assertEqual(stream.read(), self.data)
+            self.assertFalse(stream.closed)
+            self.assertEqual(media_type, 'application/jsonl')
+            self.assertEqual(kwargs['purpose'], 'batch')
+            self.assertEqual(kwargs['timeout'], 600)
+            return SimpleNamespace(model_dump=lambda **kw: self.row)
+        client.files.create.side_effect = create
+        factory = Mock(return_value=client)
+        with patch.dict(sys.modules, {'openai': SimpleNamespace(__version__='1.109.1', OpenAI=factory)}):
+            api = r.SDKFilesAPI('synthetic-key')
+        factory.assert_called_once_with(api_key='synthetic-key', base_url='https://api.openai.com/v1',
+                                        timeout=600, max_retries=0)
+        with patch.object(api, 'listing', return_value=[]) as listing, patch.object(api, 'content', return_value=self.data):
+            result = r.manual_retry(self.path, self.binding, self.sidecar, api,
+                                    acknowledge_previous_uncertain=True, sdk=True)
+            self.assertEqual(result['status'], 'verified_upload')
+            listing.assert_called_once_with('files')
+            with self.assertRaisesRegex(ValueError, 'PRIOR_RECOVERY_INTENT_STOP'):
+                r.manual_retry(self.path, self.binding, self.sidecar, api,
+                               acknowledge_previous_uncertain=True, sdk=True)
+        client.files.create.assert_called_once()
+        api.close(); client.close.assert_called_once()
+        for name, raw in originals.items(): self.assertEqual((self.sidecar / name).read_bytes(), raw)
+
+    def test_sdk_uncertain_error_records_status_and_blocks_retry(self):
+        """SDK exceptions expose numeric status only and cannot consume another authorization."""
+        self.binding['jobID'] = 'job-000003'
+        self.api.fail = True
+        with self.assertRaises(ValueError): self.run_recovery()
+        class SDKError(Exception):
+            status_code = 503
+        with patch.object(self.api, 'upload', side_effect=SDKError('SECRET')) as upload:
+            for expected in ('UPLOAD_OUTCOME_UNCERTAIN', 'PRIOR_RECOVERY_INTENT_STOP'):
+                with self.assertRaisesRegex(ValueError, expected):
+                    r.manual_retry(self.path, self.binding, self.sidecar, self.api,
+                                   acknowledge_previous_uncertain=True, sdk=True)
+            upload.assert_called_once()
+        raw = (self.sidecar / 'sdk-retry-000002/outcome.json').read_text()
+        self.assertNotIn('SECRET', raw)
+        self.assertEqual(json.loads(raw)['httpStatus'], 503)
+
+    def test_installed_sdk_mock_transport(self):
+        """Exercise the real pinned SDK without sockets when installed in the new environment."""
+        import openai
+        if getattr(openai, '__version__', None) != '1.109.1':
+            self.skipTest('Run in multigranular-kg for real SDK MockTransport validation')
+        import httpx
+        api = r.SDKFilesAPI('synthetic-key')
+        api.client.close()
+        seen = []
+        def handler(request):
+            seen.append(request)
+            self.assertEqual(request.url.path, '/v1/files')
+            self.assertEqual(request.method, 'POST')
+            body = request.read()
+            self.assertIn(self.path.name.encode(), body)
+            self.assertIn(self.data, body)
+            return httpx.Response(200, json=self.row)
+        api.client = openai.OpenAI(api_key='synthetic-key', timeout=600, max_retries=0,
+                                  http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+        try:
+            self.assertEqual(api.upload(self.path)['id'], self.row['id'])
+            self.assertEqual(len(seen), 1)
+        finally: api.close()
+
     def test_wrong_queue_checkpoint_fails_before_network(self):
         """The local verifier accepts only the exact sealed v6 manifest."""
         queue = self.root/r.QUEUE; queue.mkdir(parents=True)

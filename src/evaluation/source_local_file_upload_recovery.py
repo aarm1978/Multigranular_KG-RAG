@@ -58,6 +58,29 @@ class FileOnlyAPI(transport.BatchAPI):
             raise error from None
 
 
+class SDKFilesAPI(FileOnlyAPI):
+    """Keep native read reconciliation; stream only the authorized POST through the SDK."""
+
+    def __init__(self, key):
+        """Initialize the pinned SDK without any network request or automatic retries."""
+        import openai
+        require(openai.__version__ == '1.109.1', 'SDK_VERSION_REQUIRED: openai==1.109.1')
+        super().__init__(key)
+        self.client = openai.OpenAI(api_key=key, base_url='https://api.openai.com/v1',
+                                   timeout=TIMEOUT, max_retries=0)
+
+    def upload(self, path):
+        """Keep exact filename and bytes; the stream stays open through the single POST."""
+        with path.open('rb') as stream:
+            result = self.client.files.create(
+                file=(path.name, stream, 'application/jsonl'), purpose='batch', timeout=TIMEOUT)
+        return result.model_dump(mode='json')
+
+    def close(self):
+        """Release local HTTP resources without dispatching requests."""
+        self.client.close()
+
+
 def safe_diagnostic(exc):
     """Retain exception classes and numeric codes only; never messages, bodies or URLs."""
     supplied = getattr(exc, 'safe_diagnostic', None)
@@ -67,6 +90,8 @@ def safe_diagnostic(exc):
     errno = getattr(exc, 'errno', None)
     if type(errno) is int:
         result['errno'] = errno
+    if type(getattr(exc, 'status_code', None)) is int:
+        result['httpStatus'] = exc.status_code
     if isinstance(exc, transport.HTTPFailure):
         result['httpStatus'] = exc.evidence['status']
     cause = getattr(exc, 'reason', None)
@@ -76,10 +101,19 @@ def safe_diagnostic(exc):
         result['transportCauseType'] = type(cause).__name__
         if type(getattr(cause, 'errno', None)) is int:
             result['transportCauseErrno'] = cause.errno
+        chain, seen = [], {id(exc)}
+        while isinstance(cause, BaseException) and id(cause) not in seen and len(chain) < 8:
+            seen.add(id(cause))
+            item = dict(exceptionType=type(cause).__name__)
+            if type(getattr(cause, 'errno', None)) is int:
+                item['errno'] = cause.errno
+            chain.append(item)
+            cause = cause.__cause__ or cause.__context__
+        result['transportCauses'] = chain
     return result
 
 
-def manual_retry(path, binding, sidecar, api, *, acknowledge_previous_uncertain=False):
+def manual_retry(path, binding, sidecar, api, *, acknowledge_previous_uncertain=False, sdk=False):
     """Authorize only recovery attempt 2, retaining and binding the first attempt forever."""
     require(acknowledge_previous_uncertain, 'EXPLICIT_PREVIOUS_UNCERTAIN_ACK_REQUIRED')
     # Share the original lock, preventing concurrent original/retry recovery operations.
@@ -96,11 +130,15 @@ def manual_retry(path, binding, sidecar, api, *, acknowledge_previous_uncertain=
                 require(record['action'] == 'one_file_upload' and record['attempts'] == 1,
                         'PREVIOUS_INTENT_DRIFT')
             previous[name] = digest(raw)
-        retry = sidecar / 'manual-retry-000002'
+        require(not sdk or binding.get('jobID') == 'job-000003', 'SDK_RETRY_ONLY_JOB_000003')
+        retry = sidecar / ('sdk-retry-000002' if sdk else 'manual-retry-000002')
         durable_directory(retry)
         authorization = dict(binding=binding, recoveryAttempt=2,
             acknowledgedPreviousUncertainOutcome=True, authorizedAdditionalPosts=1,
             previousRecordSha256=previous)
+        if sdk:
+            authorization.update(transport='openai-sdk', sdkVersion='1.109.1',
+                                 timeoutSeconds=TIMEOUT, maxRetries=0)
         auth_path = retry / 'authorization.json'
         if auth_path.exists():
             require(transport.decode(auth_path.read_bytes()) == authorization, 'AUTHORIZATION_DRIFT')
@@ -263,24 +301,30 @@ def recover(path, binding, sidecar, api, *, allow_one_upload=False):
 def main():
     """Researcher-terminal entry point; inspect is offline, recover permits Files only."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('operation', choices=['inspect', 'reconcile', 'recover', 'manual-retry'])
+    parser.add_argument('operation', choices=['inspect', 'reconcile', 'recover', 'manual-retry', 'sdk-retry'])
     parser.add_argument('--job', choices=[JOB, 'job-000003'], default=JOB)
     parser.add_argument('--allow-one-upload', action='store_true')
     parser.add_argument('--acknowledge-previous-uncertain-outcome', action='store_true')
     args = parser.parse_args()
-    if args.operation == 'manual-retry':
+    if args.operation in ('manual-retry', 'sdk-retry'):
         require(args.acknowledge_previous_uncertain_outcome, 'EXPLICIT_PREVIOUS_UNCERTAIN_ACK_REQUIRED')
     require(args.operation != 'manual-retry' or args.job == JOB, 'MANUAL_RETRY_ONLY_JOB_000001')
+    require(args.operation != 'sdk-retry' or args.job == 'job-000003', 'SDK_RETRY_ONLY_JOB_000003')
     sidecar = ROOT / SIDECAR.parent / args.job
     with sealed_job(job=args.job) as (path, binding):
         if args.operation == 'inspect': result = dict(binding=binding, providerCalls=0)
         else:
-            api = FileOnlyAPI(openai_provider.load_openai_api_key())
+            api_type = SDKFilesAPI if args.operation == 'sdk-retry' else FileOnlyAPI
+            api = api_type(openai_provider.load_openai_api_key())
             if args.operation == 'reconcile':
                 result = reconcile(binding, api)
-            elif args.operation == 'manual-retry':
-                result = manual_retry(path, binding, sidecar, api,
-                    acknowledge_previous_uncertain=args.acknowledge_previous_uncertain_outcome)
+            elif args.operation in ('manual-retry', 'sdk-retry'):
+                try:
+                    result = manual_retry(path, binding, sidecar, api,
+                        acknowledge_previous_uncertain=args.acknowledge_previous_uncertain_outcome,
+                        sdk=args.operation == 'sdk-retry')
+                finally:
+                    if args.operation == 'sdk-retry': api.close()
             else:
                 result = recover(path, binding, sidecar, api, allow_one_upload=args.allow_one_upload)
     print(json.dumps(result, indent=2))

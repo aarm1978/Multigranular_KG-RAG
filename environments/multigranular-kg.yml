@@ -1,0 +1,15 @@
+# Scoped Step 13 recovery/submission runtime; not a full-project lockfile.
+# Existing preprocessing and ontology environments remain authoritative for their tasks.
+name: multigranular-kg
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - openai==1.109.1
+      - PyYAML==6.0.2
+      - jsonschema==4.23.0
+      - packaging==24.2
+# unittest is supplied by Python. SDK transitive dependencies are resolved by pip.
+# openpyxl/pybtex (corpus rebuilding) and owlready2 (ontology work) are out of scope.
