@@ -1,6 +1,6 @@
 # Ontology Inventory — Study 2 (Phase 1 closure)
 
-**Current semantic version:** 0.1.6, formally frozen on 2026-10-07 — 77 source class declarations and 130 source relation declarations. The 44-test focused ontology suite passed, and the researcher-confirmed HermiT gate passed on the exact generated OWL artifact. See `ontology_formalization.md` §12 for the hash, validation scope, and import limitations. Frozen v0.1.5 authorities and existing extraction/evaluation artifacts remain historical authorities; no deterministic extractor or Publication artifact has been changed.
+**Current semantic version:** 0.1.7, formally validated and frozen — 77 source class declarations and 130 source relation declarations. The completed 46-test focused ontology suite passed. Researcher-confirmed HermiT classification completed in 38,931 ms, with no reported errors or inconsistencies and zero named unsatisfiable classes under `owl:Nothing`. Validated OWL SHA-256: `ac64435ca02a703bdee8168a045a3897d7f6f5be1a8e25e6cdf485c66c85e0fa`. See `ontology_formalization.md` §13 for scope and limitations; §12 preserves the v0.1.6 record. Earlier authorities and extraction/evaluation artifacts remain unchanged.
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 **Companion to `Study2_Ontology_v0.1.md` (concepts + namespaces §3.1). Vocabulary reuse verified (validation 1); schema fit-checked on 6 real artifacts (validation 2, Etapa A) — GO, with the schema-change log below applied.**
@@ -324,7 +324,7 @@ instances. DCAT is added as a **reference-only** reuse vocabulary, not an OWL im
 | C-C12 | `mentionsVariable` | `Repository` → `Variable` | `ciroh:` | prose (quote) | cross+same | E · consol |
 | C-C13 | `dependsOnRepository` | `Repository` → `Repository` | `ciroh:` (no standard repo→repo dep) | `github.com` links / dep files | same | S/E |
 | C-C14 | `forkedFrom` | `Repository` → `Repository` | `ciroh:` | `fork` flag (det); parent via README/Binder badge | same | flag S · **parent E** |
-| C-C15 | `usesDataset` | → `DatasetResource` | `ciroh:` | README/notebook HydroShare URL | cross | S (→ D-01) |
+| C-C15 | `usesDataset` | → `DatasetResource` ∪ `DatasetMention` | `ciroh:` | README/notebook HydroShare URL | cross | S (→ D-01) |
 | C-C16 | `implementsMethod` | `Repository`/`Tool` → `Method` (in `Paper`) | `ciroh:` (+ `cito:usesMethodIn` by reference) | README + Methods prose | cross | S (→ D-02) |
 | C-C17 | `referencePublication`/`citesPaper` | → `Paper` | `codemeta:referencePublication` (+ `cito:cites`) | `CITATION.cff`/`.md` (det) / prose | cross | S (→ D-07) |
 | C-C18 | `archivedAs`/`sameSoftwareAs` | `Repository` → archived DOI snapshot | `datacite:relatedIdentifier` (IsVersionOf/IsDerivedFrom) | repo README DOI ↔ paper-cited DOI (det where matched) | same | E (→ D-20) |
@@ -403,7 +403,7 @@ reverse from a repository; no duplicate `implementsModel` inverse is declared.
 | C-DC22 | `references` | `DocumentationPage` → `DocumentationPage` | `dcterms:references` | explicit internal or relative documentation-page link | same | S (→ D-15); distinct from `linksTo` and `announces` |
 | C-DC23 | `referencesFeature` | `DocumentationPage` → `HydrologicFeature` | `ciroh:` | explicit geoconnex/hydrologic-feature URI or body prose with quoted evidence | cross | S · consol (→ D-18); distinct from place mentions and spatial coverage |
 | C-DC24 | `mentionsModel` | `DocumentationPage` → `ComputationalModel` | `ciroh:` | body prose with quoted evidence | cross+same | S · consol (→ D-21); weaker than C-DC16 `describesModel` |
-| C-DC25 | `mentionsDataset` | `DocumentationPage` → `DatasetResource` | `ciroh:` | body prose with quoted evidence | cross | S · consol (→ D-21); distinct from C-DC15 `referencesDataset` |
+| C-DC25 | `mentionsDataset` | `DocumentationPage` → `DatasetResource` ∪ `DatasetMention` | `ciroh:` | body prose with quoted evidence | cross | S · consol (→ D-21); distinct from C-DC15 `referencesDataset` |
 | C-DC26 | `referencePublication` | `DocumentationPage` → `Paper` | `ciroh:` | explicit publication DOI, bibliographic citation, or publication link in prose | cross | S · consol (→ D-07) |
 | C-DC27 | `describesDataset` ⊑ `describes` | `DocumentationPage` → `DatasetResource` | `ciroh:` | body prose substantially about the dataset/data product | cross | S · consol |
 | C-DC28 | `describesMethod` ⊑ `describes` | `DocumentationPage` → `Method` | `ciroh:` | body prose explaining or documenting the method | cross | S · consol |
@@ -536,3 +536,13 @@ unsatisfiable classes under `owl:Nothing`, and no execution errors.
 - MiTO: prefix `mito:` = `http://purl.org/spar/mito/`; **reference only**, do not `owl:imports`. D-26 `ciroh:mentions` uses `mito:mentions` as its reuse anchor. MiTO's inverse `mito:isMentionedBy` is documented but not adopted as a CIROH inverse.
 - CodeMeta: profile (context `https://doi.org/10.5063/schema/codemeta-2.0`); reuse properties, not classes.
 - Dublin Core `dcterms:` only; GeoNames ≥ 2.2.1. SPDX `http://spdx.org/rdf/terms#`; DOAP `http://usefulinc.com/ns/doap#`; PROV-O `http://www.w3.org/ns/prov#`; SKOS `http://www.w3.org/2004/02/skos/core#`; CiTO `http://purl.org/spar/cito`; DataCite `http://purl.org/spar/datacite` (+ `relatedIdentifier`); GeoSPARQL `http://www.opengis.net/ont/geosparql#`; `ciroh:` = `https://w3id.org/ciroh/ontology#`.
+
+**Dataset range amendment — formally frozen v0.1.7.** Relative to v0.1.6, only
+C-C15 and C-DC25 extend their target ranges from DatasetResource to
+DatasetResource ∪ DatasetMention. The former requires actual-use evidence; the
+latter records a weak mention. Unresolved DatasetMention does not imply a known
+global identifier or canonical equivalence. C-C19/C-DC15 reference signatures,
+all other declarations, and historical extraction authorities are unchanged.
+The shared generated OWL properties already included these union members through
+Publication branches. Formal validation is recorded in `ontology_formalization.md`
+§13; it does not establish empirical extraction quality or authorize migration.

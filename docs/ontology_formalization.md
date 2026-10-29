@@ -2,11 +2,11 @@
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 
-**Current semantic version:** 0.1.6, formally frozen on 2026-10-07. The exact generated
-OWL passed the researcher-confirmed manual HermiT gate; see §12 for the artifact hash,
-structural compatibility results, and import/parser limitations. Historical v0.1.5
-validation and authorities remain preserved. Deterministic graphs, Publication artifacts,
-and evaluation authorities are unchanged; this freeze does not authorize their migration.
+**Current semantic version:** 0.1.7, formally validated and frozen following
+researcher-confirmed manual HermiT classification. See §13 for the exact artifact
+hash, approved range extensions, validation result and limitations. The v0.1.6
+record in §12 and all earlier authorities remain historical and unchanged.
+This freeze does not migrate extraction, production, or evaluation authorities.
 
 **Purpose.** This document records the *formalization* phase: how the validated
 conceptual schema was translated into a machine-readable OWL/RDF ontology, the
@@ -218,7 +218,7 @@ workflow invocation. **Use is not implementation**, so no duplicate
 
 `build_ontology.py` (owlready2) reads the specification and emits `ciroh_ontology.owl`
 in RDF/XML. The historical formally frozen ontology 0.1.5 artifact has these counts
-(the current v0.1.6 counts are recorded in §12):
+(v0.1.6 counts are recorded in §12 and remain unchanged in v0.1.7, §13):
 
 | Element | Count |
 |---|---|
@@ -313,7 +313,7 @@ successfully, found the ontology consistent with zero unsatisfiable named classe
 reported no execution errors. Ontology 0.1.3 is formally frozen. The deterministic ABox
 backbone remained unchanged, and no deterministic extractor was rerun.
 
-**Current 0.1.4 status.** The researcher-approved generic `mentions` amendment was
+**Historical 0.1.4 status.** The researcher-approved generic `mentions` amendment was
 generated and structurally validated, and its exact OWL artifact passed the formal HermiT
 gate. Ontology 0.1.4 is formally frozen. Downstream Publication LLM authority contracts were
 subsequently migrated to ontology 0.1.4 under the Publication LLM workstream; that
@@ -729,3 +729,63 @@ Ontology **v0.1.6 is formally frozen** on this exact artifact. Historical v0.1.5
 formalization, hashes, and evaluation authorities remain intact. This freeze does not
 close Step 10: a separate researcher-approved scope record is required. It does not
 begin Step 11 or authorize the minimal deterministic corrections.
+
+## 13. Dataset range amendment 0.1.7 (formally frozen)
+
+The researcher-approved amendment changes only the version and these two source
+signatures relative to frozen v0.1.6:
+
+| Inventory ID | Relation | Domain | v0.1.7 range |
+|---|---|---|---|
+| C-C15 | `usesDataset` | `Repository` | `DatasetResource` ∪ `DatasetMention` |
+| C-DC25 | `mentionsDataset` | `DocumentationPage` | `DatasetResource` ∪ `DatasetMention` |
+
+C-C15 retains actual-use semantics; C-DC25 retains weak-mention semantics.
+C-C19 and C-DC15 identifier-based dataset reference signatures are unchanged.
+No class, relation, evidence rule, identity equivalence, or import is added.
+All other v0.1.6 declarations and earlier historical authorities are preserved.
+
+### 13.1 Build and structural validation
+
+The unchanged `src/ontology/build_ontology.py` generated
+`src/ontology/ciroh_ontology.owl`. Implementation checkpoint:
+`922177db1d02742e28af509797ae56bb43abad01`.
+The completed focused ontology suite passed **46 tests** in 10.626 seconds,
+including three independent byte-identical builds, explicit OWL union-range checks,
+exact preservation of the other v0.1.6 source bytes, and applicable historical
+regressions. These tests were not repeated during documentation finalization.
+The source and generated entity/property/import counts remain those in §12.1.
+
+The shared `usesDataset` and `mentionsDataset` OWL properties already had union
+ranges including DatasetMention through their Publication branches. Consequently,
+the generated RDF/XML differs from v0.1.6 only in `owl:versionInfo`; the approved
+module-specific YAML signatures now explicitly include the additional range.
+
+### 13.2 Researcher-confirmed manual HermiT gate
+
+The researcher ran HermiT in Protégé on the generated v0.1.7 OWL and reported:
+
+- Classification completed successfully in **38,931 ms**.
+- No reasoner errors or inconsistencies were reported.
+- Researcher inspection found **zero named unsatisfiable classes under `owl:Nothing`**.
+
+**HERMIT 0.1.7 FORMAL REASONER GATE: PASS.** Ontology **v0.1.7 is formally
+validated and frozen** on this exact artifact, whose SHA-256 was rechecked during
+this documentation finalization:
+
+`ac64435ca02a703bdee8168a045a3897d7f6f5be1a8e25e6cdf485c66c85e0fa`
+
+### 13.3 Validation limitations and provenance
+
+This is a researcher-confirmed manual result, not a reasoner run performed by
+Codex. It applies to the exact OWL artifact and import configuration available in
+that Protégé session. The confirmation does not supply reasoner/Protégé version
+numbers or establish complete third-party import resolution; versions and import
+observations from §12 describe the historical v0.1.6 session and are not asserted
+as observations of this run. No claim of a fully resolved import closure is made.
+
+Logical consistency and named-class satisfiability do not establish scientific
+correctness, extraction completeness or accuracy, source-level evidence validity,
+identity alignment, or consistency of every instance graph. No extraction pipeline,
+production queue, provider artifact, or historical output is migrated by this freeze.
+The OWL was not regenerated and the builder was not modified during finalization.

@@ -5,20 +5,24 @@
 > exhaustive human-readable schema with stable IDs; `src/ontology/ontology_spec.yaml`
 > is the current machine-readable authority; and `ontology_formalization.md` records
 > formalization history, exact hashes, generated-artifact counts, and reasoner
-> validation. The current formally frozen ontology release is **0.1.6**.
+> validation. The current formally frozen ontology release is **0.1.7**.
 
-**Current 0.1.6 summary.** The frozen ontology has 77 source class declarations and
+**Current 0.1.7 summary.** The ontology retains 77 source class declarations and
 130 source relation declarations: 53 minted CIROH classes, 22 referenced external
 classes, 92 object properties, 20 datatype properties, and 6 direct OWL imports.
-The generated RDF/XML OWL SHA-256 is
-`6ebf7f67f79d8aae4fada176911ed9311964beb567f40a097af9017f1ad9c730`.
-The 44-test focused structural suite passed. The researcher-confirmed HermiT gate
-passed on 2026-10-07: classification completed, no inconsistency or HermiT exception
-was reported, and zero named unsatisfiable classes were visually confirmed under
-`owl:Nothing`. Third-party import/parser limitations preclude claiming a fully resolved
-import closure; see `ontology_formalization.md` §12. The additive amendment declares
-DatasetResource contributors, Award funding agencies, and optional DataService support.
-Historical v0.1.5 and Publication evaluation authorities remain unchanged.
+The only declaration changes from v0.1.6 extend C-C15 `usesDataset` (Repository)
+and C-DC25 `mentionsDataset` (DocumentationPage) to the range
+`DatasetResource | DatasetMention`. Use and weak mention remain distinct; no
+identifier or canonical identity is inferred for an unresolved DatasetMention.
+The generated OWL SHA-256 is
+`ac64435ca02a703bdee8168a045a3897d7f6f5be1a8e25e6cdf485c66c85e0fa`.
+The completed 46-test structural suite passed. The researcher subsequently confirmed
+HermiT classification in Protégé completed successfully in **38,931 ms**, with no
+reported reasoner errors or inconsistencies and zero named unsatisfiable classes
+under `owl:Nothing`. v0.1.7 is formally validated and frozen; see
+`ontology_formalization.md` §13 for the exact validation scope and limitations.
+Historical v0.1.6 and earlier authorities remain intact; extraction and production
+authority migration is separate.
 
 > **Scope (TBox/ABox).** The schema declares all proposal classes. Instance-level
 > extraction status is `S` (supported-now), `E` (extract where evidence supports it),
@@ -260,8 +264,35 @@ with generic `mentions` connectivity only. It does not add an organization-speci
 family, does not alter historical annotations, and does not reopen the frozen deterministic
 graphs. Structural validation passed (38 focused ontology regression tests, including
 byte-deterministic regeneration and frozen Phase B byte-integrity checks). The researcher
-then ran HermiT on the exact OWL artifact above: classification completed successfully, no
+then ran HermiT on the exact v0.1.5 OWL artifact recorded in
+`ontology_formalization.md` §11: classification completed successfully, no
 inconsistency was reported, and zero named classes were unsatisfiable under `owl:Nothing`.
 Ontology 0.1.5 is formally frozen. Third-party import/parser warnings are distinct from
 CIROH ontology errors and do not alter the formal HermiT result. Further ontology expansion
 is deferred unless a reproducible blocker invalidates the frozen Study 2 evaluation protocol.
+
+### 0.1.6 additive amendment and freeze (historical)
+
+**Historical 0.1.6 summary.** The frozen ontology has 77 source class declarations and
+130 source relation declarations: 53 minted CIROH classes, 22 referenced external
+classes, 92 object properties, 20 datatype properties, and 6 direct OWL imports.
+The generated RDF/XML OWL SHA-256 is
+`6ebf7f67f79d8aae4fada176911ed9311964beb567f40a097af9017f1ad9c730`.
+The 44-test focused structural suite passed. The researcher-confirmed HermiT gate
+passed on 2026-10-07: classification completed, no inconsistency or HermiT exception
+was reported, and zero named unsatisfiable classes were visually confirmed under
+`owl:Nothing`. Third-party import/parser limitations preclude claiming a fully resolved
+import closure; see `ontology_formalization.md` §12. The additive amendment declares
+DatasetResource contributors, Award funding agencies, and optional DataService support.
+Historical v0.1.5 and Publication evaluation authorities remain unchanged.
+
+
+### 0.1.7 dataset range amendment and freeze
+
+Only C-C15 and C-DC25 extend their ranges to `DatasetResource | DatasetMention`;
+all other declarations remain unchanged. The unchanged builder already merged
+these OWL property ranges with Publication branches containing DatasetMention,
+so the generated OWL differs from v0.1.6 only in its version annotation. The
+researcher-confirmed HermiT gate passed on the exact v0.1.7 artifact above.
+This documentation finalization does not regenerate the artifact or migrate
+historical requests, outputs, evaluation authorities, or downstream pipelines.
