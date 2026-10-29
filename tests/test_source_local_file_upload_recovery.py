@@ -124,6 +124,67 @@ class FileRecoveryTests(unittest.TestCase):
         with patch.object(r.transport, 'urlopen', return_value=io.BytesIO(b'{"data":[]}')):
             with self.assertRaisesRegex(ValueError, 'INCOMPLETE_FILE_LISTING'): api.listing('files')
 
+    def test_manual_second_attempt_is_numbered_and_never_repeated(self):
+        """An explicit second attempt preserves first evidence and cannot authorize a third."""
+        self.api.fail = True
+        with self.assertRaises(ValueError): self.run_recovery()
+        originals = {p.name: p.read_bytes() for p in self.sidecar.iterdir()}
+        with self.assertRaisesRegex(ValueError, 'ACK_REQUIRED'):
+            r.manual_retry(self.path, self.binding, self.sidecar, self.api)
+        retry = self.sidecar / 'manual-retry-000002'
+        api = r.FileOnlyAPI('synthetic-secret')
+        from urllib.error import URLError
+        with patch.object(api, 'listing', return_value=[]), patch.object(
+                r, 'urlopen', side_effect=URLError(ConnectionResetError(54, 'SECRET'))) as post:
+            with self.assertRaisesRegex(ValueError, 'UPLOAD_OUTCOME_UNCERTAIN'):
+                r.manual_retry(self.path, self.binding, self.sidecar, api,
+                               acknowledge_previous_uncertain=True)
+            self.assertEqual(post.call_count, 1)
+            self.assertEqual(post.call_args.kwargs['timeout'], 600)
+            with self.assertRaisesRegex(ValueError, 'PRIOR_RECOVERY_INTENT_STOP'):
+                r.manual_retry(self.path, self.binding, self.sidecar, api,
+                               acknowledge_previous_uncertain=True)
+            self.assertEqual(post.call_count, 1)
+        outcome = json.loads((retry / 'outcome.json').read_bytes())
+        self.assertEqual(outcome['exceptionType'], 'URLError')
+        self.assertEqual(outcome['transportCauseType'], 'ConnectionResetError')
+        self.assertEqual(outcome['transportCauseErrno'], 54)
+        self.assertNotIn('SECRET', (retry / 'outcome.json').read_text())
+        auth = json.loads((retry / 'authorization.json').read_bytes())
+        self.assertEqual(auth['recoveryAttempt'], 2)
+        for name, raw in originals.items():
+            self.assertEqual((self.sidecar / name).read_bytes(), raw)
+        self.api.rows = [self.row]
+        result = r.manual_retry(self.path, self.binding, self.sidecar, self.api,
+                                acknowledge_previous_uncertain=True)
+        self.assertEqual(result['status'], 'verified_reuse')
+        self.assertEqual(self.api.posts, 1)
+
+    def test_manual_retry_reconciliation_and_success(self):
+        """Ambiguous files stop; exact files reuse; zero matches allow one verified upload."""
+        self.api.fail = True
+        with self.assertRaises(ValueError): self.run_recovery()
+        self.api.fail = False
+        def run():
+            return r.manual_retry(self.path, self.binding, self.sidecar, self.api,
+                                  acknowledge_previous_uncertain=True)
+        self.api.rows = [self.row, self.row]
+        with self.assertRaisesRegex(ValueError, 'MULTIPLE_MATCHING_FILES'): run()
+        self.api.rows = [self.row]; self.api.bad = True
+        with self.assertRaisesRegex(ValueError, 'REMOTE_CONTENT_DRIFT'): run()
+        self.api.bad = False; self.api.rows = []
+        result = run()
+        self.assertEqual(result['fileID'], self.row['id'])
+        self.assertEqual(result['status'], 'verified_upload')
+        self.assertEqual(self.api.posts, 2)
+        with self.assertRaisesRegex(ValueError, 'PRIOR_RECOVERY_INTENT_STOP'): run()
+        self.assertEqual(self.api.posts, 2)
+
+    def test_safe_http_diagnostics_exclude_response_body(self):
+        """HTTP diagnostics retain status without sensitive response text."""
+        diagnostic = r.safe_diagnostic(r.transport.HTTPFailure(503, b'SECRET'))
+        self.assertEqual(diagnostic, dict(exceptionType='HTTPFailure', httpStatus=503))
+
     def test_wrong_queue_checkpoint_fails_before_network(self):
         """The local verifier accepts only the exact sealed v6 manifest."""
         queue = self.root/r.QUEUE; queue.mkdir(parents=True)

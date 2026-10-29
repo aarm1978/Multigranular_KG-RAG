@@ -52,8 +52,62 @@ class FileOnlyAPI(transport.BatchAPI):
                 return response.read()
         except HTTPError as exc:
             raise transport.HTTPFailure(exc.code, exc.read()) from None
-        except (OSError, TimeoutError):
-            raise ValueError('UPLOAD_OUTCOME_UNCERTAIN; no automatic repeat') from None
+        except (OSError, TimeoutError) as exc:
+            error = ValueError('UPLOAD_OUTCOME_UNCERTAIN; no automatic repeat')
+            error.safe_diagnostic = safe_diagnostic(exc)
+            raise error from None
+
+
+def safe_diagnostic(exc):
+    """Retain exception classes and numeric codes only; never messages, bodies or URLs."""
+    supplied = getattr(exc, 'safe_diagnostic', None)
+    if supplied is not None:
+        return supplied
+    result = dict(exceptionType=type(exc).__name__)
+    errno = getattr(exc, 'errno', None)
+    if type(errno) is int:
+        result['errno'] = errno
+    if isinstance(exc, transport.HTTPFailure):
+        result['httpStatus'] = exc.evidence['status']
+    cause = getattr(exc, 'reason', None)
+    if not isinstance(cause, BaseException):
+        cause = exc.__cause__
+    if isinstance(cause, BaseException) and cause is not exc:
+        result['transportCauseType'] = type(cause).__name__
+        if type(getattr(cause, 'errno', None)) is int:
+            result['transportCauseErrno'] = cause.errno
+    return result
+
+
+def manual_retry(path, binding, sidecar, api, *, acknowledge_previous_uncertain=False):
+    """Authorize only recovery attempt 2, retaining and binding the first attempt forever."""
+    require(acknowledge_previous_uncertain, 'EXPLICIT_PREVIOUS_UNCERTAIN_ACK_REQUIRED')
+    # Share the original lock, preventing concurrent original/retry recovery operations.
+    with (sidecar / 'recovery.lock').open('rb') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        previous = {}
+        for name in ('intent.json', 'outcome.json'):
+            raw = (sidecar / name).read_bytes()
+            record = transport.decode(raw)
+            require(record['binding'] == binding, 'PREVIOUS_RECOVERY_BINDING_DRIFT')
+            if name == 'outcome.json':
+                require(record['status'] == 'uncertain', 'PREVIOUS_OUTCOME_NOT_UNCERTAIN')
+            else:
+                require(record['action'] == 'one_file_upload' and record['attempts'] == 1,
+                        'PREVIOUS_INTENT_DRIFT')
+            previous[name] = digest(raw)
+        retry = sidecar / 'manual-retry-000002'
+        durable_directory(retry)
+        authorization = dict(binding=binding, recoveryAttempt=2,
+            acknowledgedPreviousUncertainOutcome=True, authorizedAdditionalPosts=1,
+            previousRecordSha256=previous)
+        auth_path = retry / 'authorization.json'
+        if auth_path.exists():
+            require(transport.decode(auth_path.read_bytes()) == authorization, 'AUTHORIZATION_DRIFT')
+        else:
+            seal(auth_path, authorization)
+        # Existing attempt-2 intent blocks a third POST even when this command is repeated.
+        return recover(path, binding, retry, api, allow_one_upload=True)
 
 
 @contextmanager
@@ -162,7 +216,7 @@ def recover(path, binding, sidecar, api, *, allow_one_upload=False):
         try:
             uploaded = api.upload(path)
         except BaseException as exc:
-            seal(sidecar / 'outcome.json', dict(binding=binding, status='uncertain', exceptionType=type(exc).__name__))
+            seal(sidecar / 'outcome.json', dict(binding=binding, status='uncertain', **safe_diagnostic(exc)))
             raise ValueError('UPLOAD_OUTCOME_UNCERTAIN; recovery intent prohibits another POST') from None
         seal(sidecar / 'outcome.json', dict(binding=binding, status='response_received', response=uploaded))
         file_id = verify_remote(api, uploaded, binding)
@@ -174,14 +228,21 @@ def recover(path, binding, sidecar, api, *, allow_one_upload=False):
 def main():
     """Researcher-terminal entry point; inspect is offline, recover permits Files only."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('operation', choices=['inspect', 'recover'])
+    parser.add_argument('operation', choices=['inspect', 'recover', 'manual-retry'])
     parser.add_argument('--allow-one-upload', action='store_true')
+    parser.add_argument('--acknowledge-previous-uncertain-outcome', action='store_true')
     args = parser.parse_args()
+    if args.operation == 'manual-retry':
+        require(args.acknowledge_previous_uncertain_outcome, 'EXPLICIT_PREVIOUS_UNCERTAIN_ACK_REQUIRED')
     with sealed_job() as (path, binding):
         if args.operation == 'inspect': result = dict(binding=binding, providerCalls=0)
         else:
             api = FileOnlyAPI(openai_provider.load_openai_api_key())
-            result = recover(path, binding, ROOT / SIDECAR, api, allow_one_upload=args.allow_one_upload)
+            if args.operation == 'manual-retry':
+                result = manual_retry(path, binding, ROOT / SIDECAR, api,
+                    acknowledge_previous_uncertain=args.acknowledge_previous_uncertain_outcome)
+            else:
+                result = recover(path, binding, ROOT / SIDECAR, api, allow_one_upload=args.allow_one_upload)
     print(json.dumps(result, indent=2))
 
 
