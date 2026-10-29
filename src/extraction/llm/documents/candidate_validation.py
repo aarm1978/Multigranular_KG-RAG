@@ -194,6 +194,7 @@ def validate_hub_candidates(
     accepted_endpoints: list[Mapping[str, Any]] | None = None,
     accepted_assertions: list[Mapping[str, Any]] | None = None,
     profile_version: str | None = None, evidence_binder: Any = None,
+    materialized_evidence: bool = False,
 ) -> dict[str, Any]:
     """Check a page-local batch without accepting semantics or writing assertions.
 
@@ -219,6 +220,8 @@ def validate_hub_candidates(
     Example/hasExample, as possible context. Parameter requires non-heading prose
     context and retains the unevaluated explanatory-prose gate. Duplicate records
     keep all original fragments. Only identifiable local failures are isolated.
+    The explicit materialized_evidence route changes format eligibility only;
+    it retains those semantic gates and all independent structural checks.
     """
     from src.extraction.llm.documents.example_context_binding import bind_example_context
 
@@ -405,7 +408,7 @@ def validate_hub_candidates(
             binding = (evidence_binder or binder)(page, view, uid, [{k: fragment[k] for k in ("evidenceText", "locatorAnchor") if k in fragment}],
                 accepted_page_id=accepted_page_id, accepted_section_mapping=accepted_section_mapping)
             rec["evidenceBindings"].append({"fragmentIndex": index, "originalFragment": deepcopy(fragment), "binding": binding})
-            if (profile_version == "study2-source-local-semantics/0.4.1"
+            if (not materialized_evidence and profile_version == "study2-source-local-semantics/0.4.1"
                     and binding["status"] == "example_context_bound" and identifier not in {"A-DC08", "C-DC12"}):
                 binding = {**binding, "status": "needs_review", "evidenceSpans": [],
                     "diagnostics": [{"reason": "possible_example_context_only", "status": "needs_review"}]}
@@ -414,7 +417,10 @@ def validate_hub_candidates(
                 rec["boundEvidence"].extend({**deepcopy(s), "fragmentIndex": index} for s in binding["evidenceSpans"])
                 if binding["status"] == "example_context_bound":
                     rec["contextDisposition"] = "possible_example_context"
-                if (unit and unit["contentKind"] in {"prose", "list_text", "table_text", "component_text"}) or (
+                # Materialized eligibility establishes only availability of bound evidence.
+                # The explanatory_parameter_prose semantic gate below remains pending;
+                # neither this flag nor the binder attests semantic sufficiency.
+                if (materialized_evidence and binding.get("materializedEvidence") is True) or (unit and unit["contentKind"] in {"prose", "list_text", "table_text", "component_text"}) or (
                         profile_version == "study2-source-local-semantics/0.4.1" and binding.get("admissibilityVersion") == "hub-full-authority-admissibility/0.4.1"
                         and binding.get("explanatoryProse") is True):
                     parameter_prose_bound = True
