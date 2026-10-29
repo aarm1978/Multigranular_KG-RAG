@@ -151,16 +151,21 @@ class ProductionSelectionTests(unittest.TestCase):
             rows[0]['status']='silently_excluded'
             with self.assertRaisesRegex(ValueError,'UNKNOWN_OWNER_STATUS'):p.check_groups(rows,requests)
 
-    def test_frozen_ontology_pin_and_conflicts_are_not_silently_relabelled(self):
-        """Check actual frozen bytes and validator discrepancies; block provider use."""
+    def test_canonical_ontology_pin_and_historical_publications_are_preserved(self):
+        """Check canonical signatures, native validator reachability and historical distinction."""
         with p.ontology_parse_cache():
             report=p.ontology_authority_report()
-            self.assertEqual(report['frozen']['version'],'0.1.6')
-            self.assertEqual(report['frozen']['sha256'],'47f035081d4e883146a479130c1f4c4751f0c40358fd1a8d154b43b36e34371e')
-            self.assertFalse(report['threeFamilyExact'])
-            self.assertEqual({d['inventoryId'] for f in report['profiles'].values() for d in f['declarationDifferences']},{'C-C15','C-DC25'})
+            self.assertEqual(report['frozen']['version'],'0.1.7')
+            self.assertEqual(report['frozen']['sha256'],'75a8096b797d11a5195a178d95955438eb7148e766bd399597201b0114d505b0')
+            self.assertTrue(report['threeFamilyExact'])
+            self.assertEqual(report['threeFamilyDiscrepancies'],[])
+            for family in p.CORPORA:
+                profile=p.semantic.profiles.get_profile(family,version=p.semantic.VERSION)
+                self.assertNotIn('signatureExtensions',profile)
+                self.assertEqual(profile['ontologySpecSha256'],report['frozen']['sha256'])
+            self.assertEqual({d['inventoryId'] for f in report['profiles'].values() for d in f['declarationDifferences']},set())
             self.assertTrue(all(c['structuralScopePass'] for c in report['validatorSignatureChecks']))
-            self.assertFalse(report['completedPublications']['matchesFrozenV016'])
+            self.assertFalse(report['completedPublications']['matchesCurrentFrozenOntology'])
             with patch.object(p.semantic.profiles,'ONTOLOGY_SHA256','incorrect'):
                 with self.assertRaises(ValueError):p.ontology_authority_report()
         with patch.object(p,'inspect_queue',return_value=({'productionReady':False,'blockedOwners':[],

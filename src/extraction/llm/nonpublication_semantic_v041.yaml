@@ -1,9 +1,6 @@
 version: study2-source-local-semantics/0.4.1
-baseOntologySha256: 47f035081d4e883146a479130c1f4c4751f0c40358fd1a8d154b43b36e34371e
-# Prospective, source-family-only signature amendment; frozen v0.1.6 is unchanged.
-rangeExtensions:
-  C-C15: DatasetMention
-  C-DC25: DatasetMention
+baseOntologySha256: 75a8096b797d11a5195a178d95955438eb7148e766bd399597201b0114d505b0
+# Canonical frozen v0.1.7 signatures; no provisional range overlay.
 families:
   hydroshare:
     entities: [A-DOM04, A-D12, A-DOM02, A-DOM03a, A-DOM03b, A-DOM03c, A-DOM03d, A-DOM03e, A-C11, A-C01, A-DOM05, A-DOM07a, A-DOM07b, A-DOM07c, A-DOM07d, A-DOM07e, A-DOM07f, A-DOM08, A-DOM11, A-DOM12, A-P01, A-D01]

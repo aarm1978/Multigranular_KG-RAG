@@ -17,7 +17,7 @@ import yaml
 
 CONTRACT_ID = "study2-step11-semantic-contracts/v0.3"
 ONTOLOGY_PATH = Path(__file__).resolve().parents[2] / "ontology" / "ontology_spec.yaml"
-ONTOLOGY_SHA256 = "47f035081d4e883146a479130c1f4c4751f0c40358fd1a8d154b43b36e34371e"
+ONTOLOGY_SHA256 = "75a8096b797d11a5195a178d95955438eb7148e766bd399597201b0114d505b0"
 MODELS = ("A-DOM03a", "A-DOM03b", "A-DOM03c", "A-DOM03d", "A-DOM03e")
 ENTITY_IDS = {
     "hydroshare": ("A-DOM04", "A-D12", "A-DOM02", *MODELS, "A-C11", "A-C01"),
@@ -41,13 +41,13 @@ OWNERS = {"hydroshare": "A-D01", "github": "A-C01", "ciroh_hub": "A-DC01"}
 
 
 def load_ontology() -> dict[str, Any]:
-    """Load exact frozen v0.1.6 bytes; never generate or modify the ontology."""
+    """Load exact frozen v0.1.7 bytes; never generate or modify the ontology."""
     raw = ONTOLOGY_PATH.read_bytes()
     if hashlib.sha256(raw).hexdigest() != ONTOLOGY_SHA256:
         raise ValueError("Frozen ontology specification hash mismatch")
     document = yaml.safe_load(raw)
-    if document["ontology"]["version"] != "0.1.6":
-        raise ValueError("Expected frozen ontology v0.1.6")
+    if document["ontology"]["version"] != "0.1.7":
+        raise ValueError("Expected frozen ontology v0.1.7")
     return document
 
 
@@ -111,7 +111,7 @@ def get_profile(family: str, *, ontology: Mapping[str, Any] | None = None, versi
         raise ValueError(f"Unsupported source family: {family}")
     spec = load_ontology()
     if ontology is not None and ontology != spec:
-        raise ValueError("Supplied ontology differs from frozen v0.1.6")
+        raise ValueError("Supplied ontology differs from frozen v0.1.7")
     classes = {r["id"]: r for r in spec["classes"]}
     relations = {r["id"]: r for r in spec["relations"]}
     if len(classes) != len(spec["classes"]) or len(relations) != len(spec["relations"]):
@@ -126,7 +126,7 @@ def get_profile(family: str, *, ontology: Mapping[str, Any] | None = None, versi
         if identifier not in relations or relations[identifier]["name"] != name:
             raise ValueError(f"Profile relation ID/name mismatch: {identifier}/{name}")
         targets[identifier] = {"declaration": deepcopy(relations[identifier]), **_policy(family, identifier)}
-    return {"artifactFamily": family, "contractID": CONTRACT_ID, "ontologyVersion": "0.1.6",
+    return {"artifactFamily": family, "contractID": CONTRACT_ID, "ontologyVersion": "0.1.7",
             "ontologySpecSha256": ONTOLOGY_SHA256, "implementationProjectionOnly": True,
             "ownerClassID": OWNERS[family], "ownerPolicy": "Reuse accepted artifact endpoint; never remint owner",
             "entities": entities, "relations": targets,

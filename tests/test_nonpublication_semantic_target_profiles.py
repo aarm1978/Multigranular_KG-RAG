@@ -30,7 +30,7 @@ class NonpublicationTargetProfileTests(unittest.TestCase):
             self.assertEqual(set(profile["relations"]), relations)
             for identifier, record in {**profile["entities"], **profile["relations"]}.items():
                 self.assertEqual(record["declaration"], declarations[identifier])
-            self.assertEqual(profile["ontologyVersion"], "0.1.6")
+            self.assertEqual(profile["ontologyVersion"], "0.1.7")
         self.assertEqual(get_profile("hydroshare")["relations"]["C-D26"]["declaration"]["name"], "mentionsModel")
         self.assertEqual(declarations["D-26"]["name"], "mentions")
 

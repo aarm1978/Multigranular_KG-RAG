@@ -24,8 +24,8 @@ from src.extraction.llm import source_local_specialized as grouped
 from src.extraction.llm.pilot_preflight import canonical, digest
 
 ROOT=previous.ROOT
-BASE=Path('var/study2_step13/source-local-specialized-production/v4')
-VERSION='study2-source-local-production-selection/1.1.0'
+BASE=Path('var/study2_step13/source-local-specialized-production/v5')
+VERSION='study2-source-local-production-selection/1.2.0'
 GRAPHS=previous.GRAPHS
 adapter=previous.adapter
 require=semantic.require
@@ -72,7 +72,7 @@ def ontology_authority_report(repo: Path=ROOT) -> dict:
     spec=semantic.profiles.load_ontology()
     ontology_path='src/ontology/ontology_spec.yaml'
     sha=digest((repo/ontology_path).read_bytes())
-    require(sha==semantic.profiles.ONTOLOGY_SHA256 and spec['ontology']['version']=='0.1.6','FROZEN_ONTOLOGY_DRIFT')
+    require(sha==semantic.profiles.ONTOLOGY_SHA256 and spec['ontology']['version']=='0.1.7','FROZEN_ONTOLOGY_DRIFT')
     declarations={kind:{d['id']:d for d in spec[key]} for kind,key in [('entities','classes'),('relations','relations')]}
     profiles={};discrepancies=[]
     for family in CORPORA:
@@ -84,8 +84,8 @@ def ontology_authority_report(repo: Path=ROOT) -> dict:
                     differences.append(dict(inventoryId=identifier,frozenDeclaration=expected,profileDeclaration=actual))
         profiles[family]=dict(ontologyVersion=profile['ontologyVersion'],baseOntologyVersion=profile.get('baseOntologyVersion'),
             declarationDifferences=differences,signatureExtensions=profile.get('signatureExtensions',{}))
-        if differences or profile['ontologyVersion']!='0.1.6':
-            discrepancies.append(dict(family=family,reason='profile_not_exact_frozen_v016',inventoryIDs=[d['inventoryId'] for d in differences]))
+        if differences or profile['ontologyVersion']!='0.1.7':
+            discrepancies.append(dict(family=family,reason='profile_not_exact_frozen_v017',inventoryIDs=[d['inventoryId'] for d in differences]))
     checks=[]
     for family,identifier,owner in [('github','C-C15','A-C01'),('ciroh_hub','C-DC25','A-DC01')]:
         profile=semantic.profiles.get_profile(family,version=semantic.VERSION);target=profile['relations'][identifier]
@@ -98,7 +98,7 @@ def ontology_authority_report(repo: Path=ROOT) -> dict:
     publication_path='src/extraction/llm/publications/publication_target_inventory_v0.1.5.yaml'
     raw=(repo/publication_path).read_bytes();publication=yaml.safe_load(raw)['ontology']
     history=dict(profilePath=publication_path,profileSha256=digest(raw),recordedAuthority=publication,
-        matchesFrozenV016=publication['version']=='0.1.6' and publication['spec_sha256_of_reviewed_copy']==sha,
+        matchesCurrentFrozenOntology=publication['version']=='0.1.7' and publication['spec_sha256_of_reviewed_copy']==sha,
         historicalOutputsModified=False)
     generator='var/study2_step13/publication-extraction-plan/v0.1/preflight.py'
     manifest=repo/'var/study2_step13/publications-gpt61-batch/v1/run-manifest.json'
@@ -106,8 +106,8 @@ def ontology_authority_report(repo: Path=ROOT) -> dict:
         m=json.loads(manifest.read_bytes());history.update(generatorPath=generator,generatorSha256=digest((repo/generator).read_bytes()),
             runManifestSha256=digest(manifest.read_bytes()),generatorMatchesCompletedRunPin=m['generatorPins'].get(generator)==digest((repo/generator).read_bytes()),
             authorityEvidence='build(): q[authorities][ontology] explicitly uses the reviewed v0.1.5 profile; prospectiveSourceUnitAuthority is separate.')
-    return dict(version='source-local-ontology-authority-check/1.0',
-        frozen=dict(path=ontology_path,version='0.1.6',sha256=sha),profiles=profiles,validatorSignatureChecks=checks,
+    return dict(version='source-local-ontology-authority-check/1.1',
+        frozen=dict(path=ontology_path,version='0.1.7',sha256=sha),profiles=profiles,validatorSignatureChecks=checks,
         threeFamilyExact=not discrepancies,threeFamilyDiscrepancies=discrepancies,completedPublications=history,
         providerCalls=0,ontologyModified=False)
 

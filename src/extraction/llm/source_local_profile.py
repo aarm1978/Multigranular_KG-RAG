@@ -26,7 +26,7 @@ def inventory() -> dict:
 
 
 def get_profile(family: str, *, version: str, ontology: Mapping[str, Any] | None = None) -> dict:
-    """Extend only enumerated targets and approved source-local dataset signatures."""
+    """Project enumerated targets with exact canonical ontology signatures."""
     if version != VERSION:
         raise ValueError('unsupported_prospective_version')
     spec = legacy.load_ontology()
@@ -44,19 +44,14 @@ def get_profile(family: str, *, version: str, ontology: Mapping[str, Any] | None
             declaration = deepcopy(declarations[identifier])
             if declaration.get('abstract'):
                 raise ValueError('abstract_target')
-            if identifier in data['rangeExtensions']:
-                declaration['range'] = list(dict.fromkeys(
-                    (declaration['range'] if isinstance(declaration['range'], list) else [declaration['range']])
-                    + [data['rangeExtensions'][identifier]]))
             policy = deepcopy(old.get(identifier, dict(modelAuthorable=True, mode='semantic_candidate', requiredGates=[])))
             policy['declaration'] = declaration
             if identifier in {'A-D01', 'A-C01', 'A-P01', 'A-P25'}:
                 policy.update(modelAuthorable=True, mode='evidence_backed_source_local', requiredGates=[])
                 policy.pop('identityPolicy', None)
             profile[group][identifier] = policy
-    profile.update(contractID=VERSION, ontologyVersion='0.1.6+source-local-dataset-signatures/0.1',
-                   baseOntologyVersion='0.1.6', inventorySha256=digest(INVENTORY.read_bytes()),
-                   signatureExtensions=deepcopy(data['rangeExtensions']),
+    profile.update(contractID=VERSION, ontologyVersion=spec['ontology']['version'],
+                   baseOntologyVersion=spec['ontology']['version'], inventorySha256=digest(INVENTORY.read_bytes()),
                    genericOccurrenceTargets=scope['genericOccurrences'],
                    exclusions=data['exclusions'], identityPolicy='exact_deterministic_or_evidence_scoped_local',
                    implementationProjectionOnly=True)
