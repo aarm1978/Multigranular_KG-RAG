@@ -177,7 +177,10 @@ def replay(prepared: dict, raw: bytes, *, expected_request_sha256: str) -> dict:
         baseContextSha256=context['semanticRequest']['requestSha256'],nativeValidationView=native,
         validationViewTransform='schemaVersion only; native originalReplay refers to this explicit view, not authentic provider bytes',
         projection=native['projection'],unresolvedAssertions=native['unresolvedAssertions'],
-        abstentions=native['abstentions'],zeroYield=native['zeroYield'],kgAuthorization=False)
+        abstentions=native['abstentions'],zeroYield=native['zeroYield'],kgAuthorization=False,
+        validationPolicyVersion='source-local-derived-validation/0.4.3',
+        quarantinedAbstentions=[{**q,'authenticResponseSha256':digest(raw),
+            'specializedRequestID':prepared['request']['requestID']} for q in native['quarantinedAbstentions']])
     report['reportSha256']=digest(canonical(report));return report
 
 

@@ -354,6 +354,9 @@ def enrich_checks(prepared: dict, original: dict, validation: dict) -> None:
         if check['kind']=='edge':
             for field,key in [('source','resolvedSource'),('target','resolvedTarget')]:
                 ref=candidate.get(field,{})
+                if (ref is None and identifier=='C-C07' and field=='target'
+                        and candidate.get('classification') in {'unclassified','ambiguous'}):
+                    continue  # Authorized non-KG purpose diagnostic; never invent an endpoint.
                 if ref.get('referenceType')=='candidate_node' and ref['referenceID'] in mapping:
                     check[key]=deepcopy(mapping[ref['referenceID']])
             if identifier=='C-C09':
@@ -380,8 +383,19 @@ def replay(prepared: dict, raw: bytes, *, expected_request_sha256: str) -> dict:
     ids=[r['candidateID'] for g in ('candidateNodes','candidateEdges') for r in payload[g]]+[a['abstentionID'] for a in payload['abstentions']]
     require(all(isinstance(i,str) and i.strip() for i in ids) and len(set(ids))==len(ids),'ambiguous_candidate_identity')
     selected=set(body['selectedSourceUnitIDs'])
-    for a in payload['abstentions']:
-        require(a['inventoryId'] in {*body['targetProfile']['entities'],*body['targetProfile']['relations']} and a['sourceUnitIDs'] and set(a['sourceUnitIDs'])<=selected and a['reason'].strip(),'invalid_abstention')
+    valid_abstentions=[];quarantined=[]
+    for index,a in enumerate(payload['abstentions']):
+        reasons=[]
+        if a['inventoryId'] not in {*body['targetProfile']['entities'],*body['targetProfile']['relations']}:
+            reasons.append('abstention_inventory_not_authorized')
+        if not a['sourceUnitIDs']:reasons.append('abstention_source_units_empty')
+        if not set(a['sourceUnitIDs'])<=selected:reasons.append('abstention_source_unit_not_selected')
+        if not a['reason'].strip():reasons.append('abstention_reason_blank')
+        if reasons:
+            quarantined.append(dict(originalAbstention=deepcopy(a),responseArrayIndex=index,
+                reasons=reasons,requestSha256=expected_request_sha256,responseSha256=digest(raw),
+                disposition='quarantined_invalid_abstention',countsAsNoEvidence=False))
+        else:valid_abstentions.append(deepcopy(a))
     projected={g:deepcopy(payload[g]) for g in ('candidateNodes','candidateEdges')}
     for n in projected['candidateNodes']:
         for field in ('exactIdentifier','productEndpointID','version'):n.pop(field,None)
@@ -398,7 +412,7 @@ def replay(prepared: dict, raw: bytes, *, expected_request_sha256: str) -> dict:
         requestAssociation='matched_caller_supplied_digest',expectedRequestSha256=expected_request_sha256,
         requestSha256=expected_request_sha256,responseSha256=digest(raw),responseBytesHex=raw.hex(),
         sourceSnapshot={k:body[k] for k in ('owner','sourceUnits','selectedSourceUnitIDs')},diagnostics=[],
-        abstentionRecords=deepcopy(payload['abstentions']))
+        abstentionRecords=deepcopy(valid_abstentions))
     wire=json.dumps(original,ensure_ascii=True,sort_keys=True,separators=(',',':'),allow_nan=False)
     report=project_replay(SimpleNamespace(report_json=wire,report_sha256=digest(wire.encode())),policy_version=VERSION).to_record()
     decisions={d['candidateID']:d for d in report['decisions']}
@@ -424,7 +438,9 @@ def replay(prepared: dict, raw: bytes, *, expected_request_sha256: str) -> dict:
                 report['deferredEvidenceAssociations'].append(dict(candidateID=checked['candidateID'],
                     sourceRecordReference=deferred['sourceRecordReference'],sourceGraphSha256=deferred['sourceGraphSha256'],
                     basis='exact_deferred_value_in_bound_same_owner_evidence; association_only_not_promotion'))
-    report['abstentions']=deepcopy(payload['abstentions'])
+    report['abstentions']=valid_abstentions
+    report['quarantinedAbstentions']=quarantined
+    report['validationPolicyVersion']='source-local-derived-validation/0.4.3'
     report['zeroYield']=not (report['projection']['nodes'] or report['projection']['edges'])
     report['derivedConstructionInput'] = derived_construction_input(body, report, validation)
     report['derivedMentions'] = deepcopy(report['derivedConstructionInput']['assertions'])
