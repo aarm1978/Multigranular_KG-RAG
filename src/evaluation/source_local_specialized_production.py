@@ -24,8 +24,8 @@ from src.extraction.llm import source_local_specialized as grouped
 from src.extraction.llm.pilot_preflight import canonical, digest
 
 ROOT=previous.ROOT
-BASE=Path('var/study2_step13/source-local-specialized-production/v5')
-VERSION='study2-source-local-production-selection/1.2.0'
+BASE=Path('var/study2_step13/source-local-specialized-production/v6')
+VERSION='study2-source-local-production-selection/1.3.0'
 GRAPHS=previous.GRAPHS
 adapter=previous.adapter
 require=semantic.require

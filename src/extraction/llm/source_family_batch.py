@@ -9,6 +9,8 @@ import base64
 from copy import deepcopy
 from dataclasses import asdict
 from types import SimpleNamespace
+import sys
+from unittest.mock import patch
 from typing import Any
 
 from src.extraction.llm import construction_acceptance as acceptance
@@ -155,12 +157,47 @@ def process(p: dict, receipt: dict, number: int, first: dict | None = None,
                                 policySha256=digest(policy_path.read_bytes())))
 
 
+# Exact reusable implementation pins, independent of any Publications parent queue.
+# The four stream pins retain the native Journal's existing generatorPins contract.
+TRANSPORT_PINS = {
+    'var/study2_step13/publication-paired-gpt61-smoke/v0.1/paired.py': '249386b6d166fbafb30f77321d7ce05cae1aae1de969f6d12715eaa964c88eda',
+    'var/study2_step13/publication-extraction-plan/v0.1/input-pins.json': '014bbdead7284408769bc4eb23169589bda64141de15d761660c846ba6ecfee9',
+    'var/study2_step13/publication-extraction-plan/v0.1/preflight.py': '480cd98f0cbf88983fab155f84d36596683d55cb4fdd1ffd63b661d97cdd20c8',
+    'var/study2_step13/publication-extraction-plan/v0.2/journal.py': 'c4ee4aa6b3d50352aee67e12c5c88a50ce37d18178ec4c230e511c4ef2e2f0d5',
+    'var/study2_step13/publication-extraction-plan/v0.2/stream.py': 'be8895f5f2e0d2557762dc8fd848912df454ab3c0d6d3062a7ce5445e2fda734',
+}
+
+
 def infrastructure() -> tuple[Any, Any, dict]:
-    """Reuse the verified existing local journal and cost adapter without their runners."""
-    paired, stream, native, _ = batch.baseline.dependencies()
+    """Load pinned shared transport code without a historical Publications queue.
+
+    Native framing, locks, replay and generator checks are unchanged. Each family's
+    own queue loader verifies its semantic/source/implementation authorities.
+    Publications dependencies() and all historical parent guards remain untouched.
+    """
+    root = batch.baseline.ROOT
+    for relative, expected in TRANSPORT_PINS.items():
+        require(digest((root / relative).read_bytes()) == expected,
+                'TRANSPORT_DEPENDENCY_DRIFT:' + relative)
+    paths = list(sys.path)
+    try:
+        paired = batch.baseline.load_module('source_family_paired_transport',
+            root / next(p for p in TRANSPORT_PINS if p.endswith('/paired.py')))
+        stream = batch.baseline.load_module('source_family_stream_transport',
+            root / next(p for p in TRANSPORT_PINS if p.endswith('/stream.py')))
+        # The unchanged journal imports helpers from "stream". Bind only during
+        # module loading; do not replace a historical caller's module or functions.
+        with patch.dict(sys.modules, {'stream': stream}):
+            native = batch.baseline.load_module('source_family_native_journal',
+                root / next(p for p in TRANSPORT_PINS if p.endswith('/journal.py')))
+    finally:
+        sys.path[:] = paths
+    pins = stream.versions()
+    require(pins == {p: h for p, h in TRANSPORT_PINS.items() if not p.endswith('/paired.py')},
+            'TRANSPORT_GENERATOR_DRIFT')
     adapter = SimpleNamespace(Journal=native.Journal, decode=native.decode,
                               bundle=deepcopy, unbundle=deepcopy)
-    return paired, adapter, stream.versions()
+    return paired, adapter, pins
 
 
 def journal_type(paired: Any, native: Any, *, compatibility: bool = False) -> type:
