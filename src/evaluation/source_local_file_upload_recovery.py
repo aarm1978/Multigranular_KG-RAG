@@ -110,8 +110,44 @@ def manual_retry(path, binding, sidecar, api, *, acknowledge_previous_uncertain=
         return recover(path, binding, retry, api, allow_one_upload=True)
 
 
+def recovery_checkpoint(log, job):
+    """Allow only explicitly approved interrupted checkpoints, never submitted jobs."""
+    checkpoints = {
+        JOB: dict(seq=893, head=HEAD_SHA, sha256=FILE_SHA, bytes=19977551),
+        'job-000003': dict(seq=2023,
+            head='4f2b6f4602d2b85a631d385e8648ec175878a3703ed6ee31f53b224569d28be2',
+            sha256='2be9b058f5e6aa38669d3ef067f1a87064992064cee95f113cdb055834465244',
+            bytes=13994550),
+    }
+    require(job in checkpoints, 'UNAUTHORIZED_RECOVERY_JOB')
+    checkpoint = checkpoints[job]
+    require(log.seq == checkpoint['seq'] and log.head == checkpoint['head'], 'JOURNAL_CHECKPOINT_DRIFT')
+    expected = {JOB} if job == JOB else {JOB, 'job-000002', 'job-000003'}
+    require(set(log.jobs) == expected and set(log.jobs[job]) == {'plan', 'upload_intent'}, 'JOB_STATE_DRIFT')
+    if job == 'job-000003':
+        submitted = [(JOB, 'batch_6ae2c345e7708190af156b2f997a1052', 444),
+                     ('job-000002', 'batch_6ae2c46899248190b47c536cc4a2c5bd', 354)]
+        for jid, batch_id, count in submitted:
+            require(log.job(jid, 'submitted')['id'] == batch_id and
+                    len(log.job(jid, 'plan')['items']) == count, 'SUBMITTED_BATCH_DRIFT')
+        require(len(log.job(job, 'plan')['items']) == 207, 'UNSENT_COUNT_DRIFT')
+    return log.job(job, 'plan'), log.job(job, 'upload_intent'), checkpoint
+
+
+def reconcile(binding, api):
+    """Read remote files without writing sidecars or permitting any upload."""
+    rows = api.listing('files')
+    matches = [r for r in rows if r.get('filename') == binding['filename'] and r.get('bytes') == binding['bytes']]
+    require(len(matches) <= 1, 'MULTIPLE_MATCHING_FILES_STOP')
+    result = dict(binding=binding, fullyPaginated=True, matchingFiles=len(matches),
+                  status='zero_matches', batchSubmitted=False, uploadPerformed=False)
+    if matches:
+        result.update(status='verified_reuse', fileID=verify_remote(api, matches[0], binding))
+    return result
+
+
 @contextmanager
-def sealed_job(repo=ROOT):
+def sealed_job(repo=ROOT, job=JOB):
     """Read-only native replay under an exclusive lock; verify this exact interrupted job."""
     root = repo / QUEUE
     queue_raw = (root / 'queue-manifest.json').read_bytes()
@@ -146,17 +182,16 @@ def sealed_job(repo=ROOT):
             log.file = handle
             log.anchor = native.decode(log.checkpoint.read_bytes())
             native.Journal.replay(log)
-            require(log.seq == 893 and log.head == HEAD_SHA, 'JOURNAL_CHECKPOINT_DRIFT')
-            require(set(log.jobs) == {JOB} and set(log.jobs[JOB]) == {'plan', 'upload_intent'}, 'JOB_STATE_DRIFT')
-            plan = log.job(JOB, 'plan'); intent = log.job(JOB, 'upload_intent')
+            plan, intent, checkpoint = recovery_checkpoint(log, job)
+            file_sha = checkpoint['sha256']
             require(intent == dict(filename=plan['filename'], sha256=plan['sha256']), 'UPLOAD_INTENT_DRIFT')
-            require(plan['sha256'] == FILE_SHA and plan['bytes'] == 19977551 and
-                    plan['filename'] == 'pub-' + RUN_SHA[:16] + '-' + FILE_SHA + '.jsonl', 'SEALED_PLAN_DRIFT')
+            require(plan['sha256'] == file_sha and plan['bytes'] == checkpoint['bytes'] and
+                    plan['filename'] == 'pub-' + RUN_SHA[:16] + '-' + file_sha + '.jsonl', 'SEALED_PLAN_DRIFT')
             path = execution / plan['filename']
-            require(path.stat().st_size == plan['bytes'] and digest(path.read_bytes()) == FILE_SHA, 'SEALED_FILE_DRIFT')
-            yield path, dict(queueSha256=QUEUE_SHA, runManifestSha256=RUN_SHA, jobID=JOB,
-                journalSeq=893, journalHeadSha256=HEAD_SHA, uploadIntent=intent,
-                filename=path.name, bytes=plan['bytes'], sha256=FILE_SHA, timeoutSeconds=TIMEOUT)
+            require(path.stat().st_size == plan['bytes'] and digest(path.read_bytes()) == file_sha, 'SEALED_FILE_DRIFT')
+            yield path, dict(queueSha256=QUEUE_SHA, runManifestSha256=RUN_SHA, jobID=job,
+                journalSeq=log.seq, journalHeadSha256=log.head, uploadIntent=intent,
+                filename=path.name, bytes=plan['bytes'], sha256=file_sha, timeoutSeconds=TIMEOUT)
         finally:
             log.file = None
             fcntl.flock(handle, fcntl.LOCK_UN)
@@ -228,21 +263,26 @@ def recover(path, binding, sidecar, api, *, allow_one_upload=False):
 def main():
     """Researcher-terminal entry point; inspect is offline, recover permits Files only."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('operation', choices=['inspect', 'recover', 'manual-retry'])
+    parser.add_argument('operation', choices=['inspect', 'reconcile', 'recover', 'manual-retry'])
+    parser.add_argument('--job', choices=[JOB, 'job-000003'], default=JOB)
     parser.add_argument('--allow-one-upload', action='store_true')
     parser.add_argument('--acknowledge-previous-uncertain-outcome', action='store_true')
     args = parser.parse_args()
     if args.operation == 'manual-retry':
         require(args.acknowledge_previous_uncertain_outcome, 'EXPLICIT_PREVIOUS_UNCERTAIN_ACK_REQUIRED')
-    with sealed_job() as (path, binding):
+    require(args.operation != 'manual-retry' or args.job == JOB, 'MANUAL_RETRY_ONLY_JOB_000001')
+    sidecar = ROOT / SIDECAR.parent / args.job
+    with sealed_job(job=args.job) as (path, binding):
         if args.operation == 'inspect': result = dict(binding=binding, providerCalls=0)
         else:
             api = FileOnlyAPI(openai_provider.load_openai_api_key())
-            if args.operation == 'manual-retry':
-                result = manual_retry(path, binding, ROOT / SIDECAR, api,
+            if args.operation == 'reconcile':
+                result = reconcile(binding, api)
+            elif args.operation == 'manual-retry':
+                result = manual_retry(path, binding, sidecar, api,
                     acknowledge_previous_uncertain=args.acknowledge_previous_uncertain_outcome)
             else:
-                result = recover(path, binding, ROOT / SIDECAR, api, allow_one_upload=args.allow_one_upload)
+                result = recover(path, binding, sidecar, api, allow_one_upload=args.allow_one_upload)
     print(json.dumps(result, indent=2))
 
 

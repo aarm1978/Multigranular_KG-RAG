@@ -185,6 +185,54 @@ class FileRecoveryTests(unittest.TestCase):
         diagnostic = r.safe_diagnostic(r.transport.HTTPFailure(503, b'SECRET'))
         self.assertEqual(diagnostic, dict(exceptionType='HTTPFailure', httpStatus=503))
 
+    def test_new_job_checkpoint_protects_submitted_jobs(self):
+        """Only the pinned third-job interruption permits recovery of the 207 unsent items."""
+        from types import SimpleNamespace
+        jobs = {
+            r.JOB: {'plan': {'items': [None] * 444},
+                    'submitted': {'id': 'batch_6ae2c345e7708190af156b2f997a1052'}},
+            'job-000002': {'plan': {'items': [None] * 354},
+                    'submitted': {'id': 'batch_6ae2c46899248190b47c536cc4a2c5bd'}},
+            'job-000003': {'plan': {'items': [None] * 207}, 'upload_intent': {}},
+        }
+        log = SimpleNamespace(seq=2023,
+            head='4f2b6f4602d2b85a631d385e8648ec175878a3703ed6ee31f53b224569d28be2',
+            jobs=jobs, job=lambda jid, event: jobs[jid][event])
+        self.assertEqual(r.recovery_checkpoint(log, 'job-000003')[2]['bytes'], 13994550)
+        with self.assertRaisesRegex(ValueError, 'UNAUTHORIZED_RECOVERY_JOB'):
+            r.recovery_checkpoint(log, 'job-000002')
+        jobs['job-000003']['submitted'] = {}
+        with self.assertRaisesRegex(ValueError, 'JOB_STATE_DRIFT'):
+            r.recovery_checkpoint(log, 'job-000003')
+        del jobs['job-000003']['submitted']
+        jobs[r.JOB]['submitted']['id'] = 'wrong'
+        with self.assertRaisesRegex(ValueError, 'SUBMITTED_BATCH_DRIFT'):
+            r.recovery_checkpoint(log, 'job-000003')
+
+    def test_read_only_reconcile_and_separate_new_job_records(self):
+        """Reconciliation cannot upload; third-job records never touch the first job."""
+        original = self.sidecar / 'preserved.json'
+        self.sidecar.mkdir(parents=True)
+        original.write_bytes(b'original evidence')
+        self.assertEqual(r.reconcile(self.binding, self.api)['matchingFiles'], 0)
+        self.api.rows = [self.row]
+        self.assertEqual(r.reconcile(self.binding, self.api)['fileID'], self.row['id'])
+        self.api.rows.append(self.row)
+        with self.assertRaisesRegex(ValueError, 'MULTIPLE_MATCHING_FILES'):
+            r.reconcile(self.binding, self.api)
+        self.assertEqual(self.api.posts, 0)
+        self.api.rows = []
+        new_sidecar = self.sidecar.parent / 'job-000003'
+        with self.assertRaisesRegex(ValueError, 'explicit --allow-one-upload'):
+            r.recover(self.path, self.binding, new_sidecar, self.api)
+        # Fake uploader checks the selected job's durable intent before its POST.
+        self.sidecar = new_sidecar
+        r.recover(self.path, self.binding, new_sidecar, self.api, allow_one_upload=True)
+        with self.assertRaisesRegex(ValueError, 'PRIOR_RECOVERY_INTENT_STOP'):
+            r.recover(self.path, self.binding, new_sidecar, self.api, allow_one_upload=True)
+        self.assertEqual(self.api.posts, 1)
+        self.assertEqual(original.read_bytes(), b'original evidence')
+
     def test_wrong_queue_checkpoint_fails_before_network(self):
         """The local verifier accepts only the exact sealed v6 manifest."""
         queue = self.root/r.QUEUE; queue.mkdir(parents=True)
