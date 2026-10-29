@@ -113,9 +113,10 @@ def safe_diagnostic(exc):
     return result
 
 
-def manual_retry(path, binding, sidecar, api, *, acknowledge_previous_uncertain=False, sdk=False):
-    """Authorize only recovery attempt 2, retaining and binding the first attempt forever."""
+def manual_retry(path, binding, sidecar, api, *, acknowledge_previous_uncertain=False, sdk=False, attempt=2):
+    """Authorize a fixed numbered recovery, preserving and binding prior uncertain attempts."""
     require(acknowledge_previous_uncertain, 'EXPLICIT_PREVIOUS_UNCERTAIN_ACK_REQUIRED')
+    require(attempt == 2 or (sdk and attempt == 3), 'UNAUTHORIZED_RECOVERY_ATTEMPT')
     # Share the original lock, preventing concurrent original/retry recovery operations.
     with (sidecar / 'recovery.lock').open('rb') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -131,20 +132,37 @@ def manual_retry(path, binding, sidecar, api, *, acknowledge_previous_uncertain=
                         'PREVIOUS_INTENT_DRIFT')
             previous[name] = digest(raw)
         require(not sdk or binding.get('jobID') == 'job-000003', 'SDK_RETRY_ONLY_JOB_000003')
-        retry = sidecar / ('sdk-retry-000002' if sdk else 'manual-retry-000002')
-        durable_directory(retry)
         authorization = dict(binding=binding, recoveryAttempt=2,
             acknowledgedPreviousUncertainOutcome=True, authorizedAdditionalPosts=1,
             previousRecordSha256=previous)
         if sdk:
             authorization.update(transport='openai-sdk', sdkVersion='1.109.1',
                                  timeoutSeconds=TIMEOUT, maxRetries=0)
+        if attempt == 3:
+            prior = sidecar / 'sdk-retry-000002'
+            # Require the exact previous authorization, and an uncertain dispatched attempt.
+            raw = (prior / 'authorization.json').read_bytes()
+            require(transport.decode(raw) == authorization, 'PREVIOUS_SDK_AUTHORIZATION_DRIFT')
+            previous['sdk-retry-000002/authorization.json'] = digest(raw)
+            for name in ('intent.json', 'outcome.json'):
+                raw = (prior / name).read_bytes()
+                record = transport.decode(raw)
+                require(record['binding'] == binding, 'PREVIOUS_SDK_BINDING_DRIFT')
+                if name == 'outcome.json':
+                    require(record['status'] == 'uncertain', 'PREVIOUS_SDK_OUTCOME_NOT_UNCERTAIN')
+                else:
+                    require(record['action'] == 'one_file_upload' and record['attempts'] == 1,
+                            'PREVIOUS_SDK_INTENT_DRIFT')
+                previous['sdk-retry-000002/' + name] = digest(raw)
+            authorization['recoveryAttempt'] = 3
+        retry = sidecar / (('sdk-retry-' if sdk else 'manual-retry-') + f'{attempt:06d}')
+        durable_directory(retry)
         auth_path = retry / 'authorization.json'
         if auth_path.exists():
             require(transport.decode(auth_path.read_bytes()) == authorization, 'AUTHORIZATION_DRIFT')
         else:
             seal(auth_path, authorization)
-        # Existing attempt-2 intent blocks a third POST even when this command is repeated.
+        # A numbered intent permanently blocks another POST under that authorization.
         return recover(path, binding, retry, api, allow_one_upload=True)
 
 
@@ -303,6 +321,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('operation', choices=['inspect', 'reconcile', 'recover', 'manual-retry', 'sdk-retry'])
     parser.add_argument('--job', choices=[JOB, 'job-000003'], default=JOB)
+    parser.add_argument('--sdk-attempt', type=int, choices=[2, 3], default=2)
     parser.add_argument('--allow-one-upload', action='store_true')
     parser.add_argument('--acknowledge-previous-uncertain-outcome', action='store_true')
     args = parser.parse_args()
@@ -310,6 +329,7 @@ def main():
         require(args.acknowledge_previous_uncertain_outcome, 'EXPLICIT_PREVIOUS_UNCERTAIN_ACK_REQUIRED')
     require(args.operation != 'manual-retry' or args.job == JOB, 'MANUAL_RETRY_ONLY_JOB_000001')
     require(args.operation != 'sdk-retry' or args.job == 'job-000003', 'SDK_RETRY_ONLY_JOB_000003')
+    require(args.sdk_attempt == 2 or args.operation == 'sdk-retry', 'SDK_ATTEMPT_REQUIRES_SDK_RETRY')
     sidecar = ROOT / SIDECAR.parent / args.job
     with sealed_job(job=args.job) as (path, binding):
         if args.operation == 'inspect': result = dict(binding=binding, providerCalls=0)
@@ -322,7 +342,7 @@ def main():
                 try:
                     result = manual_retry(path, binding, sidecar, api,
                         acknowledge_previous_uncertain=args.acknowledge_previous_uncertain_outcome,
-                        sdk=args.operation == 'sdk-retry')
+                        sdk=args.operation == 'sdk-retry', attempt=args.sdk_attempt)
                 finally:
                     if args.operation == 'sdk-retry': api.close()
             else:

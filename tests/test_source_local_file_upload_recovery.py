@@ -292,6 +292,63 @@ class FileRecoveryTests(unittest.TestCase):
         self.assertNotIn('SECRET', raw)
         self.assertEqual(json.loads(raw)['httpStatus'], 503)
 
+    def prepare_third_sdk_attempt(self):
+        """Create two synthetic uncertain attempts without real provider traffic."""
+        self.binding['jobID'] = 'job-000003'
+        self.api.fail = True
+        with self.assertRaises(ValueError): self.run_recovery()
+        with self.assertRaises(ValueError):
+            r.manual_retry(self.path, self.binding, self.sidecar, self.api,
+                           acknowledge_previous_uncertain=True, sdk=True)
+        return {p: p.read_bytes() for p in self.sidecar.rglob('*') if p.is_file()}
+
+    def third_sdk_attempt(self):
+        """Invoke only the explicitly numbered authorization."""
+        return r.manual_retry(self.path, self.binding, self.sidecar, self.api,
+                              acknowledge_previous_uncertain=True, sdk=True, attempt=3)
+
+    def test_sdk_third_attempt_isolated_and_permanently_blocked_after_uncertainty(self):
+        """Earlier records remain immutable and a third-attempt intent cannot be reused."""
+        originals = self.prepare_third_sdk_attempt()
+        with self.assertRaisesRegex(ValueError, 'UPLOAD_OUTCOME_UNCERTAIN'):
+            self.third_sdk_attempt()
+        self.assertEqual(self.api.posts, 3)
+        with self.assertRaisesRegex(ValueError, 'PRIOR_RECOVERY_INTENT_STOP'):
+            self.third_sdk_attempt()
+        self.assertEqual(self.api.posts, 3)
+        auth = json.loads((self.sidecar / 'sdk-retry-000003/authorization.json').read_bytes())
+        self.assertEqual(auth['recoveryAttempt'], 3)
+        self.assertEqual(len(auth['previousRecordSha256']), 5)
+        self.assertEqual(auth['binding'], self.binding)
+        for path, raw in originals.items(): self.assertEqual(path.read_bytes(), raw)
+
+    def test_sdk_third_attempt_remote_reuse_and_reconciliation_failures(self):
+        """Remote failures or ambiguity cannot dispatch; exact bytes permit reuse only."""
+        self.prepare_third_sdk_attempt()
+        with patch.object(self.api, 'listing', side_effect=OSError('offline')):
+            with self.assertRaises(OSError): self.third_sdk_attempt()
+        self.api.rows = [self.row, self.row]
+        with self.assertRaisesRegex(ValueError, 'MULTIPLE_MATCHING_FILES'): self.third_sdk_attempt()
+        self.api.rows = [self.row]; self.api.bad = True
+        with self.assertRaisesRegex(ValueError, 'REMOTE_CONTENT_DRIFT'): self.third_sdk_attempt()
+        self.api.bad = False
+        self.assertEqual(self.third_sdk_attempt()['status'], 'verified_reuse')
+        self.assertEqual(self.api.posts, 2)
+        self.assertFalse((self.sidecar / 'sdk-retry-000003/intent.json').exists())
+
+    def test_sdk_third_attempt_requires_prior_uncertain_authorization(self):
+        """No arbitrary retry numbers or altered prior authority can authorize a POST."""
+        self.prepare_third_sdk_attempt()
+        prior = self.sidecar / 'sdk-retry-000002/authorization.json'
+        record = json.loads(prior.read_bytes()); record['maxRetries'] = 1
+        prior.write_bytes(r.canonical(record))
+        with self.assertRaisesRegex(ValueError, 'PREVIOUS_SDK_AUTHORIZATION_DRIFT'):
+            self.third_sdk_attempt()
+        with self.assertRaisesRegex(ValueError, 'UNAUTHORIZED_RECOVERY_ATTEMPT'):
+            r.manual_retry(self.path, self.binding, self.sidecar, self.api,
+                           acknowledge_previous_uncertain=True, sdk=True, attempt=4)
+        self.assertEqual(self.api.posts, 2)
+
     def test_installed_sdk_mock_transport(self):
         """Exercise the real pinned SDK without sockets when installed in the new environment."""
         import openai
