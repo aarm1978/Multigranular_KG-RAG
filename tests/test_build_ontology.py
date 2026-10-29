@@ -479,7 +479,8 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
         self.assertEqual(uses_dataset["name"], "usesDataset")
         self.assertEqual(references_dataset["name"], "referencesDataset")
         self.assertEqual(uses_dataset["domain"], references_dataset["domain"])
-        self.assertEqual(uses_dataset["range"], references_dataset["range"])
+        self.assertEqual(uses_dataset["range"], ["DatasetResource", "DatasetMention"])
+        self.assertEqual(references_dataset["range"], "DatasetResource")
         self.assertEqual(uses_dataset["maps_to"], "D-01")
         self.assertEqual(references_dataset["maps_to"], "D-05")
 
@@ -591,7 +592,7 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
             "C-DC22": ("references", "DocumentationPage", "DocumentationPage", "D-15"),
             "C-DC23": ("referencesFeature", "DocumentationPage", "HydrologicFeature", "D-18"),
             "C-DC24": ("mentionsModel", "DocumentationPage", "ComputationalModel", "D-21"),
-            "C-DC25": ("mentionsDataset", "DocumentationPage", "DatasetResource", "D-21"),
+            "C-DC25": ("mentionsDataset", "DocumentationPage", ["DatasetResource", "DatasetMention"], "D-21"),
         }
         for inventory_id, declaration in expected.items():
             with self.subTest(inventory_id=inventory_id):
@@ -917,15 +918,54 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
             )
 
 
-class Ontology016CandidateTests(unittest.TestCase):
+class Ontology017CandidateTests(unittest.TestCase):
     """Check the prospective amendment without migrating frozen outputs."""
 
     def test_candidate_artifact_hash_and_property_counts(self) -> None:
         """Pin the build candidate, not a claim of completed HermiT validation."""
-        self.assertEqual(hashlib.sha256(OWL_PATH.read_bytes()).hexdigest(), "6ebf7f67f79d8aae4fada176911ed9311964beb567f40a097af9017f1ad9c730")
+        self.assertEqual(hashlib.sha256(OWL_PATH.read_bytes()).hexdigest(), "ac64435ca02a703bdee8168a045a3897d7f6f5be1a8e25e6cdf485c66c85e0fa")
         root = parse_owl()
         self.assertEqual(len(root.findall("owl:ObjectProperty", NS)), 92)
         self.assertEqual(len(root.findall("owl:DatatypeProperty", NS)), 20)
+
+    def test_only_approved_v017_source_changes(self) -> None:
+        """Reversing the version and two ranges recovers exact frozen v0.1.6 bytes."""
+        raw = SPEC_PATH.read_bytes()
+        self.assertEqual(raw.count(b'version: "0.1.7"'), 1)
+        restored = raw.replace(b'version: "0.1.7"', b'version: "0.1.6"')
+        for identifier in ("C-C15", "C-DC25"):
+            lines = [line for line in restored.splitlines(keepends=True)
+                     if f"id: {identifier},".encode() in line]
+            self.assertEqual(len(lines), 1)
+            self.assertIn(b"range: [DatasetResource, DatasetMention]", lines[0])
+            restored = restored.replace(lines[0], lines[0].replace(
+                b"range: [DatasetResource, DatasetMention]", b"range: DatasetResource"))
+        self.assertEqual(hashlib.sha256(restored).hexdigest(),
+                         "47f035081d4e883146a479130c1f4c4751f0c40358fd1a8d154b43b36e34371e")
+
+    def test_approved_dataset_signatures_generate_union_ranges(self) -> None:
+        """Both approved signatures use OWL unions, with original domains and IDs."""
+        root = parse_owl()
+        for identifier, name, domain, merged_domains, ids in (
+            ("C-C15", "usesDataset", "Repository", {"Repository", "Paper"}, {"C-C15", "C-P20"}),
+            ("C-DC25", "mentionsDataset", "DocumentationPage", {"DocumentationPage", "Paper"}, {"C-DC25", "C-P24"}),
+        ):
+            with self.subTest(inventory_id=identifier):
+                declaration = relation_by_id(identifier)
+                self.assertEqual(declaration["name"], name)
+                self.assertEqual(declaration["domain"], domain)
+                self.assertEqual(declaration["range"], ["DatasetResource", "DatasetMention"])
+                prop = entity_for_inventory_id(root, identifier)
+                self.assertEqual(property_inventory_ids(prop), ids)
+                self.assertEqual(property_expression_members(prop, "domain"), merged_domains)
+                self.assertEqual(property_expression_members(prop, "range"), {"DatasetResource", "DatasetMention"})
+                ranges = prop.findall("rdfs:range", NS)
+                self.assertEqual(len(ranges), 1)
+                self.assertIsNone(ranges[0].get(RDF_RESOURCE))
+                union = ranges[0].find("owl:Class/owl:unionOf", NS)
+                self.assertIsNotNone(union)
+                self.assertEqual(union.get(f"{{{NS['rdf']}}}parseType"), "Collection")
+                self.assertEqual(len(union.findall("rdf:Description", NS)), 2)
 
     def test_historical_authorities_are_byte_preserved(self) -> None:
         """Pin the exact pre-amendment authorities, including validated OWL."""
@@ -938,11 +978,11 @@ class Ontology016CandidateTests(unittest.TestCase):
             self.assertEqual(hashlib.sha256((HISTORICAL_015 / name).read_bytes()).hexdigest(), digest)
 
     def test_candidate_version_counts_and_approved_source_delta(self) -> None:
-        """Only reviewed additions and two explanatory notes change the source."""
+        """Retain the 0.1.6 additions/notes and only the approved 0.1.7 ranges."""
         old = yaml.safe_load((HISTORICAL_015 / "ontology_spec.yaml").read_text())
         new = load_spec()
-        self.assertEqual(new["ontology"]["version"], "0.1.6")
-        self.assertEqual(parse_owl().find("owl:Ontology/owl:versionInfo", NS).text, "0.1.6")
+        self.assertEqual(new["ontology"]["version"], "0.1.7")
+        self.assertEqual(parse_owl().find("owl:Ontology/owl:versionInfo", NS).text, "0.1.7")
         self.assertEqual((len(new["classes"]), len(new["relations"])), (77, 130))
         for section, additions in (("classes", {"A-D13"}), ("relations", {"C-D27", "C-D28", "C-D29"})):
             before = {x["id"]: x for x in old[section]}
@@ -954,6 +994,9 @@ class Ontology016CandidateTests(unittest.TestCase):
                 retained = dict(after[key])
                 if key in {"A-C07", "A-AG-R2"}:
                     retained["note"] = declaration["note"]
+                if key in {"C-C15", "C-DC25"}:
+                    self.assertEqual(retained["range"], ["DatasetResource", "DatasetMention"])
+                    retained["range"] = declaration["range"]
                 self.assertEqual(retained, declaration, key)
         prefixes = {x["prefix"]: x for x in new["prefixes"]}
         for entry in old["prefixes"]:

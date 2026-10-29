@@ -20,7 +20,7 @@ ontology:
   iri: "https://w3id.org/ciroh/ontology#"
   prefix: ciroh
   title: "Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts"
-  version: "0.1.6"
+  version: "0.1.7"
 
 # -----------------------------------------------------------------------------
 # Namespaces / imports (v0.1 §3.1).
@@ -469,7 +469,7 @@ relations:
   - {id: C-C12, name: mentionsVariable, domain: Repository, range: Variable, anchor: "ciroh:", evidence: "prose (quote)", type: [cross, same], consol: true, status: E, subproperty_of: mentions}
   - {id: C-C13, name: dependsOnRepository, domain: Repository, range: Repository, anchor: "ciroh:", evidence: "github.com links / dep files", type: same, status: S, status_note: "S/E", note: "no standard repo->repo dep"}
   - {id: C-C14, name: forkedFrom, domain: Repository, range: Repository, anchor: "ciroh:", evidence: "fork flag (det); parent via README/Binder badge", type: same, status: S, status_note: "flag S · parent E"}
-  - {id: C-C15, name: usesDataset, domain: Repository, range: DatasetResource, anchor: "ciroh:", evidence: "README/notebook HydroShare URL", type: cross, status: S, maps_to: D-01}
+  - {id: C-C15, name: usesDataset, domain: Repository, range: [DatasetResource, DatasetMention], anchor: "ciroh:", evidence: "README/notebook HydroShare URL", type: cross, status: S, maps_to: D-01}
   - {id: C-C16, name: implementsMethod, domain: [Repository, Tool], range: Method, anchor: "ciroh:", typed_subproperties: ["cito:usesMethodIn"], evidence: "README + Methods prose", type: cross, status: S, maps_to: D-02, note: "Method in Paper"}
   - {id: C-C17, name: referencePublication, domain: Repository, range: Paper, anchor: "codemeta:referencePublication", typed_subproperties: ["cito:cites"], evidence: "CITATION.cff/.md (det) / prose", type: cross, status: S, maps_to: D-07, note: "aka citesPaper"}
   - {id: C-C18, name: archivedAs, domain: Repository, range: Identifier, anchor: "datacite:relatedIdentifier", evidence: "repo README DOI <-> paper-cited DOI (det where matched)", type: same, status: E, maps_to: D-20, note: "aka sameSoftwareAs; archived DOI snapshot; IsVersionOf/IsDerivedFrom"}
@@ -538,7 +538,7 @@ relations:
      anchor: "ciroh:", evidence: "documentation body prose with quoted evidence",
      type: [cross, same], consol: true, status: S, maps_to: D-21,
      note: "Model mention without sufficient evidence that the page describes, documents, or uses the model; weaker than C-DC16 describesModel.", subproperty_of: mentions}
-  - {id: C-DC25, name: mentionsDataset, domain: DocumentationPage, range: DatasetResource,
+  - {id: C-DC25, name: mentionsDataset, domain: DocumentationPage, range: [DatasetResource, DatasetMention],
      anchor: "ciroh:", evidence: "documentation body prose with quoted evidence",
      type: cross, consol: true, status: S, maps_to: D-21,
      note: "Dataset mention without sufficient evidence of use or explicit identifier-based reference; distinct from C-DC15 referencesDataset.", subproperty_of: mentions}
