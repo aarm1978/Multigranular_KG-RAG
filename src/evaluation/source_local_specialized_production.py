@@ -24,14 +24,28 @@ from src.extraction.llm import source_local_specialized as grouped
 from src.extraction.llm.pilot_preflight import canonical, digest
 
 ROOT=previous.ROOT
-BASE=Path('var/study2_step13/source-local-specialized-production/v3')
-VERSION='study2-source-local-production-selection/1.0.0'
+BASE=Path('var/study2_step13/source-local-specialized-production/v4')
+VERSION='study2-source-local-production-selection/1.1.0'
 GRAPHS=previous.GRAPHS
 adapter=previous.adapter
 require=semantic.require
 CORPORA={'hydroshare':'data/interim/datasets/ciroh_hydroshare_corpus.json',
          'github':'data/interim/coderepos/ciroh_github_corpus.json',
          'ciroh_hub':'data/interim/documents/ciroh_hub_corpus.json'}
+
+SIZING={**deepcopy(previous.sizing.SIZING),
+    'version':'source-local-specialized-production-sizing/1.1.0',
+    'maxSelectedTextBytes':262144,
+    'grouping':{f:'complete_owner_context_shared_by_specialized_groups' for f in CORPORA},
+    'rationale':'Measured all 335 frozen contexts after removing provider historical diagnostics: '
+        'maximum source 255288 UTF-8 bytes; maximum specialized envelope 347760 bytes. '
+        'Use a 256 KiB source planning margin with the unchanged 1 MB envelope and 32768 output-token ceiling. '
+        'No source splitting, filtering, cache assumption or output-completeness guarantee; native truncation holds remain.'}
+
+
+def source_fits(units: list) -> bool:
+    """Apply the measured prospective text margin without modifying any source unit."""
+    return sum(len(u['text'].encode()) for u in units)<=SIZING['maxSelectedTextBytes']
 
 
 @contextmanager
@@ -50,6 +64,52 @@ def ontology_parse_cache():
         return deepcopy(cached[raw])
     with patch.object(semantic.profiles,'yaml',SimpleNamespace(safe_load=parse)):
         yield
+
+
+def ontology_authority_report(repo: Path=ROOT) -> dict:
+    """Verify frozen bytes and expose profile/validator authority conflicts without repair."""
+    import yaml
+    spec=semantic.profiles.load_ontology()
+    ontology_path='src/ontology/ontology_spec.yaml'
+    sha=digest((repo/ontology_path).read_bytes())
+    require(sha==semantic.profiles.ONTOLOGY_SHA256 and spec['ontology']['version']=='0.1.6','FROZEN_ONTOLOGY_DRIFT')
+    declarations={kind:{d['id']:d for d in spec[key]} for kind,key in [('entities','classes'),('relations','relations')]}
+    profiles={};discrepancies=[]
+    for family in CORPORA:
+        profile=semantic.profiles.get_profile(family,version=semantic.VERSION);differences=[]
+        for kind in declarations:
+            for identifier,target in profile[kind].items():
+                actual=target['declaration'];expected=declarations[kind].get(identifier)
+                if actual!=expected:
+                    differences.append(dict(inventoryId=identifier,frozenDeclaration=expected,profileDeclaration=actual))
+        profiles[family]=dict(ontologyVersion=profile['ontologyVersion'],baseOntologyVersion=profile.get('baseOntologyVersion'),
+            declarationDifferences=differences,signatureExtensions=profile.get('signatureExtensions',{}))
+        if differences or profile['ontologyVersion']!='0.1.6':
+            discrepancies.append(dict(family=family,reason='profile_not_exact_frozen_v016',inventoryIDs=[d['inventoryId'] for d in differences]))
+    checks=[]
+    for family,identifier,owner in [('github','C-C15','A-C01'),('ciroh_hub','C-DC25','A-DC01')]:
+        profile=semantic.profiles.get_profile(family,version=semantic.VERSION);target=profile['relations'][identifier]
+        check=semantic.profiles.check_target(family,identifier,version=semantic.VERSION,
+            relation_name=target['declaration']['name'],source_class_id=owner,target_class_id='A-P25',
+            gates={k:True for k in target['requiredGates']})
+        checks.append(dict(family=family,inventoryId=identifier,targetClass='DatasetMention',
+            structuralScopePass=check['structuralScopePass'],reasons=check['reasons'],
+            meaning='Synthetic signature-only counterexample; not evidence validation or an accepted assertion.'))
+    publication_path='src/extraction/llm/publications/publication_target_inventory_v0.1.5.yaml'
+    raw=(repo/publication_path).read_bytes();publication=yaml.safe_load(raw)['ontology']
+    history=dict(profilePath=publication_path,profileSha256=digest(raw),recordedAuthority=publication,
+        matchesFrozenV016=publication['version']=='0.1.6' and publication['spec_sha256_of_reviewed_copy']==sha,
+        historicalOutputsModified=False)
+    generator='var/study2_step13/publication-extraction-plan/v0.1/preflight.py'
+    manifest=repo/'var/study2_step13/publications-gpt61-batch/v1/run-manifest.json'
+    if manifest.exists() and (repo/generator).exists():
+        m=json.loads(manifest.read_bytes());history.update(generatorPath=generator,generatorSha256=digest((repo/generator).read_bytes()),
+            runManifestSha256=digest(manifest.read_bytes()),generatorMatchesCompletedRunPin=m['generatorPins'].get(generator)==digest((repo/generator).read_bytes()),
+            authorityEvidence='build(): q[authorities][ontology] explicitly uses the reviewed v0.1.5 profile; prospectiveSourceUnitAuthority is separate.')
+    return dict(version='source-local-ontology-authority-check/1.0',
+        frozen=dict(path=ontology_path,version='0.1.6',sha256=sha),profiles=profiles,validatorSignatureChecks=checks,
+        threeFamilyExact=not discrepancies,threeFamilyDiscrepancies=discrepancies,completedPublications=history,
+        providerCalls=0,ontologyModified=False)
 
 
 def owner_inventory(original: dict, recovery: dict, corpora: dict) -> list[dict]:
@@ -136,6 +196,8 @@ def full_hub_template(owner: dict) -> dict:
 
 def check_groups(rows: list, requests: list) -> None:
     """Require exact owner/group coverage and reject duplicates or excluded owners."""
+    require(all(r['status'] in {'prepared','blocked'} for r in rows),'UNKNOWN_OWNER_STATUS')
+    require(len({(r['family'],r['ownerID']) for r in rows})==len(rows),'DUPLICATE_OWNER_ROW')
     scopes={f:set(grouped.inventory(f)) for f in {r['family'] for r in rows}}
     expected={(r['family'],r['ownerID']):scopes[r['family']] for r in rows if r['status']=='prepared'}
     actual=defaultdict(set)
@@ -165,6 +227,7 @@ def prepare(repo: Path=ROOT, output: Path=BASE) -> dict:
     for path,sha in original['sourcePins'].items():
         require(digest((repo/path).read_bytes())==sha,'HISTORICAL_SOURCE_DRIFT:'+path);pins[path]=sha
     rows=owner_inventory(original,recovery,corpora)
+    ontology_report=ontology_authority_report(repo)
     implementation=previous.implementation_pins(repo)
     for path in (grouped.CONTRACT,Path(__file__).resolve().parents[2]/'docs/study2_source_local_production_selection_v1.md'):
         implementation[str(path.relative_to(repo))]=digest(path.read_bytes())
@@ -209,11 +272,11 @@ def prepare(repo: Path=ROOT, output: Path=BASE) -> dict:
             row['sourceBytes']=sum(u['utf8Bytes'] for u in row['sources'])
             name='contexts/'+digest(owner.encode())+'.json'
             row['contextFile']=name;row['contextSha256']=write(name,p)
-            require(previous.sizing.fits(units),'OWNER_CONTEXT_REQUIRES_EXPLICIT_STRUCTURAL_SUBDIVISION')
+            require(source_fits(units),'OWNER_CONTEXT_REQUIRES_EXPLICIT_STRUCTURAL_SUBDIVISION')
             prepared=[]
             for group in grouped.inventory(family):
-                q=grouped.build(p,group)
-                require(len(canonical(q['body']))<=previous.sizing.SIZING['maxEnvelopeBytes'],'SPECIALIZED_ENVELOPE_TOO_LARGE')
+                q=grouped.build(p,group,provider_projection_version=grouped.PROVIDER_PROJECTION_VERSION)
+                require(len(canonical(q['body']))<=SIZING['maxEnvelopeBytes'],'SPECIALIZED_ENVELOPE_TOO_LARGE')
                 prepared.append((group,q))
             for group,q in prepared:
                 raw=canonical(q)+b'\n';name=digest(raw)+'.json'
@@ -234,12 +297,14 @@ def prepare(repo: Path=ROOT, output: Path=BASE) -> dict:
         eligibility='Unchanged v0.4.1 complete authority selection and v0.4.2 specialized targets; no scientific prefiltering of full Hub MDX.',
         blockedOwners=[r['ownerID'] for r in rows if r['status']=='blocked'],providerCalls=0,kgAuthorization=False)
     selection_sha=write('source-selection-manifest.json',selection)
+    ontology_sha=write('ontology-authority.json',ontology_report)
     scenarios=('low','pooled','high','outputCeiling')
-    manifest=dict(version=grouped.VERSION,selectionVersion=VERSION,sourceSelectionSha256=selection_sha,
+    manifest=dict(version=grouped.VERSION,selectionVersion=VERSION,providerProjectionVersion=grouped.PROVIDER_PROJECTION_VERSION,sourceSelectionSha256=selection_sha,
         requests=requests,inputPins=pins,implementationPins=implementation,batchInputSha256=digest(b''.join(lines)),
-        productionReady=not selection['blockedOwners'],blockedOwners=selection['blockedOwners'],
+        productionReady=not selection['blockedOwners'] and ontology_report['threeFamilyExact'],blockedOwners=selection['blockedOwners'],
+        ontologyAuthoritySha256=ontology_sha,ontologyReady=ontology_report['threeFamilyExact'],ontologyBlockers=ontology_report['threeFamilyDiscrepancies'],
         ownerCounts=dict(Counter(r['family'] for r in rows)),requestCounts=dict(Counter(r['family'] for r in requests)),
-        pricing={'batch':adapter.batch.PRICING},sizing=previous.sizing.SIZING,providerCalls=0,kgAuthorization=False,
+        pricing={'batch':adapter.batch.PRICING},sizing=SIZING,providerCalls=0,kgAuthorization=False,
         estimate=dict(requestCount=len(requests),excludedBlockedOwners=len(selection['blockedOwners']),
             basis='Prepared requests only; native envelope-byte heuristic scenarios, no cache savings or retries; not measured provider tokens or actual charges.',
             batchScenariosUSD={k:sum(r['cost']['costUSD'][k] for r in requests) for k in scenarios},
@@ -248,7 +313,7 @@ def prepare(repo: Path=ROOT, output: Path=BASE) -> dict:
     write('queue-manifest.json',manifest)
     with (root/'batch-input.jsonl').open('xb') as handle:handle.write(b''.join(lines))
     with (root/'summary.md').open('x') as handle:
-        handle.write('# Full-inventory source-local v0.4.2 preparation\n\n'+json.dumps({k:manifest[k] for k in ('productionReady','ownerCounts','requestCounts','blockedOwners','estimate')},indent=2)+'\n')
+        handle.write('# Full-inventory source-local v0.4.2 preparation\n\n'+json.dumps({k:manifest[k] for k in ('productionReady','ownerCounts','requestCounts','blockedOwners','ontologyBlockers','estimate')},indent=2)+'\n')
     return manifest
 
 
@@ -257,6 +322,7 @@ def inspect_queue(repo: Path, output: Path, expected_sha: str, *, retain=False) 
     root=repo/output;raw=(root/'queue-manifest.json').read_bytes()
     require(digest(raw)==expected_sha,'QUEUE_MANIFEST_DRIFT');m=json.loads(raw)
     require(m['version']==grouped.VERSION and m['selectionVersion']==VERSION,'VERSION_DRIFT')
+    require(m['providerProjectionVersion']==grouped.PROVIDER_PROJECTION_VERSION and m['sizing']==SIZING,'PRODUCTION_POLICY_DRIFT')
     for path,sha in {**m['inputPins'],**m['implementationPins']}.items():require(digest((repo/path).read_bytes())==sha,'PIN_DRIFT:'+path)
     raw=(root/'source-selection-manifest.json').read_bytes();require(digest(raw)==m['sourceSelectionSha256'],'SELECTION_DRIFT')
     selection=json.loads(raw);rows=selection['owners'];check_groups(rows,m['requests'])
@@ -265,7 +331,10 @@ def inspect_queue(repo: Path, output: Path, expected_sha: str, *, retain=False) 
         {f:json.loads((repo/p).read_bytes()) for f,p in CORPORA.items()})
     require([{k:r[k] for k in e} for r,e in zip(rows,expected)]==expected and len(rows)==len(expected),'OWNER_SELECTION_DRIFT')
     require(m['blockedOwners']==selection['blockedOwners']==[r['ownerID'] for r in rows if r['status']=='blocked'],'BLOCKED_OWNER_DRIFT')
-    require(m['productionReady']==(not m['blockedOwners']),'READINESS_DRIFT')
+    raw=(root/'ontology-authority.json').read_bytes();require(digest(raw)==m['ontologyAuthoritySha256'],'ONTOLOGY_REPORT_DRIFT')
+    authority=json.loads(raw);require(authority==ontology_authority_report(repo),'ONTOLOGY_AUTHORITY_DRIFT')
+    require(m['ontologyReady']==authority['threeFamilyExact'] and m['ontologyBlockers']==authority['threeFamilyDiscrepancies'],'ONTOLOGY_READINESS_DRIFT')
+    require(m['productionReady']==(not m['blockedOwners'] and m['ontologyReady']),'READINESS_DRIFT')
     contexts={}
     for row in rows:
         if 'contextFile' in row:
@@ -275,9 +344,11 @@ def inspect_queue(repo: Path, output: Path, expected_sha: str, *, retain=False) 
     for e in m['requests']:
         raw=(root/'queue'/e['bundleFile']).read_bytes();require(digest(raw)==e['bundleSha256'],'BUNDLE_DRIFT')
         p=json.loads(raw);require(adapter.fingerprint(p)==e['identity'],'REQUEST_IDENTITY_DRIFT');grouped.verify(p)
+        require(p['binding'].get('providerProjectionVersion')==grouped.PROVIDER_PROJECTION_VERSION,'UNCLEAN_PROVIDER_ROUTE')
+        grouped.assert_provider_clean(p['body'])
         b=p['semanticRequest']['request'];require((b['artifactFamily'],b['owner']['endpointID'],p['binding']['groupID'])==(e['family'],e['ownerID'],e['groupID']),'ENTRY_OWNER_DRIFT')
         require(digest(canonical(p['requestInputs']['baseContext']))==contexts[e['ownerID']],'OWNER_CONTEXT_DRIFT')
-        require(previous.sizing.fits(b['sourceUnits']) and len(canonical(p['body']))<=previous.sizing.SIZING['maxEnvelopeBytes'],'SIZE_HOLD')
+        require(source_fits(b['sourceUnits']) and len(canonical(p['body']))<=SIZING['maxEnvelopeBytes'],'SIZE_HOLD')
         require(e['cost']==previous.sizing.costs(p),'COST_DRIFT')
         rid=p['request']['requestID'];require(rid not in ids,'DUPLICATE_REQUEST');ids.add(rid)
         item,line=adapter.batch.input_line(p,1,adapter.fingerprint);require(item==e['batchItem'],'BATCH_ITEM_DRIFT');lines.append(line)
@@ -289,7 +360,7 @@ def inspect_queue(repo: Path, output: Path, expected_sha: str, *, retain=False) 
 def load_queue(repo: Path, output: Path, expected_sha: str) -> tuple[dict,dict]:
     """Refuse all provider operations on a partial full-production preparation."""
     m,bundles=inspect_queue(repo,output,expected_sha,retain=True)
-    require(m['productionReady'],'PRODUCTION_BLOCKED:'+','.join(m['blockedOwners']))
+    require(m['productionReady'],'PRODUCTION_BLOCKED:'+json.dumps(dict(owners=m['blockedOwners'],ontology=m.get('ontologyBlockers'))))
     return m,bundles
 
 
@@ -316,11 +387,15 @@ def main():
         if args.operation=='preflight':
             m,_=inspect_queue(ROOT,args.output,args.queue_sha256)
             result=dict(integrity='passed',productionReady=m['productionReady'],blockedOwners=m['blockedOwners'],
-                ownerCounts=m['ownerCounts'],requestCounts=m['requestCounts'],estimate=m['estimate'],providerCalls=0)
+                ownerCounts=m['ownerCounts'],requestCounts=m['requestCounts'],estimate=m['estimate'],providerCalls=0,
+                ontologyReady=m['ontologyReady'],ontologyBlockers=m['ontologyBlockers'])
             if m['productionReady']:result['nativeBatchPreflight']=operate('preflight','batch',args.queue_sha256,output=args.output)
-            else:result['nativeBatchPreflight']='blocked: incomplete full-production owner set'
+            else:result['nativeBatchPreflight']='blocked: owner preparation or ontology authority is unresolved'
             destination=ROOT/args.output/'offline-preflight.json'
-            with destination.open('xb') as handle:handle.write(canonical(result)+b'\n')
+            raw=canonical(result)+b'\n'
+            if destination.exists():require(destination.read_bytes()==raw,'PREFLIGHT_REPORT_ALREADY_EXISTS_WITH_DIFFERENT_STATE')
+            else:
+                with destination.open('xb') as handle:handle.write(raw)
             return result
         if args.operation=='review':
             return specialized.bind(specialized.review,load_queue=load_queue,operate=operate)(args.queue_sha256,'batch',output=args.output)

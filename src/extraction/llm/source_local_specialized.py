@@ -1,6 +1,9 @@
 """v0.4.2 request specialization and exact owner consolidation over unchanged v0.4.1."""
+from __future__ import annotations
+
 from copy import deepcopy
 from pathlib import Path
+import json
 
 from jsonschema import Draft202012Validator
 from src.extraction.llm import source_local_semantics as base
@@ -77,7 +80,43 @@ def group_schema(context: dict, group: str) -> dict:
     return schema
 
 
-def build(context: dict, group: str) -> dict:
+PROVIDER_PROJECTION_VERSION='source-local-provider-projection/0.4.3'
+
+
+def provider_projection(value, *, path=(), removed=None):
+    """Remove operational historical diagnostics recursively, including encoded JSON.
+
+    Source units are immutable evidence authorities. A reserved diagnostic field
+    inside one is a conflict to report, never permission to edit source content.
+    Removed records stay in the private base context and an explicit local index.
+    """
+    removed=[] if removed is None else removed
+    if isinstance(value,dict):
+        result={}
+        for key,item in value.items():
+            if key=='historicalSourceDiagnostics':
+                require('sourceUnits' not in path,'DIAGNOSTIC_FIELD_IN_SOURCE_UNIT')
+                removed.append(dict(path=list(path)+( [key] ),value=deepcopy(item)))
+            else:result[key]=provider_projection(item,path=(*path,key),removed=removed)
+        return result
+    if isinstance(value,list):
+        return [provider_projection(item,path=(*path,index),removed=removed) for index,item in enumerate(value)]
+    if isinstance(value,str):
+        try:decoded=json.loads(value)
+        except (ValueError,TypeError):return value
+        if isinstance(decoded,(dict,list)):
+            count=len(removed);projected=provider_projection(decoded,path=(*path,'$json'),removed=removed)
+            if len(removed)!=count:return canonical(projected).decode()
+    return deepcopy(value)
+
+
+def assert_provider_clean(envelope: dict) -> None:
+    """Fail if any nested provider object or encoded JSON contains diagnostic fields."""
+    removed=[];provider_projection(envelope,removed=removed)
+    require(not removed,'PROVIDER_HISTORICAL_DIAGNOSTICS_FORBIDDEN')
+
+
+def build(context: dict, group: str, *, provider_projection_version: str | None = None) -> dict:
     """Keep full trusted context privately and transmit only the assigned target profile."""
     require(context==base.prepare_request(context['semanticRequest'],context['requestInputs']),'BASE_CONTEXT_DRIFT')
     body=deepcopy(context['semanticRequest']['request']);family=body['artifactFamily'];scope=inventory(family)[group]
@@ -92,20 +131,34 @@ def build(context: dict, group: str) -> dict:
         'Every evidence fragment must include a nonblank contribution explaining its role, including single-fragment evidence.',
         'Candidate references and parentPath candidate_edge references are local to this response. Propose required local endpoints/parents together with their independently evidenced relations; never refer to candidates from another request. Exact supplied deterministic endpoints remain reusable.']
     body['executableCoverage']={k:v for k,v in scope.items()}
+    local_diagnostics=[]
+    if provider_projection_version is not None:
+        require(provider_projection_version==PROVIDER_PROJECTION_VERSION,'UNKNOWN_PROVIDER_PROJECTION')
+        original_units=deepcopy(body['sourceUnits'])
+        body=provider_projection(body,removed=local_diagnostics)
+        require(body['sourceUnits']==original_units,'PROVIDER_SOURCE_CONTENT_DRIFT')
     wire=canonical(body);sha=digest(wire);schema=group_schema(context,group)
     envelope=deepcopy(context['body']);envelope['input']=wire.decode()
     envelope['text']['format'].update(name=family+'_specialized_v042',schema=schema)
-    return dict(request={'requestID':family+':v042:'+group+':'+sha},
+    if provider_projection_version is not None:
+        envelope=provider_projection(envelope,removed=local_diagnostics)
+        assert_provider_clean(envelope)
+        require(json.loads(envelope['input'])==body,'PROVIDER_INPUT_DRIFT')
+    result=dict(request={'requestID':family+':v042:'+group+':'+sha},
         semanticRequest=dict(status='request_ready',request=body,requestSha256=sha,diagnostics=[]),
         requestInputs=dict(baseContext=deepcopy(context),groupID=group),body=envelope,
         binding=dict(version=VERSION,baseContextSha256=context['semanticRequest']['requestSha256'],groupID=group,
             sourceSha256=context['binding']['sourceSha256'],providerInputSha256=sha,providerEnvelopeSha256=digest(canonical(envelope)),
             schemaSha256=digest(canonical(schema)),policySha256=digest(CONTRACT.read_bytes())))
+    if provider_projection_version is not None:
+        result['binding']['providerProjectionVersion']=provider_projection_version
+        result['requestInputs']['localHistoricalDiagnostics']=local_diagnostics
+    return result
 
 
 def verify(prepared: dict) -> None:
     """Reconstruct all specialized bytes; caller input cannot silently narrow coverage."""
-    require(prepared==build(prepared['requestInputs']['baseContext'],prepared['requestInputs']['groupID']),'SPECIALIZED_REQUEST_DRIFT')
+    require(prepared==build(prepared['requestInputs']['baseContext'],prepared['requestInputs']['groupID'],provider_projection_version=prepared['binding'].get('providerProjectionVersion')),'SPECIALIZED_REQUEST_DRIFT')
 
 
 def replay(prepared: dict, raw: bytes, *, expected_request_sha256: str) -> dict:

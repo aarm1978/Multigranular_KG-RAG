@@ -95,7 +95,8 @@ class ProductionSelectionTests(unittest.TestCase):
     def test_real_specialized_bundles_pass_streaming_preflight(self):
         """Native reconstruction checks exact context/provenance and catches file damage."""
         from test_source_local_semantics import template
-        with p.ontology_parse_cache(), tempfile.TemporaryDirectory() as directory:
+        with p.ontology_parse_cache():authority=p.ontology_authority_report()
+        with p.ontology_parse_cache(), patch.object(p,'ontology_authority_report',return_value=authority), tempfile.TemporaryDirectory() as directory:
             root=Path(directory);(root/'queue').mkdir();(root/'contexts').mkdir()
             def write(path,value):
                 """Seal synthetic canonical bytes exactly like preparation."""
@@ -112,7 +113,7 @@ class ProductionSelectionTests(unittest.TestCase):
             row['contextFile']='contexts/owner.json';row['contextSha256']=write(Path(row['contextFile']),context)
             requests=[];lines=[]
             for group in p.grouped.inventory('github'):
-                q=p.grouped.build(context,group);raw=p.canonical(q)+b'\n';name=p.digest(raw)+'.json'
+                q=p.grouped.build(context,group,provider_projection_version=p.grouped.PROVIDER_PROJECTION_VERSION);raw=p.canonical(q)+b'\n';name=p.digest(raw)+'.json'
                 write(Path('queue')/name,q);item,line=p.adapter.batch.input_line(q,1,p.adapter.fingerprint);lines.append(line)
                 requests.append(dict(family='github',ownerID='github:repo:1',groupID=group,bundleFile=name,
                     bundleSha256=p.digest(raw),identity=p.adapter.fingerprint(q),batchItem=item,cost=p.previous.sizing.costs(q)))
@@ -121,6 +122,9 @@ class ProductionSelectionTests(unittest.TestCase):
             selection=dict(owners=rows,blockedOwners=blocked)
             selection_sha=write(Path('source-selection-manifest.json'),selection)
             manifest=dict(version=p.grouped.VERSION,selectionVersion=p.VERSION,sourceSelectionSha256=selection_sha,
+                providerProjectionVersion=p.grouped.PROVIDER_PROJECTION_VERSION,sizing=p.SIZING,
+                ontologyAuthoritySha256=write(Path('ontology-authority.json'),authority),
+                ontologyReady=authority['threeFamilyExact'],ontologyBlockers=authority['threeFamilyDiscrepancies'],
                 inputPins={},implementationPins={},requests=requests,blockedOwners=blocked,productionReady=False,
                 batchInputSha256=p.digest(b''.join(lines)))
             sha=write(Path('queue-manifest.json'),manifest);(root/'batch-input.jsonl').write_bytes(b''.join(lines))
@@ -129,6 +133,39 @@ class ProductionSelectionTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'PRODUCTION_BLOCKED'):p.load_queue(root,Path('.'),sha)
             (root/'queue'/requests[0]['bundleFile']).write_bytes(b'corrupt')
             with self.assertRaisesRegex(ValueError,'BUNDLE_DRIFT'):p.inspect_queue(root,Path('.'),sha)
+
+    def test_measured_size_margin_and_complete_full_inventory(self):
+        """Retain whole large contexts and all 1005 groups; unknown/partial owners fail."""
+        self.assertTrue(p.source_fits([{'text':'x'*255288}]))
+        self.assertFalse(p.source_fits([{'text':'x'*262145}]))
+        self.assertEqual(p.previous.sizing.SIZING['maxSelectedTextBytes'],98304)
+        self.assertEqual(p.SIZING['maxEnvelopeBytes'],1000000)
+        self.assertEqual(p.SIZING['outputTokenCeiling'],32768)
+        rows=[dict(family=f,ownerID=f+str(i),status='prepared')
+              for f,n in [('hydroshare',42),('github',51),('ciroh_hub',242)] for i in range(n)]
+        with p.ontology_parse_cache():
+            scopes={f:p.grouped.inventory(f) for f in p.CORPORA}
+            requests=[dict(family=r['family'],ownerID=r['ownerID'],groupID=g) for r in rows for g in scopes[r['family']]]
+            self.assertEqual(len(requests),1005);p.check_groups(rows,requests)
+            with self.assertRaises(ValueError):p.check_groups(rows,requests[:-1])
+            rows[0]['status']='silently_excluded'
+            with self.assertRaisesRegex(ValueError,'UNKNOWN_OWNER_STATUS'):p.check_groups(rows,requests)
+
+    def test_frozen_ontology_pin_and_conflicts_are_not_silently_relabelled(self):
+        """Check actual frozen bytes and validator discrepancies; block provider use."""
+        with p.ontology_parse_cache():
+            report=p.ontology_authority_report()
+            self.assertEqual(report['frozen']['version'],'0.1.6')
+            self.assertEqual(report['frozen']['sha256'],'47f035081d4e883146a479130c1f4c4751f0c40358fd1a8d154b43b36e34371e')
+            self.assertFalse(report['threeFamilyExact'])
+            self.assertEqual({d['inventoryId'] for f in report['profiles'].values() for d in f['declarationDifferences']},{'C-C15','C-DC25'})
+            self.assertTrue(all(c['structuralScopePass'] for c in report['validatorSignatureChecks']))
+            self.assertFalse(report['completedPublications']['matchesFrozenV016'])
+            with patch.object(p.semantic.profiles,'ONTOLOGY_SHA256','incorrect'):
+                with self.assertRaises(ValueError):p.ontology_authority_report()
+        with patch.object(p,'inspect_queue',return_value=({'productionReady':False,'blockedOwners':[],
+                'ontologyBlockers':report['threeFamilyDiscrepancies']},{})):
+            with self.assertRaisesRegex(ValueError,'PRODUCTION_BLOCKED'):p.load_queue(Path('.'),p.BASE,'hash')
 
     def test_partial_submission_and_corrupt_queue_fail_closed(self):
         """No partial owner selection can reach the native provider controller."""
