@@ -122,6 +122,50 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(len(self.sidecar.getvalue().splitlines()),2)
         self.assertNotIn('boundEvidence',graph['nodes'][0].get('attributes',{}))
 
+    def test_six_purpose_seeds_and_has_purpose(self):
+        """Shared vocabulary completes endpoints without administrative density inflation."""
+        from src.extraction.llm.coderepos.purpose_validation import purpose_vocabulary
+        seeds = purpose_vocabulary()
+        self.s.seed_purposes()
+        self.s.seed_purposes()
+        self.assertEqual(len(self.s.nodes), 7)
+        for seed in seeds:
+            row = self.s.nodes[seed['nodeID']]
+            self.assertEqual((row['class'], row['inventoryId']), ('RepositoryPurpose', 'A-C07'))
+            self.assertEqual(set(row['attributes']), {'label', 'definition'})
+        self.s.add('nodes', dict(id='repo', **{'class':'Repository'}, inventoryId='A-C01', attributes={}), {}, {})
+        self.s.add('edges', dict(id='purpose', source='repo', target=seeds[0]['nodeID'],
+            relation='hasPurpose', inventoryId='C-C07'), {'original': 'edge'}, {})
+        self.assertIsNotNone(self.s.finish())
+        records = [json.loads(line) for line in self.sidecar.getvalue().splitlines()]
+        self.assertEqual(records[0]['nativeRecord'], seeds[0])
+        self.assertEqual(records[0]['provenance']['origin'], 'controlled_vocabulary_seed')
+        self.assertNotIn('evidenceOccurrences', records[0]['nativeRecord'])
+
+    def test_owner_label_variants_and_hard_conflicts(self):
+        """Existing consolidation permits literal labels only, retaining every native record."""
+        native = dict(originalCandidate=dict(label='B', attributes={'range':'literal'}),
+            resolvedEndpoint=dict(endpointID='local:x', **{'class':'Tool'}, inventoryId='A-DOM02'),
+            boundEvidence=[dict(evidenceText='unchanged')])
+        other = deepcopy(native); other['originalCandidate']['label'] = 'A'
+        report = dict(nodes=[dict(records=[dict(record=n, requestID=str(i), groupID='g')
+            for i,n in enumerate([native, other, native])])], edges=[])
+        saved = deepcopy(report)
+        self.s.owner(report, {})
+        self.assertEqual(self.s.nodes['local:x']['attributes'], {'label':['A','B'], 'range':'literal'})
+        self.assertEqual(m.metrics.count_informative_attributes('Tool', {'label':['A','B']}), 1)
+        self.assertEqual(report, saved)
+        records = [json.loads(line)['nativeRecord'] for line in self.sidecar.getvalue().splitlines()]
+        self.assertEqual(records, [native, other, native])
+        for field, value in [('endpointID','other'), ('class','Algorithm'), ('inventoryId','other')]:
+            bad = deepcopy(report); bad['nodes'][0]['records'][1]['record']['resolvedEndpoint'][field] = value
+            with self.assertRaisesRegex(ValueError, 'INCOMPATIBLE_OWNER'):
+                m.Snapshot(baseline(), io.StringIO()).owner(bad, {})
+        bad = deepcopy(report)
+        bad['nodes'][0]['records'][1]['record']['originalCandidate']['attributes']['range'] = 'different'
+        with self.assertRaisesRegex(ValueError, 'INCOMPATIBLE_OWNER'):
+            m.Snapshot(baseline(), io.StringIO()).owner(bad, {})
+
     def test_existing_metric_policy_and_order50(self):
         """Use the unchanged full/filtered evaluator and pre-consolidation accounting."""
         graph=baseline();graph['nodes'].append(dict(id='file',**{'class':'File'},inventoryId='A-C02',attributes=dict(fileName='x')))

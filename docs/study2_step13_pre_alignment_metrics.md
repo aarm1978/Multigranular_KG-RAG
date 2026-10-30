@@ -63,3 +63,23 @@ After successful transformation, the existing metric command above can use `v2` 
 `publication_step5_evaluation_authority_v0.1.1.md` §Authority B permits governed exact `link_existing` consolidation within a source artifact using target, action, existingNodeID and structured attributes. That evaluation authority must not silently become a new snapshot identity rule. No such consolidation or edge retargeting is implemented here. Researcher confirmation is required before treating this occurrence-based snapshot as the intended dissertation structural checkpoint, or separately authorizing an exact-endpoint projection rule (not fuzzy or semantic alignment). Attribute correction alone does not settle that measurement decision.
 
 Step 13 closure is now recorded separately in `handoffs/STUDY2_STEP13_COMPLETION_ACCEPTANCE.md`; older pending-closure text and adapter manifest labels reflect the preparation checkpoint and are not changed by this attribute-only patch.
+
+## v3 endpoint/consolidation correction
+
+Adapter version `step13-evaluation-pre-alignment/0.1.1` addresses the saved v2 manifest's 138 blockers. Bounded checks verified all 17 conflicting IDs against hash-checked v4.1 owner records: 12 GitHub and five HydroShare cases have matching exact IDs, classes, inventory IDs and non-label attributes, with different literal labels. The adapter now projects each existing consolidated node with sorted distinct label variants (scalar for one), retaining every native occurrence and its evidence in the sidecar. Label still contributes one informative key. Any other incompatibility fails closed. This is consumption of existing owner consolidation, not new identity resolution.
+
+All 121 missing endpoints are members of the existing authorized `purpose_vocabulary()`. Exactly six shared `RepositoryPurpose` seeds are materialized with their original stable IDs and A-C07 type. Their label/definition are semantic attributes; scheme, category and contract metadata remain in native provenance, outside informative attributes. No LLM evidence is fabricated. Existing exact-ID collisions still block output. Vocabulary/profile implementations are pinned in the manifest.
+
+Preserve failed v1/v2 directories. Run from the repository root:
+
+```bash
+/Users/aramirezm/micromamba/envs/multigranular-kg/bin/python -m src.evaluation.build_step13_pre_alignment --output var/study2_step13/pre-alignment-metrics/v3
+```
+
+Only after successful preparation, measure the ignored snapshot with the unchanged evaluator:
+
+```bash
+/Users/aramirezm/micromamba/envs/multigranular-kg/bin/python -m src.evaluation.compute_structural_metrics var/study2_step13/pre-alignment-metrics/v3/snapshot.json --label step13_semantic_pre_alignment --display-name '+ Accepted semantics (pre-alignment occurrences)' --order 50 --consolidation-stage pre_consolidation --results-dir var/study2_step13/pre-alignment-metrics/v3/metrics
+```
+
+Output layout is unchanged, now under v3. Publication request-local occurrences, all accepted edges and the 407 separately excluded derived inputs are unchanged. The previously documented occurrence-versus-distinct-entity interpretation remains; these corrections do not authorize Publication identity consolidation. The accepted Step 13 closure is preserved. Neither full transformation nor measurement was executed inside Codex.

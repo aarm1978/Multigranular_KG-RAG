@@ -21,7 +21,7 @@ REVIEW = Path('var/study2_step13/source-local-supplemental-review/v4.1')
 PUBLICATIONS = Path('var/study2_step13/publications-gpt61-batch/v1')
 VERIFICATION = Path('var/study2_step13/publications-production-verification/v1')
 OUTPUT = Path('var/study2_step13/pre-alignment-metrics/v1')
-VERSION = 'step13-evaluation-pre-alignment/0.1.0'
+VERSION = 'step13-evaluation-pre-alignment/0.1.1'
 
 
 def require(condition, reason):
@@ -94,15 +94,49 @@ class Snapshot:
         self.evidence.write(canonical(dict(kind=kind,graphID=record['id'],nativeRecord=native,
             nativeRecordSha256=digest(canonical(native)),provenance=provenance)).decode()+'\n')
 
+    def seed_purposes(self):
+        """Materialize only the authorized shared vocabulary, with no LLM evidence."""
+        from src.extraction.llm.coderepos.purpose_validation import purpose_vocabulary
+        seeds = purpose_vocabulary()
+        require(len(seeds) == 6 and len({n['nodeID'] for n in seeds}) == 6,
+                'PURPOSE_VOCABULARY_DRIFT')
+        for seed in seeds:
+            self.add('nodes', dict(id=seed['nodeID'], **{'class': seed['class']},
+                inventoryId=seed['inventoryId'],
+                attributes={k: seed[k] for k in ('label', 'definition')}), seed,
+                dict(authority='src/extraction/llm/coderepos/purpose_validation.py',
+                     origin='controlled_vocabulary_seed', contractID=seed['contractID'],
+                     schemeID=seed['schemeID'], schemeVersion=seed['schemeVersion']))
+
     def owner(self, report, provenance):
         """Consume existing exact owner consolidation, preserving all supporting records."""
         for collection in ('nodes','edges'):
             for consolidated in report[collection]:
+                projected = None
+                if collection == 'nodes':
+                    # Only consume identity already established by this owner record.
+                    rows = []
+                    labels = {}
+                    for occurrence in consolidated['records']:
+                        native = occurrence['record']; ep = native['resolvedEndpoint']
+                        attrs = attributes(native['originalCandidate'])
+                        label = attrs.pop('label', None)
+                        require(label is None or isinstance(label, str), 'OWNER_LABEL_NOT_LITERAL_STRING')
+                        if label is not None:
+                            labels[canonical(label)] = label
+                        rows.append(dict(id=ep['endpointID'], **{'class': ep['class']},
+                                         inventoryId=ep['inventoryId'], attributes=attrs))
+                    require(bool(rows), 'EMPTY_OWNER_CONSOLIDATION')
+                    require(all(canonical(row) == canonical(rows[0]) for row in rows),
+                            'INCOMPATIBLE_OWNER_EXACT_ID_CONSOLIDATION')
+                    projected = deepcopy(rows[0])
+                    ordered = [labels[key] for key in sorted(labels)]
+                    if ordered:
+                        projected['attributes']['label'] = ordered[0] if len(ordered) == 1 else ordered
                 for occurrence in consolidated['records']:
                     n = occurrence['record']; c = n['originalCandidate']
                     if collection == 'nodes':
-                        ep = n['resolvedEndpoint']
-                        row = dict(id=ep['endpointID'], **{'class':ep['class']},inventoryId=ep['inventoryId'],attributes=attributes(c))
+                        row = deepcopy(projected)
                     else:
                         row = dict(id=n['sourceLocalCandidateID'],source=n['resolvedSource']['endpointID'],
                             target=n['resolvedTarget']['endpointID'],relation=c['relation'],inventoryId=c['inventoryId'])
@@ -197,7 +231,7 @@ def build(repo=Path('.'), output=OUTPUT):
     pin(Path('docs/study2_v4_1_reviewer_adjudications_v0.1.json'),manifest['adjudicationArtifactSha256'])
     for mapping in ('baselineFileHashes','implementationHashes'):
         for name,sha in manifest[mapping].items():pin(Path(name),sha)
-    for name in ('docs/study2_step13_construction_acceptance_policy_v0.1.md','docs/study2_materialized_corpus_evidence_amendment_v0.1.md','src/evaluation/compute_structural_metrics.py','src/evaluation/build_cumulative_snapshot.py',__file__):
+    for name in ('docs/study2_step13_construction_acceptance_policy_v0.1.md','docs/study2_materialized_corpus_evidence_amendment_v0.1.md','src/evaluation/compute_structural_metrics.py','src/evaluation/build_cumulative_snapshot.py','src/extraction/llm/coderepos/purpose_validation.py','src/extraction/llm/semantic_target_profiles.py',__file__):
         path=Path(name)
         if path.is_absolute():path=path.relative_to(repo.resolve())
         pin(path)
@@ -217,6 +251,7 @@ def build(repo=Path('.'), output=OUTPUT):
     dest.mkdir(parents=True);totals=Counter();pubcounts=Counter();derived=[]
     with (dest/'native-provenance.jsonl').open('x') as evidence:
         snapshot=Snapshot(deterministic,evidence)
+        snapshot.seed_purposes()
         owners=sorted((repo/REVIEW/'owners').glob('*.json'))
         expected_owners={s['ownerID'] for s in manifest['originalSelection']['selection']}
         require(len(owners)==335 and {p.stem for p in owners}=={digest(o.encode()) for o in expected_owners},'OWNER_COVERAGE_DRIFT')
