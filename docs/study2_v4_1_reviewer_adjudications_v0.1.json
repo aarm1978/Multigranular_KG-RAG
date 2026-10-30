@@ -1,0 +1,229 @@
+{
+  "authority": "source-local-reviewer-adjudication/0.1.0",
+  "classification": "Researcher-approved post-hoc scientific adjudication; not autonomous extraction success",
+  "authorization": "Explicit researcher instruction: Resume the stopped v4.1 correction; three enumerated exclusions approved.",
+  "baselineFileHashes": {
+    "var/study2_step13/source-local-supplemental-review/v4/summary.json": "65ecfedee9911a1c38a57f479cf25fe0693402b4346299d630720351e34f0716",
+    "var/study2_step13/source-local-supplemental-review/v4/selection-manifest.json": "086ecf94a6448ecc4d51a28c17eac841b90fc046d413709536abbffca078794c",
+    "var/study2_step13/source-local-supplemental-review/v4/comparison.json": "2398ca7e5079194c63de1262a32b885663f422a6df8b800d6323068d10969715",
+    "var/study2_step13/source-local-supplemental-review/v4/quarantined-abstentions.json": "4c4b9b12d3164c1c5cdb31f7b97ed0a6e2e5b3c1fc134d3e707c896e8103cd48",
+    "var/study2_step13/source-local-v4-semantic-diagnostic/v1/diagnostic.json": "08d4215ee9afecfe192d0844e5783c70fe942e7aaf6cefe11bdcf565abd4d1c8"
+  },
+  "entries": [
+    {
+      "adjudicationID": "v4.1-exclusion-001",
+      "requestID": "ciroh_hub:v042:procedures_and_dependents:90688c82334ee51102114b9c5a605ec623f996e540fd61c5805525a299d830f6",
+      "requestSha256": "90688c82334ee51102114b9c5a605ec623f996e540fd61c5805525a299d830f6",
+      "responseSha256": "e847eacbc6bf87e0904c3cf7d789f1c64a5169ade8a51df90db1892ff11e3d7f",
+      "baselineGroupSha256": "357e0b9ebeea9d5edb606393197efe8142a3d78f2f0b6083a820d4abf94cb132",
+      "excluded": {
+        "candidateID": "has-procedure-multi",
+        "ownerID": "hub:page:7c8e718c1929bdbc73e8",
+        "candidateSha256": "2a7d6a4b57d2bde27a287101f5eca184b569349f0a1e07248319261cc3bd7fdc",
+        "boundEvidenceSha256": "f680c45b1ba3736344a5217cac20c779fd174d848e90ac403ae3655616a044d0",
+        "evidence": [
+          {
+            "sourceUnitID": "hub:full-content:1e2d31b58182914f75630f3e995db3aa817e2a714e06ee6a73c9e2bc811dc089",
+            "startOffset": 2679,
+            "endOffset": 2782,
+            "quoteSha256": "b9cd60a1dab803707ed2d7dedc007666be4892f0abdde2f237b78e3dcacb36ae",
+            "sourceTextSha256": "f3b6e25fee1bd944b75baa4c3154c83eb87e0d8602e329a12cb33ad36096c880",
+            "sourceUnitSha256": "309ff8ee3e339481fb8a1f77bbdbf1a164289a51e754dc6dff635ef10ec217a0"
+          },
+          {
+            "sourceUnitID": "hub:full-content:1e2d31b58182914f75630f3e995db3aa817e2a714e06ee6a73c9e2bc811dc089",
+            "startOffset": 3892,
+            "endOffset": 3945,
+            "quoteSha256": "a5cc9ffa2d9e6814f7ca6f3affa53ebb756b227bebf0c8fe834241defc34de06",
+            "sourceTextSha256": "f3b6e25fee1bd944b75baa4c3154c83eb87e0d8602e329a12cb33ad36096c880",
+            "sourceUnitSha256": "309ff8ee3e339481fb8a1f77bbdbf1a164289a51e754dc6dff635ef10ec217a0"
+          }
+        ],
+        "resolvedSource": {
+          "class": "DocumentationPage",
+          "endpointID": "hub:page:7c8e718c1929bdbc73e8",
+          "inventoryId": "A-DC01"
+        },
+        "resolvedTarget": {
+          "class": "Procedure",
+          "endpointID": "ciroh_hub:local:24d47b55eb9a53a1dbe1ccdaeddc35f017f2714a67bffe61a1f77558223bfad3",
+          "identityScope": "source_local_no_global_equivalence",
+          "inventoryId": "A-DC05"
+        }
+      },
+      "counterpart": {
+        "candidateID": "has-procedure-hybrid",
+        "ownerID": "hub:page:7c8e718c1929bdbc73e8",
+        "candidateSha256": "365200f8d5e55f5e2f66f916d2d3f238412ac88fbea58e794d1055d6e71451c5",
+        "boundEvidenceSha256": "9d196e58144775e0ec3f952b1dbf4922e800dc48efc1cef7454e0d41fcc47ea5",
+        "evidence": [
+          {
+            "sourceUnitID": "hub:full-content:1e2d31b58182914f75630f3e995db3aa817e2a714e06ee6a73c9e2bc811dc089",
+            "startOffset": 4250,
+            "endOffset": 4276,
+            "quoteSha256": "a5571d93e9817e22249195b66d7aa71ad139caa3aeac31b1935e1d5b14664c2d",
+            "sourceTextSha256": "f3b6e25fee1bd944b75baa4c3154c83eb87e0d8602e329a12cb33ad36096c880",
+            "sourceUnitSha256": "309ff8ee3e339481fb8a1f77bbdbf1a164289a51e754dc6dff635ef10ec217a0"
+          },
+          {
+            "sourceUnitID": "hub:full-content:1e2d31b58182914f75630f3e995db3aa817e2a714e06ee6a73c9e2bc811dc089",
+            "startOffset": 6988,
+            "endOffset": 7040,
+            "quoteSha256": "0ded262a7fabd8aaaf5520de4188a612aa001eb82b789c0ddec2fb671164f60f",
+            "sourceTextSha256": "f3b6e25fee1bd944b75baa4c3154c83eb87e0d8602e329a12cb33ad36096c880",
+            "sourceUnitSha256": "309ff8ee3e339481fb8a1f77bbdbf1a164289a51e754dc6dff635ef10ec217a0"
+          },
+          {
+            "sourceUnitID": "hub:full-content:1e2d31b58182914f75630f3e995db3aa817e2a714e06ee6a73c9e2bc811dc089",
+            "startOffset": 6725,
+            "endOffset": 6775,
+            "quoteSha256": "81a9524ea0a1a59cfd1dc3d95e33d62e706f57766cf7d15281c7b005c876e85f",
+            "sourceTextSha256": "f3b6e25fee1bd944b75baa4c3154c83eb87e0d8602e329a12cb33ad36096c880",
+            "sourceUnitSha256": "309ff8ee3e339481fb8a1f77bbdbf1a164289a51e754dc6dff635ef10ec217a0"
+          }
+        ],
+        "resolvedSource": {
+          "class": "DocumentationPage",
+          "endpointID": "hub:page:7c8e718c1929bdbc73e8",
+          "inventoryId": "A-DC01"
+        },
+        "resolvedTarget": {
+          "class": "Procedure",
+          "endpointID": "ciroh_hub:local:24d47b55eb9a53a1dbe1ccdaeddc35f017f2714a67bffe61a1f77558223bfad3",
+          "identityScope": "source_local_no_global_equivalence",
+          "inventoryId": "A-DC05"
+        }
+      },
+      "reason": "Evidence describes multi-node MPI (mpi_multi_node.sh), not the resolved hybrid MPI+OpenMP Procedure (mpi_omp_job.sh).",
+      "decision": "exclude_from_derived_construction"
+    },
+    {
+      "adjudicationID": "v4.1-exclusion-002",
+      "requestID": "ciroh_hub:v042:products_and_references:b9d4c5747efd3b0a1f77aa275a0215644871ad85a07ffd985019688b64b6eb72",
+      "requestSha256": "b9d4c5747efd3b0a1f77aa275a0215644871ad85a07ffd985019688b64b6eb72",
+      "responseSha256": "58c0cea866d5ca39ae1ed2e668e00a2e0312b5e109be062f26ac5d7f11f692ff",
+      "baselineGroupSha256": "c90b4b0c9189047b0861eefebaed214a6ca93511c3aab715c9c3ad63c82e5a59",
+      "excluded": {
+        "candidateID": "edge-reference-compute-paper",
+        "ownerID": "hub:page:487bd50ef9cdb9447523",
+        "candidateSha256": "995153cb46f16eef97116560f049e513ad7ee2d2d2e1b661b9c9004220013cdf",
+        "boundEvidenceSha256": "6684c42c554fb2468ec0911e5d77c9a23e8e3bcd872b015f0b9fabfddb2e805b",
+        "evidence": [
+          {
+            "sourceUnitID": "hub:full-content:fe8fbd5f9ed477399ec56ea84774be6ca321e449e3159e6f806016e8b66d9dc7",
+            "startOffset": 6179,
+            "endOffset": 6484,
+            "quoteSha256": "f06d0e3ae7045e2d7ebd1cbae561b98493714852878d985a7fd32357d73d9229",
+            "sourceTextSha256": "706c9e943e1f19b08f618d59dffab817dfa9229c220462fb620503e900a57f91",
+            "sourceUnitSha256": "08e262e475cd16994d049a984ea1469ab694e90f28e18685e2f6076f353f1dc8"
+          }
+        ],
+        "resolvedSource": {
+          "class": "DocumentationPage",
+          "endpointID": "hub:page:487bd50ef9cdb9447523",
+          "inventoryId": "A-DC01"
+        },
+        "resolvedTarget": {
+          "class": "Paper",
+          "endpointID": "ciroh_hub:local:27dda02c873315c9ea44e954e47d0cc471a96ca32bbe9bd7fcec2eb41a5b3749",
+          "exactIdentifier": "https://doi.org/10.2139/ssrn.5531964",
+          "identityScope": "source_local_no_global_equivalence",
+          "inventoryId": "A-P01"
+        }
+      },
+      "counterpart": {
+        "candidateID": "edge-reference-imagery-paper",
+        "ownerID": "hub:page:487bd50ef9cdb9447523",
+        "candidateSha256": "7046b17d37e4d65ff9dbcf1d6bfac4898c3e55936f9243d010673f9e09052f54",
+        "boundEvidenceSha256": "cf1dca3773098106ed16bb367dd0cfe1f4c0f0850541170e1ef346e93f401ab9",
+        "evidence": [
+          {
+            "sourceUnitID": "hub:full-content:fe8fbd5f9ed477399ec56ea84774be6ca321e449e3159e6f806016e8b66d9dc7",
+            "startOffset": 6501,
+            "endOffset": 6817,
+            "quoteSha256": "b7734ed91b3b10342a121c0fc284ab1b65842b314be66eab40703c6760f11dd0",
+            "sourceTextSha256": "706c9e943e1f19b08f618d59dffab817dfa9229c220462fb620503e900a57f91",
+            "sourceUnitSha256": "08e262e475cd16994d049a984ea1469ab694e90f28e18685e2f6076f353f1dc8"
+          }
+        ],
+        "resolvedSource": {
+          "class": "DocumentationPage",
+          "endpointID": "hub:page:487bd50ef9cdb9447523",
+          "inventoryId": "A-DC01"
+        },
+        "resolvedTarget": {
+          "class": "Paper",
+          "endpointID": "ciroh_hub:local:27dda02c873315c9ea44e954e47d0cc471a96ca32bbe9bd7fcec2eb41a5b3749",
+          "exactIdentifier": "https://doi.org/10.2139/ssrn.5531964",
+          "identityScope": "source_local_no_global_equivalence",
+          "inventoryId": "A-P01"
+        }
+      },
+      "reason": "Evidence identifies DOI 10.2139/ssrn.5451100, whereas the resolved Paper identifies DOI 10.2139/ssrn.5531964.",
+      "decision": "exclude_from_derived_construction"
+    },
+    {
+      "adjudicationID": "v4.1-exclusion-003",
+      "requestID": "ciroh_hub:v042:procedures_and_dependents:a37605ee2ff650d7e0819bd968ba5ed294e1176efbda015601f80743f51bc084",
+      "requestSha256": "a37605ee2ff650d7e0819bd968ba5ed294e1176efbda015601f80743f51bc084",
+      "responseSha256": "516ba6fbbb456f4621ee58f0f66d181d8c3c569e7d9ee063c31c8be86cd48934",
+      "baselineGroupSha256": "4e1c7e202af54ab1da68e5ce75eaddd69e8fc2195e85674f2ffea416232aed8a",
+      "excluded": {
+        "candidateID": "e-page-jupyter",
+        "ownerID": "hub:page:4e70b0b7f9c71d9a79b0",
+        "candidateSha256": "fe17204610ddbbb863dddd3e5065d2376db523390a98554020ab122c61d6b260",
+        "boundEvidenceSha256": "ee12df1d04e3dc3969deda970d5c51c368061468597ee1f43383f225380c2805",
+        "evidence": [
+          {
+            "sourceUnitID": "hub:full-content:cf676cd9abdc88b0c752b884da16fd7f265b4dfa8658401fc54ab0962822e9d1",
+            "startOffset": 1261,
+            "endOffset": 1777,
+            "quoteSha256": "32c6aa649bd6444ecdc9691514f52863ebf8e637b32d5f9b8c3e43a6b3d8f107",
+            "sourceTextSha256": "4d5651b50a7d829d4de6b831918fda7cebba52c8c78f9a5be1251d2fb47842af",
+            "sourceUnitSha256": "fe30ad6145b814960a1285bfeb084d394a7e865ec625c566cb994a539cfe1a46"
+          }
+        ],
+        "resolvedSource": {
+          "class": "DocumentationPage",
+          "endpointID": "hub:page:4e70b0b7f9c71d9a79b0",
+          "inventoryId": "A-DC01"
+        },
+        "resolvedTarget": {
+          "class": "Procedure",
+          "endpointID": "ciroh_hub:local:1ab4717466dea8ee327c51c590dd976168eef79967d28204ac94fdbc359d9bd8",
+          "identityScope": "source_local_no_global_equivalence",
+          "inventoryId": "A-DC05"
+        }
+      },
+      "counterpart": {
+        "candidateID": "e-page-python-path",
+        "ownerID": "hub:page:4e70b0b7f9c71d9a79b0",
+        "candidateSha256": "23b4965a9dd7f89607e3e068992f4be0b9dfb172f48234f10b4c37b56525fba8",
+        "boundEvidenceSha256": "4dbc7ca93a707e7b26c048af63d223e81677759875302ad0bac73032d1b558dd",
+        "evidence": [
+          {
+            "sourceUnitID": "hub:full-content:cf676cd9abdc88b0c752b884da16fd7f265b4dfa8658401fc54ab0962822e9d1",
+            "startOffset": 1963,
+            "endOffset": 2248,
+            "quoteSha256": "9c123714ba28d47555e3531c31ed05127ea580963248c5223ba652f08da0ed09",
+            "sourceTextSha256": "4d5651b50a7d829d4de6b831918fda7cebba52c8c78f9a5be1251d2fb47842af",
+            "sourceUnitSha256": "fe30ad6145b814960a1285bfeb084d394a7e865ec625c566cb994a539cfe1a46"
+          }
+        ],
+        "resolvedSource": {
+          "class": "DocumentationPage",
+          "endpointID": "hub:page:4e70b0b7f9c71d9a79b0",
+          "inventoryId": "A-DC01"
+        },
+        "resolvedTarget": {
+          "class": "Procedure",
+          "endpointID": "ciroh_hub:local:1ab4717466dea8ee327c51c590dd976168eef79967d28204ac94fdbc359d9bd8",
+          "identityScope": "source_local_no_global_equivalence",
+          "inventoryId": "A-DC05"
+        }
+      },
+      "reason": "Launching Jupyter does not independently support configuring the notebook Python path and importing data grabbers.",
+      "decision": "exclude_from_derived_construction"
+    }
+  ]
+}
