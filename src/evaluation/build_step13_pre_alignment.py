@@ -44,16 +44,21 @@ def checked(path):
 
 def attributes(candidate):
     """Preserve literal semantic label/attribute keys; do not count evidence as attributes."""
-    result = {}
-    if candidate.get('label') is not None:
-        result['label'] = candidate['label']
+    grouped = {}
     values = candidate.get('attributes', [])
     if isinstance(values, dict):
-        values = [dict(attributeName=k,value=v) for k,v in values.items()]
+        values = [dict(attributeName=k, value=v) for k, v in values.items()]
+    if candidate.get('label') is not None:
+        values = [dict(attributeName='label', value=candidate['label']), *values]
     for item in values:
-        key, value = item['attributeName'], item['value']
-        require(key not in result or result[key] == value, 'ATTRIBUTE_CONFLICT:'+key)
-        result[key] = value
+        # Canonical JSON compares literal values, including their JSON types;
+        # sorting representations is ordering only, never semantic normalization.
+        value = item['value']
+        grouped.setdefault(item['attributeName'], {})[canonical(value)] = deepcopy(value)
+    result = {}
+    for key, distinct in grouped.items():
+        ordered = [distinct[token] for token in sorted(distinct)]
+        result[key] = ordered[0] if len(ordered) == 1 else ordered
     return result
 
 

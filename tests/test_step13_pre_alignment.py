@@ -55,6 +55,39 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(len(self.sidecar.getvalue().splitlines()),4)
         self.assertEqual(self.s.counts['nodes_repeated_exact_id'],1)
 
+    def test_repeated_ranges_literal_projection_and_provenance(self):
+        """Distinct ranges become one multivalue key; original evidence is untouched."""
+        p = projection()
+        candidate = p['acceptedNodes'][0]['candidate']
+        candidate['attributes'] = [
+            dict(attributeName='range', value=value, evidence=[dict(quote=quote)])
+            for value, quote in [('z range', 'first'), ('a range', 'second'), ('z range', 'third')]]
+        saved = deepcopy(p)
+        self.s.publication(p, dict(requestID=p['requestID']), paper_id=7)
+        row = self.s.nodes[p['acceptedNodes'][0]['nodeID']]
+        self.assertEqual(row['attributes']['range'], ['a range', 'z range'])
+        self.assertEqual(m.metrics.count_informative_attributes('Tool', {'range': row['attributes']['range']}), 1)
+        native = json.loads(self.sidecar.getvalue().splitlines()[0])
+        self.assertEqual(native['nativeRecord'], saved['acceptedNodes'][0])
+        self.assertEqual(native['nativeRecordSha256'], m.digest(m.canonical(saved['acceptedNodes'][0])))
+        self.assertEqual(p, saved)
+        reversed_candidate = deepcopy(candidate)
+        reversed_candidate['attributes'].reverse()
+        self.assertEqual(m.attributes(candidate), m.attributes(reversed_candidate))
+        self.assertIsNotNone(self.s.finish())
+
+    def test_identical_ranges_remain_scalar(self):
+        """Repeated equal values collapse only in projection, never in provenance."""
+        p = projection()
+        p['acceptedNodes'][0]['candidate']['attributes'] = [
+            dict(attributeName='range', value='[0, 1]', evidence=[dict(quote=q)])
+            for q in ('one', 'two')]
+        saved = deepcopy(p)
+        self.s.publication(p, {}, paper_id=7)
+        self.assertEqual(self.s.nodes[p['acceptedNodes'][0]['nodeID']]['attributes']['range'], '[0, 1]')
+        self.assertEqual(json.loads(self.sidecar.getvalue().splitlines()[0])['nativeRecord'], saved['acceptedNodes'][0])
+        self.assertEqual(p, saved)
+
     def test_conflicting_identity_blocks(self):
         """Different attributes under one exact ID cannot silently replace a record."""
         self.s.publication(projection(),{},paper_id=7)
