@@ -1,12 +1,12 @@
 # Publication Source-Unit Contract — Publication Pilot 1
 
 > **Status:** final and binding for Publication Pilot 1 implementation
-> **Contract version:** 0.1.1
+> **Contract version:** 0.1.2
 > **Artifact family:** scientific publications
 > **Source scope:** curated publication corpus
 > **Stage scope:** source-preserving preparation for the ontology-guided LLM semantic overlay
-> **Frozen ontology:** CIROH ontology 0.1.3
-> **Validated OWL SHA-256:** `ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57`
+> **Frozen ontology:** CIROH ontology 0.1.4
+> **Validated OWL SHA-256:** `7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635`
 > **Binding target inventory:** `docs/publication_llm_extraction_target_inventory.md`
 > **Date drafted:** 2026-07-30
 > **Date frozen:** 2026-07-30
@@ -37,7 +37,7 @@ changing it.
 
 Conflicts are resolved in this order:
 
-1. frozen ontology 0.1.3 specification and generated OWL
+1. frozen ontology 0.1.4 specification and generated OWL
 2. frozen deterministic Phase B outputs and tests
 3. final Publication Pilot 1 human-readable target inventory
 4. publication ontology observations register
@@ -53,8 +53,8 @@ Reviewed inputs:
 
 | Artifact | Reviewed SHA-256 | Role |
 | --- | --- | --- |
-| `src/ontology/ontology_spec.yaml` | `a940dd79ac0c8b10980b3a17739d2f03ac5b0c23ce80dffb0bb90009cf19db54` | Formal class, relation, domain, range, and status authority |
-| `docs/publication_llm_extraction_target_inventory.md` | `b2055e9735c64c5dc5d712fa96bdc95cb4137c75390261902fbc3055fc3d9ffa` | Binding Publication Pilot 1 scope |
+| `src/ontology/ontology_spec.yaml` | `363cb4f92a2fc82f993baf808da56bc7d38bbb355669dd01ca03686c3551982d` | Formal class, relation, domain, range, and status authority |
+| `docs/publication_llm_extraction_target_inventory.md` | `fcf5619006def7839f910881099f1534341b3b36fc64ad23e920311b9d07cba9` | Binding Publication Pilot 1 scope |
 | `docs/publication_ontology_observations_register.md` | `d06dbdf64fa7bd2ac81c7c1e97d16eebb8ded3d432396414c03a3e0ebca79d5e` | Contract and validator decisions |
 | `docs/publication_preprocessing_phaseA.md` | `636cf5babc2a42294fc1986b911e75f414f4564dd760d8079179b4a7aeb77722` | Canonical publication preprocessing boundary |
 | `data/interim/papers/ciroh_publication_corpus.json` | `6bce89579cb250d4ba94525bc31c327cc1ae7bdb48b71091cb648fd0502f1e25` | Frozen Phase A publication corpus |
@@ -614,7 +614,7 @@ Every JSONL record must contain all required fields. Absence is represented by `
 
 ```json
 {
-  "contractVersion": "0.1.1",
+  "contractVersion": "0.1.2",
   "paperID": "34",
   "canonicalArtifactID": "https://doi.org/...",
   "recordType": "journal_article",
@@ -1019,7 +1019,7 @@ static and methodological conditions pass. Production code is not required for t
 
 - [x] the machine-readable target inventory has been reviewed;
 - [x] all ontology IDs and operational signatures have been statically validated against
-      frozen ontology 0.1.3;
+      frozen ontology 0.1.4;
 - [x] the binding authority order is aligned across the contract artifacts;
 - [x] all reviewed-source hashes match the current repository bytes;
 - [x] compatibility with the frozen Publication Phase A corpus is established;

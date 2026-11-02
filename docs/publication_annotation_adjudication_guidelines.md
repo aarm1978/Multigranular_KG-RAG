@@ -1,18 +1,18 @@
 # Publication Annotation and Adjudication Guidelines — Publication Pilot 1
 
 > **Status:** final and binding for Publication Pilot 1 Study 2 annotation and adjudication
-> **Guideline version:** 0.1.1
+> **Guideline version:** 0.1.2
 > **Artifact family:** scientific publications
 > **Dissertation scope:** Study 2 — multigranular KG construction and intrinsic evaluation
 > **Source scope:** selected Publication Pilot 1 source units
 > **Stage scope:** human gold annotation, disagreement resolution, and post-validation candidate adjudication
-> **Frozen ontology:** CIROH ontology 0.1.3
+> **Frozen ontology:** CIROH ontology 0.1.4
 > **Binding target profile:** `src/extraction/llm/publications/publication_target_inventory.yaml`
 > **Binding source-unit contract:** `docs/publication_source_unit_contract.md`
 > **Binding candidate-output schema:** `schemas/publication_candidate_output.schema.json`
 > **Binding evidence-validation contract:** `docs/publication_evidence_validation_contract.md`
 > **Date drafted:** 2026-07-30
-> **Date revised:** 2026-07-31
+> **Date revised:** 2026-09-01
 > **Date frozen:** 2026-07-31
 
 ## 1. Purpose
@@ -44,7 +44,7 @@ The governing evidence rule remains:
 
 Conflicts are resolved in this order:
 
-1. frozen ontology 0.1.3 specification and generated OWL;
+1. frozen ontology 0.1.4 specification and generated OWL;
 2. frozen deterministic Phase B outputs and tests;
 3. final Publication Pilot 1 human-readable target inventory;
 4. publication ontology observations register;
@@ -65,6 +65,10 @@ Publication Pilot 1 target profile.
 Annotation identifies source-supported nodes, edges, attributes, and evidence directly
 from the canonical source representation. Gold annotation is performed independently of
 model output.
+
+The D-26 generic `ciroh:mentions` relation is pipeline-derived. It is not an
+independently human-annotated or LLM-scored Pilot 1 candidate type, so it adds no human
+annotation decision and no evaluation-matching denominator.
 
 ### 3.2 Automatic validation
 

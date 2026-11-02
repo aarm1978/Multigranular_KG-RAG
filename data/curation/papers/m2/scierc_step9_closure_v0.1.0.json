@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "0.1.0",
+  "study": "Study 2",
+  "step": 9,
+  "status": "FROZEN_CLOSED",
+  "createdAt": "2026-10-07T05:24:42.915159+00:00",
+  "acceptedImplementationCommit": "29fa6524833d777badffd69ad1ec5d9d707e9206",
+  "acceptance": {
+    "authority": "researcher",
+    "basis": "Explicit researcher acceptance and instruction in this conversation to formally close Step 9 using the existing accepted SciERC results.",
+    "scope": "Strict/post-run evaluation, mechanical-overlap sensitivity, and contextual-equivalence v0.1.0 result/provenance."
+  },
+  "interpretation": {
+    "strictPostrun": "Accepted post-run A/B results retained with their original disclosed failure-handling policies.",
+    "mechanicalOverlap": "Secondary mechanical matching sensitivity; not semantic adjudication.",
+    "contextualEquivalence": "Secondary LLM-assisted analysis under the researcher-approved contextual rubric; not independently human-adjudicated gold or a replacement extraction score."
+  },
+  "bindings": [
+    {
+      "path": "data/curation/papers/m2/scierc_step9_postrun_v0.1.0/metrics.json",
+      "sha256": "c4e80f73224137f54be653777817373b03b800dea05dfde9beab5844a2697a75",
+      "sizeBytes": 1936
+    },
+    {
+      "path": "data/curation/papers/m2/scierc_step9_postrun_v0.1.0/projection_manifest.json",
+      "sha256": "405b63f7d4f78f206bcfb6b6ed3572139b35e19d30c9117c0a3e652795fddbf6",
+      "sizeBytes": 132382
+    },
+    {
+      "path": "data/curation/papers/m2/scierc_overlap_sensitivity_v0.1.0/aggregate_report.json",
+      "sha256": "0acadfa35cb082518e5b3ecee1ce5fce3882292d38d0a95629ac95f8c2ee5195",
+      "sizeBytes": 1794
+    },
+    {
+      "path": "data/curation/papers/m2/scierc_overlap_sensitivity_v0.1.0/manifest.json",
+      "sha256": "36dcec2df06badff97f520670308e3f9b34082fa2071285ea810815baa48d5a1",
+      "sizeBytes": 4010
+    },
+    {
+      "path": "data/curation/papers/m2/scierc_contextual_equivalence_v0.1.0/aggregate_metrics.json",
+      "sha256": "3697abe64c38c64cb421a9191dc0b6dfd88860649e2920dcb3bbbfc41b2b89e0",
+      "sizeBytes": 1357
+    },
+    {
+      "path": "data/curation/papers/m2/scierc_contextual_equivalence_v0.1.0/provenance_manifest.json",
+      "sha256": "27cf869549f88fe6dbb9106d5c898705af6a90433fe194c0ede5628e002dfa1a",
+      "sizeBytes": 4125
+    },
+    {
+      "path": "data/curation/papers/m2/scierc_contextual_equivalence_v0.1.0/decision_ledger.jsonl",
+      "sha256": "3eac7c198f44a017bcfc7c936baa1364a6e6c594f83c87e2099ae2519735dde8",
+      "sizeBytes": 256018
+    },
+    {
+      "path": "data/curation/papers/m2/scierc_contextual_equivalence_v0.1.0/alternative_rematch_ledger.jsonl",
+      "sha256": "367a959556dc768ba9559a581086baf4987ad5329ab2b3a9e47919f4b75c395f",
+      "sizeBytes": 34609
+    }
+  ],
+  "closureActions": {
+    "metricsRecomputed": false,
+    "priorTestsRerun": false,
+    "newAnalysis": false,
+    "providerModelCalls": 0,
+    "priorArtifactsModified": false
+  },
+  "nextWorkstream": "Step 10 — audit source-specific semantic gaps for HydroShare, GitHub, and CIROH Hub."
+}

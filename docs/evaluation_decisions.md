@@ -3,8 +3,8 @@
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts — Intrinsic Evaluation Strategy**
 
 **Purpose.** This document records the evaluation design for Study 2: which metrics are
-computed, at which points in KG construction, how the three-LLM robustness analysis is
-structured, and how the schema-agnostic comparison against Microsoft GraphRAG is framed.
+computed, at which points in KG construction, and how structural comparison against
+Microsoft GraphRAG is framed.
 It is a decisions record (rationale + table skeletons) intended as direct input to the
 manuscript's evaluation section, and as the contract for the metrics-computation script.
 
@@ -14,6 +14,167 @@ justification status: anchored (a verified source exists, e.g. MINE in the propo
 by explicit reasoning rather than citation). Citations are NOT invented here; placeholders
 mark where literature support must be added. This doubles as a checklist of what still
 needs grounding.
+
+## Manuscript reporting checkpoint — Human Core GPT-6.1 selection (2026-10-20)
+
+**Status:** Researcher decision recorded for later Study 2 manuscript/dissertation
+writing (Step 18); **not** a manuscript draft, new confirmatory evaluation, or
+authorization to dispatch the full corpus. On 2026-10-20, the researcher
+selected `gpt-6.1-sol` as the **prospective Publications semantic-production
+model** for Step 13, and decided to **report its Human Core N=5 findings in
+the manuscript alongside the historical GPT-5.6 results**, rather than
+reporting only GPT-5.6.
+
+### Results to bring into the manuscript
+
+The five original Human Core units and frozen reference support are shared:
+**118 nodes and 61 relations**. The original GPT-5.6 Step 7B strict
+evaluation is **confirmatory**; the subsequent GPT-6.1 strict evaluation is
+explicitly **POST-HOC MODEL SENSITIVITY**, using the unchanged matcher and
+Human Core. Both models' semantic-recovery and source-support rates are
+**secondary, researcher-confirmed post-hoc analyses**, not substitutions
+for strict precision/recall/F1.
+
+| Measure | GPT-5.6 Sol | GPT-6.1 Sol |
+|---|---:|---:|
+| Strict node TP / FP / FN | 30 / 79 / 88 | 32 / 95 / 86 |
+| Strict node F1 | 0.264317 | 0.261224 |
+| Strict relation TP / FP / FN | 6 / 62 / 55 | 7 / 60 / 54 |
+| Strict relation F1 | 0.093023 | 0.109375 |
+| Human Core node semantic recovery (one-to-one) | 64/118 = 54.2373% | 78/118 = 66.1017% |
+| Human Core relation semantic recovery (one-to-one) | 33/61 = 54.0984% | 41/61 = 67.2131% |
+| Source-supported node predictions | 103/109 = 94.4954% | 120/127 = 94.4882% |
+| Source-supported relation predictions | 66/68 = 97.0588% | 65/67 = 97.0149% |
+
+**Interpretation:** GPT-6.1 yields 14 additional researcher-confirmed
+semantic correspondences among Human Core nodes and eight among relations,
+with essentially unchanged source-support rates. The strict *node* F1 is
+slightly lower for GPT-6.1; its strict *relation* F1 is slightly higher.
+Do **not** describe GPT-6.1 as uniformly better on all strict metrics.
+
+**Critical reporting boundaries:**
+- Semantic recovery measures one-to-one correspondence with Human Core;
+  **it is not a revised strict Recall or F1**.
+- Source-supported prediction rate asks whether each assertion is supported
+  **as proposed** (including typing and relation endpoints), even when Human
+  Core omitted it; **it is not conventional gold-referenced Precision**.
+- The secondary judgments used **ChatGPT-assisted exhaustive
+  pre-adjudication with researcher confirmation of grouped recommendations
+  and escalated cases**. The researcher did **not** independently and blindly
+  re-annotate every GPT-6.1 prediction. Preserve this provenance when writing
+  the paper; do not describe it as an independent blinded human evaluation.
+- N=5 was a deliberately bounded Human Core. No statistical significance,
+  equivalence, full-corpus generalization or demonstrated causal improvement
+  follows from these descriptive comparisons.
+- Preserve the original confirmatory GPT-5.6 Step 7 closure, strict results,
+  fixed Human Core, ontology and matching contract; **do not reopen Step 7C**.
+  GPT-6.1 results are a model-selection/post-hoc sensitivity companion.
+- The choice of GPT-6.1 for prospective Publications production additionally
+  considers the earlier paired smoke's lower observed API cost and higher
+  latency. This note does **not** authorize an API run or set a monetary cap;
+  later Step 13 production preparation should estimate cost and satisfy the
+  already-approved execution-manifest budget/STOP provisions minimally.
+
+### Exact source artifacts to reuse at manuscript time
+
+- GPT-5.6 corrected strict Step 7B:
+  `data/curation/papers/m2/human_core_gold/publication_human_core_n5_corrected_evaluation_step7b_pre_freeze_v1.0.0.json`
+- GPT-5.6 researcher-reviewed secondary sensitivity:
+  `data/curation/papers/m2/human_core_gold/publication_human_core_n5_corrected_evaluation_posthoc_semantic_equivalence_researcher_review_v1.0.0.json`
+- GPT-6.1 strict post-hoc model sensitivity:
+  `data/curation/papers/m2/publication_human_core_n5_gpt61_extraction/gpt61_posthoc_strict_evaluation_v1.0.0.json`
+- GPT-6.1 researcher-reviewed secondary sensitivity and its provenance ledger:
+  `data/curation/papers/m2/publication_human_core_n5_gpt61_extraction/gpt61_posthoc_secondary_researcher_review_v1.0.0.json`
+  and
+  `data/curation/papers/m2/publication_human_core_n5_gpt61_extraction/gpt61_posthoc_researcher_judgment_ledger_v1.0.0.json`
+- Frozen secondary review criteria:
+  `docs/publication_human_core_posthoc_semantic_equivalence_sensitivity_protocol_v0.1.1.md`.
+- GPT-6.1 strict evaluation was committed as `22309460`;
+  GPT-6.1 reviewed secondary results as `238e1f8`.
+  Keep the corresponding Markdown summaries as report-ready references.
+
+**Writing follow-up (not now):** When drafting the Study 2 evaluation
+section, present both models in one explicitly labeled comparative table,
+identify GPT-5.6's confirmatory status and GPT-6.1's post-hoc status, and
+discuss strict vs. semantically grounded coverage separately. Make the
+production-model choice traceable to these observations, not a claim of
+statistically established superiority.
+
+---
+
+## SciERC post-run failure-handling decision — 2026-10-06
+
+The researcher explicitly approved
+[`scierc_postrun_failure_isolation_amendment_v0.1.0.md`](scierc_postrun_failure_isolation_amendment_v0.1.0.md)
+after completed official test execution and diagnostics of inconsistent model
+mentionText/span pairs. **This amendment was not predeclared and is not a
+confirmatory failure-handling policy.** Before accessing gold, fix and hash both
+views: (A) uniformly exclude only inconsistent entities and their dependent
+relations while retaining independent records unchanged, with all other errors
+fail-closed; (B) document-rejection sensitivity using the original 98 valid
+predictions and empty collections for the two originally rejected documents.
+Both use the complete frozen 100-document gold and unchanged native scorer and
+must be reported regardless of outcome. No correction, inferred intent, semantic
+adjudication, new predictions, provider rerun, or Publication Production Acceptance
+is authorized. Original runtime evidence and frozen authorities stay unchanged.
+Step 9 remains open; Step 8 acceptance/closure is unaffected.
+
+## Current accepted architecture
+
+The authoritative prospective Study 2 evaluation architecture is
+[`study2_evaluation_protocol_amendment_v0.3.md`](study2_evaluation_protocol_amendment_v0.3.md)
+and [`publication_step5_evaluation_authority_v0.1.4.md`](publication_step5_evaluation_authority_v0.1.4.md),
+both **FROZEN/CLOSED**. Step 8 execution remains separately authorized. It governs this
+decisions record wherever historical design text conflicts with it. The current
+architecture is: bounded, model-blind **Human Core N=5**; independent **reliability
+N=2**; complementary candidate-conditioned **N=6 pooled validation** with full
+independent 6/6 review of the same 182 items before reconciliation and optional
+non-exhaustive omission observations; a **SciERC external IE anchor**; and **GraphRAG for
+structural comparison only**. The N=6 candidate source is the frozen corrected
+`step5_n6` cohort, not the historical 227-request C1 realization. No standalone
+exhaustive/model-blind completeness procedure, audit-to-pool matching, saturation,
+missed-reference proportion, or completeness statistic is a current requirement.
+Historical three-LLM, broad-gold-standard, paired per-model GraphRAG, and prior audit
+design text below are retained as design history, not current authority.
+
+The 6/6 replication successor was authorized before any Step 8 production judgment
+or activation file. Its paired candidate-support agreement plan is exact observed
+agreement and three-category nominal Cohen's kappa, with confusion/count tables,
+overall (182), nodes (133), and relations (49); target-level results are descriptive
+only where support is adequate. This is not extraction IAA or Human Core reliability.
+The historical 2/6 authorities and accepted primary package remain byte-identical.
+
+### Step 8 researcher acceptance — ACCEPTED / FROZEN_CLOSED
+
+The researcher accepts the Step 8 closure materialized at commit
+`edece69d545eb08ef54b269f2cc5f7c649b6abc8`. Step 8 is **ACCEPTED / FROZEN_CLOSED**.
+This acceptance binds the exact file
+`data/curation/papers/m2/publication_step8_final_evaluation/publication_step8_closure_freeze_v1.0.0.json`
+with SHA-256 `f1b434fbc995f17222ba4bb65a4e220af5856d5a3f6be9d4a10b4f3c6ba56b94`.
+
+This note records acceptance after materialization; the freeze snapshot's pending
+acceptance field and the summary are preserved as historical bytes, not rewritten.
+The initial reviews/agreement, reconciliation export, and all final evaluation
+artifacts remain byte-identical. Step 9 remains open and separately paused; this
+acceptance changes none of its status or authorization boundaries and does not
+authorize its resumption or provider execution.
+
+### Step 8 initial-review agreement interpretation
+
+The frozen unreconciled Step 8 agreement artifact reports exact observed agreement of
+171/182 = 0.939560 and three-category nominal Cohen's kappa of -0.007549 overall.
+The expected agreement is 0.940013. Reviewer marginals were highly concentrated in
+`supported_as_proposed` (172/182 versus 181/182), which explains the divergence
+between high raw agreement and near-zero kappa. Nodes report 124/133 = 0.932331
+observed agreement with kappa 0; relations report 47/49 = 0.959184 observed agreement
+with kappa -0.010309.
+
+Kappa remains reported because it was predeclared, but it must be interpreted alongside
+exact agreement, marginals, and the frozen confusion tables rather than alone.
+Reconciliation does not alter the initial kappa or any initial-review agreement result,
+and no replacement reliability metric is added post hoc. The prevalence/marginal-
+imbalance interpretation requires literature support before manuscript use.
+`[CITE-NEEDED: methodological source on Cohen's kappa under highly imbalanced category marginals/prevalence.]`
 
 ---
 
@@ -52,7 +213,7 @@ point of the internal trajectory and the operand of the external comparison.
 
 **Scope boundary (important for honest claims).** Density and richness measure *how much
 structure*, not *how correct* it is. A denser graph is not automatically a better one.
-Correctness is established separately by the gold-standard component (Precision/Recall/F1)
+Correctness evidence is established separately under the amended human-reference components
 and logical soundness through the formal HermiT validation gate. The schema-agnostic
 comparison supports a claim of *structural richness*, which—combined with correctness
 and consistency evidence—supports the overall claim of a faithful, rich representation.
@@ -141,27 +302,24 @@ encodes UTF-8, and computes lowercase SHA-256. Individual excluded IDs are not p
   from proposal):* computed **globally and per entity type**, to separate intended
   multiplicity (e.g. versioned datasets) from undesirable duplication.
 
-### 2.3 Gold-standard metrics — deferred (framework only)
+### 2.3 Human-reference metrics — bounded current evidence
 
-Precision, Recall, F1, and a **fact-recoverability** measure (whether extracted triples
-suffice to reconstruct core scientific assertions — problem–method–result chains, dataset
-lineage, code–documentation links — without generative inference). These require a manually
-annotated gold standard (stratified subset, ≥2 annotators, adjudication, inter-annotator
-agreement as upper bound). *Decision:* the gold-standard protocol is a separate sub-design,
-documented elsewhere; this document only records that these metrics exist, are measured
-**once on the extraction output** (not as a trajectory), and apply mainly to the LLM layer
-(deterministic extraction is correct-by-construction w.r.t. source fields).
-`[CITE-NEEDED: standard IE evaluation (P/R/F1) reference; inter-annotator agreement
-measure, e.g. the specific agreement coefficient chosen.]`
+Human Core N=5 scoring and the N=2 reliability procedure are frozen/closed under their
+existing matching and closure authorities; they are bounded evidence, not claims against a
+broad “gold standard.” Complementary N=6 pooled validation is a frozen current
+architecture. Optional incidental omission observations are outside its positive pooled
+reference and excluded from Recall/F1 and completeness-related statistics. The SciERC
+adapter binding is frozen as a separate external anchor; see amendment v0.3 for current
+boundaries and execution status.
 
 ### 2.4 Ontology validation — partially done
 
 Competency questions as Cypher/SPARQL queries (pending instances), logical consistency via
-the formal HermiT gate (PASS for ontology 0.1.4 — classification completed, consistent,
-zero named unsatisfiable classes, and no execution errors), and constraint validation
-during assembly. Recorded for completeness; the formalization phase already established
-consistency. The validated ontology 0.1.4 artifact SHA-256 is
-`7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635`.
+the formal HermiT gate (PASS for formally frozen ontology 0.1.5 — classification completed,
+consistent, zero named unsatisfiable classes, and no execution errors), and constraint
+validation during assembly. Recorded for completeness; the formalization phase already
+established consistency. The validated ontology 0.1.5 OWL SHA-256 is
+`ce5f6d3d8ac926dc8ff872c9a36066758a86068b6681417bf7edc6aaeccf1e71`.
 
 ---
 
@@ -180,9 +338,9 @@ The construction pipeline stages and their measurement points are cumulative:
 | | after +GitHub det. | density, richness | | no |
 | | after +Hub det. | density, richness | | no |
 | | after +Papers det. | density, richness | | no |
-| | after LLM layer added | density, richness | ratio "before alignment" | **yes — ×3 models** |
-| Alignment (consolidation) | after semantic alignment | density, richness | ratio "after alignment" | yes — ×3 models |
-| Assembly | after graph assembly | density, richness | ratio "after assembly" | yes — ×3 models |
+| | after Publication semantic layer added | density, richness | ratio "before alignment" | governed by the amended evaluation architecture |
+| Alignment (consolidation) | after semantic alignment | density, richness | ratio "after alignment" | governed by the amended evaluation architecture |
+| Assembly | after graph assembly | density, richness | ratio "after assembly" | governed by the amended evaluation architecture |
 
 Thus “+ GitHub” means the concatenated HydroShare and GitHub mention graphs, not GitHub in
 isolation. Module-only diagnostics may be computed for quality control, but they are stored
@@ -194,11 +352,8 @@ dominated by low-degree or attribute-sparse entity classes can lower a global av
 still increasing graph coverage and total represented information. Global values must
 therefore be interpreted together with node and edge counts and per-class diagnostics.
 
-*Reading the table:* the deterministic-only points have no model dimension (no LLM
-involved). The model dimension (×3) appears only from the LLM layer onward, because only
-the LLM-produced portion of the graph varies by model; the deterministic portion, the
-ontology, the consolidation logic, and assembly are model-invariant. This keeps the matrix
-manageable: it is "the LLM-dependent points × 3," not "everything × 3."
+*Historical note — superseded:* the previous ×3 model matrix is not a current requirement.
+Any future evaluation design must follow the prospective architecture in amendment v0.3.
 
 *Decision (argued):* the three proposal-mandated consolidation-ratio points (before/after
 alignment, after assembly) are the coarse trajectory; the per-source structural points are
@@ -214,7 +369,11 @@ component.)
 
 ---
 
-## 4. The three-LLM robustness analysis
+## 4. Historical three-LLM robustness analysis — superseded
+
+This section preserves the earlier design rationale only. It is superseded by the current
+accepted architecture above and must not be used to require three LLMs, select a model, or
+define a correctness baseline.
 
 **Models (confirmed):** `gpt-oss-120b`, `qwen3.6-27b`, `gpt-5.5-2026-04-23`.
 `[VERIFY: confirm these exact identifiers at experiment time — model names version
@@ -249,12 +408,9 @@ lab OpenAI-credit item).
 
 ## 5. External comparison vs. Microsoft GraphRAG
 
-**Design (confirmed): paired, per-model.** GraphRAG is run with *each* model, and the
-ontology-guided pipeline is run with *each* model, and comparison is **within each model**:
-GraphRAG-with-model-M vs. ours-with-model-M. This controls for the model: any difference is
-attributable to the *approach* (ontology-guided vs. schema-agnostic), not the model — and
-it yields two robustness arguments at once (our advantage holds across models; our metrics
-are stable across models).
+**Current authority:** GraphRAG is a structural-only comparator under the amendment. It is
+not a human-reference, semantic-correctness, or model-robustness baseline. The earlier
+paired per-model design is superseded.
 
 **What is compared.** The two schema-agnostic metrics only (information density, relational
 richness), on the **final assembled** ontology-guided KG vs. GraphRAG's KG, both over the
@@ -276,16 +432,12 @@ both Multigranular KG variants for consistency.
 
 ### Table skeleton — schema-agnostic comparison (Purpose 2)
 
-| Model | Information density — GraphRAG KG | Information density — Multi-granular KG | Relational richness — GraphRAG KG | Relational richness — Multi-granular KG |
+| Evaluation state | Information density — GraphRAG KG | Information density — Multi-granular KG | Relational richness — GraphRAG KG | Relational richness — Multi-granular KG |
 |---|---|---|---|---|
-| gpt-oss-120b | | | | |
-| qwen3.6-27b | | | | |
-| gpt-5.5-2026-04-23 | | | | |
+| final assembled same-corpus graphs | | | | |
 
-*Reading:* each row fixes the model; compare GraphRAG vs. Multi-granular within the row
-(approach effect, model held constant). Read down our columns to see stability across
-models. "Multi-granular KG" = the final assembled KG. `[VERIFY: confirm GraphRAG's exact
-configuration/version used.]`
+*Reading:* “Multi-granular KG” is the final assembled KG. The comparison supports only
+structural interpretation. `[VERIFY: confirm GraphRAG's exact configuration/version used.]`
 
 ---
 
@@ -320,7 +472,8 @@ Uses the same rows and columns as Table A.
 | + Hub (det.) | | | | | | | | |
 | + Papers (det.) | | | | | | | | |
 
-For the LLM-onward rows, this table is instantiated **once per model** (×3), per §4.
+The historical per-model instantiation is superseded; use the amendment for any
+model-sensitive evaluation design.
 
 ### 6.2 Consolidation ratio — global and per entity type (Purpose 1)
 
@@ -333,11 +486,19 @@ For the LLM-onward rows, this table is instantiated **once per model** (×3), pe
 Per-type columns separate intended multiplicity (e.g. versioned datasets) from undesirable
 duplication.
 
-### 6.3 Gold-standard (deferred — framework only)
+### 6.3 Human-reference (current bounded architecture)
+
+#### Strict Human Core N=5 metrics
 
 | Layer / source | Precision | Recall | F1 | Fact recoverability |
 |---|---|---|---|---|
-| (to be defined with the gold-standard protocol) | | | | |
+| Human Core N=5 (frozen Step 7 closure) | | | | |
+
+#### Complementary N=6 candidate-conditioned validation
+
+The frozen N=6 pooled procedure is a separate candidate-conditioned human-validation
+component. Under v0.1.2 it does not produce Recall, F1, completeness, saturation, or
+missed-reference statistics. No new N=6 quantitative metric is defined here.
 
 ---
 
@@ -348,25 +509,22 @@ duplication.
   point. GitHub alone is retained only as a module diagnostic.
 - **As construction proceeds:** materialize the next cumulative snapshot and re-run the
   same evaluator after each added source and each consolidation stage (the fine trajectory).
-- **Later (requires LLM layer):** the model dimension (×3), the before/after-alignment
-  consolidation ratios.
-- **Later (requires gold standard):** Precision/Recall/F1, fact recoverability.
+- **Later (separately authorized implementation/execution):** N=6 pooled validation and
+  any separate SciERC external-anchor execution.
 - **Later (requires GraphRAG runs):** the §5 comparison.
 
 ---
 
 ## 8. Open items / pending decisions
 
-- `[CITE-NEEDED]` items above: MINE [97] verification; GraphRAG reference; IE-metrics and
-  inter-annotator-agreement references; multi-model-robustness rationale reference.
-- Confirm exact model identifiers at experiment time (§4).
+- `[CITE-NEEDED]` items above: MINE [97] verification; GraphRAG reference; and IE-metrics
+  references appropriate to the amended architecture.
 - Confirm GraphRAG configuration/version and that its run uses the same corpus (§5).
 - Preserve the ratified global and class-specific administrative/identifier exclusion
   policy for information density (§2.1) and apply it identically to both KGs.
 - Preserve the frozen Multigranular KG file-inventory class policy and endpoint-derived
   edge filtering as a supporting sensitivity analysis; do not claim symmetric GraphRAG
   filtering without a pre-defined common cross-schema identification protocol.
-- Decide whether the "Multi-granular KG" in the GraphRAG comparison is strictly the
-  assembled state (recommended) — confirm.
-- Budget and ordering for the ×3 (and GraphRAG ×3) runs, with the advisor.
-- Gold-standard protocol: separate design (annotators, stratification, adjudication).
+- Preserve the frozen pooled-validation and SciERC bindings during their separately
+  authorized implementation/execution, and do not treat optional omission observations as
+  completeness evidence.

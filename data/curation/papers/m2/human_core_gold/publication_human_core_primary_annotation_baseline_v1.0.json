@@ -1,0 +1,79 @@
+{
+  "artifactType": "immutable_primary_annotation_baseline_preservation",
+  "artifactVersion": "1.0.0",
+  "status": "immutable_primary_annotation_baseline_produced_under_ontology_v0.1.4",
+  "statement": "This is the immutable Human Core primary annotation baseline produced under ontology v0.1.4. It preserves the completed primary annotation through its deterministic session export; it does not reopen, revise, normalize, or otherwise alter any annotation.",
+  "deterministicSessionExport": {
+    "path": "var/publication_pilot1_annotation/human-core/primary-researcher/exports/HUMAN_CORE_N5_PRIMARY_V1.annotation.json",
+    "versionControlStatus": "ignored_local_runtime_export; not copied into the repository",
+    "sha256": "9d71ae66c3218c4b8be21a3ea10b4015cb5502fce5eaf75f6bb0ac9922bc4e74",
+    "detachedSha256Path": "var/publication_pilot1_annotation/human-core/primary-researcher/exports/HUMAN_CORE_N5_PRIMARY_V1.annotation.annotation.sha256",
+    "detachedSha256Matches": true
+  },
+  "runtimeSQLite": {
+    "path": "var/publication_pilot1_annotation/human-core/primary-researcher/sessions/HUMAN_CORE_N5_PRIMARY_V1.sqlite3",
+    "versionControlStatus": "ignored_local_runtime_state; not versioned",
+    "preservationAction": "not modified"
+  },
+  "sessionAuthority": {
+    "annotationSessionID": "HUMAN_CORE_N5_PRIMARY_V1",
+    "annotatorID": "HUMAN_CORE_PRIMARY_RESEARCHER",
+    "mode": "human-core",
+    "annotationSchemaVersion": "0.1.2",
+    "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.3",
+    "routingVersion": "0.1.2",
+    "contextPolicy": {
+      "name": "bounded_human_annotation_context",
+      "version": "0.1.0"
+    }
+  },
+  "packageAuthority": {
+    "path": "data/curation/papers/m2/human_core_gold/publication_human_core_primary_annotation_package_v1.1.json",
+    "sha256": "817b53e54d5e3b819edc7fbbe9dbf2b025340f484d4158199ac8366e832f7586",
+    "packageIdentity": "publication-human-core-gold-n5-primary-v1",
+    "packageDefinitionVersion": "1.1.0",
+    "freezePath": "data/curation/papers/m2/human_core_gold/publication_human_core_gold_sample_freeze_v1.0.json",
+    "freezeSha256": "0005a1c37f3eb7597651a7bee898098a0cd71e29c15464c36a06dffe19b486e0"
+  },
+  "guideAuthority": {
+    "packageBoundGuide": {
+      "path": "docs/publication_human_core_expert_annotation_guide.md",
+      "version": "1.1",
+      "sha256": "c937a86bfe2a920dac0ad0b7c9f16cc863f2c2ece68cd65e5b3bfa7aef2ba56e"
+    },
+    "exportRecordedGuideAndHandbookVersion": "1.0",
+    "recordingStatus": "discrepancy_preserved_without_reinterpretation_or_mutation",
+    "note": "The deterministic export records 1.0 for both guidelineVersion and handbookVersion. The primary package binds Guide 1.1 and states that it superseded 1.0 before first Human Core annotation. This artifact records both authorities exactly and does not resolve the discrepancy."
+  },
+  "schemaAuthority": {
+    "path": "schemas/publication_pilot1_annotation_record.schema.json",
+    "version": "0.1.2",
+    "sha256": "23eb32dacf473149554d3f93302719142015131077c04aa7766f0b358a7d8b7b"
+  },
+  "ontologyAuthority": {
+    "path": "src/ontology/ontology_spec.yaml",
+    "version": "0.1.4",
+    "sha256": "363cb4f92a2fc82f993baf808da56bc7d38bbb355669dd01ca03686c3551982d",
+    "authorityBasis": "researcher-directed completed Human Core baseline and current frozen ontology authority"
+  },
+  "completion": {
+    "selectedSourceUnitIDs": [
+      "pub:10:sec:0008:unit:0001",
+      "pub:15:sec:0004:unit:0001",
+      "pub:16:sec:0033:unit:0001",
+      "pub:34:sec:0015:unit:0001",
+      "pub:79:sec:0004:unit:0001"
+    ],
+    "annotationCount": 5,
+    "submissionCount": 5,
+    "allFiveSelectedUnitsSubmitted": true,
+    "allExportedAnnotationWorkflowStatesSubmitted": true,
+    "auditActionCount": 5,
+    "auditActions": ["submitted", "submitted", "submitted", "submitted", "submitted"]
+  },
+  "scopeBoundary": {
+    "primaryAnnotations": "immutable; do not reopen or modify",
+    "observationLog": "data/curation/papers/m2/human_core_gold/publication_human_core_ontology_gap_observations_v1.0.json is an immutable researcher observation log",
+    "runtimeSQLite": "not versioned"
+  }
+}

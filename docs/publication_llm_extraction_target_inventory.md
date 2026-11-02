@@ -4,8 +4,8 @@
 **Artifact family:** Scientific publications
 **Source scope:** curated publication corpus
 **Stage scope:** ontology-guided LLM semantic overlay over the frozen Phase B backbone
-**Frozen ontology:** CIROH ontology 0.1.3
-**Validated OWL SHA-256:** `ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57`
+**Frozen ontology:** CIROH ontology 0.1.4
+**Validated OWL SHA-256:** `7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635`
 **Decision basis:** Ten-block publication target review plus approved pre-pilot ontology gate
 **Date consolidated:** 2026-07-30
 
@@ -27,7 +27,7 @@ The following decisions are binding for Pilot 1:
 8. The remaining ontology observations are assigned to annotation/validator changes,
    post-pilot review, source-specific pilots, or the alignment/consolidation pilot.
 
-This inventory is final against the formally frozen ontology 0.1.3 baseline and the
+This inventory is final against the formally frozen ontology 0.1.4 baseline and the
 validated OWL SHA recorded above.
 
 ## 1. Purpose
@@ -66,10 +66,15 @@ The completed and frozen implementation contracts under this inventory are:
 - [`publication_target_inventory.yaml`](../src/extraction/llm/publications/publication_target_inventory.yaml)
   — the final and binding machine-readable executable target profile;
 - [`publication_source_unit_contract.md`](publication_source_unit_contract.md) — the
-  final and binding canonical source-unit and request-context contract.
+  final and binding canonical source-unit and request-context contract;
+- [`publication_candidate_output.schema.json`](../schemas/publication_candidate_output.schema.json)
+  — the final and binding candidate-output structure; and
+- [`publication_evidence_validation_contract.md`](publication_evidence_validation_contract.md)
+  — the final and binding validation contract.
 
-The candidate-output JSON Schema and evidence-validation contract are next. The
-production source-unit builder and LLM extractor are not yet implemented.
+The source-unit builder, request builder, parser, candidate/evidence validator, and
+development extractor components are implemented. Production extraction has not been
+executed.
 
 ## 3. Scope and non-goals
 
@@ -275,7 +280,7 @@ domain, or resolution cases.
 | A-P09 | ResearchGoal | discourse | llm | extract_and_evaluate | Yes | Explicit aim, objective, or intended scientific action of the current paper. | Exclude goals of simulated agents, cited studies, software components, and future recommendations. |
 | A-P10 | ResearchSignificance | discourse | llm | extract_and_monitor | Yes | Explicit statement of why this study, result, or contribution matters. | Background is general importance; Contribution is what was added. |
 | A-P11 | Definition | discourse | llm | extract_and_monitor | Yes | Explicit statement establishing the meaning of a term, measure, method, or concept. | Exclude general explanations, procedure descriptions, and formulas without textual interpretation. |
-| A-P12 | TheoreticalBasis | discourse | llm | extract_and_monitor | Yes | Theory, conceptual framework, or scientific principle that grounds the study, hypothesis, method, or interpretation. | Exclude mere theory mentions and applied procedures. No TheoreticalBasis grounding relation is declared in ontology 0.1.3. |
+| A-P12 | TheoreticalBasis | discourse | llm | extract_and_monitor | Yes | Theory, conceptual framework, or scientific principle that grounds the study, hypothesis, method, or interpretation. | Exclude mere theory mentions and applied procedures. No TheoreticalBasis grounding relation is declared in ontology 0.1.4. |
 | A-P13 | Method | discourse | llm | extract_and_evaluate | Yes | Technique, procedure, or applied approach used to perform part of the current study. | A named reusable entity may instead be an Algorithm, Tool, or concrete model; the applied activity remains Method. |
 | A-P14 | Experiment | discourse | llm | extract_and_evaluate | Yes | Delimited empirical or computational test combining data, methods/models, conditions, and evaluation. | Exclude a single technique, a data description, or an illustrative example without evaluation. |
 | A-P15 | Examples | discourse | llm | extract_and_monitor | Yes | Single illustrative case, scenario, or application used to demonstrate an idea or procedure. | Exclude evaluated experiments and incidental phrases introduced by 'for example'. |
@@ -326,7 +331,7 @@ domain, or resolution cases.
 | PROV-R2 | wasExtractedBy | EvidenceSpan → prov:Activity | pipeline_generated | required_infrastructure | Created from run/model/prompt/schema metadata. | Not an independent LLM prediction. |
 | ID-R1 / C-P04 | hasIdentifier | Entity/Paper → Identifier | deterministic | context_only | Exact authorized identifier link. | The LLM cannot mint, repair, or merge identifiers. |
 | A-AG-R1 | affiliatedWith | Person → Organization | deterministic | out_of_scope | Publication affiliation parsing. | Implementation gap, not an LLM target. |
-| A-AG-R2 | fundedBy | Paper → Award | deterministic | out_of_scope | Publication funding parsing. | Implementation gap, not an LLM target. An Award-to-funding-organization branch is not formally declared in ontology 0.1.3 and remains deferred outside Publication Pilot 1. |
+| A-AG-R2 | fundedBy | Paper → Award | deterministic | out_of_scope | Publication funding parsing. | Implementation gap, not an LLM target. An Award-to-funding-organization branch is not formally declared in ontology 0.1.4 and remains deferred outside Publication Pilot 1. |
 | C-P01 | hasAuthor | Paper → Author | deterministic | context_only | Frozen Phase B author edge. | Not re-extracted. |
 | C-P02 | publishedIn | Paper → Venue | deterministic | context_only | Frozen Phase B venue edge. | Not re-extracted. |
 | C-P03 | hasSubject | Paper → Subject | deterministic | context_only | Frozen explicit keyword edge. | Not interchangeable with mentionsConcept. |
@@ -578,5 +583,5 @@ Before implementation or benchmark annotation begins:
 # 17. Acceptance statement
 
 This document is the binding Publication Pilot 1 target inventory against formally
-frozen ontology 0.1.3 and validated OWL SHA-256
-`ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57`.
+frozen ontology 0.1.4 and validated OWL SHA-256
+`7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635`.

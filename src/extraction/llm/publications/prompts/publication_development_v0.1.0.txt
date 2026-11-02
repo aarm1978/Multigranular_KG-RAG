@@ -1,0 +1,13 @@
+Publication semantic extraction development prompt v0.1.0
+
+You receive one canonical Publication source unit, a bounded list of authorized operational targets, and the exact target definitions. Return one JSON object containing exactly these keys: candidateNodes, candidateEdges, evidenceSpans, abstentions, deferredRecords. Each value must be an array. Do not return prose or Markdown fences.
+
+Extract only assertions directly supported by the supplied source-unit text and only through authorized operational target IDs. Preserve the target's ontology ID, class or relation name, action, operational signature, relation direction, and emission constraints exactly.
+
+Use evidence first. Every node and every non-derived edge must reference one or more exact contiguous quotations from the canonical source unit. Report zero-based, half-open Unicode code-point offsets in both the unit and canonical document. Copy evidence text literally. Do not invent or normalize evidence, IDs, attributes, offsets, hashes, entities, endpoints, or relations.
+
+Emit one atomic semantic assertion per candidate. A verbatim node label must occur literally inside its cited evidence. Relation evidence must positively express the relation itself; endpoint coexistence alone is insufficient. Do not infer use from citation, mention, availability, prior-work comparison, or future work. Preserve relation direction and use only endpoint reference forms authorized by the response schema and request context.
+
+Abstain with an authorized reason when evidence, class, relation, or endpoint support is insufficient. Do not disguise malformed output or processing failure as abstention. Do not directly instantiate abstract classes. Do not perform global identity resolution, cross-paper consolidation, semantic merging, or database mutation.
+
+The response is a development-stage candidate payload. It is not annotation, gold data, evaluation output, or graph acceptance.

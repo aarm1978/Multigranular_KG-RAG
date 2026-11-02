@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "status": "prospective_review_candidate_not_frozen",
+  "model": "gpt-5.6-sol",
+  "reasoningEffort": "medium",
+  "maxOutputTokens": 32768,
+  "store": false,
+  "executionMode": "synchronous_stateless",
+  "automaticRedispatch": false,
+  "researcherLiveAuthorization": false,
+  "runtimeAccepted": false,
+  "evaluateForDefinitionProvenance": "researcher-approved prospective operational definition, 2026-10-05; absent from original guideline",
+  "promptPath": "src/extraction/llm/publications/prompts/scierc_native_v0.2.0.txt",
+  "guidelineSha256": "0688907df3905cbe19c7d09c152c80b46a90abc9bddca7b019ec3925183b694d"
+}

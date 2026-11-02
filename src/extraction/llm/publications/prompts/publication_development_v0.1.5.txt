@@ -1,0 +1,29 @@
+Publication semantic extraction development prompt v0.1.5
+
+You receive one canonical Publication source unit, a bounded list of authorized operational targets, and the exact target definitions. Return only the model-authorable structured payload constrained by the supplied JSON Schema. Do not return prose or Markdown fences. The pipeline supplies trusted envelope metadata separately.
+
+Extract only assertions directly supported by the supplied source-unit text and only through authorized operational target IDs. Preserve the target's trusted ontology ID, class or relation name, action, operational signature, relation direction, and emission constraints exactly.
+
+REQUIRED LOCAL OUTPUT IDENTIFIERS
+
+Generate every local identifier required by the structured candidate format. Use the exact allowed local patterns and unique sequential values within this response, including node-0001, edge-0001, evidence-0001, and the corresponding frozen pattern for any abstention when applicable. Candidate and edge evidenceSpanIDs must reference generated evidenceSpanID values exactly.
+
+TRUSTED IDENTIFIERS
+
+Never invent or modify ontology IDs, operational target IDs, source artifact IDs, source unit IDs, deterministic entity IDs, request IDs, hashes, or pipeline metadata. Copy trusted identifiers assigned to model-authored evidence fields exactly from the bounded request.
+
+EVIDENCE
+
+Use evidence first. Every node and every non-derived edge must reference one or more exact contiguous quotations from the canonical sourceUnit.text. Return evidenceText as an exact literal substring, including every internal whitespace character and punctuation mark. The pipeline computes all coordinates and the evidence hash deterministically; do not author offsets or hashes. Do not normalize, approximate, fabricate, or repair evidence, entities, endpoints, relations, or semantic assertions.
+
+If the exact evidenceText occurs more than once in sourceUnit.text, return locatorAnchor: a compact exact contiguous substring of sourceUnit.text that occurs exactly once, contains evidenceText, and contains only one occurrence of that evidenceText. locatorAnchor is location-only metadata, not semantic evidence: never extend or alter evidenceText with it. Use null when no locatorAnchor is needed.
+
+COMPLETE AUTHORIZED TARGET-SPACE SEARCH
+
+Systematically consider the complete set of authorized operational targets supplied in the bounded request. Emit every distinct source-supported candidate found for any authorized target, not merely the most salient candidate or target. Continue to emit only assertions supported by explicit source evidence, and never emit a candidate for an unauthorized target. Authorization permits semantic search but does not imply that a target is present. Do not produce one abstention for every authorized target that lacks evidence. The absence of an emitted candidate for a target is not an explicit negative presence-or-absence assessment. Do not apply salience thresholds, quotas, section-role heuristics, or target-specific expectations.
+
+Emit one atomic semantic assertion per candidate. A verbatim node label must occur literally inside its cited evidence. Relation evidence must positively express the relation itself; endpoint coexistence alone is insufficient. Do not infer use from citation, mention, availability, prior-work comparison, or future work. Preserve relation direction and use only endpoint reference forms authorized by the bounded request and structured response schema.
+
+Abstain with an authorized reason when evidence, class, relation, or endpoint support is insufficient. Do not disguise malformed output or processing failure as abstention. Do not directly instantiate abstract classes. Do not perform global identity resolution, cross-paper consolidation, semantic merging, or database mutation.
+
+The response is a development-stage candidate payload. It is not annotation, gold data, evaluation output, or graph acceptance.

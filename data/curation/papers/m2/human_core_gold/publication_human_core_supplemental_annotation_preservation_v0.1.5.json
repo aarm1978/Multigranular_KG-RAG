@@ -1,0 +1,63 @@
+{
+  "artifactType": "immutable_human_core_supplemental_annotation_preservation",
+  "artifactVersion": "0.1.5.0",
+  "status": "immutable_supplemental_annotation_completed_under_ontology_v0.1.5",
+  "statement": "This record preserves the completed Human Core v0.1.5 supplemental annotation as a distinct immutable delta. It does not reopen, normalize, copy, merge, or otherwise alter either the primary or supplemental annotations.",
+  "supplementalDeterministicSessionExport": {
+    "path": "var/publication_pilot1_annotation/human-core/supplemental-researcher/exports/HUMAN_CORE_N5_SUPPLEMENTAL_V015.annotation.json",
+    "versionControlStatus": "ignored_local_runtime_export; not copied into the repository",
+    "sha256": "8d637084d3f14cae958b9a9bbe3acb8c74ca741a2c43a990ec939699266707a2",
+    "detachedSha256Path": "var/publication_pilot1_annotation/human-core/supplemental-researcher/exports/HUMAN_CORE_N5_SUPPLEMENTAL_V015.annotation.annotation.sha256",
+    "detachedSha256Matches": true,
+    "preservationAction": "not modified"
+  },
+  "sessionAuthority": {
+    "annotationSessionID": "HUMAN_CORE_N5_SUPPLEMENTAL_V015",
+    "annotatorID": "HUMAN_CORE_PRIMARY_RESEARCHER",
+    "mode": "human-core-supplemental",
+    "annotationSchemaVersion": "0.1.2",
+    "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.3",
+    "routingVersion": "0.1.2",
+    "guideAndHandbookVersion": "1.1"
+  },
+  "authorities": {
+    "supplementalPackage": {
+      "path": "data/curation/papers/m2/human_core_gold/publication_human_core_supplemental_annotation_package_v0.1.5.json",
+      "packageIdentity": "publication-human-core-gold-n5-supplemental-v015",
+      "sha256": "22d4946f0159361badbb8bf87517368a9d24ffa336d4c3549f3166c45b4334c2"
+    },
+    "guide": {"path": "docs/publication_human_core_expert_annotation_guide.md", "version": "1.1", "sha256": "c937a86bfe2a920dac0ad0b7c9f16cc863f2c2ece68cd65e5b3bfa7aef2ba56e"},
+    "supplementalAddendum": {"path": "docs/publication_human_core_supplemental_annotation_addendum_v0.1.5.md", "version": "0.1.5", "sha256": "e2ff6d58e9a982080891b373595b8a3ab747f674e68d76ed5ed0082d9f3bd562"},
+    "annotationSchema": {"path": "schemas/publication_pilot1_annotation_record.schema.json", "version": "0.1.2", "sha256": "23eb32dacf473149554d3f93302719142015131077c04aa7766f0b358a7d8b7b"},
+    "ontologySpec": {"path": "src/ontology/ontology_spec.yaml", "version": "0.1.5", "sha256": "eac8ec2e0eeec380d05e75c804dc386e9e8aaf8f443b79e20a25a163e513efc5"},
+    "ontologyOwl": {"path": "src/ontology/ciroh_ontology.owl", "version": "0.1.5", "sha256": "ce5f6d3d8ac926dc8ff872c9a36066758a86068b6681417bf7edc6aaeccf1e71"}
+  },
+  "immutablePrimaryBaseline": {
+    "preservationRecordPath": "data/curation/papers/m2/human_core_gold/publication_human_core_primary_annotation_baseline_v1.0.json",
+    "preservationRecordSha256": "377610a7dbd4ffca587e76942c4438e53a7d28d535aea4d0aa8daae4044e02cc",
+    "exportPath": "var/publication_pilot1_annotation/human-core/primary-researcher/exports/HUMAN_CORE_N5_PRIMARY_V1.annotation.json",
+    "exportSha256": "9d71ae66c3218c4b8be21a3ea10b4015cb5502fce5eaf75f6bb0ac9922bc4e74",
+    "preservationAction": "not modified"
+  },
+  "completion": {
+    "annotationCount": 5,
+    "submissionCount": 5,
+    "allFiveAnnotationsSubmitted": true,
+    "nodeCounts": {"AgentBasedModel": 1, "Organization": 15},
+    "relationCounts": {
+      "total": 8,
+      "PUB-R-C-P13-USESMODEL-PAPER-BRANCH": 1,
+      "PUB-R-C-P14-APPLIESTO": 1,
+      "PUB-R-C-P34-HASCOMPONENT": 6,
+      "PUB-R-C-P13-USESMODEL-METHOD-BRANCH": 0,
+      "PUB-R-C-P23-MENTIONSMODEL": 0,
+      "PUB-R-C-P26-EVALUATES": 0,
+      "PUB-R-C-P27-HASPARAMETER": 0
+    }
+  },
+  "referenceComposition": {
+    "description": "The Human Core v0.1.5 reference is composed from the immutable v0.1.4 primary baseline plus this immutable v0.1.5 supplemental delta.",
+    "destructiveMergeAuthorized": false,
+    "primaryAndSupplementalExportsRemainDistinct": true
+  }
+}

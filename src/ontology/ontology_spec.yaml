@@ -20,7 +20,7 @@ ontology:
   iri: "https://w3id.org/ciroh/ontology#"
   prefix: ciroh
   title: "Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts"
-  version: "0.1.4"
+  version: "0.1.7"
 
 # -----------------------------------------------------------------------------
 # Namespaces / imports (v0.1 §3.1).
@@ -44,6 +44,7 @@ prefixes:
   - {prefix: gn,      iri: "http://www.geonames.org/ontology#", use: reference, note: ">= 2.2.1"}
   - {prefix: schema,  iri: "https://schema.org/",         use: reference, note: "primary for Person/Org/Software/Parameter"}
   - {prefix: dcterms, iri: "http://purl.org/dc/terms/",   use: reference, note: "not legacy dc:"}
+  - {prefix: dcat,    iri: "http://www.w3.org/ns/dcat#",    use: reference, note: "DCAT v3 data-service reuse; reference-only, no new import"}
   - {prefix: foaf,    iri: "http://xmlns.com/foaf/0.1/",  use: reference, note: "optional owl:equivalentClass only"}
   - {prefix: doap,    iri: "http://usefulinc.com/ns/doap#", use: reference}
   - {prefix: spdx,    iri: "http://spdx.org/rdf/terms#",  use: reference}
@@ -82,9 +83,10 @@ classes:
      anchor: {curie: "schema:Person", relation: useDirectly}, optional_equivalent: "foaf:Person",
      status: S, locus: "creators / author block / contributors.json / doc lines",
      note: "roles: Author/Creator/Contributor; canonicalized across four identifier regimes"}
-  - {id: A-AG02, name: Organization, iri: "schema:Organization", kind: agent, extraction: det,
+  - {id: A-AG02, name: Organization, iri: "schema:Organization", kind: agent, extraction: hybrid,
      anchor: {curie: "schema:Organization", relation: useDirectly}, status: S,
-     locus: "affiliation; awards[].funding_agency", note: "+ ROR"}
+     locus: "affiliation; awards[].funding_agency; publication body prose",
+     note: "+ ROR; deterministic affiliation/funding loci retained; Publication prose permits evidence-backed LLM occurrence extraction"}
 
   # ---- Shared CIROH domain-entity layer (Part 1 — the contribution) ----
   - {id: A-DOM01, name: SoftwareEntity, iri: ciroh:SoftwareEntity, kind: domain, abstract: true,
@@ -106,6 +108,9 @@ classes:
      status_note: "vestigial — regression resolves to Method; instantiates only for a named statistical model with own identity"}
   - {id: A-DOM03d, name: MLModel, iri: ciroh:MLModel, kind: domain, parent: ciroh:ComputationalModel,
      anchor: null, extraction: llm, status: S, examples: [LSTM, "random forest"], note: "aka DataDrivenModel"}
+  - {id: A-DOM03e, name: AgentBasedModel, iri: ciroh:AgentBasedModel, kind: domain, parent: ciroh:ComputationalModel,
+     anchor: null, extraction: llm, status: S, examples: ["agent-based model", ABM],
+     note: "Simulation model organized around interacting autonomous agents; distinct from MLModel even when learned components are embedded within agents."}
   - {id: A-DOM04, name: Variable, iri: "schema:variableMeasured", kind: domain, extraction: llm,
      anchor: {curie: "schema:PropertyValue", relation: subClassOf}, status: E,
      locus: "abstract/README/paper/doc prose", note: "CF Standard Names; measurable quantity (vs Concept)"}
@@ -226,6 +231,13 @@ classes:
                    evidence: "app_home_page_url / app-launching URL pattern"}]}
   - {id: A-D12, name: Measurement, iri: ciroh:Measurement, kind: domain, extraction: llm,
      anchor: null, status: E, status_note: "coverage ~ 0 · demote-candidate", locus: "README prose"}
+  # Prospective v0.1.6 service representation: declared now, optional deterministic materialization later.
+  - {id: A-D13, name: DataService, iri: ciroh:DataService, kind: metadata, extraction: det,
+     anchor: {curie: "dcat:DataService", relation: subClassOf}, status: S,
+     locus: "HydroShare structured data_services WMS/WCS declarations",
+     note: "Source-asserted data-access service, not a Tool, repository, landing page, or verified live endpoint; source-local identity until alignment",
+     attributes: [{name: endpointURL, type: string, anchor: "dcat:endpointURL", evidence: "data_services explicit endpoint field (exact location to be mapped)"},
+                  {name: serviceType, type: string, anchor: "schema:serviceType", evidence: "data_services explicit WMS/WCS type when present"}]}
   # A-D07 SpatialCoverage -> A-DOM09; A-D08 TemporalCoverage -> A-DOM10; A-D11 Variable -> A-DOM04 (refs, not redeclared)
 
   # ---- Module 3: Code Repository (Part 4) ----
@@ -243,7 +255,7 @@ classes:
   - {id: A-C04, name: ExecutionEnvironment, iri: ciroh:ExecutionEnvironment, kind: metadata, extraction: det,
      anchor: null, status: S, note: "codemeta:runtimePlatform; Dockerfile/environment.yml"}
   - {id: A-C07, name: RepositoryPurpose, iri: ciroh:RepositoryPurpose, kind: metadata, extraction: llm,
-     anchor: null, status: S, note: "controlled vocabulary"}
+     anchor: null, status: S, note: "controlled vocabulary; SKOS is already imported and may encode a later approved instance-level concept scheme; no TBox category list is minted"}
   - {id: A-C08, name: Function, iri: ciroh:Function, kind: domain, extraction: llm, anchor: null, status: E,
      note: "prose only; AST = future"}
   - {id: A-C10, name: ModelVersion, iri: ciroh:ModelVersion, kind: metadata, extraction: hybrid,
@@ -286,7 +298,7 @@ relations:
      anchor: "schema:affiliation", evidence: "affiliation block (det)", type: intra, status: S}
   - {id: A-AG-R2, name: fundedBy, domain: [Paper, DatasetResource], range: Award,
      anchor: "schema:funder", evidence: "acknowledgments / awards[] (det)", type: prov, status: S,
-     note: "Award -> Organization via funding_agency"}
+     note: "Award -> Organization is separately authorized by C-D28 in prospective v0.1.6"}
 
   # ---- Provenance (Part 1) ----
   - {id: PROV-R1, name: hasEvidence, domain: owl:Thing, range: EvidenceSpan,
@@ -377,6 +389,9 @@ relations:
      anchor: "schema:codeRepository", evidence: "explicit code/software availability statement or explicit statement that the repository contains the implementation associated with the paper",
      type: cross, consol: true, status: S, maps_to: D-04, subproperty_of: referencesRepository,
      note: "Paper-associated implementation repository; a typed subproperty of referencesRepository."}
+  - {id: C-P34, name: hasComponent, domain: [Tool, ComputationalModel], range: [Tool, ComputationalModel],
+     anchor: "ciroh:", evidence: "paper prose with a verbatim quoted span", type: intra, consol: true, status: S,
+     note: "Publication-module realization of existing hasComponent semantics; explicit model/tool composition only, never inferred from co-occurrence."}
 
   # ---- Module 2: Dataset / HydroShare (Table C) ----
   - {id: C-D01, name: hasResourceType, domain: DatasetResource, range: ResourceType, anchor: "ciroh:", evidence: "resource_type (det)", type: intra, status: S}
@@ -426,6 +441,18 @@ relations:
   - {id: C-D26, name: mentionsModel, domain: DatasetResource, range: ComputationalModel,
      anchor: "ciroh:", evidence: "abstract or README prose naming or referencing a model without sufficient evidence of use",
      type: [cross, same], consol: true, status: S, maps_to: D-21, note: "Weaker than C-D25 usesModel.", subproperty_of: mentions}
+  # Step 10 compatibility corrections, additive realizations of existing property names.
+  - {id: C-D27, name: hasContributor, domain: DatasetResource, range: Person,
+     anchor: "schema:contributor", evidence: "contributors[] (det)", type: intra, status: S,
+     note: "Merged with existing Repository/DocumentationPage hasContributor; restores missing DatasetResource domain"}
+  - {id: C-D28, name: fundedBy, domain: Award, range: Organization,
+     anchor: "schema:funder", evidence: "awards[].funding_agency (det)", type: prov, status: S,
+     note: "Award funding agency explicitly named in metadata; distinct from DatasetResource -> Award funding"}
+  # Additional optional deterministic data-service support; no endpoint network verification.
+  - {id: C-D29, name: servesDataset, domain: DataService, range: DatasetResource,
+     anchor: "dcat:servesDataset", evidence: "data_services attached to the source DatasetResource (det)",
+     type: intra, status: S,
+     note: "Service offers access to this DatasetResource; source-local identity, explicit endpoint/type only, no service-consumption or implementation claim"}
 
   # ---- Module 3: Code Repository (Table C) ----
   - {id: C-C01, name: hasFile, domain: Repository, range: RepoFile, anchor: "schema:hasPart", evidence: "files_manifest (det)", type: intra, status: S}
@@ -442,7 +469,7 @@ relations:
   - {id: C-C12, name: mentionsVariable, domain: Repository, range: Variable, anchor: "ciroh:", evidence: "prose (quote)", type: [cross, same], consol: true, status: E, subproperty_of: mentions}
   - {id: C-C13, name: dependsOnRepository, domain: Repository, range: Repository, anchor: "ciroh:", evidence: "github.com links / dep files", type: same, status: S, status_note: "S/E", note: "no standard repo->repo dep"}
   - {id: C-C14, name: forkedFrom, domain: Repository, range: Repository, anchor: "ciroh:", evidence: "fork flag (det); parent via README/Binder badge", type: same, status: S, status_note: "flag S · parent E"}
-  - {id: C-C15, name: usesDataset, domain: Repository, range: DatasetResource, anchor: "ciroh:", evidence: "README/notebook HydroShare URL", type: cross, status: S, maps_to: D-01}
+  - {id: C-C15, name: usesDataset, domain: Repository, range: [DatasetResource, DatasetMention], anchor: "ciroh:", evidence: "README/notebook HydroShare URL", type: cross, status: S, maps_to: D-01}
   - {id: C-C16, name: implementsMethod, domain: [Repository, Tool], range: Method, anchor: "ciroh:", typed_subproperties: ["cito:usesMethodIn"], evidence: "README + Methods prose", type: cross, status: S, maps_to: D-02, note: "Method in Paper"}
   - {id: C-C17, name: referencePublication, domain: Repository, range: Paper, anchor: "codemeta:referencePublication", typed_subproperties: ["cito:cites"], evidence: "CITATION.cff/.md (det) / prose", type: cross, status: S, maps_to: D-07, note: "aka citesPaper"}
   - {id: C-C18, name: archivedAs, domain: Repository, range: Identifier, anchor: "datacite:relatedIdentifier", evidence: "repo README DOI <-> paper-cited DOI (det where matched)", type: same, status: E, maps_to: D-20, note: "aka sameSoftwareAs; archived DOI snapshot; IsVersionOf/IsDerivedFrom"}
@@ -511,7 +538,7 @@ relations:
      anchor: "ciroh:", evidence: "documentation body prose with quoted evidence",
      type: [cross, same], consol: true, status: S, maps_to: D-21,
      note: "Model mention without sufficient evidence that the page describes, documents, or uses the model; weaker than C-DC16 describesModel.", subproperty_of: mentions}
-  - {id: C-DC25, name: mentionsDataset, domain: DocumentationPage, range: DatasetResource,
+  - {id: C-DC25, name: mentionsDataset, domain: DocumentationPage, range: [DatasetResource, DatasetMention],
      anchor: "ciroh:", evidence: "documentation body prose with quoted evidence",
      type: cross, consol: true, status: S, maps_to: D-21,
      note: "Dataset mention without sufficient evidence of use or explicit identifier-based reference; distinct from C-DC15 referencesDataset.", subproperty_of: mentions}
@@ -542,7 +569,7 @@ relations:
      status: S, inverse_of: describes, note: "Realizes Validation 3 / E-14 documentedBy inverse."}
   - {id: D-26, name: mentions,
      domain: [Paper, DatasetResource, Repository, DocumentationPage, Background, Theme, ResearchProblem, ResearchQuestion, ResearchGoal, ResearchSignificance, Definition, TheoreticalBasis, Method, Experiment, Examples, Finding, Discussion, RelatedResearch, Limitation, Conclusion, Contribution, FutureWork, Hypothesis, Claim, DataDescription],
-     range: [ComputationalModel, Tool, DatasetMention, DatasetResource, Variable, Concept, HydrologicFeature, NamedPlace, EvaluationMetric, Parameter, Algorithm, Repository],
+     range: [ComputationalModel, Tool, DatasetMention, DatasetResource, Variable, Concept, HydrologicFeature, NamedPlace, EvaluationMetric, Parameter, Algorithm, Repository, Organization],
      anchor: "mito:mentions",
      evidence: "pipeline-derived from accepted evidence-backed entity occurrence; discourse-to-entity derivation additionally requires same canonical Paper, valid endpoint evidence, and strict evidence containment; endpoint coexistence alone is insufficient",
      type: [intra, cross, same], consol: true, status: S,
@@ -550,9 +577,10 @@ relations:
 
 # =============================================================================
 # Notes carried from the inventory (for build_ontology.py and reviewers):
-#  - D-06 product hub aggregation is realized by: catalogs (C-DC17) + hasComponent
-#    (C-DC19) + implementedBy (D-22) + describedInPaper (D-23) + documentedBy
-#    (D-25), the inverse of describes (D-24).
+#  - D-06 product hub aggregation is realized by: catalogs (C-DC17) + documentation
+#    hasComponent (C-DC19) + implementedBy (D-22) + describedInPaper (D-23) + documentedBy
+#    (D-25), the inverse of describes (D-24). Publication C-P34 reuses the same
+#    hasComponent property for evidence-backed composition expressed in paper prose.
 #  - D-26 mentions is a weak pipeline-derived fallback anchored to mito:mentions.
 #    Existing mentionsModel/mentionsDataset/mentionsTool/mentionsVariable/
 #    mentionsConcept/mentionsParameter are subproperties of mentions. MiTO's

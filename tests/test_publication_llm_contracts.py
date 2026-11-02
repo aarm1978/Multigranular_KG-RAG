@@ -52,7 +52,7 @@ EXPECTED_TREATMENT_COUNTS = {
     },
 }
 EXPECTED_AUTHORITY_ORDER = [
-    "frozen ontology 0.1.3 specification and generated OWL",
+    "frozen ontology 0.1.4 specification and generated OWL",
     "frozen deterministic Phase B outputs and tests",
     "final Publication Pilot 1 human-readable target inventory",
     "publication ontology observations register",
@@ -149,7 +149,7 @@ class PublicationTargetInventoryTests(unittest.TestCase):
         self.assertEqual(target["pilot_treatment"], "out_of_scope")
         self.assertEqual(target["emission_mode"], "not_emitted")
         self.assertEqual(target["evaluation_mode"], "not_attempted")
-        self.assertIn("not formally declared in ontology 0.1.3", target["boundary"])
+        self.assertIn("not formally declared in ontology 0.1.4", target["boundary"])
         self.assertNotIn("Award → Organization", TARGET_INVENTORY_PATH.read_text(encoding="utf-8"))
 
     def test_reviewed_source_hashes_match_repository_bytes(self) -> None:
@@ -350,16 +350,16 @@ class PublicationSourceUnitContractTests(unittest.TestCase):
                 self.assertIn(fragment, self.text)
 
     def test_contract_version_is_consistent(self) -> None:
-        """Metadata and serialized-record examples use contract version 0.1.1."""
+        """Metadata and serialized-record examples use contract version 0.1.2."""
         self.assertIn(
             "**Status:** final and binding for Publication Pilot 1 implementation",
             self.text,
         )
         self.assertIn("**Date frozen:** 2026-07-30", self.text)
-        self.assertIn("**Contract version:** 0.1.1", self.text)
+        self.assertIn("**Contract version:** 0.1.2", self.text)
         serialized_versions = re.findall(r'"contractVersion": "([^"]+)"', self.text)
         self.assertTrue(serialized_versions)
-        self.assertEqual(set(serialized_versions), {"0.1.1"})
+        self.assertEqual(set(serialized_versions), {"0.1.2"})
 
     def test_authority_order_matches_the_binding_integration_order(self) -> None:
         """The source contract does not omit or reorder binding Pilot 1 authorities."""

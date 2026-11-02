@@ -1,0 +1,126 @@
+{
+  "version": "step13-post-acceptance-relationships/0.1.0",
+  "status": "researcher_authorized_evaluation_only",
+  "historicalExtractionAuthority": "publication-semantic-v0.1.5-schema-v0.1.3",
+  "historicalD26Policy": "publication-generic-mentions-materialization/0.1.1",
+  "canonicalOntology": "0.1.7",
+  "inputHashes": {
+    "src/ontology/ontology_spec.yaml": "75a8096b797d11a5195a178d95955438eb7148e766bd399597201b0114d505b0",
+    "src/ontology/ciroh_ontology.owl": "ac64435ca02a703bdee8168a045a3897d7f6f5be1a8e25e6cdf485c66c85e0fa",
+    "docs/study2_step13_construction_acceptance_policy_v0.1.md": "917bd0aa470e0916164960bc6f075f14816040765e772eef48458b461f2a9aee",
+    "docs/study2_materialized_corpus_evidence_amendment_v0.1.md": "2040a586003ea6174b17a620b9ed922527a08d3fd3f15eb9e271047db00452d6",
+    "docs/study2_v4_1_reviewer_adjudications_v0.1.json": "6e034ff662c1c6bdb98e633e8d5bd8eac31819c12ce99642eaf50b5dd86e9433",
+    "src/extraction/llm/publications/publication_target_inventory_v0.1.5.yaml": "84aa773f0a4931fafc50d27240d784b2c977ef29767f3d9e80f3f4a42ef8e6e0",
+    "src/extraction/llm/publications/generic_mentions_policy_v0.1.1.yaml": "19bb28a484e6b2bf61ddbccb7752c8190f5e54d5c38dccae87ea190eafcd91ae",
+    "src/extraction/llm/publications/semantic_materializer.py": "91163ff1744b0bde0a598a501d0125572e6e28c4d4395c65ed77bc902b7d98ac",
+    "src/extraction/llm/publications/production_acceptance.py": "53e8a0ba10abf751e878dca4f1f5c964dca84ac1927e220cac6925274431b395",
+    "src/extraction/llm/nonpublication_semantic_v041.yaml": "20ab72c39a1ccac7a4ff5240d7ea60d88690a5c296ad858770128e7cc31f1bb3",
+    "src/extraction/llm/source_local_semantics.py": "2962c7c3dcc11ceadb15c8aab2bce3173da31f628b694c1ca92e1833998fc3a7",
+    "src/extraction/llm/source_local_specialized.py": "bb36d6e5202c0cfc243480e61d881216e08eff43de3d69c9da57246415b38a85",
+    "var/study2_step13/publications-gpt61-batch/v1/run-manifest.json": "04fd1a5ada9c632d557ef97979aaea237954c4b330f425b3ec4ff487661a9656",
+    "var/study2_step13/publication-extraction-plan/v0.1/input-pins.json": "014bbdead7284408769bc4eb23169589bda64141de15d761660c846ba6ecfee9",
+    "var/study2_step13/pre-alignment-metrics/v3/derived-construction-inputs.json": "89c4c78774027c7dafc33457435b5d86ad554bbb530c6a0b1e66a82bbb8172c9",
+    "var/study2_step13/pre-alignment-metrics/v3/snapshot.json": "a3e4d73378b12b459e6acb1c2c895a103b36d44fad1bc378f3b25ee2aedec6ac",
+    "var/study2_step13/pre-alignment-metrics/v3/manifest.json": "7e8901af73fbfa7e08a3ada22d940d59b0f0923091f6939a5191deda965fdbde",
+    "var/study2_step13/relationship-gap-audit/v1/diagnostic.json": "8452348e4ea27cecf2af2d83b0cf9b3c8499644724b9009c693cadbb63b24583"
+  },
+  "applicableSignatures": {
+    "C-P05": {
+      "name": "reports",
+      "domain": "Paper",
+      "range": [
+        "Background",
+        "Theme",
+        "ResearchProblem",
+        "ResearchQuestion",
+        "ResearchGoal",
+        "ResearchSignificance",
+        "Definition",
+        "TheoreticalBasis",
+        "Method",
+        "Experiment",
+        "Examples",
+        "Finding",
+        "Discussion",
+        "RelatedResearch",
+        "Limitation",
+        "Conclusion",
+        "Contribution",
+        "FutureWork",
+        "Hypothesis",
+        "Claim",
+        "DataDescription"
+      ]
+    },
+    "C-P10": {
+      "name": "discussesRelatedWork",
+      "domain": "Paper",
+      "range": "RelatedResearch"
+    },
+    "C-P12": {
+      "name": "hasLimitation",
+      "domain": [
+        "Paper",
+        "Finding"
+      ],
+      "range": "Limitation"
+    },
+    "D-26": {
+      "name": "mentions",
+      "domain": [
+        "Paper",
+        "DatasetResource",
+        "Repository",
+        "DocumentationPage",
+        "Background",
+        "Theme",
+        "ResearchProblem",
+        "ResearchQuestion",
+        "ResearchGoal",
+        "ResearchSignificance",
+        "Definition",
+        "TheoreticalBasis",
+        "Method",
+        "Experiment",
+        "Examples",
+        "Finding",
+        "Discussion",
+        "RelatedResearch",
+        "Limitation",
+        "Conclusion",
+        "Contribution",
+        "FutureWork",
+        "Hypothesis",
+        "Claim",
+        "DataDescription"
+      ],
+      "range": [
+        "ComputationalModel",
+        "Tool",
+        "DatasetMention",
+        "DatasetResource",
+        "Variable",
+        "Concept",
+        "HydrologicFeature",
+        "NamedPlace",
+        "EvaluationMetric",
+        "Parameter",
+        "Algorithm",
+        "Repository",
+        "Organization"
+      ]
+    }
+  },
+  "historicalPublicationPins": [
+    "src/extraction/llm/publications/publication_target_inventory_v0.1.5.yaml",
+    "src/extraction/llm/publications/generic_mentions_policy_v0.1.1.yaml",
+    "src/extraction/llm/publications/semantic_materializer.py",
+    "src/extraction/llm/publications/production_acceptance.py"
+  ],
+  "requiredPublicationTargets": [
+    "PUB-R-C-P05-REPORTS",
+    "PUB-R-C-P10-DISCUSSESRELATEDWORK",
+    "PUB-R-C-P12-HASLIMITATION-PAPER-BRANCH"
+  ],
+  "interpretation": "Separate compatible evaluation consumer; historical materializer guards and all original records remain unchanged. No generic target expansion or identity reconciliation."
+}

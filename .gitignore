@@ -71,3 +71,17 @@ Thumbs.db
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Local runtime state, sessions, provider outputs, temporary execution artifacts, and exports
+var/
+
+# Temporary folder used to store intermediate files during the development. Not used in production.
+/temp/
+
+# Provider HTTP response headers may contain cookies/account identifiers
+data/curation/papers/m2/**/*_http_headers.txt
+
+# Historical local Publication DEVSET0 execution roots; preserved locally, not versioned
+data/curation/papers/m2/future_full_semantic_devset0_v015/
+data/curation/papers/m2/future_full_semantic_devset0_v015_schema012_smoke1/
+data/curation/papers/m2/future_full_semantic_devset0_v015_schema013_tail/

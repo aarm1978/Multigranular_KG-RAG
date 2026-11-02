@@ -1,0 +1,190 @@
+{
+  "interpretation": "first endpoint = source/B; second endpoint = target/A; EVALUATE-FOR measure or criterion -> evaluated entity",
+  "limits": "not a frequency, performance, or semantic-policy analysis; no examples enter prompt",
+  "providerModelCalls": 0,
+  "records": [
+    {
+      "documentID": "J87-1003",
+      "firstSpan": [
+        48,
+        49
+      ],
+      "lineNumber": 1,
+      "recordSha256": "88867c4180a39a3099ef55eb1293a0660428194f94d1cf3580e53abe19548232",
+      "relationIndex": 1,
+      "relationType": "FEATURE-OF",
+      "secondSpan": [
+        51,
+        51
+      ],
+      "sentenceIndex": 1,
+      "split": "train",
+      "splitSha256": "04970819bd215fce8c60b3a64fccca15388b49eab2010bdc5f6d322b463568c3"
+    },
+    {
+      "documentID": "J87-1003",
+      "firstSpan": [
+        54,
+        54
+      ],
+      "lineNumber": 1,
+      "recordSha256": "88867c4180a39a3099ef55eb1293a0660428194f94d1cf3580e53abe19548232",
+      "relationIndex": 2,
+      "relationType": "HYPONYM-OF",
+      "secondSpan": [
+        51,
+        51
+      ],
+      "sentenceIndex": 1,
+      "split": "train",
+      "splitSha256": "04970819bd215fce8c60b3a64fccca15388b49eab2010bdc5f6d322b463568c3"
+    },
+    {
+      "documentID": "CVPR_2003_18_abs",
+      "firstSpan": [
+        6,
+        6
+      ],
+      "lineNumber": 2,
+      "recordSha256": "3d9497a84cc0e10de0d50a671de48e76dde97ae260246e54bfec362f518ae4a1",
+      "relationIndex": 0,
+      "relationType": "USED-FOR",
+      "secondSpan": [
+        10,
+        12
+      ],
+      "sentenceIndex": 0,
+      "split": "train",
+      "splitSha256": "04970819bd215fce8c60b3a64fccca15388b49eab2010bdc5f6d322b463568c3"
+    },
+    {
+      "documentID": "CVPR_2003_18_abs",
+      "firstSpan": [
+        96,
+        98
+      ],
+      "lineNumber": 2,
+      "recordSha256": "3d9497a84cc0e10de0d50a671de48e76dde97ae260246e54bfec362f518ae4a1",
+      "relationIndex": 0,
+      "relationType": "PART-OF",
+      "secondSpan": [
+        103,
+        105
+      ],
+      "sentenceIndex": 4,
+      "split": "train",
+      "splitSha256": "04970819bd215fce8c60b3a64fccca15388b49eab2010bdc5f6d322b463568c3"
+    },
+    {
+      "documentID": "INTERSPEECH_2013_31_abs",
+      "firstSpan": [
+        82,
+        83
+      ],
+      "lineNumber": 3,
+      "recordSha256": "87a99bc79d1a50aa158b0c7a67d6a54039124663c0c2a9173f783f43894c1e3c",
+      "relationIndex": 0,
+      "relationType": "EVALUATE-FOR",
+      "secondSpan": [
+        85,
+        88
+      ],
+      "sentenceIndex": 3,
+      "split": "train",
+      "splitSha256": "04970819bd215fce8c60b3a64fccca15388b49eab2010bdc5f6d322b463568c3"
+    },
+    {
+      "documentID": "ICCV_2003_158_abs",
+      "firstSpan": [
+        4,
+        4
+      ],
+      "lineNumber": 1,
+      "recordSha256": "be8799b9b22bc489e7eda7550e3491534036fbc7670fdcd353f3ac7161f1671c",
+      "relationIndex": 0,
+      "relationType": "USED-FOR",
+      "secondSpan": [
+        6,
+        17
+      ],
+      "sentenceIndex": 0,
+      "split": "dev",
+      "splitSha256": "61f21b224129e580a654b036ee6fffeeb1a0311f1009a38ea931c13612db040e"
+    },
+    {
+      "documentID": "ICCV_2003_158_abs",
+      "firstSpan": [
+        24,
+        26
+      ],
+      "lineNumber": 1,
+      "recordSha256": "be8799b9b22bc489e7eda7550e3491534036fbc7670fdcd353f3ac7161f1671c",
+      "relationIndex": 2,
+      "relationType": "FEATURE-OF",
+      "secondSpan": [
+        20,
+        21
+      ],
+      "sentenceIndex": 0,
+      "split": "dev",
+      "splitSha256": "61f21b224129e580a654b036ee6fffeeb1a0311f1009a38ea931c13612db040e"
+    },
+    {
+      "documentID": "ICCV_2003_158_abs",
+      "firstSpan": [
+        67,
+        67
+      ],
+      "lineNumber": 1,
+      "recordSha256": "be8799b9b22bc489e7eda7550e3491534036fbc7670fdcd353f3ac7161f1671c",
+      "relationIndex": 1,
+      "relationType": "HYPONYM-OF",
+      "secondSpan": [
+        64,
+        64
+      ],
+      "sentenceIndex": 2,
+      "split": "dev",
+      "splitSha256": "61f21b224129e580a654b036ee6fffeeb1a0311f1009a38ea931c13612db040e"
+    },
+    {
+      "documentID": "P84-1047",
+      "firstSpan": [
+        121,
+        122
+      ],
+      "lineNumber": 3,
+      "recordSha256": "fd86510f13ca9ff536c751f73d28fe05036002a4e77bcef733bfbae0b3013a9c",
+      "relationIndex": 0,
+      "relationType": "PART-OF",
+      "secondSpan": [
+        118,
+        118
+      ],
+      "sentenceIndex": 6,
+      "split": "dev",
+      "splitSha256": "61f21b224129e580a654b036ee6fffeeb1a0311f1009a38ea931c13612db040e"
+    },
+    {
+      "documentID": "C04-1116",
+      "firstSpan": [
+        31,
+        31
+      ],
+      "lineNumber": 5,
+      "recordSha256": "006b202213f2a89f5bc5ab3e66d9e53f0e4b5ba315c0577f8b269111659cd524",
+      "relationIndex": 0,
+      "relationType": "EVALUATE-FOR",
+      "secondSpan": [
+        34,
+        36
+      ],
+      "sentenceIndex": 1,
+      "split": "dev",
+      "splitSha256": "61f21b224129e580a654b036ee6fffeeb1a0311f1009a38ea931c13612db040e"
+    }
+  ],
+  "semanticAuthority": "guideline 1.2 for four directed labels; researcher definition for EVALUATE-FOR",
+  "status": "bounded_serialization_check_only",
+  "testGoldAccessed": false
+}

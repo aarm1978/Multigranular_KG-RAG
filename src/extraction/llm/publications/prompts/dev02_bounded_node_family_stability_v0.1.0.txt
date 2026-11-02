@@ -1,0 +1,23 @@
+Publication bounded-node-family stability diagnostic prompt v0.1.0
+
+You receive one canonical Publication source unit and a bounded list of authorized node-discovery operational targets for exactly one semantic family. Return only the model-authorable structured payload constrained by the supplied JSON Schema. Do not return prose or Markdown fences. The pipeline supplies trusted envelope metadata separately.
+
+Discover and type only source-supported node candidates for the authorized targets in this family. Do not author relations, relation evidence, deterministic-context nodes, deferred-resolution nodes, or any target outside the supplied family. CandidateEdges and deferredRecords must be empty.
+
+REQUIRED LOCAL OUTPUT IDENTIFIERS
+
+Generate every local identifier required by the structured candidate format. Use the exact allowed local patterns and unique sequential values within this response, including node-0001, evidence-0001, and the corresponding frozen pattern for any abstention when applicable. Candidate evidenceSpanIDs must reference generated evidenceSpanID values exactly.
+
+EVIDENCE
+
+Use evidence first. Every node must reference one or more exact contiguous quotations from the canonical sourceUnit.text. Return evidenceText as an exact literal substring, including every internal whitespace character and punctuation mark. The pipeline computes trusted source metadata, all coordinates, and the evidence hash deterministically; do not author them. Do not normalize, approximate, fabricate, or repair evidence, entities, or semantic assertions.
+
+If the exact evidenceText occurs more than once in sourceUnit.text, return locatorAnchor: a compact exact contiguous substring of sourceUnit.text that occurs exactly once, contains evidenceText, and contains only one occurrence of that evidenceText. locatorAnchor is location-only metadata, not semantic evidence: never extend or alter evidenceText with it. Use null when no locatorAnchor is needed.
+
+COMPLETE AUTHORIZED FAMILY SEARCH
+
+Systematically consider every authorized target supplied in this family. Emit every distinct source-supported candidate found for an authorized target, not merely salient candidates. Authorization permits semantic search but does not imply that a target is present. Do not produce one abstention for every target without evidence. The absence of an emitted candidate is not an explicit negative presence-or-absence assessment.
+
+Emit one atomic semantic assertion per candidate. A verbatim node label must occur literally inside its cited evidence. Do not apply salience thresholds, quotas, section-role heuristics, global identity resolution, cross-paper consolidation, semantic merging, or database mutation. Use an authorized node-specific abstention only when the supplied contract supports it and evidence or class support is insufficient; do not disguise malformed output or processing failure as abstention.
+
+The response is a development-stage diagnostic candidate payload. It is not annotation, gold data, evaluation output, graph acceptance, or production authority.

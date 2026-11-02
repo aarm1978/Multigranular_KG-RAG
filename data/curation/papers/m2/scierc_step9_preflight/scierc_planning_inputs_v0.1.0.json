@@ -1,0 +1,18 @@
+{
+  "version": "0.1.0",
+  "model": "gpt-5.6-sol",
+  "pricingProvenance": "Externally verified in ChatGPT on 2026-10-05 and supplied by the researcher in this conversation; not independently browsed by Codex.",
+  "pricingBasis": "Public Standard/short-context USD per million tokens; regional, custom, account billing and applicability of default service tier are unverified.",
+  "sourceReferences": ["https://developers.openai.com/api/docs/models/gpt-5.6-sol", "https://developers.openai.com/api/docs/guides/prompt-caching"],
+  "usdPerMillionTokens": {"ordinaryInput": 4, "cacheRead": 0.40, "cacheWrite": 5, "outputIncludingReasoning": 20},
+  "cacheRule": "Read/write categories replace ordinary input pricing; reasoning is included in output, never added twice.",
+  "tokenizerEvidence": {"locallyInstalled": "tiktoken 0.3.3", "explicitModelMapping": null, "matchingModelPrefixes": [], "encodingLoaded": false, "decision": "No established compatible local model mapping; no tokenizer download or token API. Use smoke-calibrated byte-size heuristic."},
+  "inputSensitivityMultipliers": [0.5, 1, 2],
+  "outputLatencyScenarios": [
+    {"name": "half_observation", "multiplier": 0.5, "extraSecondsPerRequest": 0},
+    {"name": "one_observation_baseline", "multiplier": 1, "extraSecondsPerRequest": 0},
+    {"name": "double_plus_overhead", "multiplier": 2, "extraSecondsPerRequest": 10}
+  ],
+  "conservativeInputMultiplier": 2,
+  "scenarioInterpretation": "Planning assumptions from N=1, not confidence intervals, percentiles or a validated predictive model. No guaranteed spending or wall-clock cap."
+}

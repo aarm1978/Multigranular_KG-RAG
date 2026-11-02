@@ -1,0 +1,22 @@
+{
+  "version": "publications-recovery-operational-compatibility/1.0",
+  "baselineCommit": "18075955e81fcb08844798b0a6f768a6cf90d75f",
+  "publicationsLegacyPins": {
+    "docs/study2_publications_gpt61_batch_v1.0.md": "cb21737371e0723335fd01766915977850d4138ed584cd73038e9d30b76152c1",
+    "src/extraction/llm/publications/batch_journal.py": "1e76a5ac5c7c6b5bc651b10a164a34716596e7891e9fba77d48435456ac6c60b",
+    "src/extraction/llm/publications/batch_transport.py": "6fd9097b75a0fc3d165a85b55ee5cfb5044889cbf225ccda4f4079b2bc12854b",
+    "src/extraction/llm/publications/resumable_production_journal.py": "479cadc55c4fa994d4b3b1c11197dada4ffbef5de5dc49aaa42a636831af67f8",
+    "src/extraction/llm/publications/full_corpus_gpt61_production.py": "9b63e13d63a2dcc6a86c846efac6e768e8aaa49e0ae02a51cfa237d75392dafa",
+    "src/extraction/llm/publications/full_corpus_gpt61_batch.py": "9155ab2e448c057600969f57303bf1c348a101fb3c938b286a7b0ea9d0b34f02"
+  },
+  "sourceFamilyPreviousPins": {
+    "src/extraction/llm/full_corpus_source_family_batch.py": "12b801f6be95cbf0f77d4de99902c9c43c4ca3e84747340379dd8276ec29baa7",
+    "src/extraction/llm/format_conformance.py": "f68f08cf32b5a9b5d243e0c48f339bbc5e208e9097970c9a909c720c19342756",
+    "src/extraction/llm/publications/full_corpus_gpt61_batch.py": "9155ab2e448c057600969f57303bf1c348a101fb3c938b286a7b0ea9d0b34f02"
+  },
+  "sourceFamilyCurrentPins": {
+    "src/extraction/llm/full_corpus_source_family_batch.py": "c94761f092810109b26cbf12d294214c93609273a11372d43b2578691204c999",
+    "src/extraction/llm/format_conformance.py": "d9bc9597e1ce1066e47b7cebfdb6b52f3cb908f363a10bd0430a3335ccccf53f",
+    "src/extraction/llm/publications/full_corpus_gpt61_batch.py": "2f1949aa40c637e90abfc5ce18c20e60500f7e4c87162e36237382ab8c1e89bf"
+  }
+}

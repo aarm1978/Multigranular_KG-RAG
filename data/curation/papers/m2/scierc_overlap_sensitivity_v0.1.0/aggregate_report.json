@@ -1,0 +1,69 @@
+{
+  "caseCounts": {
+    "discrepancy_flags": 479,
+    "exact_locked": 1221,
+    "overlap_pair": 532,
+    "unmatched_gold": 991,
+    "unmatched_prediction": 2275
+  },
+  "discrepancyCounts": {
+    "entityFlaggedPairUnion": 406,
+    "exact_endpoints_different_label": 62,
+    "exact_endpoints_direction_reversal": 26,
+    "exact_span_different_type": 406,
+    "relationFlaggedPairUnion": 73
+  },
+  "documentCount": 100,
+  "interpretation": "mechanical correspondences only, not semantic equivalences or improved extraction",
+  "metrics": {
+    "entity": {
+      "additionalMatches": 215,
+      "overlapSensitivity": {
+        "FN": 643,
+        "FP": 1300,
+        "TP": 1042,
+        "f1": 0.517506828904892,
+        "goldSupport": 1685,
+        "precision": 0.4449188727583262,
+        "predictionSupport": 2342,
+        "recall": 0.6183976261127596
+      },
+      "strictA": {
+        "FN": 858,
+        "FP": 1515,
+        "TP": 827,
+        "f1": 0.4107275887757636,
+        "goldSupport": 1685,
+        "precision": 0.35311699402220326,
+        "predictionSupport": 2342,
+        "recall": 0.4908011869436202
+      }
+    },
+    "relation": {
+      "additionalMatches": 232,
+      "overlapSensitivity": {
+        "FN": 348,
+        "FP": 975,
+        "TP": 626,
+        "f1": 0.4862135922330097,
+        "goldSupport": 974,
+        "precision": 0.3910056214865709,
+        "predictionSupport": 1601,
+        "recall": 0.6427104722792608
+      },
+      "strictA": {
+        "FN": 580,
+        "FP": 1207,
+        "TP": 394,
+        "f1": 0.30601941747572814,
+        "goldSupport": 974,
+        "precision": 0.24609618988132417,
+        "predictionSupport": 1601,
+        "recall": 0.40451745379876797
+      }
+    }
+  },
+  "newProviderCalls": 0,
+  "predeclared": false,
+  "version": "0.1.0"
+}

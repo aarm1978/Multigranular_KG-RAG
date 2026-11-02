@@ -8,10 +8,11 @@ Primary description of the complete deterministic KG at each construction point.
 
 | Construction point | Nodes | Edges | Information density | Informative attributes per node | Incident edges per node | Relational richness | Consolidation ratio |
 |---|---:|---:|---:|---:|---:|---:|---|
-| HydroShare (det.) | 1288 | 1613 | 3.795031 | 1.290373 | 2.504658 | 1.346273 | 1.000000 (mention level pre consolidation) |
-| + GitHub (det.) | 13996 | 14283 | 3.959417 | 1.918405 | 2.041012 | 1.047728 | 1.000000 (mention level pre consolidation) |
-| + Hub (det.) | 18663 | 20836 | 5.567219 | 3.334351 | 2.232867 | 1.152869 | 1.000000 (mention level pre consolidation) |
-| + Publications (det.) | 28319 | 32608 | 5.514990 | 3.212084 | 2.302906 | 1.133656 | 1.000000 (mention level pre consolidation) |
+| HydroShare (det.) [HS v0.1.6] | 1303 | 1628 | 3.774367 | 1.275518 | 2.498849 | 1.342287 | 1.000000 (mention level pre consolidation) |
+| + GitHub (det.) [HS v0.1.6; refs v1] | 14083 | 14393 | 3.953135 | 1.909110 | 2.044025 | 1.051765 | 1.000000 (mention level pre consolidation) |
+| + Hub (det.) [HS v0.1.6; refs v1] | 18750 | 21037 | 5.564747 | 3.320800 | 2.243947 | 1.159680 | 1.000000 (mention level pre consolidation) |
+| + Publications (det.) [HS v0.1.6; refs v1] | 28406 | 32809 | 5.513518 | 3.203513 | 2.310005 | 1.138210 | 1.000000 (mention level pre consolidation) |
+| + Accepted semantics and approved derivations (pre-alignment) | 215653 | 337562 | 4.471021 | 1.340417 | 3.130603 | 1.617979 | 1.000000 (mention level pre consolidation) |
 
 ## Table B — File-inventory-excluded sensitivity analysis
 
@@ -19,10 +20,11 @@ Sensitivity analysis only. File-inventory entities remain legitimate content in 
 
 | Construction point | Nodes | Edges | Information density | Informative attributes per node | Incident edges per node | Relational richness | Consolidation ratio |
 |---|---:|---:|---:|---:|---:|---:|---|
-| HydroShare (det.) | 531 | 856 | 4.930320 | 1.706215 | 3.224105 | 1.768362 | 1.000000 (mention level pre consolidation) |
-| + GitHub (det.) | 1537 | 1824 | 4.292128 | 1.918673 | 2.373455 | 1.376708 | 1.000000 (mention level pre consolidation) |
-| + Hub (det.) | 5962 | 7893 | 8.748071 | 6.100302 | 2.647769 | 1.382254 | 1.000000 (mention level pre consolidation) |
-| + Publications (det.) | 15618 | 19665 | 6.686772 | 4.168523 | 2.518248 | 1.205596 | 1.000000 (mention level pre consolidation) |
+| HydroShare (det.) [HS v0.1.6] | 546 | 871 | 4.849817 | 1.659341 | 3.190476 | 1.747253 | 1.000000 (mention level pre consolidation) |
+| + GitHub (det.) [HS v0.1.6; refs v1] | 1624 | 1934 | 4.219828 | 1.838054 | 2.381773 | 1.394089 | 1.000000 (mention level pre consolidation) |
+| + Hub (det.) [HS v0.1.6; refs v1] | 6049 | 8094 | 8.694660 | 6.018515 | 2.676145 | 1.400066 | 1.000000 (mention level pre consolidation) |
+| + Publications (det.) [HS v0.1.6; refs v1] | 15705 | 19866 | 6.677619 | 4.147724 | 2.529895 | 1.213435 | 1.000000 (mention level pre consolidation) |
+| + Accepted semantics and approved derivations (pre-alignment) | 202952 | 324619 | 4.495861 | 1.296888 | 3.198973 | 1.653825 | 1.000000 (mention level pre consolidation) |
 
 ## Table C — Sensitivity effect
 
@@ -30,10 +32,11 @@ Every delta is `file_inventory_excluded − full`. Parenthesized values are perc
 
 | Construction point | Excluded nodes | Excluded edges | Excluded nodes as percentage of full graph | Delta information density | Delta informative attributes per node | Delta incident edges per node | Delta relational richness | Delta consolidation ratio |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| HydroShare (det.) | 757 | 757 | 58.773292% | +1.135289 (+29.915%) | +0.415842 (+32.226%) | +0.719447 (+28.724%) | +0.422089 (+31.352%) | +0.000000 (+0.000%) |
-| + GitHub (det.) | 12459 | 12459 | 89.018291% | +0.332711 (+8.403%) | +0.000268 (+0.014%) | +0.332443 (+16.288%) | +0.328980 (+31.399%) | +0.000000 (+0.000%) |
-| + Hub (det.) | 12701 | 12943 | 68.054439% | +3.180852 (+57.135%) | +2.765951 (+82.953%) | +0.414902 (+18.582%) | +0.229385 (+19.897%) | +0.000000 (+0.000%) |
-| + Publications (det.) | 12701 | 12943 | 44.849748% | +1.171782 (+21.247%) | +0.956439 (+29.776%) | +0.215342 (+9.351%) | +0.071940 (+6.346%) | +0.000000 (+0.000%) |
+| HydroShare (det.) [HS v0.1.6] | 757 | 757 | 58.096700% | +1.075450 (+28.494%) | +0.383823 (+30.092%) | +0.691627 (+27.678%) | +0.404966 (+30.170%) | +0.000000 (+0.000%) |
+| + GitHub (det.) [HS v0.1.6; refs v1] | 12459 | 12459 | 88.468366% | +0.266693 (+6.746%) | -0.071056 (-3.722%) | +0.337748 (+16.524%) | +0.342324 (+32.548%) | +0.000000 (+0.000%) |
+| + Hub (det.) [HS v0.1.6; refs v1] | 12701 | 12943 | 67.738667% | +3.129913 (+56.245%) | +2.697715 (+81.237%) | +0.432198 (+19.261%) | +0.240386 (+20.729%) | +0.000000 (+0.000%) |
+| + Publications (det.) [HS v0.1.6; refs v1] | 12701 | 12943 | 44.712385% | +1.164101 (+21.114%) | +0.944211 (+29.474%) | +0.219890 (+9.519%) | +0.075225 (+6.609%) | +0.000000 (+0.000%) |
+| + Accepted semantics and approved derivations (pre-alignment) | 12701 | 12943 | 5.889554% | +0.024840 (+0.556%) | -0.043529 (-3.247%) | +0.068370 (+2.184%) | +0.035846 (+2.215%) | +0.000000 (+0.000%) |
 
 ## Counting Policy
 
@@ -46,3 +49,7 @@ Each nonempty informative attribute key counts once. Incoming and outgoing edge 
 **File-inventory classes:** `DatasetFile` (A-D03), `File` (A-C02), and `RepoFile` (A-C02). Excluded edges are derived only from incident excluded endpoints; relation names and node degrees are not selectors.
 
 **External URL stub note:** Because url and host are excluded as identifier/administrative fields, external-URL stub nodes may have near-zero informative-attribute density. This is intentional and honest: unresolved stubs are information-poor, while their incident relations still contribute to structural density.
+
+## Order-50 frozen-scope interpretation
+
+Order 50 is the evaluation-only, occurrence-level pre-alignment checkpoint, not the final assembled KG. It includes approved post-acceptance relationships and retains 472 isolated nodes. Historical deterministic rows remain unchanged. See [the promotion and scope record](../../docs/study2_order50_frozen_scope_checkpoint.md) for authority hashes, residual limitations and the separate Step 15 source-provenance requirement. No new measurement was performed during promotion.

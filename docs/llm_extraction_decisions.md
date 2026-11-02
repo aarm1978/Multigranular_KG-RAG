@@ -3,7 +3,7 @@
 **Project:** Multigranular KG-RAG for Operational Hydrology
 **Study:** Dissertation Study 2
 **Document purpose:** Methodological decision record for ontology-guided LLM extraction
-**Current ontology baseline:** 0.1.3, formally frozen
+**Current ontology baseline:** 0.1.4, formally frozen
 **Initial decision date:** 2026-07-28
 **Status vocabulary:** `decided`, `deferred`, `pilot-dependent`
 
@@ -17,7 +17,7 @@ The ontology defines the permitted classes, relations, domains, ranges, and extr
 
 When this document conflicts with the frozen ontology or deterministic extraction artifacts, the following authority order applies:
 
-1. frozen ontology 0.1.3 specification and generated OWL;
+1. frozen ontology 0.1.4 specification and generated OWL;
 2. frozen deterministic Phase B outputs and tests;
 3. current ontology inventory and formalization records;
 4. this LLM extraction decision record;
@@ -25,9 +25,41 @@ When this document conflicts with the frozen ontology or deterministic extractio
 
 Any change to a frozen ontology decision requires explicit evidence, impact analysis, versioning, updated tests, regeneration of the OWL artifact, and reasoner validation.
 
-The approved minimal pre-pilot correction is represented by formally frozen ontology
-0.1.3. Its authoritative HermiT gate completed successfully with consistency, zero
+The current additive generic-mentions authority is represented by formally frozen ontology
+0.1.4. Its authoritative HermiT gate completed successfully with consistency, zero
 unsatisfiable named classes, and no execution errors.
+
+For current and future Publication provider requests, `evidenceSpan.sectionTitle` is a
+request-bound transport specialization: the provider-facing schema constrains it to the
+exact typed `const` value of trusted `sourceUnit.sectionTitleRaw` before generation. This
+does not normalize the raw title, repair provider output, weaken V4 exact validation, or
+bind any other evidence field. The frozen candidate-output schema remains the semantic
+envelope authority.
+
+Ontology D-26 `ciroh:mentions` is not model-authored or independently annotated. It is
+materialized deterministically only after semantic acceptance. Paper-to-entity fallback
+requires valid entity evidence and unambiguous trusted Paper provenance. A discourse-to-
+entity fallback additionally requires the same Paper, the same source unit, and **EXACT
+COORDINATE CONTAINMENT** in both unit and document coordinates; boundary equality is
+permitted. An accepted stronger-role or specialized `mentionsX` edge for the exact same
+endpoint pair suppresses the redundant explicit generic edge.
+
+The zero-call pre-live C1B replay is a `DEVELOPMENT_DIAGNOSTIC_REPLAY` and
+`COUNTERFACTUAL_TRANSPORT_EMULATION`. It is not authentic new model output, gold,
+formal evaluation, or formal acceptance. Its V12-usable-node projection validates only
+deterministic D-26 mechanics. Because C1B exposed zero relation targets, the no-call
+routed-relation development gate was completed before authorizing a fresh ten-unit
+semantic run. It provides structural coverage for all 26 model-authorable Publication
+relations and confirms one combined nodes-plus-eligible-relations request per DEV unit is
+mechanically ready. No recorded provider run has yet exposed those relations end to end.
+
+Candidate `relationScope` is derived from resolved endpoint artifact ownership, not fixed
+from ontology relation `type`. Same-artifact endpoints require `intra_source`; distinct-
+artifact endpoints require `inter_source`. Thus source-local DatasetMention and
+provisional Repository candidates remain local without invented identity, while exact or
+resolver-bound external endpoints retain the external path. V8 remains authoritative;
+the provider schema preserves the frozen scope enum and performs no post-generation
+repair.
 
 ---
 
@@ -638,7 +670,7 @@ Pilot comparisons showing that another granularity materially improves extractio
 
 **Options considered.**
 
-1. Extract every publication class, relation, and attribute in ontology 0.1.3.
+1. Extract every publication class, relation, and attribute in ontology 0.1.4.
 2. Begin with a focused target subset.
 3. Extract only domain entities.
 4. Extract only discourse entities.
@@ -647,9 +679,9 @@ Pilot comparisons showing that another granularity materially improves extractio
 
 A focused Publication Pilot 1 target inventory has been completed and is final and
 binding. It is stored at
-`docs/publication_llm_extraction_target_inventory.md`, is governed by ontology 0.1.3,
+`docs/publication_llm_extraction_target_inventory.md`, is governed by ontology 0.1.4,
 and uses the validated OWL SHA-256
-`ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57`.
+`7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635`.
 
 The binding target groups include:
 
@@ -1557,7 +1589,7 @@ Production extraction code must not be written before the target inventory and e
 
 | Decision area | Current state |
 |---|---|
-| Ontology baseline | 0.1.3 formally frozen |
+| Ontology baseline | 0.1.4 formally frozen |
 | Deterministic Phase B | Frozen and immutable |
 | First pilot | Scientific publications |
 | Intermediate representation | Source-preserving evidence units |

@@ -1,0 +1,1001 @@
+{
+  "analysisVersion": "0.1.0",
+  "candidateConstruction": {
+    "method": "one coverage-first greedy completion from every eligible source-unit seed, followed by nondominated filtering",
+    "optimizationDimensions": [
+      "routed_scored_node_target_coverage",
+      "routed_scored_relation_target_coverage",
+      "sampling_stratum_coverage",
+      "distinct_paper_coverage"
+    ],
+    "stableTieBreaker": [
+      "higher_total_routed_scored_target_coverage",
+      "higher_sampling_stratum_coverage",
+      "higher_distinct_paper_coverage",
+      "higher_node_target_coverage",
+      "higher_relation_target_coverage",
+      "lexicographically_smaller_sourceUnitID_tuple"
+    ]
+  },
+  "comparisons": [
+    {
+      "availablePaperCount": 11,
+      "availableSamplingStrata": [
+        "core_discourse_nodes",
+        "core_discourse_relations",
+        "entity_role_and_study_context_relations",
+        "measurement_context_relations",
+        "scientific_entity_nodes"
+      ],
+      "deterministicBestCandidateSet": {
+        "coveredNodeOperationalTargetIDs": [
+          "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
+          "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+          "PUB-N-A-DOM03D-MLMODEL",
+          "PUB-N-A-DOM04-VARIABLE",
+          "PUB-N-A-DOM07A-WATERSHED",
+          "PUB-N-A-DOM08-NAMEDPLACE",
+          "PUB-N-A-DOM11-EVALUATIONMETRIC",
+          "PUB-N-A-DOM12-PARAMETER",
+          "PUB-N-A-P07-RESEARCHPROBLEM",
+          "PUB-N-A-P09-RESEARCHGOAL",
+          "PUB-N-A-P13-METHOD",
+          "PUB-N-A-P14-EXPERIMENT",
+          "PUB-N-A-P16-FINDING",
+          "PUB-N-A-P19-LIMITATION",
+          "PUB-N-A-P20-CONCLUSION",
+          "PUB-N-A-P21-CONTRIBUTION",
+          "PUB-N-A-P22-FUTUREWORK",
+          "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
+          "PUB-N-A-P26-DATADESCRIPTION"
+        ],
+        "coveredRelationOperationalTargetIDs": [
+          "PUB-R-C-P06-RESOLVES",
+          "PUB-R-C-P07-PRODUCES",
+          "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+          "PUB-R-C-P14-APPLIESTO",
+          "PUB-R-C-P15-USESTOOL",
+          "PUB-R-C-P16-MENTIONSVARIABLE",
+          "PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH",
+          "PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH",
+          "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
+          "PUB-R-C-P23-MENTIONSMODEL",
+          "PUB-R-C-P24-MENTIONSDATASET",
+          "PUB-R-C-P25-REPORTSMETRIC",
+          "PUB-R-C-P26-EVALUATES",
+          "PUB-R-C-P27-HASPARAMETER",
+          "PUB-R-C-P31-MENTIONSTOOL",
+          "PUB-R-C-P33-HASCODEREPOSITORY"
+        ],
+        "metrics": {
+          "distinctPaperCount": 4,
+          "routedScoredNodeTargetCount": 19,
+          "routedScoredRelationTargetCount": 16,
+          "samplingStratumCount": 5
+        },
+        "paperIDs": [
+          "10",
+          "18",
+          "34",
+          "46"
+        ],
+        "sourceUnitIDs": [
+          "pub:10:sec:0008:unit:0001",
+          "pub:18:sec:0023:unit:0001",
+          "pub:34:sec:0016:unit:0001",
+          "pub:46:sec:0005:unit:0001"
+        ],
+        "structuralBurdenIndicators": {
+          "perUnitRoutedTargetCounts": [
+            {
+              "observedDeterministicContentTypes": [
+                "heading",
+                "html",
+                "metadata",
+                "prose",
+                "table"
+              ],
+              "routedNodeTargetCount": 9,
+              "routedRelationTargetCount": 4,
+              "routedTargetCount": 13,
+              "sourceConversionStatus": "canonical_markdown_available",
+              "sourceUnitID": "pub:10:sec:0008:unit:0001"
+            },
+            {
+              "observedDeterministicContentTypes": [
+                "heading",
+                "list",
+                "prose"
+              ],
+              "routedNodeTargetCount": 8,
+              "routedRelationTargetCount": 6,
+              "routedTargetCount": 14,
+              "sourceConversionStatus": "canonical_markdown_sanitized_forbidden_controls",
+              "sourceUnitID": "pub:18:sec:0023:unit:0001"
+            },
+            {
+              "observedDeterministicContentTypes": [
+                "heading",
+                "prose"
+              ],
+              "routedNodeTargetCount": 11,
+              "routedRelationTargetCount": 7,
+              "routedTargetCount": 18,
+              "sourceConversionStatus": "canonical_markdown_available",
+              "sourceUnitID": "pub:34:sec:0016:unit:0001"
+            },
+            {
+              "observedDeterministicContentTypes": [
+                "heading",
+                "prose"
+              ],
+              "routedNodeTargetCount": 11,
+              "routedRelationTargetCount": 6,
+              "routedTargetCount": 17,
+              "sourceConversionStatus": "canonical_markdown_available",
+              "sourceUnitID": "pub:46:sec:0005:unit:0001"
+            }
+          ],
+          "sourceConversionStatusCounts": {
+            "canonical_markdown_available": 3,
+            "canonical_markdown_sanitized_forbidden_controls": 1
+          },
+          "unionObservedDeterministicContentTypes": [
+            "heading",
+            "html",
+            "list",
+            "metadata",
+            "prose",
+            "table"
+          ]
+        },
+        "uncoveredNodeOperationalTargetIDs": [],
+        "uncoveredRelationOperationalTargetIDs": []
+      },
+      "feasible": true,
+      "greedySeedCount": 210,
+      "nondominatedGreedyCandidateCount": 17,
+      "nondominatedMetricVectors": [
+        {
+          "distinctPaperCount": 4,
+          "routedScoredNodeTargetCount": 19,
+          "routedScoredRelationTargetCount": 16,
+          "samplingStratumCount": 5
+        }
+      ],
+      "sampleSize": 4,
+      "uniqueGreedyCandidateCount": 203
+    },
+    {
+      "availablePaperCount": 11,
+      "availableSamplingStrata": [
+        "core_discourse_nodes",
+        "core_discourse_relations",
+        "entity_role_and_study_context_relations",
+        "measurement_context_relations",
+        "scientific_entity_nodes"
+      ],
+      "deterministicBestCandidateSet": {
+        "coveredNodeOperationalTargetIDs": [
+          "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
+          "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+          "PUB-N-A-DOM03D-MLMODEL",
+          "PUB-N-A-DOM04-VARIABLE",
+          "PUB-N-A-DOM07A-WATERSHED",
+          "PUB-N-A-DOM08-NAMEDPLACE",
+          "PUB-N-A-DOM11-EVALUATIONMETRIC",
+          "PUB-N-A-DOM12-PARAMETER",
+          "PUB-N-A-P07-RESEARCHPROBLEM",
+          "PUB-N-A-P09-RESEARCHGOAL",
+          "PUB-N-A-P13-METHOD",
+          "PUB-N-A-P14-EXPERIMENT",
+          "PUB-N-A-P16-FINDING",
+          "PUB-N-A-P19-LIMITATION",
+          "PUB-N-A-P20-CONCLUSION",
+          "PUB-N-A-P21-CONTRIBUTION",
+          "PUB-N-A-P22-FUTUREWORK",
+          "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
+          "PUB-N-A-P26-DATADESCRIPTION"
+        ],
+        "coveredRelationOperationalTargetIDs": [
+          "PUB-R-C-P06-RESOLVES",
+          "PUB-R-C-P07-PRODUCES",
+          "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+          "PUB-R-C-P14-APPLIESTO",
+          "PUB-R-C-P15-USESTOOL",
+          "PUB-R-C-P16-MENTIONSVARIABLE",
+          "PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH",
+          "PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH",
+          "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
+          "PUB-R-C-P23-MENTIONSMODEL",
+          "PUB-R-C-P24-MENTIONSDATASET",
+          "PUB-R-C-P25-REPORTSMETRIC",
+          "PUB-R-C-P26-EVALUATES",
+          "PUB-R-C-P27-HASPARAMETER",
+          "PUB-R-C-P31-MENTIONSTOOL",
+          "PUB-R-C-P33-HASCODEREPOSITORY"
+        ],
+        "metrics": {
+          "distinctPaperCount": 5,
+          "routedScoredNodeTargetCount": 19,
+          "routedScoredRelationTargetCount": 16,
+          "samplingStratumCount": 5
+        },
+        "paperIDs": [
+          "10",
+          "15",
+          "16",
+          "34",
+          "79"
+        ],
+        "sourceUnitIDs": [
+          "pub:10:sec:0008:unit:0001",
+          "pub:15:sec:0004:unit:0001",
+          "pub:16:sec:0033:unit:0001",
+          "pub:34:sec:0015:unit:0001",
+          "pub:79:sec:0004:unit:0001"
+        ],
+        "structuralBurdenIndicators": {
+          "perUnitRoutedTargetCounts": [
+            {
+              "observedDeterministicContentTypes": [
+                "heading",
+                "html",
+                "metadata",
+                "prose",
+                "table"
+              ],
+              "routedNodeTargetCount": 9,
+              "routedRelationTargetCount": 4,
+              "routedTargetCount": 13,
+              "sourceConversionStatus": "canonical_markdown_available",
+              "sourceUnitID": "pub:10:sec:0008:unit:0001"
+            },
+            {
+              "observedDeterministicContentTypes": [
+                "caption",
+                "heading",
+                "metadata",
+                "prose"
+              ],
+              "routedNodeTargetCount": 4,
+              "routedRelationTargetCount": 4,
+              "routedTargetCount": 8,
+              "sourceConversionStatus": "canonical_markdown_available",
+              "sourceUnitID": "pub:15:sec:0004:unit:0001"
+            },
+            {
+              "observedDeterministicContentTypes": [
+                "heading",
+                "prose"
+              ],
+              "routedNodeTargetCount": 7,
+              "routedRelationTargetCount": 1,
+              "routedTargetCount": 8,
+              "sourceConversionStatus": "canonical_markdown_available",
+              "sourceUnitID": "pub:16:sec:0033:unit:0001"
+            },
+            {
+              "observedDeterministicContentTypes": [
+                "equation",
+                "heading",
+                "prose"
+              ],
+              "routedNodeTargetCount": 12,
+              "routedRelationTargetCount": 9,
+              "routedTargetCount": 21,
+              "sourceConversionStatus": "canonical_markdown_available",
+              "sourceUnitID": "pub:34:sec:0015:unit:0001"
+            },
+            {
+              "observedDeterministicContentTypes": [
+                "heading",
+                "prose"
+              ],
+              "routedNodeTargetCount": 11,
+              "routedRelationTargetCount": 8,
+              "routedTargetCount": 19,
+              "sourceConversionStatus": "canonical_markdown_available",
+              "sourceUnitID": "pub:79:sec:0004:unit:0001"
+            }
+          ],
+          "sourceConversionStatusCounts": {
+            "canonical_markdown_available": 5
+          },
+          "unionObservedDeterministicContentTypes": [
+            "caption",
+            "equation",
+            "heading",
+            "html",
+            "metadata",
+            "prose",
+            "table"
+          ]
+        },
+        "uncoveredNodeOperationalTargetIDs": [],
+        "uncoveredRelationOperationalTargetIDs": []
+      },
+      "feasible": true,
+      "greedySeedCount": 210,
+      "nondominatedGreedyCandidateCount": 159,
+      "nondominatedMetricVectors": [
+        {
+          "distinctPaperCount": 5,
+          "routedScoredNodeTargetCount": 19,
+          "routedScoredRelationTargetCount": 16,
+          "samplingStratumCount": 5
+        }
+      ],
+      "sampleSize": 5,
+      "uniqueGreedyCandidateCount": 202
+    },
+    {
+      "availablePaperCount": 11,
+      "availableSamplingStrata": [
+        "core_discourse_nodes",
+        "core_discourse_relations",
+        "entity_role_and_study_context_relations",
+        "measurement_context_relations",
+        "scientific_entity_nodes"
+      ],
+      "deterministicBestCandidateSet": {
+        "coveredNodeOperationalTargetIDs": [
+          "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
+          "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+          "PUB-N-A-DOM03D-MLMODEL",
+          "PUB-N-A-DOM04-VARIABLE",
+          "PUB-N-A-DOM07A-WATERSHED",
+          "PUB-N-A-DOM08-NAMEDPLACE",
+          "PUB-N-A-DOM11-EVALUATIONMETRIC",
+          "PUB-N-A-DOM12-PARAMETER",
+          "PUB-N-A-P07-RESEARCHPROBLEM",
+          "PUB-N-A-P09-RESEARCHGOAL",
+          "PUB-N-A-P13-METHOD",
+          "PUB-N-A-P14-EXPERIMENT",
+          "PUB-N-A-P16-FINDING",
+          "PUB-N-A-P19-LIMITATION",
+          "PUB-N-A-P20-CONCLUSION",
+          "PUB-N-A-P21-CONTRIBUTION",
+          "PUB-N-A-P22-FUTUREWORK",
+          "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
+          "PUB-N-A-P26-DATADESCRIPTION"
+        ],
+        "coveredRelationOperationalTargetIDs": [
+          "PUB-R-C-P06-RESOLVES",
+          "PUB-R-C-P07-PRODUCES",
+          "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+          "PUB-R-C-P14-APPLIESTO",
+          "PUB-R-C-P15-USESTOOL",
+          "PUB-R-C-P16-MENTIONSVARIABLE",
+          "PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH",
+          "PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH",
+          "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
+          "PUB-R-C-P23-MENTIONSMODEL",
+          "PUB-R-C-P24-MENTIONSDATASET",
+          "PUB-R-C-P25-REPORTSMETRIC",
+          "PUB-R-C-P26-EVALUATES",
+          "PUB-R-C-P27-HASPARAMETER",
+          "PUB-R-C-P31-MENTIONSTOOL",
+          "PUB-R-C-P33-HASCODEREPOSITORY"
+        ],
+        "metrics": {
+          "distinctPaperCount": 6,
+          "routedScoredNodeTargetCount": 19,
+          "routedScoredRelationTargetCount": 16,
+          "samplingStratumCount": 5
+        },
+        "paperIDs": [
+          "10",
+          "15",
+          "16",
+          "18",
+          "34",
+          "79"
+        ],
+        "sourceUnitIDs": [
+          "pub:10:sec:0008:unit:0001",
+          "pub:15:sec:0004:unit:0001",
+          "pub:16:sec:0010:unit:0001",
+          "pub:18:sec:0005:unit:0001",
+          "pub:34:sec:0023:unit:0001",
+          "pub:79:sec:0004:unit:0001"
+        ],
+        "structuralBurdenIndicators": {
+          "perUnitRoutedTargetCounts": [
+            {
+              "observedDeterministicContentTypes": [
+                "heading",
+                "html",
+                "metadata",
+                "prose",
+                "table"
+              ],
+              "routedNodeTargetCount": 9,
+              "routedRelationTargetCount": 4,
+              "routedTargetCount": 13,
+              "sourceConversionStatus": "canonical_markdown_available",
+              "sourceUnitID": "pub:10:sec:0008:unit:0001"
+            },
+            {
+              "observedDeterministicContentTypes": [
+                "caption",
+                "heading",
+                "metadata",
+                "prose"
+              ],
+              "routedNodeTargetCount": 4,
+              "routedRelationTargetCount": 4,
+              "routedTargetCount": 8,
+              "sourceConversionStatus": "canonical_markdown_available",
+              "sourceUnitID": "pub:15:sec:0004:unit:0001"
+            },
+            {
+              "observedDeterministicContentTypes": [
+                "caption",
+                "heading",
+                "list",
+                "metadata",
+                "prose"
+              ],
+              "routedNodeTargetCount": 4,
+              "routedRelationTargetCount": 1,
+              "routedTargetCount": 5,
+              "sourceConversionStatus": "canonical_markdown_available",
+              "sourceUnitID": "pub:16:sec:0010:unit:0001"
+            },
+            {
+              "observedDeterministicContentTypes": [
+                "heading",
+                "prose"
+              ],
+              "routedNodeTargetCount": 6,
+              "routedRelationTargetCount": 4,
+              "routedTargetCount": 10,
+              "sourceConversionStatus": "canonical_markdown_sanitized_forbidden_controls",
+              "sourceUnitID": "pub:18:sec:0005:unit:0001"
+            },
+            {
+              "observedDeterministicContentTypes": [
+                "caption",
+                "heading",
+                "metadata",
+                "prose",
+                "table"
+              ],
+              "routedNodeTargetCount": 13,
+              "routedRelationTargetCount": 8,
+              "routedTargetCount": 21,
+              "sourceConversionStatus": "canonical_markdown_available",
+              "sourceUnitID": "pub:34:sec:0023:unit:0001"
+            },
+            {
+              "observedDeterministicContentTypes": [
+                "heading",
+                "prose"
+              ],
+              "routedNodeTargetCount": 11,
+              "routedRelationTargetCount": 8,
+              "routedTargetCount": 19,
+              "sourceConversionStatus": "canonical_markdown_available",
+              "sourceUnitID": "pub:79:sec:0004:unit:0001"
+            }
+          ],
+          "sourceConversionStatusCounts": {
+            "canonical_markdown_available": 5,
+            "canonical_markdown_sanitized_forbidden_controls": 1
+          },
+          "unionObservedDeterministicContentTypes": [
+            "caption",
+            "heading",
+            "html",
+            "list",
+            "metadata",
+            "prose",
+            "table"
+          ]
+        },
+        "uncoveredNodeOperationalTargetIDs": [],
+        "uncoveredRelationOperationalTargetIDs": []
+      },
+      "feasible": true,
+      "greedySeedCount": 210,
+      "nondominatedGreedyCandidateCount": 174,
+      "nondominatedMetricVectors": [
+        {
+          "distinctPaperCount": 6,
+          "routedScoredNodeTargetCount": 19,
+          "routedScoredRelationTargetCount": 16,
+          "samplingStratumCount": 5
+        }
+      ],
+      "sampleSize": 6,
+      "uniqueGreedyCandidateCount": 202
+    }
+  ],
+  "eligibleUniverse": {
+    "paperIDs": [
+      "10",
+      "15",
+      "16",
+      "18",
+      "276",
+      "34",
+      "37",
+      "46",
+      "54",
+      "79",
+      "87"
+    ],
+    "routedScoredNodeOperationalTargetIDs": [
+      "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
+      "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+      "PUB-N-A-DOM03D-MLMODEL",
+      "PUB-N-A-DOM04-VARIABLE",
+      "PUB-N-A-DOM07A-WATERSHED",
+      "PUB-N-A-DOM08-NAMEDPLACE",
+      "PUB-N-A-DOM11-EVALUATIONMETRIC",
+      "PUB-N-A-DOM12-PARAMETER",
+      "PUB-N-A-P07-RESEARCHPROBLEM",
+      "PUB-N-A-P09-RESEARCHGOAL",
+      "PUB-N-A-P13-METHOD",
+      "PUB-N-A-P14-EXPERIMENT",
+      "PUB-N-A-P16-FINDING",
+      "PUB-N-A-P19-LIMITATION",
+      "PUB-N-A-P20-CONCLUSION",
+      "PUB-N-A-P21-CONTRIBUTION",
+      "PUB-N-A-P22-FUTUREWORK",
+      "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
+      "PUB-N-A-P26-DATADESCRIPTION"
+    ],
+    "routedScoredRelationOperationalTargetIDs": [
+      "PUB-R-C-P06-RESOLVES",
+      "PUB-R-C-P07-PRODUCES",
+      "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+      "PUB-R-C-P14-APPLIESTO",
+      "PUB-R-C-P15-USESTOOL",
+      "PUB-R-C-P16-MENTIONSVARIABLE",
+      "PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH",
+      "PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH",
+      "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
+      "PUB-R-C-P23-MENTIONSMODEL",
+      "PUB-R-C-P24-MENTIONSDATASET",
+      "PUB-R-C-P25-REPORTSMETRIC",
+      "PUB-R-C-P26-EVALUATES",
+      "PUB-R-C-P27-HASPARAMETER",
+      "PUB-R-C-P31-MENTIONSTOOL",
+      "PUB-R-C-P33-HASCODEREPOSITORY"
+    ],
+    "samplingStrata": [
+      "core_discourse_nodes",
+      "core_discourse_relations",
+      "entity_role_and_study_context_relations",
+      "measurement_context_relations",
+      "scientific_entity_nodes"
+    ],
+    "sourceUnitIDs": [
+      "pub:10:sec:0008:unit:0001",
+      "pub:10:sec:0008:unit:0002",
+      "pub:10:sec:0009:unit:0001",
+      "pub:10:sec:0010:unit:0001",
+      "pub:10:sec:0011:unit:0001",
+      "pub:10:sec:0012:unit:0001",
+      "pub:10:sec:0013:unit:0001",
+      "pub:10:sec:0014:unit:0001",
+      "pub:10:sec:0016:unit:0001",
+      "pub:10:sec:0017:unit:0001",
+      "pub:10:sec:0018:unit:0001",
+      "pub:10:sec:0019:unit:0001",
+      "pub:10:sec:0022:unit:0001",
+      "pub:10:sec:0023:unit:0001",
+      "pub:10:sec:0024:unit:0001",
+      "pub:10:sec:0025:unit:0001",
+      "pub:10:sec:0026:unit:0001",
+      "pub:10:sec:0027:unit:0001",
+      "pub:10:sec:0028:unit:0001",
+      "pub:15:sec:0004:unit:0001",
+      "pub:15:sec:0005:unit:0001",
+      "pub:15:sec:0006:unit:0001",
+      "pub:15:sec:0007:unit:0001",
+      "pub:15:sec:0010:unit:0001",
+      "pub:15:sec:0010:unit:0002",
+      "pub:15:sec:0011:unit:0001",
+      "pub:15:sec:0012:unit:0001",
+      "pub:15:sec:0013:unit:0001",
+      "pub:15:sec:0014:unit:0001",
+      "pub:15:sec:0015:unit:0001",
+      "pub:15:sec:0016:unit:0001",
+      "pub:15:sec:0017:unit:0001",
+      "pub:16:sec:0010:unit:0001",
+      "pub:16:sec:0012:unit:0001",
+      "pub:16:sec:0013:unit:0001",
+      "pub:16:sec:0014:unit:0001",
+      "pub:16:sec:0015:unit:0001",
+      "pub:16:sec:0016:unit:0001",
+      "pub:16:sec:0017:unit:0001",
+      "pub:16:sec:0018:unit:0001",
+      "pub:16:sec:0019:unit:0001",
+      "pub:16:sec:0020:unit:0001",
+      "pub:16:sec:0021:unit:0001",
+      "pub:16:sec:0022:unit:0001",
+      "pub:16:sec:0023:unit:0001",
+      "pub:16:sec:0024:unit:0001",
+      "pub:16:sec:0025:unit:0001",
+      "pub:16:sec:0026:unit:0001",
+      "pub:16:sec:0027:unit:0001",
+      "pub:16:sec:0029:unit:0001",
+      "pub:16:sec:0030:unit:0001",
+      "pub:16:sec:0031:unit:0001",
+      "pub:16:sec:0032:unit:0001",
+      "pub:16:sec:0033:unit:0001",
+      "pub:16:sec:0041:unit:0001",
+      "pub:18:sec:0002:unit:0001",
+      "pub:18:sec:0004:unit:0001",
+      "pub:18:sec:0005:unit:0001",
+      "pub:18:sec:0006:unit:0001",
+      "pub:18:sec:0007:unit:0001",
+      "pub:18:sec:0008:unit:0001",
+      "pub:18:sec:0009:unit:0001",
+      "pub:18:sec:0010:unit:0001",
+      "pub:18:sec:0011:unit:0001",
+      "pub:18:sec:0012:unit:0001",
+      "pub:18:sec:0013:unit:0001",
+      "pub:18:sec:0014:unit:0001",
+      "pub:18:sec:0015:unit:0001",
+      "pub:18:sec:0016:unit:0001",
+      "pub:18:sec:0017:unit:0001",
+      "pub:18:sec:0018:unit:0001",
+      "pub:18:sec:0019:unit:0001",
+      "pub:18:sec:0021:unit:0001",
+      "pub:18:sec:0022:unit:0001",
+      "pub:18:sec:0023:unit:0001",
+      "pub:18:sec:0024:unit:0001",
+      "pub:18:sec:0025:unit:0001",
+      "pub:18:sec:0026:unit:0001",
+      "pub:18:sec:0027:unit:0001",
+      "pub:18:sec:0028:unit:0001",
+      "pub:18:sec:0029:unit:0001",
+      "pub:276:sec:0003:unit:0001",
+      "pub:276:sec:0004:unit:0001",
+      "pub:276:sec:0005:unit:0001",
+      "pub:276:sec:0009:unit:0001",
+      "pub:276:sec:0010:unit:0001",
+      "pub:276:sec:0011:unit:0001",
+      "pub:276:sec:0013:unit:0001",
+      "pub:276:sec:0014:unit:0001",
+      "pub:276:sec:0015:unit:0001",
+      "pub:276:sec:0016:unit:0001",
+      "pub:276:sec:0017:unit:0001",
+      "pub:276:sec:0018:unit:0001",
+      "pub:276:sec:0019:unit:0001",
+      "pub:276:sec:0020:unit:0001",
+      "pub:34:sec:0003:unit:0001",
+      "pub:34:sec:0006:unit:0001",
+      "pub:34:sec:0007:unit:0001",
+      "pub:34:sec:0007:unit:0002",
+      "pub:34:sec:0009:unit:0001",
+      "pub:34:sec:0010:unit:0001",
+      "pub:34:sec:0012:unit:0001",
+      "pub:34:sec:0013:unit:0001",
+      "pub:34:sec:0014:unit:0001",
+      "pub:34:sec:0015:unit:0001",
+      "pub:34:sec:0016:unit:0001",
+      "pub:34:sec:0018:unit:0001",
+      "pub:34:sec:0019:unit:0001",
+      "pub:34:sec:0020:unit:0001",
+      "pub:34:sec:0021:unit:0001",
+      "pub:34:sec:0022:unit:0001",
+      "pub:34:sec:0023:unit:0001",
+      "pub:34:sec:0023:unit:0002",
+      "pub:34:sec:0024:unit:0001",
+      "pub:34:sec:0025:unit:0001",
+      "pub:34:sec:0026:unit:0001",
+      "pub:37:sec:0004:unit:0001",
+      "pub:37:sec:0005:unit:0001",
+      "pub:37:sec:0006:unit:0001",
+      "pub:37:sec:0008:unit:0001",
+      "pub:37:sec:0009:unit:0001",
+      "pub:37:sec:0010:unit:0001",
+      "pub:37:sec:0011:unit:0001",
+      "pub:37:sec:0012:unit:0001",
+      "pub:37:sec:0014:unit:0001",
+      "pub:37:sec:0015:unit:0001",
+      "pub:37:sec:0016:unit:0001",
+      "pub:37:sec:0022:unit:0001",
+      "pub:46:sec:0005:unit:0001",
+      "pub:46:sec:0006:unit:0001",
+      "pub:46:sec:0006:unit:0002",
+      "pub:46:sec:0008:unit:0001",
+      "pub:46:sec:0009:unit:0001",
+      "pub:46:sec:0012:unit:0001",
+      "pub:46:sec:0013:unit:0001",
+      "pub:46:sec:0014:unit:0001",
+      "pub:46:sec:0015:unit:0001",
+      "pub:46:sec:0016:unit:0001",
+      "pub:46:sec:0017:unit:0001",
+      "pub:46:sec:0018:unit:0001",
+      "pub:46:sec:0019:unit:0001",
+      "pub:46:sec:0020:unit:0001",
+      "pub:46:sec:0021:unit:0001",
+      "pub:46:sec:0022:unit:0001",
+      "pub:46:sec:0023:unit:0001",
+      "pub:46:sec:0024:unit:0001",
+      "pub:46:sec:0025:unit:0001",
+      "pub:46:sec:0026:unit:0001",
+      "pub:46:sec:0027:unit:0001",
+      "pub:46:sec:0028:unit:0001",
+      "pub:46:sec:0030:unit:0001",
+      "pub:46:sec:0033:unit:0001",
+      "pub:54:sec:0002:unit:0001",
+      "pub:54:sec:0003:unit:0001",
+      "pub:54:sec:0004:unit:0001",
+      "pub:54:sec:0006:unit:0001",
+      "pub:54:sec:0007:unit:0001",
+      "pub:54:sec:0008:unit:0001",
+      "pub:54:sec:0010:unit:0001",
+      "pub:54:sec:0011:unit:0001",
+      "pub:54:sec:0012:unit:0001",
+      "pub:54:sec:0013:unit:0001",
+      "pub:54:sec:0014:unit:0001",
+      "pub:54:sec:0015:unit:0001",
+      "pub:54:sec:0016:unit:0001",
+      "pub:54:sec:0017:unit:0001",
+      "pub:54:sec:0019:unit:0001",
+      "pub:54:sec:0020:unit:0001",
+      "pub:54:sec:0021:unit:0001",
+      "pub:54:sec:0022:unit:0001",
+      "pub:54:sec:0023:unit:0001",
+      "pub:54:sec:0024:unit:0001",
+      "pub:54:sec:0025:unit:0001",
+      "pub:54:sec:0026:unit:0001",
+      "pub:54:sec:0027:unit:0001",
+      "pub:54:sec:0028:unit:0001",
+      "pub:54:sec:0029:unit:0001",
+      "pub:54:sec:0030:unit:0001",
+      "pub:54:sec:0032:unit:0001",
+      "pub:54:sec:0033:unit:0001",
+      "pub:54:sec:0034:unit:0001",
+      "pub:54:sec:0035:unit:0001",
+      "pub:54:sec:0036:unit:0001",
+      "pub:54:sec:0037:unit:0001",
+      "pub:79:sec:0003:unit:0001",
+      "pub:79:sec:0004:unit:0001",
+      "pub:79:sec:0005:unit:0001",
+      "pub:79:sec:0006:unit:0001",
+      "pub:79:sec:0008:unit:0002",
+      "pub:79:sec:0009:unit:0001",
+      "pub:79:sec:0010:unit:0001",
+      "pub:79:sec:0012:unit:0001",
+      "pub:79:sec:0013:unit:0001",
+      "pub:79:sec:0014:unit:0001",
+      "pub:79:sec:0015:unit:0001",
+      "pub:79:sec:0016:unit:0001",
+      "pub:79:sec:0017:unit:0001",
+      "pub:79:sec:0018:unit:0001",
+      "pub:87:sec:0001:unit:0001",
+      "pub:87:sec:0004:unit:0001",
+      "pub:87:sec:0005:unit:0001",
+      "pub:87:sec:0007:unit:0001",
+      "pub:87:sec:0008:unit:0001",
+      "pub:87:sec:0009:unit:0001",
+      "pub:87:sec:0011:unit:0001",
+      "pub:87:sec:0012:unit:0001",
+      "pub:87:sec:0013:unit:0001",
+      "pub:87:sec:0014:unit:0001",
+      "pub:87:sec:0015:unit:0001",
+      "pub:87:sec:0016:unit:0001"
+    ],
+    "unroutedScoredNodeOperationalTargetIDs": [],
+    "unroutedScoredRelationOperationalTargetIDs": []
+  },
+  "exclusionLedger": {
+    "eligibleUnitCount": 210,
+    "excludedByReason": {
+      "calibration_manifest": [
+        "pub:10:sec:0007:unit:0001",
+        "pub:10:sec:0020:unit:0001",
+        "pub:15:sec:0001:unit:0001",
+        "pub:15:sec:0002:unit:0001",
+        "pub:16:sec:0005:unit:0001",
+        "pub:16:sec:0042:unit:0001",
+        "pub:18:sec:0001:unit:0001",
+        "pub:18:sec:0020:unit:0001",
+        "pub:276:sec:0006:unit:0001",
+        "pub:34:sec:0028:unit:0001",
+        "pub:37:sec:0017:unit:0001",
+        "pub:46:sec:0010:unit:0001",
+        "pub:54:sec:0001:unit:0001",
+        "pub:79:sec:0008:unit:0001",
+        "pub:87-corrigendum:sec:0003:unit:0001",
+        "pub:87:sec:0002:unit:0001"
+      ],
+      "no_routed_scored_target": [
+        "pub:10:sec:0001:unit:0001",
+        "pub:10:sec:0004:unit:0001",
+        "pub:10:sec:0006:unit:0001",
+        "pub:16:sec:0001:unit:0001",
+        "pub:16:sec:0002:unit:0001",
+        "pub:16:sec:0004:unit:0001",
+        "pub:16:sec:0004:unit:0002",
+        "pub:16:sec:0006:unit:0001",
+        "pub:16:sec:0007:unit:0001",
+        "pub:16:sec:0008:unit:0001",
+        "pub:16:sec:0009:unit:0001",
+        "pub:16:sec:0035:unit:0001",
+        "pub:16:sec:0036:unit:0001",
+        "pub:16:sec:0038:unit:0001",
+        "pub:16:sec:0039:unit:0001",
+        "pub:16:sec:0040:unit:0001",
+        "pub:276:sec:0001:unit:0001",
+        "pub:276:sec:0002:unit:0001",
+        "pub:276:sec:0022:unit:0001",
+        "pub:276:sec:0023:unit:0001",
+        "pub:34:sec:0001:unit:0001",
+        "pub:34:sec:0002:unit:0001",
+        "pub:34:sec:0004:unit:0001",
+        "pub:34:sec:0005:unit:0001",
+        "pub:34:sec:0027:unit:0001",
+        "pub:37:sec:0001:unit:0001",
+        "pub:37:sec:0002:unit:0001",
+        "pub:37:sec:0003:unit:0001",
+        "pub:37:sec:0018:unit:0001",
+        "pub:37:sec:0019:unit:0001",
+        "pub:37:sec:0021:unit:0001",
+        "pub:46:sec:0001:unit:0001",
+        "pub:46:sec:0002:unit:0001",
+        "pub:46:sec:0029:unit:0001",
+        "pub:46:sec:0031:unit:0001",
+        "pub:79:sec:0002:unit:0001",
+        "pub:79:sec:0020:unit:0001"
+      ],
+      "reserved_nonprimary_artifact": [
+        "pub:87-corrigendum:sec:0002:unit:0001",
+        "pub:87-corrigendum:sec:0006:unit:0001",
+        "pub:87-corrigendum:sec:0008:unit:0001",
+        "pub:87-corrigendum:sec:0009:unit:0001"
+      ],
+      "source_eligibility:context_only": [
+        "pub:10:sec:0000:unit:0001",
+        "pub:10:sec:0003:unit:0001",
+        "pub:10:sec:0005:unit:0001",
+        "pub:10:sec:0015:unit:0001",
+        "pub:10:sec:0021:unit:0001",
+        "pub:10:sec:0029:unit:0001",
+        "pub:15:sec:0003:unit:0001",
+        "pub:15:sec:0009:unit:0001",
+        "pub:16:sec:0011:unit:0001",
+        "pub:16:sec:0028:unit:0001",
+        "pub:16:sec:0034:unit:0001",
+        "pub:18:sec:0000:unit:0001",
+        "pub:18:sec:0003:unit:0001",
+        "pub:276:sec:0000:unit:0001",
+        "pub:276:sec:0007:unit:0001",
+        "pub:276:sec:0008:unit:0001",
+        "pub:276:sec:0012:unit:0001",
+        "pub:276:sec:0021:unit:0001",
+        "pub:34:sec:0008:unit:0001",
+        "pub:34:sec:0011:unit:0001",
+        "pub:34:sec:0017:unit:0001",
+        "pub:34:sec:0029:unit:0001",
+        "pub:37:sec:0007:unit:0001",
+        "pub:37:sec:0013:unit:0001",
+        "pub:37:sec:0020:unit:0001",
+        "pub:46:sec:0000:unit:0001",
+        "pub:46:sec:0003:unit:0001",
+        "pub:46:sec:0004:unit:0001",
+        "pub:46:sec:0007:unit:0001",
+        "pub:46:sec:0011:unit:0001",
+        "pub:46:sec:0032:unit:0001",
+        "pub:54:sec:0000:unit:0001",
+        "pub:54:sec:0005:unit:0001",
+        "pub:54:sec:0009:unit:0001",
+        "pub:54:sec:0018:unit:0001",
+        "pub:54:sec:0031:unit:0001",
+        "pub:79:sec:0001:unit:0001",
+        "pub:79:sec:0007:unit:0001",
+        "pub:79:sec:0011:unit:0001",
+        "pub:79:sec:0019:unit:0001",
+        "pub:87-corrigendum:sec:0000:unit:0001",
+        "pub:87-corrigendum:sec:0001:unit:0001",
+        "pub:87-corrigendum:sec:0004:unit:0001",
+        "pub:87-corrigendum:sec:0005:unit:0001",
+        "pub:87-corrigendum:sec:0007:unit:0001",
+        "pub:87:sec:0000:unit:0001",
+        "pub:87:sec:0003:unit:0001",
+        "pub:87:sec:0006:unit:0001",
+        "pub:87:sec:0010:unit:0001"
+      ],
+      "source_eligibility:excluded": [
+        "pub:10:sec:0002:unit:0001",
+        "pub:10:sec:0030:unit:0001",
+        "pub:10:sec:0030:unit:0002",
+        "pub:10:sec:0030:unit:0003",
+        "pub:15:sec:0000:unit:0001",
+        "pub:15:sec:0008:unit:0001",
+        "pub:15:sec:0018:unit:0001",
+        "pub:16:sec:0000:unit:0001",
+        "pub:16:sec:0003:unit:0001",
+        "pub:16:sec:0037:unit:0001",
+        "pub:16:sec:0037:unit:0002",
+        "pub:16:sec:0037:unit:0003",
+        "pub:16:sec:0037:unit:0004",
+        "pub:16:sec:0037:unit:0005",
+        "pub:18:sec:0030:unit:0001",
+        "pub:18:sec:0030:unit:0002",
+        "pub:18:sec:0030:unit:0003",
+        "pub:18:sec:0030:unit:0004",
+        "pub:276:sec:0024:unit:0001",
+        "pub:34:sec:0000:unit:0001",
+        "pub:34:sec:0030:unit:0001",
+        "pub:34:sec:0030:unit:0002",
+        "pub:37:sec:0000:unit:0001",
+        "pub:37:sec:0023:unit:0001",
+        "pub:37:sec:0023:unit:0002",
+        "pub:46:sec:0034:unit:0001",
+        "pub:46:sec:0034:unit:0002",
+        "pub:54:sec:0038:unit:0001",
+        "pub:54:sec:0038:unit:0002",
+        "pub:54:sec:0038:unit:0003",
+        "pub:54:sec:0038:unit:0004",
+        "pub:54:sec:0038:unit:0005",
+        "pub:54:sec:0038:unit:0006",
+        "pub:54:sec:0038:unit:0007",
+        "pub:79:sec:0000:unit:0001",
+        "pub:79:sec:0021:unit:0001",
+        "pub:87-corrigendum:sec:0010:unit:0001",
+        "pub:87:sec:0017:unit:0001",
+        "pub:87:sec:0017:unit:0002"
+      ],
+      "source_eligibility:needs_review": [
+        "pub:34:sec:0031:unit:0001",
+        "pub:34:sec:0031:unit:0002",
+        "pub:34:sec:0031:unit:0003"
+      ]
+    },
+    "fixedPopulationUnitCount": 358
+  },
+  "inputArtifacts": {
+    "calibrationManifest": {
+      "path": "data/curation/papers/pilot1/publication_pilot1_calibration_manifest.json",
+      "sha256": "e9d761224b1c3c76c89bc6d7d63ca1f3b309e3155c4a191bbdfd66f380355d76"
+    },
+    "coverageMatrix": {
+      "path": "data/curation/papers/pilot1/publication_pilot1_target_coverage_matrix.csv",
+      "sha256": "b67fabb4c7b03b2e4b578c29e932f0122372a2d62f93cb5b172d90d798c9d109"
+    },
+    "developmentManifest": {
+      "path": "data/curation/papers/publication_llm_development_only_manifest.json",
+      "sha256": "4825505c0bb785b4b1f512f6f7309950b9431d2df92c9cf64514effd3fed13bf"
+    },
+    "targetFamilyMapping": {
+      "path": "data/curation/papers/pilot1/publication_pilot1_target_family_mapping.yaml",
+      "sha256": "fbf1da8f43174791a160106014975fd7084c18de5df2f14a5203368418f081fe"
+    }
+  },
+  "reservedRoleProvenance": {
+    "calibrationManifestUnitCount": 16,
+    "coreFeasibilitySubsumption": "Researcher-authorized: CORE_FEAS used only units already contained in the frozen 16-unit Publication Calibration manifest (CORE_FEAS subset Calibration); therefore no separate CORE_FEAS exclusion manifest is created or required.",
+    "developmentManifestUnitCount": 10,
+    "developmentUnitsPresentInFixedPopulation": [],
+    "diagnosticExclusionRule": "All stability diagnostics are excluded through their DEV provenance; no diagnostic-only unit overlaps the fixed population."
+  },
+  "scope": {
+    "doesNotUse": [
+      "canonical_source_text",
+      "section_titles",
+      "LLM_or_provider_outputs",
+      "candidate_counts",
+      "semantic_extraction_results",
+      "external_sources"
+    ],
+    "usesOnly": [
+      "unit_and_paper_IDs",
+      "artifact_role_and_partition_metadata",
+      "source_eligibility",
+      "routed_scored_operational_target_IDs",
+      "likely_sampling_strata",
+      "observed_deterministic_structural_metadata",
+      "source_conversion_status"
+    ]
+  },
+  "status": "prospective_comparison_not_sample_freeze"
+}

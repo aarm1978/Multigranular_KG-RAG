@@ -1,0 +1,57 @@
+{
+  "counts": {
+    "alternative": {
+      "entity": {
+        "equivalent": 6,
+        "not_equivalent": 32,
+        "not_established": 0
+      },
+      "relation": {
+        "equivalent": 1,
+        "not_equivalent": 22,
+        "not_established": 0
+      }
+    },
+    "selected": {
+      "entity": {
+        "equivalent": 161,
+        "not_equivalent": 54,
+        "not_established": 0
+      },
+      "relation": {
+        "equivalent": 199,
+        "not_equivalent": 29,
+        "not_established": 4
+      }
+    }
+  },
+  "metrics": {
+    "entity": {
+      "FN": 691,
+      "FP": 1348,
+      "TP": 994,
+      "additionalOverStrictA": 167,
+      "f1": 0.4936677427365284,
+      "goldSupport": 1685,
+      "precision": 0.42442356959863364,
+      "predictionSupport": 2342,
+      "recall": 0.5899109792284867,
+      "salvagedAlternatives": 6
+    },
+    "relation": {
+      "FN": 380,
+      "FP": 1007,
+      "TP": 594,
+      "additionalOverStrictA": 200,
+      "f1": 0.4613592233009709,
+      "goldSupport": 974,
+      "precision": 0.37101811367895066,
+      "predictionSupport": 1601,
+      "recall": 0.6098562628336756,
+      "salvagedAlternatives": 1
+    }
+  },
+  "nature": "secondary LLM-assisted contextual-equivalence analysis; not independently human-adjudicated gold or replacement extraction score",
+  "newProviderCalls": 0,
+  "version": "0.1.0"
+}

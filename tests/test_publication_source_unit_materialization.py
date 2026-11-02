@@ -47,8 +47,8 @@ class CorrectedMaterializationTests(unittest.TestCase):
         self.assertTrue(OVERRIDES.is_file())
         self.assertEqual(hashlib.sha256(OVERRIDES.read_bytes()).hexdigest(), OVERRIDES_HASH)
 
-    def test_manifest_hashes_and_aliases_bind_repository_bytes(self) -> None:
-        """Direct contract names and compatibility aliases are equal and byte-valid."""
+    def test_manifest_hashes_and_aliases_preserve_historical_authority(self) -> None:
+        """The accepted fifth materialization retains its exact ontology-0.1.3 provenance."""
 
         manifest = self.manifest
         self.assertEqual(manifest["builderVersion"], "0.1.4")
@@ -56,8 +56,17 @@ class CorrectedMaterializationTests(unittest.TestCase):
         self.assertEqual(manifest["contractVersion"], manifest["sourceUnitContractVersion"])
         self.assertEqual(manifest["configurationSha256"], manifest["sourceUnitBuilderConfigurationHash"])
         self.assertEqual(manifest["generatedAt"], manifest["generationTimestamp"])
-        self.assertEqual(manifest["targetInventoryHash"], source.TARGET_INVENTORY_HASH)
-        self.assertEqual(manifest["ontologyOwlSha256"], source.ONTOLOGY_OWL_HASH)
+        self.assertEqual(
+            manifest["targetInventoryHash"],
+            "3d8a80c4ff8794588e2551e63a61e72c60a9afcb89d8b7a7058ff23e25ee4760",
+        )
+        self.assertEqual(manifest["ontologyVersion"], "0.1.3")
+        self.assertEqual(
+            manifest["ontologyOwlSha256"],
+            "ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57",
+        )
+        self.assertNotEqual(manifest["targetInventoryHash"], source.TARGET_INVENTORY_HASH)
+        self.assertNotEqual(manifest["ontologyOwlSha256"], source.ONTOLOGY_OWL_HASH)
         self.assertEqual(manifest["phaseBArtifactHash"], source.PHASE_B_HASH)
         self.assertEqual(manifest["phaseBVersion"], source.PHASE_B_VERSION)
         self.assertEqual(hashlib.sha256(INVENTORY.read_bytes()).hexdigest(), manifest["sourceUnitInventoryHash"])

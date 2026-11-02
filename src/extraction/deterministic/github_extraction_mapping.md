@@ -1,5 +1,38 @@
 # GitHub → Ontology — Deterministic Extraction Mapping
 
+## Prospective reference enrichment v1 (post-Step-10)
+
+This bounded addendum activates C-C27 under the frozen ontology **v0.1.6**.
+The contract below remains historical Phase B 1.0.0; its prohibition/deferral of
+`referencesRepository` still applies to historical-profile extraction and validation.
+Opt in with `--enrich-references` (Python: `enrich_references=True`); prospective
+outputs declare Phase B **1.1.0**, not a new ontology version. Default API behavior
+remains historical; the default write destination is the separate
+`data/interim/coderepos/github_nodes_edges_refs_v1.json`. Writes to the frozen
+`github_nodes_edges.json` path are prohibited in either profile.
+
+Only `readme.deterministic_urls.github` values that are complete HTTP(S) GitHub
+repository roots and occur exactly in the supplied README text qualify. Existing
+root canonicalization applies after a strict root/host gate; query/fragment URLs,
+reserved GitHub routes, images, badges, actions, issues/PRs, attachments, arbitrary
+files, fenced/indented-code-only and absent occurrences abstain. Rejection may conservatively omit
+valid references; no proximity-based semantic inference is used.
+
+Emit `Repository referencesRepository Repository` (C-C27). Reuse curated targets
+by the existing exact repository lookup; otherwise reuse/create source-scoped N17
+Repository stubs and their existing exact URL Identifier/hasIdentifier representation.
+Do not canonicalize across source modules. Suppress self references and associations
+already covered by dependsOnRepository, forkedFrom, archivedAs, or an originating
+repository's Tool implementedBy edge. Aggregate by source/target, retaining exact raw
+URL, README line/column, SHA-pinned blob location, snapshot URL and version in
+`sourceDeclarations`; public primary evidence is the exact original URL.
+The prospective dependency validator must select the stub belonging to the source
+repository, rather than the first same-URL stub from any source.
+
+Scope and preservation authority:
+`docs/handoffs/STUDY2_POST_STEP10_REFERENCE_ENRICHMENT_V1.md`.
+
+
 **Study 2 — Knowledge-graph construction, deterministic layer (Module 3: Code Repository / GitHub)**
 
 **Purpose.** This document is the field-level contract between the GitHub Phase A consolidated corpus (`ciroh_github_corpus.json`, schema `1.1.0`) and the Study 2 ontology. For each structured field that Phase B processes deterministically, it specifies the ontology node or edge produced, stable inventory ID, identity rule, public evidence construction, and special guards. It is the implementation specification for `extract_github.py` and the manuscript-ready record of how the GitHub layer is populated.

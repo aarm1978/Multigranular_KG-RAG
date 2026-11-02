@@ -1,0 +1,143 @@
+{
+  "expectedNodesSha256": "1d3de8bd537b2ec2f04656419730017d0baac9453bd2dd4a98c4eec50b2998fd",
+  "expectedRetainedEdgesSha256": "de8097b0f1387e4af8d88f868628507b2f59bb5ddf135018b1c6da6b9ff454da",
+  "priorCommit": "10c12279ec87b4d19d24e97ac48218b12b95f071",
+  "priorGraphSha256": "6893cb9dfe2869378983e878b9411ed88367b0df946a5547c791bc0ff40baa7d",
+  "priorProspectiveHashes": {
+    "data/interim/coderepos/github_nodes_edges_refs_v1.json": "ea49b820903ae102068783c3a890632f648974f0d0e83a3688697ad618d8de3b",
+    "data/interim/datasets/hydroshare_nodes_edges_v016.json": "4fbfcb2548f51323e9bfc83a0ea9ffa76bfa8344f9c86c4550efce7373515576",
+    "data/interim/documents/ciroh_hub_nodes_edges_refs_v1.json": "6893cb9dfe2869378983e878b9411ed88367b0df946a5547c791bc0ff40baa7d",
+    "data/interim/evaluation/hydroshare_github_deterministic_refs_v1.json": "57e60ab935fe1041fc80e9aca87feee024a9c28163b00776bf20f90a0bb3154c",
+    "data/interim/evaluation/hydroshare_github_hub_deterministic_refs_v1.json": "2055da7bdc870e298c460233bd1b3ab87c3aaf76fb73e33abe506ea257cf0043",
+    "data/interim/evaluation/hydroshare_github_hub_publications_deterministic_refs_v1.json": "5e2d5265c90d09c0f2735a18440e9d04369d34ecdd2cba761e1950b504e6548d",
+    "data/interim/papers/publication_nodes_edges.json": "675049dae5c3dfed6f492ad0aa79e27fc1a9b37d0ecbc13ab3cf1a69cdb8efaf"
+  },
+  "removedEdges": [
+    {
+      "attributes": {
+        "sourceDeclarations": [
+          {
+            "anchorText": "hub.ciroh.org",
+            "evidenceText": "- **Centralized documentation:** Use CIROH Hub ([hub.ciroh.org](https://hub.ciroh.org)) as a central location for documenting procedures, best practices, and resource usage guidelines for linked accounts.",
+            "linkId": "hub:link:3d01bb416f8f10bb1c54:0005",
+            "pagePath": "docs/services/cloudservices/aws/documentation/aws-best-practice/index.mdx",
+            "pageUrl": "https://hub.ciroh.org/docs/services/cloudservices/aws/documentation/aws-best-practice/",
+            "path": null,
+            "rawTarget": "https://hub.ciroh.org",
+            "resolvedUrl": "https://hub.ciroh.org",
+            "sourceKind": "link",
+            "sourceLine": 66,
+            "sourceOrdinal": 5,
+            "sourcePath": "links[ordinal=5]",
+            "version": "a534100caa39d9a340eaf3de828e75e79dd40b8796fe1a5c07aaa7ed3cee912f"
+          }
+        ],
+        "targetUrl": "https://hub.ciroh.org/"
+      },
+      "evidence": {
+        "evidenceText": "- **Centralized documentation:** Use CIROH Hub ([hub.ciroh.org](https://hub.ciroh.org)) as a central location for documenting procedures, best practices, and resource usage guidelines for linked accounts.",
+        "extractionMethod": "deterministic",
+        "sourceArtifact": "https://hub.ciroh.org/docs/services/cloudservices/aws/documentation/aws-best-practice/",
+        "sourceLocation": "https://hub.ciroh.org/docs/services/cloudservices/aws/documentation/aws-best-practice/",
+        "version": "a534100caa39d9a340eaf3de828e75e79dd40b8796fe1a5c07aaa7ed3cee912f"
+      },
+      "id": "hub:edge:references:3566706144e457a30c03",
+      "internalLineage": {
+        "corpusPath": "docs/services/cloudservices/aws/documentation/aws-best-practice/index.mdx",
+        "phaseAField": "links[ordinal=5]",
+        "phaseAVersion": "1.0.2",
+        "sourceLine": 66,
+        "sourceOrdinal": 5,
+        "sourcePath": "docs/services/cloudservices/aws/documentation/aws-best-practice/index.mdx"
+      },
+      "inventoryId": "C-DC22",
+      "relation": "references",
+      "source": "hub:page:3d01bb416f8f10bb1c54",
+      "target": "hub:page:daf253320e24a185271e"
+    },
+    {
+      "attributes": {
+        "sourceDeclarations": [
+          {
+            "anchorText": "hub.ciroh.org",
+            "evidenceText": "1. Visit [hub.ciroh.org](https://hub.ciroh.org) and navigate to the page you wish to modify.",
+            "linkId": "hub:link:899853688e65e1e9555d:0001",
+            "pagePath": "docs/contribute/repository.mdx",
+            "pageUrl": "https://hub.ciroh.org/docs/contribute/repository",
+            "path": null,
+            "rawTarget": "https://hub.ciroh.org",
+            "resolvedUrl": "https://hub.ciroh.org",
+            "sourceKind": "link",
+            "sourceLine": 10,
+            "sourceOrdinal": 1,
+            "sourcePath": "links[ordinal=1]",
+            "version": "03c9c943b12b2193d0c04ba1468f060543396db44a7f5ab5d26fc5285d8f0d8d"
+          }
+        ],
+        "targetUrl": "https://hub.ciroh.org/"
+      },
+      "evidence": {
+        "evidenceText": "1. Visit [hub.ciroh.org](https://hub.ciroh.org) and navigate to the page you wish to modify.",
+        "extractionMethod": "deterministic",
+        "sourceArtifact": "https://hub.ciroh.org/docs/contribute/repository",
+        "sourceLocation": "https://hub.ciroh.org/docs/contribute/repository",
+        "version": "03c9c943b12b2193d0c04ba1468f060543396db44a7f5ab5d26fc5285d8f0d8d"
+      },
+      "id": "hub:edge:references:4c0c5369a1eb417ded19",
+      "internalLineage": {
+        "corpusPath": "docs/contribute/repository.mdx",
+        "phaseAField": "links[ordinal=1]",
+        "phaseAVersion": "1.0.2",
+        "sourceLine": 10,
+        "sourceOrdinal": 1,
+        "sourcePath": "docs/contribute/repository.mdx"
+      },
+      "inventoryId": "C-DC22",
+      "relation": "references",
+      "source": "hub:page:899853688e65e1e9555d",
+      "target": "hub:page:daf253320e24a185271e"
+    },
+    {
+      "attributes": {
+        "sourceDeclarations": [
+          {
+            "anchorText": "CIROH Hub",
+            "evidenceText": "- CIROH Web Sites - Downloadable executables, model instances, installers, documentation, etc can be shared via [CIROH Hub](https://hub.ciroh.org)",
+            "linkId": "hub:link:f721d433673fcb922897:0002",
+            "pagePath": "docs/policies/DataAndCodeSharingPolicy/Recommendations.mdx",
+            "pageUrl": "https://hub.ciroh.org/docs/policies/DataAndCodeSharingPolicy/Recommendations",
+            "path": null,
+            "rawTarget": "https://hub.ciroh.org",
+            "resolvedUrl": "https://hub.ciroh.org",
+            "sourceKind": "link",
+            "sourceLine": 95,
+            "sourceOrdinal": 2,
+            "sourcePath": "links[ordinal=2]",
+            "version": "3e47c1abd800231e041ef1a1a2a9cad0dfe0c23e33663044cc0a1d2466c75ad8"
+          }
+        ],
+        "targetUrl": "https://hub.ciroh.org/"
+      },
+      "evidence": {
+        "evidenceText": "- CIROH Web Sites - Downloadable executables, model instances, installers, documentation, etc can be shared via [CIROH Hub](https://hub.ciroh.org)",
+        "extractionMethod": "deterministic",
+        "sourceArtifact": "https://hub.ciroh.org/docs/policies/DataAndCodeSharingPolicy/Recommendations",
+        "sourceLocation": "https://hub.ciroh.org/docs/policies/DataAndCodeSharingPolicy/Recommendations",
+        "version": "3e47c1abd800231e041ef1a1a2a9cad0dfe0c23e33663044cc0a1d2466c75ad8"
+      },
+      "id": "hub:edge:references:a5b0e2533cd2656f43ff",
+      "internalLineage": {
+        "corpusPath": "docs/policies/DataAndCodeSharingPolicy/Recommendations.mdx",
+        "phaseAField": "links[ordinal=2]",
+        "phaseAVersion": "1.0.2",
+        "sourceLine": 95,
+        "sourceOrdinal": 2,
+        "sourcePath": "docs/policies/DataAndCodeSharingPolicy/Recommendations.mdx"
+      },
+      "inventoryId": "C-DC22",
+      "relation": "references",
+      "source": "hub:page:f721d433673fcb922897",
+      "target": "hub:page:daf253320e24a185271e"
+    }
+  ]
+}

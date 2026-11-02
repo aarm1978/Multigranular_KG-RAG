@@ -1,0 +1,126 @@
+{
+  "acceptedRuntimeCommit": "285eee025376628ce323461f7079d6e1dcd82f49",
+  "approvalBindingVerification": "exact resolved designated runtimeRoot checked locally; machine-specific root is not copied here",
+  "approvalFiles": [
+    {
+      "path": "var/scierc_external_anchor/approvals/single_dev_smoke_v0.1.0/runtime_acceptance.json",
+      "sha256": "043c59afd8b6dd8808d99ab3802948ef5aa87c066673a419d901b3684fbbe93f",
+      "sizeBytes": 1164
+    },
+    {
+      "path": "var/scierc_external_anchor/approvals/single_dev_smoke_v0.1.0/live_authorization.json",
+      "sha256": "d84c5e2158a42d88951851b421e30a2d82e95f84a3d1d42965225d1928067c47",
+      "sizeBytes": 1241
+    }
+  ],
+  "approvalRecordIDs": [
+    "researcher-scierc-dev-line1-runtime-acceptance-v0.1.0",
+    "researcher-scierc-dev-line1-live-authorization-v0.1.0"
+  ],
+  "artifacts": [
+    {
+      "path": "var/scierc_external_anchor/single_dev_smoke_v0.1.0/dispatch_started.json",
+      "sha256": "b7d133021b3ae636e5ab3d360c98fda49055d251124b0a80f8a923617f64f22e",
+      "sizeBytes": 331
+    },
+    {
+      "path": "var/scierc_external_anchor/single_dev_smoke_v0.1.0/identity.json",
+      "sha256": "774ab217158e5af29303ea87bfa710655834e2d2f44cbb95f139d7f4e691980e",
+      "sizeBytes": 4784
+    },
+    {
+      "path": "var/scierc_external_anchor/single_dev_smoke_v0.1.0/model_output_part_000.bin",
+      "sha256": "e3deec1eab64d01ced31fd626a0429d9581a344491263504a11170f537f15687",
+      "sizeBytes": 5499
+    },
+    {
+      "path": "var/scierc_external_anchor/single_dev_smoke_v0.1.0/provider_request.json",
+      "sha256": "aff25959d545279da589268a9f4ce87c0aee9df0b83f60664ea92df02120dcc5",
+      "sizeBytes": 9741
+    },
+    {
+      "path": "var/scierc_external_anchor/single_dev_smoke_v0.1.0/provider_response.bin",
+      "sha256": "3b5f4c0e721435e8ab6ce11892b4db45a4f341bd21a1a6c74a655f87e0ab7f1f",
+      "sizeBytes": 46563
+    },
+    {
+      "path": "var/scierc_external_anchor/single_dev_smoke_v0.1.0/provider_response.json",
+      "sha256": "2e100992d05816587b3678d16c2718a4c75637f5626d1e3f7d949f5aa3fd9557",
+      "sizeBytes": 44100
+    },
+    {
+      "path": "var/scierc_external_anchor/single_dev_smoke_v0.1.0/raw_model_output.bin",
+      "sha256": "e3deec1eab64d01ced31fd626a0429d9581a344491263504a11170f537f15687",
+      "sizeBytes": 5499
+    },
+    {
+      "path": "var/scierc_external_anchor/single_dev_smoke_v0.1.0/terminal.json",
+      "sha256": "92d16707867982b9f219f5f05196c82bf26d4339e07ad6ad674ba71056440861",
+      "sizeBytes": 800
+    },
+    {
+      "path": "var/scierc_external_anchor/single_dev_smoke_v0.1.0/validated_prediction.json",
+      "sha256": "e3deec1eab64d01ced31fd626a0429d9581a344491263504a11170f537f15687",
+      "sizeBytes": 5499
+    }
+  ],
+  "attemptLimits": "One dispatch marker and response in this namespace; not proof of global account activity or external service internal attempts. Provider request ID is recorded only in terminal metadata; no independent HTTP-header artifact exists. Monotonic end value is not stored; UTC duration corroborates recorded elapsed time, not independent monotonic recomputation.",
+  "bindings": {
+    "bodySha256": "aff25959d545279da589268a9f4ce87c0aee9df0b83f60664ea92df02120dcc5",
+    "planSha256": "905f99e9813074ccfb6b89607b436d0947deb3aa2156578dab18f267f19e631b",
+    "runtimeSha256": "87c0050932bb1c256671ba481e5efa80d07e9f04b0c5bae1c06c4e35e71d5251"
+  },
+  "documentID": "ICCV_2003_158_abs",
+  "locallyRecordedDispatchAttempts": 1,
+  "locallyRecordedProviderResponses": 1,
+  "newProviderCalls": 0,
+  "officialTestAuthorized": false,
+  "planFile": {
+    "path": "data/curation/papers/m2/scierc_step9_preflight/scierc_smoke_plan_v0.1.0.json",
+    "sha256": "8292703209554d1a2e5694646c947e290865721e4ba67b9f82d838a51274be21",
+    "sizeBytes": 2613
+  },
+  "serviceTier": "default",
+  "terminal": {
+    "automaticRedispatch": false,
+    "completedAt": "2026-10-05T22:38:10.635963Z",
+    "delivery": "http_response_received",
+    "elapsedMilliseconds": 93691.190542,
+    "httpStatus": 200,
+    "providerCompletedAt": 1791239890,
+    "providerCreatedAt": 1791239798,
+    "providerRequestID": "req_ed582a1371a8438096ae10edf973eb8a",
+    "requestID": "scierc-dev-smoke-aff25959d545279da589268a9f4ce87c0aee9df0b83f60664ea92df02120dcc5",
+    "requestedModel": "gpt-5.6-sol",
+    "responseID": "resp_0ff9d459ec662351016ac426761bd487d2ac9f01f099e5cca6",
+    "returnedModel": "gpt-5.6-sol",
+    "startedAt": "2026-10-05T22:36:36.944026Z",
+    "terminalStatus": "completed_valid",
+    "timeoutSeconds": 180,
+    "usage": {
+      "input_tokens": 2116,
+      "input_tokens_details": {
+        "cache_write_tokens": 2113,
+        "cached_tokens": 0
+      },
+      "output_tokens": 5290,
+      "output_tokens_details": {
+        "reasoning_tokens": 3744
+      },
+      "total_tokens": 7406
+    }
+  },
+  "verification": {
+    "approvalsAndStoredIdentity": true,
+    "authenticBytesUnchanged": true,
+    "benchmarkMetricsComputed": false,
+    "exactRequestParity": true,
+    "goldCompared": false,
+    "planAndRuntimeIdentity": true,
+    "providerObjectAndModelOutputParity": true,
+    "structuralValidation": "valid",
+    "terminalHashMatchesResearcherUpload": true,
+    "timestampOrderAndElapsedConsistency": true
+  },
+  "version": "0.1.0"
+}

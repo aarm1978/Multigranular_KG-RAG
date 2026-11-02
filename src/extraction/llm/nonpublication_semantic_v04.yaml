@@ -1,0 +1,28 @@
+version: study2-source-local-semantics/0.4.0
+baseOntologySha256: 47f035081d4e883146a479130c1f4c4751f0c40358fd1a8d154b43b36e34371e
+# Prospective, source-family-only signature amendment; frozen v0.1.6 is unchanged.
+rangeExtensions:
+  C-C15: DatasetMention
+  C-DC25: DatasetMention
+families:
+  hydroshare:
+    entities: [A-DOM04, A-D12, A-DOM02, A-DOM03a, A-DOM03b, A-DOM03c, A-DOM03d, A-DOM03e, A-C11, A-C01, A-DOM05, A-DOM07a, A-DOM07b, A-DOM07c, A-DOM07d, A-DOM07e, A-DOM07f, A-DOM08, A-DOM11, A-DOM12, A-P01, A-D01]
+    relations: [C-D16, C-D17, C-D18, C-D24, C-D25, C-D26, C-D22, D-17, C-D15, C-D23, C-D19, C-D14, D-22]
+    genericOccurrences: [A-DOM08, A-DOM11, A-DOM12]
+  github:
+    entities: [A-C07, A-DOM02, A-DOM03a, A-DOM03b, A-DOM03c, A-DOM03d, A-DOM03e, A-D01, A-P25, A-C11, A-C08, A-DOM13, A-C10, A-P13, A-DOM04, A-DOM12, A-DOM05, A-DOM11, A-P01, A-C01]
+    relations: [C-C07, C-C11, C-C22, D-22, C-C21, C-C23, C-C15, C-C10, C-C08, C-C20, C-C09, C-C16, C-C12, C-C24, C-C25, C-C26, C-C17, C-C19, D-17]
+    genericOccurrences: [A-DOM11]
+  ciroh_hub:
+    entities: [A-DOM02, A-DOM03a, A-DOM03b, A-DOM03c, A-DOM03d, A-DOM03e, A-D01, A-P25, A-P13, A-C01, A-DC05, A-DC06, A-C11, A-DC08, A-DOM12, A-DOM05, A-DOM07a, A-DOM07b, A-DOM07c, A-DOM07d, A-DOM07e, A-DOM07f, A-DOM04, A-DOM11, A-DOM13, A-P01]
+    relations: [C-DC17, C-DC19, C-DC07, C-DC16, C-DC27, C-DC28, D-22, C-DC20, C-DC10, C-DC09, C-DC12, C-DC11, C-DC08, C-DC23, C-DC24, C-DC25, C-DC26, D-23]
+    genericOccurrences: [A-DOM04, A-DOM11, A-DOM13]
+exclusions:
+  abstract: Concrete subtype evidence is mandatory; never author abstract classes.
+  deterministic: Keep structural metadata, identifiers, agents, membership, files, licenses, hierarchy and links in the native backbone.
+  service: DataService activation remains excluded; heuristic service candidates are not verified evidence.
+  generic: No blanket D-26 range activation; only enumerated occurrence targets with explicit source loci are active.
+  method: GitHub Method implementation remains a positive unresolved assertion, not a fabricated Publication discourse endpoint.
+  code: Full documentary context is retained; code execution, AST inference and code-only semantic claims remain excluded.
+  hub_parent: Examples and Parameters retain independently supported Procedure/Step attachments.
+  alignment: No cross-source equivalence or consolidation; Step 14 remains separate.

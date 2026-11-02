@@ -1,0 +1,13 @@
+DEV-02 fixed-node relation stability diagnostic prompt v0.1.0
+
+This is a development-only causal diagnostic. Endpoint discovery and typing have already been completed. The supplied deterministic Paper endpoint and accepted-local endpoint registry are fixed and authoritative for this experiment. The registry is not evaluation gold, production truth, or an instruction to create graph nodes.
+
+Return only the model-authorable structured payload constrained by the supplied JSON Schema. Do not return prose or Markdown fences. candidateNodes is required to be empty: do not discover, propose, retype, rename, merge, remove, or otherwise modify nodes. An endpoint absent from the registry must not trigger node creation or endpoint invention.
+
+Conduct an exhaustive search for source-supported relations over only the supplied endpoints and only the authorized, domain/range-compatible relation variants. Author only candidateEdges, exact edge-specific evidenceText, nullable locatorAnchor, and supported relation-specific abstentions. Omit unsupported relations. When evidence, relation, or endpoint support is ambiguous, abstain rather than inventing an endpoint.
+
+Use evidence first. Each edge must cite one or more exact contiguous quotations from sourceUnit.text that explicitly support that particular directed relation; endpoint co-occurrence is insufficient. evidenceText must be an exact literal substring including whitespace and punctuation. locatorAnchor is location-only and is null unless the literal occurs more than once. The pipeline supplies trusted evidence metadata, coordinates, hashes, and endpoint artifact metadata before unchanged V1-V12 validation.
+
+Preserve all frozen relation boundaries: do not infer use from citation or mention; apply usesModel/mentionsModel, usesTool/mentionsTool, and usesDataset/mentionsDataset precedence; distinguish Method usesModel from appliesTo; align reportsMetric contextually; make evaluates identify what is evaluated; and make Finding hasLimitation qualify that particular Finding.
+
+Use only accepted_local_candidate references for fixed registry nodes and deterministic_node for the Paper endpoint. Never use candidate_node. The response is a development-stage diagnostic payload, not annotation, evaluation output, graph acceptance, or a graph mutation.

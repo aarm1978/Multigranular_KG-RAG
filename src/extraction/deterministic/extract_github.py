@@ -24,7 +24,8 @@ from packaging.utils import canonicalize_name
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_INPUT = PROJECT_ROOT / "data/interim/coderepos/ciroh_github_corpus.json"
-DEFAULT_OUTPUT = PROJECT_ROOT / "data/interim/coderepos/github_nodes_edges.json"
+HISTORICAL_OUTPUT = PROJECT_ROOT / "data/interim/coderepos/github_nodes_edges.json"
+DEFAULT_OUTPUT = PROJECT_ROOT / "data/interim/coderepos/github_nodes_edges_refs_v1.json"
 SUPPORTED_SOURCE_SCHEMAS = frozenset({"1.1.0"})
 OUTPUT_SCHEMA_VERSION = "1.0.0"
 PHASE_B_VERSION = "1.0.0"
@@ -3246,7 +3247,7 @@ def _expected_package_dependency_id(repo: Mapping[str, Any], dependency: Mapping
     return f"github:dependency:{repo['repo_id']}:{stable_hash(f'{ecosystem}|{canonical_name}')}"
 
 
-def validate_output(output: JsonObject, corpus: JsonObject) -> list[str]:
+def validate_output(output: JsonObject, corpus: JsonObject, enrich_references: bool = False) -> list[str]:
     """Validate structural, semantic, provenance, coverage, and count requirements."""
     issues: list[str] = []
     try:
@@ -3270,7 +3271,7 @@ def validate_output(output: JsonObject, corpus: JsonObject) -> list[str]:
         issues.append(f"output top-level keys differ: {sorted(set(output) ^ expected_top)}")
     if output.get("schema_version") != OUTPUT_SCHEMA_VERSION:
         issues.append("unsupported output schema version")
-    if output.get("phase_b_version") != PHASE_B_VERSION:
+    if output.get("phase_b_version") != ("1.1.0" if enrich_references else PHASE_B_VERSION):
         issues.append("unexpected phase_b_version")
     if output.get("source_schema_version") != corpus.get("schema_version"):
         issues.append("source_schema_version does not match input")
@@ -3319,6 +3320,8 @@ def validate_output(output: JsonObject, corpus: JsonObject) -> list[str]:
         "referencesDataset": {"D-05"},
         "forkedFrom": {"C-C14"},
     }
+    if enrich_references:
+        allowed_relation_ids["referencesRepository"] = {"C-C27"}
     license_semantic_groups: dict[tuple[Any, str, str], list[str]] = defaultdict(list)
     malformed_license_markers = ("{'text':", "{'file':", '{"text":', '{"file":')
     for node in nodes:
@@ -3386,8 +3389,10 @@ def validate_output(output: JsonObject, corpus: JsonObject) -> list[str]:
         _validate_set_like_arrays(edge, label, issues)
     if any(edge.get("relation") == "dependsOnRepository" and edge.get("source") == edge.get("target") for edge in edges):
         issues.append("dependsOnRepository self-loop detected")
-    if any(edge.get("relation") == "referencesRepository" for edge in edges):
+    if not enrich_references and any(edge.get("relation") == "referencesRepository" for edge in edges):
         issues.append("README or another source emitted undeclared referencesRepository")
+    if enrich_references:
+        issues.extend(validate_readme_reference_evidence(output, corpus))
     expected_repo_ids = {_expected_repo_node_id(repo) for repo in corpus["repos"]}
     actual_curated_repo_ids = {
         node["id"]
@@ -3616,6 +3621,7 @@ def validate_output(output: JsonObject, corpus: JsonObject) -> list[str]:
                     and (
                         (
                             node["curationStatus"] == REFERENCED
+                            and (not enrich_references or node["attributes"].get("sourceRepoId") == repo["repo_id"])
                             and node["canonicalKey"].casefold() == normalized_target.casefold()
                         )
                         or (
@@ -3731,14 +3737,147 @@ class OutputValidationError(ValueError):
         super().__init__("Phase B output validation failed:\n- " + "\n- ".join(self.issues))
 
 
-def extract_corpus(corpus: JsonObject) -> JsonObject:
+def exact_readme_repository(url: str) -> str | None:
+    """Gate root URLs conservatively before applying the existing canonicalizer."""
+    if not re.fullmatch(r"https?://(?:www\.)?github\.com/[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+/?", url, re.I):
+        return None
+    normalized = normalize_github_repo_url(url)
+    if not normalized:
+        return None
+    owner, name = urlparse(normalized).path.strip("/").split("/")
+    if owner.casefold() in {"about", "contact", "enterprise", "events", "new", "pricing", "search", "site", "users", "user-attachments", "orgs", "organizations", "settings", "features", "topics", "collections", "marketplace", "sponsors", "login", "apps"}:
+        return None
+    if name.casefold().endswith(IMAGE_SUFFIXES) or name in {".", ".."}:
+        return None
+    return normalized
+
+
+def readme_url_declarations(context: RepoContext, url: str) -> list[JsonObject]:
+    """Bind exact URL occurrences to SHA-pinned README lines; abstain on images/code."""
+    readme = context.repo["readme"]
+    declarations = []
+    fenced = False
+    in_comment = False
+    for line_number, line in enumerate(str(readme.get("text") or "").splitlines(), 1):
+        if "<!--" in line or in_comment:
+            in_comment = "-->" not in line
+            continue
+        if re.match(r"^\s*(```|~~~)", line):
+            fenced = not fenced
+            continue
+        if fenced or line.startswith(("    ", "\t")) or "<!--" in line or re.search(r"!\[|<img\b|badge", line, re.I):
+            continue
+        for match in re.finditer(r"(?<![A-Za-z0-9_/:?=&%.-])" + re.escape(url) + r'(?=$|[\s)<>\]"\'])', line):
+            declarations.append({
+                "rawTarget": url, "sourceLine": line_number,
+                "sourceColumn": match.start() + 1, "evidenceText": url,
+                "sourceLocation": context.file_evidence(url, str(readme["source_path"])).source_location,
+                "sourceArtifact": context.snapshot_url, "version": context.sha,
+            })
+    return declarations
+
+
+def enrich_readme_references(contexts: Sequence[RepoContext], builder: GraphBuilder) -> None:
+    """Emit C-C27 only for exact README roots not covered by approved stronger roles."""
+    for context in contexts:
+        readme = context.repo["readme"]
+        if not readme["present"] or not readme["source_path"]:
+            continue
+        groups: dict[str, list[JsonObject]] = defaultdict(list)
+        for url in sorted(set(readme["deterministic_urls"]["github"])):
+            normalized = exact_readme_repository(url)
+            declarations = readme_url_declarations(context, url) if normalized else []
+            reason = None
+            if not normalized:
+                reason = "not_unambiguous_repository_root"
+            elif github_repo_key(normalized) == github_repo_key(context.html_url):
+                reason = "self_reference"
+            elif not declarations:
+                reason = "no_exact_nonbadge_prose_occurrence"
+            if reason:
+                record_skipped(builder, context, readme["source_path"], url, "reference_enrichment_" + reason)
+                continue
+            groups[normalized.casefold()].extend(declarations)
+        for normalized, declarations in sorted(groups.items()):
+            declarations = sorted_unique(declarations)
+            existing = resolve_repository_target(builder, normalized) or builder.external_repo_cache.get((context.repo_id, normalized))
+            tool_ids = {str(record["toolId"]) for record in context.tool_records}
+            stronger = existing and any(
+                edge.target == existing and (
+                    (edge.source == context.repo_node_id and edge.relation in {"dependsOnRepository", "forkedFrom", "archivedAs"})
+                    or (edge.source in tool_ids and edge.relation == "implementedBy")
+                ) for edge in builder.edges.values()
+            )
+            if stronger:
+                record_skipped(builder, context, readme["source_path"], normalized, "reference_enrichment_stronger_relation")
+                continue
+            primary = declarations[0]
+            evidence = context.file_evidence(primary["rawTarget"], str(readme["source_path"]))
+            lineage = context.lineage("readme.deterministic_urls.github", str(readme["source_path"]))
+            target = resolve_or_stub_repository(context, builder, primary["rawTarget"], evidence, lineage)
+            builder.add_edge("referencesRepository", "C-C27", context.repo_node_id, target,
+                             {"sourceType": "readme_url", "sourceDeclarations": declarations}, evidence, lineage)
+        # Replace only the now-operative historical generic-reference deferral.
+        builder.reports["deferred"] = {
+            key: record for key, record in builder.reports["deferred"].items()
+            if not (record.get("repoId") == context.repo_id and record.get("reason") == "readme_github_url_semantics_unknown")
+        }
+
+
+def validate_readme_reference_evidence(output: JsonObject, corpus: JsonObject) -> list[str]:
+    """Reject prospective references with wrong identity, stronger roles, or unbound evidence."""
+    issues = []
+    nodes = {node["id"]: node for node in output["nodes"]}
+    contexts = {f"github:repo:{repo['repo_id']}": RepoContext.from_repo(repo, corpus["schema_version"]) for repo in corpus["repos"]}
+    curated = {github_repo_key(context.html_url): node_id for node_id, context in contexts.items()}
+    for edge in output["edges"]:
+        if edge["relation"] != "referencesRepository":
+            continue
+        context = contexts.get(edge["source"])
+        target = nodes.get(edge["target"], {})
+        label = f"{edge['id']}: invalid prospective repository reference"
+        if context is None or target.get("class") != "Repository" or edge["source"] == edge["target"]:
+            issues.append(label)
+            continue
+        key = github_repo_key(target.get("attributes", {}).get("htmlUrl"))
+        if key in curated and edge["target"] != curated[key]:
+            issues.append(label + " (curated target not reused)")
+        if target.get("curationStatus") == REFERENCED and target["attributes"].get("sourceRepoId") != context.repo_id:
+            issues.append(label + " (foreign source scope)")
+        declarations = sorted_unique([
+            declaration for url in context.repo["readme"]["deterministic_urls"]["github"]
+            if exact_readme_repository(url) and github_repo_key(url) == key
+            for declaration in readme_url_declarations(context, url)
+        ])
+        if not declarations or edge["attributes"].get("sourceDeclarations") != declarations:
+            issues.append(label + " (unbound declarations)")
+            continue
+        path = str(context.repo["readme"]["source_path"])
+        if edge["evidence"] != context.file_evidence(declarations[0]["rawTarget"], path).to_dict() or edge["internalLineage"] != context.lineage("readme.deterministic_urls.github", path).to_dict():
+            issues.append(label + " (evidence/provenance mismatch)")
+        for other in output["edges"]:
+            if other["target"] != edge["target"]:
+                continue
+            stronger = other["source"] == edge["source"] and other["relation"] in {"dependsOnRepository", "forkedFrom", "archivedAs"}
+            tool = nodes.get(other["source"], {})
+            stronger |= other["relation"] == "implementedBy" and tool.get("attributes", {}).get("sourceRepoId") == context.repo_id
+            if stronger:
+                issues.append(label + " (redundant stronger association)")
+    return issues
+
+
+def extract_corpus(corpus: JsonObject, enrich_references: bool = False) -> JsonObject:
     """Run the complete two-pass deterministic GitHub extraction."""
     validate_input_field_accounting(corpus)
     builder = GraphBuilder()
     contexts = build_contexts(corpus, builder)
     run_pass2(contexts, builder)
+    if enrich_references:
+        enrich_readme_references(contexts, builder)
     output = build_output(corpus, builder)
-    issues = validate_output(output, corpus)
+    if enrich_references:
+        output["phase_b_version"] = "1.1.0"
+    issues = validate_output(output, corpus, enrich_references)
     if issues:
         raise OutputValidationError(issues)
     return output
@@ -3746,6 +3885,10 @@ def extract_corpus(corpus: JsonObject) -> JsonObject:
 
 def write_output(output: JsonObject, output_path: Path) -> None:
     """Write byte-stable UTF-8 JSON with a final newline."""
+    if output_path.resolve() == HISTORICAL_OUTPUT.resolve():
+        raise ValueError("Frozen GitHub output must not be overwritten")
+    if output_path.resolve() == DEFAULT_OUTPUT.resolve() and output.get("phase_b_version") != "1.1.0":
+        raise ValueError("Prospective GitHub path requires --enrich-references")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         json.dumps(output, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
@@ -3800,6 +3943,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default=DEFAULT_OUTPUT,
         help="Phase B nodes/edges JSON path.",
     )
+    parser.add_argument("--enrich-references", action="store_true", help="Enable the prospective C-C27 contract; historical validation remains the default.")
     parser.add_argument("--report", action="store_true", help="Print the validation summary.")
     return parser.parse_args(argv)
 
@@ -3809,7 +3953,7 @@ def main() -> None:
     args = parse_args()
     try:
         corpus = load_corpus(args.input)
-        output = extract_corpus(corpus)
+        output = extract_corpus(corpus, enrich_references=args.enrich_references)
         write_output(output, args.output)
         if args.report:
             print_report(output)

@@ -1,0 +1,102 @@
+{
+  "aggregateReport": {
+    "path": "data/curation/papers/m2/scierc_overlap_sensitivity_v0.1.0/aggregate_report.json",
+    "sha256": "0acadfa35cb082518e5b3ecee1ce5fce3882292d38d0a95629ac95f8c2ee5195",
+    "sizeBytes": 1794
+  },
+  "allInputsUnchanged": true,
+  "goldSplit": {
+    "documentCount": 100,
+    "path": "processed_data/json/test.json",
+    "sha256": "7424da64e6214a90e39b09e47a74b3ded57dde86b4a7f848b3625d2c8ecdfbe1"
+  },
+  "inputs": [
+    {
+      "path": "docs/scierc_overlap_sensitivity_addendum_v0.1.0.md",
+      "sha256": "5c26c6f06f587320c55fc5e2bc837eddc475ce360865721a2ba3d471a0b29ef8",
+      "sizeBytes": 4007
+    },
+    {
+      "path": "data/curation/papers/m2/scierc_step9_postrun_v0.1.0/projection_manifest.json",
+      "sha256": "405b63f7d4f78f206bcfb6b6ed3572139b35e19d30c9117c0a3e652795fddbf6",
+      "sizeBytes": 132382
+    },
+    {
+      "path": "data/curation/papers/m2/scierc_step9_postrun_v0.1.0/metrics.json",
+      "sha256": "c4e80f73224137f54be653777817373b03b800dea05dfde9beab5844a2697a75",
+      "sizeBytes": 1936
+    },
+    {
+      "path": "var/scierc_external_anchor/postrun_projections_v0.1.0/A_record_isolation.jsonl",
+      "sha256": "0f51ad5e98bd8aebec4c3079f8320c2e0b66ebf843db9f23a448bcf987db2d94",
+      "sizeBytes": 408254
+    },
+    {
+      "path": "var/scierc_external_anchor/postrun_projections_v0.1.0/B_document_rejection.jsonl",
+      "sha256": "73627288166ce98bf937299a342ec35ddadb15817bc9a6f04c6aecad1620795f",
+      "sizeBytes": 402130
+    },
+    {
+      "path": "docs/evaluation_decisions.md",
+      "sha256": "b0f81b0d7d7454cbaa65646a5f749ee4fa501799630e4720f7a43688d107f1e5",
+      "sizeBytes": 25901
+    },
+    {
+      "path": "data/curation/papers/m2/step5_freeze/scierc_external_anchor_source_freeze_v0.1.0.json",
+      "sha256": "47869e3c724ed3eee35319dd860ac7b0e032deed0b1d4d5a27da52dac8018f7c",
+      "sizeBytes": 1612
+    },
+    {
+      "path": "data/curation/papers/m2/step5_freeze/scierc_external_anchor_adapter_freeze_v0.1.2.json",
+      "sha256": "23a1515d9aa54e60531ea73a095f3252bd428bd7d32cc20a7b9c0181d874b223",
+      "sizeBytes": 2328
+    },
+    {
+      "path": "src/extraction/llm/publications/scierc_external_anchor.py",
+      "sha256": "951e0a295cd19caf9d5d2d35b2fae4fea5b0a3e1a8977942eba2dee4b5b70f9e",
+      "sizeBytes": 25955
+    },
+    {
+      "path": "src/extraction/llm/publications/scierc_overlap_matching.py",
+      "sha256": "09a2ad27c87ab2bff8ca815710eb80a3a1b9164132e48db0eb772445ad5193c0",
+      "sizeBytes": 5656
+    },
+    {
+      "path": "src/extraction/llm/publications/scierc_overlap_analysis.py",
+      "sha256": "834d97f299c5e21b89b76c78fffffbe9d5e0bee5c7983260e24f634fecbb6f57",
+      "sizeBytes": 13972
+    }
+  ],
+  "reviewArtifacts": [
+    {
+      "path": "var/scierc_external_anchor/overlap_sensitivity_v0.1.0/addendum.md",
+      "sha256": "5c26c6f06f587320c55fc5e2bc837eddc475ce360865721a2ba3d471a0b29ef8",
+      "sizeBytes": 4007
+    },
+    {
+      "path": "var/scierc_external_anchor/overlap_sensitivity_v0.1.0/aggregate_report.json",
+      "sha256": "0acadfa35cb082518e5b3ecee1ce5fce3882292d38d0a95629ac95f8c2ee5195",
+      "sizeBytes": 1794
+    },
+    {
+      "path": "var/scierc_external_anchor/overlap_sensitivity_v0.1.0/package_manifest.json",
+      "sha256": "28df6bcdc3b99c1d59d4a80eddcd479c6d05099c4b47b3018ba07e4e2ee7df1b",
+      "sizeBytes": 2931
+    },
+    {
+      "path": "var/scierc_external_anchor/overlap_sensitivity_v0.1.0/review.jsonl",
+      "sha256": "497b01055774147f3b703900b258fbe6b925796cc1a810eddd46d5e5026f20d6",
+      "sizeBytes": 9650743
+    },
+    {
+      "path": "var/scierc_external_anchor/overlap_sensitivity_v0.1.0/review.md",
+      "sha256": "17744555b6c86d8df59a5f5474edb00c6ab74e06a82145ba75a280e138274d6c",
+      "sizeBytes": 5060638
+    },
+    {
+      "path": "var/scierc_external_anchor/overlap_sensitivity_v0.1.0/scierc_overlap_review_v0.1.0.zip",
+      "sha256": "c12e1f8c66c52bfa15afd4d82f1cfa55cd4c5e24da95e237e715ee5f774f133b",
+      "sizeBytes": 1513251
+    }
+  ]
+}

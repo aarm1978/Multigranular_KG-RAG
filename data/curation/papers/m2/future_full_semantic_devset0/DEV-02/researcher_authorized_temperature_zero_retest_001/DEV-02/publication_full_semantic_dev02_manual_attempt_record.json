@@ -1,0 +1,33 @@
+{
+  "recordSchemaVersion": "0.1.0",
+  "artifactRole": "manual_synchronous_temperature_zero_retest",
+  "developmentID": "DEV-02",
+  "attemptCount": 9,
+  "status": "configuration_rejected",
+  "semanticResponseProduced": false,
+  "executionMode": "synchronous",
+  "localReadTimeoutSeconds": 900,
+  "requestBodySha256": "91b520b73116ea7a4f50507477bdf27632700bbd1f767ef43c09cfc1ed09ea85",
+  "providerInputSha256": "2fdc86e178ea3990da967f40aa9b13532f8af2aae3f5f1c7e63d0b61b12d67bf",
+  "modelAuthorableSchemaSha256": "64a10f9371cdd9ad3616140f0548341a18ec9e128abb4f459bf02ef7fc356884",
+  "configuration": {
+    "model": "gpt-5.6-sol",
+    "reasoningEffort": "medium",
+    "temperature": 0,
+    "topPExplicitlySet": false,
+    "maxOutputTokens": 32768,
+    "store": false,
+    "background": false
+  },
+  "purpose": "temperature_zero_test_retest_replication",
+  "responseID": null,
+  "httpStatus": 400,
+  "providerError": {
+    "message": "Unsupported parameter: 'temperature' is not supported with this model.",
+    "type": "invalid_request_error",
+    "param": "temperature",
+    "code": null
+  },
+  "rawProviderErrorResponseSha256": "9864afd4a4ee02a5f994fabda7e2ca224cca42c4062b5e85ef0a005c97075494",
+  "researchDisposition": "temperature-zero experiment not executable with gpt-5.6-sol under the selected configuration"
+}

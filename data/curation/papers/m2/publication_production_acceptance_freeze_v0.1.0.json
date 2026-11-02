@@ -1,0 +1,37 @@
+{
+  "artifactType": "publication_production_acceptance_freeze_record",
+  "recordVersion": "0.1.0",
+  "status": "frozen",
+  "policy": {
+    "policyID": "publication-production-acceptance-policy",
+    "version": "0.1.0",
+    "path": "docs/publication_production_acceptance_policy_v0.1.md",
+    "sha256": "08d28eb925fbfa2cc21e9958e28578e8f9485c7f4c798fee80a7a3c4d8a9e9c0"
+  },
+  "acceptedImplementationCheckpoint": "daa867b3d6ba414e1ebf3b1b8b4391bb5b990585",
+  "implementation": {
+    "path": "src/extraction/llm/publications/production_acceptance.py",
+    "sha256": "53e8a0ba10abf751e878dca4f1f5c964dca84ac1927e220cac6925274431b395",
+    "controllerVersion": "publication-production-attempt-controller/0.1.0",
+    "projectionVersion": "publication-accepted-semantic-projection/0.1.0",
+    "sidecarVersion": "publication-unresolved-identity-sidecar/0.1.0"
+  },
+  "closureTests": [
+    {
+      "command": "PYTHONPATH=. pytest -q tests/test_publication_production_acceptance.py tests/test_publication_semantic_materializer.py tests/test_publication_v015_authority_bundle.py",
+      "result": "38 passed",
+      "scope": "Step 4 focused T1/T2 closure"
+    },
+    {
+      "command": "PYTHONPATH=. pytest -q tests/test_publication*.py",
+      "executionContext": "clean detached worktree at daa867b3d6ba414e1ebf3b1b8b4391bb5b990585",
+      "result": "baseline non-Step-4 failure observed: 1 failed, 13 passed with -x",
+      "knownFailure": "tests/test_publication_annotation_adjudication_guidelines.py::PublicationAnnotationGuidelineTests::test_readme_reports_freeze_without_execution_or_gold_claims",
+      "scope": "Publication workstream T3 probe; unchanged historical README expectation"
+    }
+  ],
+  "providerModelCalls": {
+    "occurred": false,
+    "statement": "This freeze implementation and its closure tests use only deterministic local code and fixtures; no provider or model call occurred."
+  }
+}

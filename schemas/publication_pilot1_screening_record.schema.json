@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w3id.org/ciroh/kg/schemas/publication-pilot1-screening-record-0.1.1.json",
+  "title": "Publication Pilot 1 human screening record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "screeningSchemaVersion", "screeningVersion", "sourceArtifactID", "paperID", "sourceUnitID",
+    "sourceUnitTextHash", "sectionID", "sectionRole", "sourceEligibility",
+    "screeningReviewerID", "screenedAt", "screeningStatus", "screeningRationale",
+    "likelyReportingFamilies", "likelySamplingStrata", "likelyExhaustiveEmptyTargetIDs",
+    "likelyRecurringDistinctions",
+    "expectedAssertionDensity", "expectedRelationDensity", "routingComplexity",
+    "distributedEvidenceLikely", "sectionContextUseful", "deterministicEndpointLikely", "sourceConversionStatus",
+    "screeningNotes"
+  ],
+  "properties": {
+    "screeningSchemaVersion": {"const": "0.1.1"},
+    "screeningVersion": {"const": "0.1.1"},
+    "sourceArtifactID": {"type": "string", "minLength": 1},
+    "paperID": {"type": "string", "minLength": 1},
+    "sourceUnitID": {"type": "string", "pattern": "^pub:.+:sec:[0-9]{4}:unit:[0-9]{4}$"},
+    "sourceUnitTextHash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sectionID": {"type": "string", "minLength": 1},
+    "sectionRole": {"type": "string", "minLength": 1},
+    "sourceEligibility": {"enum": ["eligible", "context_only", "excluded", "needs_review"]},
+    "screeningReviewerID": {"type": "string"},
+    "screenedAt": {"type": "string"},
+    "screeningStatus": {"enum": ["reviewed", "not_open_annotation_target", "blocked_needs_review"]},
+    "screeningRationale": {"type": "string"},
+    "likelyReportingFamilies": {"type": "array", "readOnly": true, "description": "Derived from routed blocking/monitored targets.", "uniqueItems": true, "items": {"$ref": "#/$defs/reportingFamily"}},
+    "likelySamplingStrata": {"type": "array", "readOnly": true, "description": "Derived from routed blocking/monitored targets.", "uniqueItems": true, "items": {"$ref": "#/$defs/samplingStratum"}},
+    "likelyExhaustiveEmptyTargetIDs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "likelyRecurringDistinctions": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/recurringDistinction"}},
+    "expectedAssertionDensity": {"$ref": "#/$defs/density"},
+    "expectedRelationDensity": {"$ref": "#/$defs/density"},
+    "routingComplexity": {"enum": ["low", "medium", "high", "not_applicable"]},
+    "distributedEvidenceLikely": {"type": "boolean"},
+    "sectionContextUseful": {"type": "boolean"},
+    "deterministicEndpointLikely": {"type": "boolean"},
+    "sourceConversionStatus": {"enum": ["canonical_markdown_available", "canonical_markdown_sanitized_forbidden_controls"]},
+    "screeningNotes": {"type": "string"}
+  },
+  "$defs": {
+    "density": {"enum": ["none", "low", "medium", "high", "not_applicable"]},
+    "reportingFamily": {"enum": [
+      "research_framing", "discourse_structure", "methods_and_experiments",
+      "models_algorithms_and_tools", "findings_conclusions_limitations_and_future_work",
+      "metrics_parameters_and_variables", "datasets_and_repositories", "concepts_and_geography",
+      "discourse_relations", "use_mention_reference_relations"
+    ]},
+    "samplingStratum": {"enum": [
+      "core_discourse_nodes", "scientific_entity_nodes", "core_discourse_relations",
+      "entity_role_and_study_context_relations", "measurement_context_relations"
+    ]},
+    "recurringDistinction": {"enum": [
+      "Model/Method/Algorithm/Tool", "Finding/Conclusion", "ResearchProblem/ResearchGoal",
+      "use/mention/reference", "EvaluationMetric/Parameter"
+    ]}
+  }
+}

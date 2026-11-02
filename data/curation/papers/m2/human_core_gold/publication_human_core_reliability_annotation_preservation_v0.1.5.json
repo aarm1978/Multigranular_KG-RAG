@@ -1,0 +1,15 @@
+{
+  "artifactType": "immutable_raw_independent_reliability_export",
+  "annotationSessionID": "HUMAN_CORE_N2_RELIABILITY_V015",
+  "annotatorID": "HUMAN_CORE_RELIABILITY_ANNOTATOR_2",
+  "export": {
+    "path": "data/curation/papers/m2/human_core_gold/publication_human_core_reliability_annotation_export_v0.1.5.json",
+    "sha256": "b7af00881cf97bffce4630352c6ceb0b32a5e46ef0caed67f15853219bae6e97",
+    "immutable": true
+  },
+  "submittedSourceUnitIDs": [
+    "pub:34:sec:0015:unit:0001",
+    "pub:79:sec:0004:unit:0001"
+  ],
+  "provenanceNote": "Both frozen units are submitted. pub:34 was audibly reopened after the surface hotfix to include non-exhaustive targets. The bound v0.1.5 guide retains one stale routed/scored-surface sentence, while the actual package/UI used the corrected eligible-surface plus v0.1.5 delta. This is documentation provenance only; the raw export remains unchanged."
+}

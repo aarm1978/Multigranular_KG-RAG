@@ -1,0 +1,304 @@
+{
+  "authorities": {
+    "annotationSchema": {
+      "path": "schemas/publication_pilot1_annotation_record.schema.json",
+      "sha256": "23eb32dacf473149554d3f93302719142015131077c04aa7766f0b358a7d8b7b",
+      "version": "0.1.2"
+    },
+    "expertGuide": {
+      "path": "docs/publication_human_core_expert_annotation_guide.md",
+      "sha256": "8fd6da3cb387986e73933218e08c04d69ed29b5600e1aa616b503bd3eacc3ae5",
+      "version": "1.0"
+    },
+    "interfaceVersion": "publication-pilot1-annotation-calibration/0.1.3",
+    "samplingAnalysis": {
+      "path": "data/curation/papers/m2/human_core_sampling_analysis/publication_human_core_sampling_analysis_v0.1.0.json",
+      "sha256": "a42a5526e39c4865ab7ee4bafd44fde0c0d1e2145da93553f101aa9f6a47968c"
+    }
+  },
+  "coverage": {
+    "distinctPaperCount": 5,
+    "routedScoredNodeTargetCount": 19,
+    "routedScoredRelationTargetCount": 16,
+    "samplingStrata": [
+      "core_discourse_nodes",
+      "core_discourse_relations",
+      "entity_role_and_study_context_relations",
+      "measurement_context_relations",
+      "scientific_entity_nodes"
+    ],
+    "samplingStratumCount": 5,
+    "uncoveredRoutedScoredNodeOperationalTargetIDs": [],
+    "uncoveredRoutedScoredRelationOperationalTargetIDs": []
+  },
+  "humanCoreSampleFreezeVersion": "1.0.0",
+  "inputArtifacts": {
+    "annotationSchema": {
+      "path": "schemas/publication_pilot1_annotation_record.schema.json",
+      "sha256": "23eb32dacf473149554d3f93302719142015131077c04aa7766f0b358a7d8b7b"
+    },
+    "coverageMatrix": {
+      "path": "data/curation/papers/pilot1/publication_pilot1_target_coverage_matrix.csv",
+      "sha256": "b67fabb4c7b03b2e4b578c29e932f0122372a2d62f93cb5b172d90d798c9d109"
+    },
+    "expertGuide": {
+      "path": "docs/publication_human_core_expert_annotation_guide.md",
+      "sha256": "8fd6da3cb387986e73933218e08c04d69ed29b5600e1aa616b503bd3eacc3ae5"
+    },
+    "samplingAnalysis": {
+      "path": "data/curation/papers/m2/human_core_sampling_analysis/publication_human_core_sampling_analysis_v0.1.0.json",
+      "sha256": "a42a5526e39c4865ab7ee4bafd44fde0c0d1e2145da93553f101aa9f6a47968c"
+    },
+    "sourceUnitInventory": {
+      "path": "data/curation/papers/pilot1/publication_pilot1_source_unit_inventory.jsonl",
+      "sha256": "7a3a4941e6c07deee96b19c7619e0b9c5000ad6fadf5bf17379e37229562b07e"
+    },
+    "targetFamilyMapping": {
+      "path": "data/curation/papers/pilot1/publication_pilot1_target_family_mapping.yaml",
+      "sha256": "fbf1da8f43174791a160106014975fd7084c18de5df2f14a5203368418f081fe"
+    },
+    "unitRouting": {
+      "path": "data/curation/papers/pilot1/publication_pilot1_unit_routing.jsonl",
+      "sha256": "66725306608139ccf3647ac7fd4a9fc150df67426498b6e3e7408320cb8c4a1f"
+    }
+  },
+  "package": {
+    "guide": "Publication Pilot 1 \u2014 Human Core Expert Annotation Guide v1.0",
+    "historicalCalibrationSeparation": "No CAL_A, CAL_B, or CORE_FEAS unit, session, export, or provenance is included or modified.",
+    "kind": "primary_researcher_human_core_annotation_package",
+    "modelBlind": true,
+    "stateNamespace": "human-core/primary-researcher"
+  },
+  "packageIdentity": "publication-human-core-gold-n5-primary-v1",
+  "reliabilitySubset": {
+    "independentAnnotationRequired": true,
+    "selectionRule": "maximize union routed scored node/relation target coverage; then node coverage; then relation coverage; then strata coverage; then lexicographically smallest sourceUnitID tuple",
+    "sourceUnitIDs": [
+      "pub:34:sec:0015:unit:0001",
+      "pub:79:sec:0004:unit:0001"
+    ]
+  },
+  "researcherDecision": {
+    "humanCoreAdequacyRule": "model_blind_selection + five_distinct_papers + five_of_five_strata + complete_routed_scored_target_coverage",
+    "legacyPilot1PerArtifactRepresentation": "superseded_for_this_distinct_human_core_component_only; retained unchanged for the historical Pilot 1 evaluation-sample design",
+    "notRepresentativeOfAllPrimaryPublications": true,
+    "sampleSize": 5,
+    "selectedBeforeSemanticInspection": true
+  },
+  "selectedUnits": [
+    {
+      "canonicalDocumentHash": "055a59f8b80c2ec088d376de2dc9558ea2dc28f217797dc7dd1e1f26e5df2b59",
+      "characterCount": 9147,
+      "endOffsetInDocument": 13275,
+      "observedDeterministicMetadata": [
+        "heading",
+        "html",
+        "metadata",
+        "prose",
+        "table"
+      ],
+      "paperID": "10",
+      "partition": "remaining_evaluation",
+      "routedScoredNodeOperationalTargetIDs": [
+        "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
+        "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+        "PUB-N-A-DOM04-VARIABLE",
+        "PUB-N-A-DOM08-NAMEDPLACE",
+        "PUB-N-A-DOM12-PARAMETER",
+        "PUB-N-A-P07-RESEARCHPROBLEM",
+        "PUB-N-A-P09-RESEARCHGOAL",
+        "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
+        "PUB-N-A-P26-DATADESCRIPTION"
+      ],
+      "routedScoredRelationOperationalTargetIDs": [
+        "PUB-R-C-P16-MENTIONSVARIABLE",
+        "PUB-R-C-P23-MENTIONSMODEL",
+        "PUB-R-C-P24-MENTIONSDATASET",
+        "PUB-R-C-P31-MENTIONSTOOL"
+      ],
+      "samplingStrata": [
+        "core_discourse_nodes",
+        "core_discourse_relations",
+        "entity_role_and_study_context_relations",
+        "scientific_entity_nodes"
+      ],
+      "sectionID": "pub:10:sec:0008",
+      "sourceArtifactID": "https://doi.org/10.1016/j.jhydrol.2017.11.036",
+      "sourceConversionStatus": "canonical_markdown_available",
+      "sourceUnitID": "pub:10:sec:0008:unit:0001",
+      "sourceUnitTextHash": "172cf6b426320cff997b9c3db0e485e017e20d1cc38a7b02d788a5b0a16829e5",
+      "startOffsetInDocument": 4128
+    },
+    {
+      "canonicalDocumentHash": "8cc50035edcda72777a100c8bb2a40498de0480a22f7c1b6929287d080479f43",
+      "characterCount": 1952,
+      "endOffsetInDocument": 11373,
+      "observedDeterministicMetadata": [
+        "caption",
+        "heading",
+        "metadata",
+        "prose"
+      ],
+      "paperID": "15",
+      "partition": "remaining_evaluation",
+      "routedScoredNodeOperationalTargetIDs": [
+        "PUB-N-A-DOM03D-MLMODEL",
+        "PUB-N-A-DOM04-VARIABLE",
+        "PUB-N-A-DOM12-PARAMETER",
+        "PUB-N-A-P13-METHOD"
+      ],
+      "routedScoredRelationOperationalTargetIDs": [
+        "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+        "PUB-R-C-P14-APPLIESTO",
+        "PUB-R-C-P16-MENTIONSVARIABLE",
+        "PUB-R-C-P27-HASPARAMETER"
+      ],
+      "samplingStrata": [
+        "core_discourse_nodes",
+        "core_discourse_relations",
+        "entity_role_and_study_context_relations",
+        "measurement_context_relations",
+        "scientific_entity_nodes"
+      ],
+      "sectionID": "pub:15:sec:0004",
+      "sourceArtifactID": "https://doi.org/10.1007/978-3-031-66428-1_13",
+      "sourceConversionStatus": "canonical_markdown_available",
+      "sourceUnitID": "pub:15:sec:0004:unit:0001",
+      "sourceUnitTextHash": "884d9663beffcff972dc821a7ce72c732b0415e0f654d85f60a4c4a1e85dbf07",
+      "startOffsetInDocument": 9421
+    },
+    {
+      "canonicalDocumentHash": "39f01a2f6055c46ee24efbb14d6212e55aa5d0ee98982420635962d6f92c807c",
+      "characterCount": 2705,
+      "endOffsetInDocument": 89564,
+      "observedDeterministicMetadata": [
+        "heading",
+        "prose"
+      ],
+      "paperID": "16",
+      "partition": "remaining_evaluation",
+      "routedScoredNodeOperationalTargetIDs": [
+        "PUB-N-A-P07-RESEARCHPROBLEM",
+        "PUB-N-A-P09-RESEARCHGOAL",
+        "PUB-N-A-P13-METHOD",
+        "PUB-N-A-P16-FINDING",
+        "PUB-N-A-P20-CONCLUSION",
+        "PUB-N-A-P21-CONTRIBUTION",
+        "PUB-N-A-P22-FUTUREWORK"
+      ],
+      "routedScoredRelationOperationalTargetIDs": [
+        "PUB-R-C-P06-RESOLVES"
+      ],
+      "samplingStrata": [
+        "core_discourse_nodes",
+        "core_discourse_relations",
+        "entity_role_and_study_context_relations",
+        "scientific_entity_nodes"
+      ],
+      "sectionID": "pub:16:sec:0033",
+      "sourceArtifactID": "https://doi.org/10.1080/02626667.2024.2355202",
+      "sourceConversionStatus": "canonical_markdown_available",
+      "sourceUnitID": "pub:16:sec:0033:unit:0001",
+      "sourceUnitTextHash": "8cefd95108487aeb3594d8c2d65e90f7c7f69c2a1a1211a00ff8aecc4a5b34d6",
+      "startOffsetInDocument": 86859
+    },
+    {
+      "canonicalDocumentHash": "0a3ec316639d150e74924967bf34253da9d803822bc9976b4657d5b93059821c",
+      "characterCount": 4065,
+      "endOffsetInDocument": 31499,
+      "observedDeterministicMetadata": [
+        "equation",
+        "heading",
+        "prose"
+      ],
+      "paperID": "34",
+      "partition": "reliability",
+      "routedScoredNodeOperationalTargetIDs": [
+        "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+        "PUB-N-A-DOM03D-MLMODEL",
+        "PUB-N-A-DOM04-VARIABLE",
+        "PUB-N-A-DOM07A-WATERSHED",
+        "PUB-N-A-DOM08-NAMEDPLACE",
+        "PUB-N-A-DOM11-EVALUATIONMETRIC",
+        "PUB-N-A-DOM12-PARAMETER",
+        "PUB-N-A-P13-METHOD",
+        "PUB-N-A-P16-FINDING",
+        "PUB-N-A-P19-LIMITATION",
+        "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
+        "PUB-N-A-P26-DATADESCRIPTION"
+      ],
+      "routedScoredRelationOperationalTargetIDs": [
+        "PUB-R-C-P07-PRODUCES",
+        "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+        "PUB-R-C-P16-MENTIONSVARIABLE",
+        "PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH",
+        "PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH",
+        "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
+        "PUB-R-C-P25-REPORTSMETRIC",
+        "PUB-R-C-P26-EVALUATES",
+        "PUB-R-C-P27-HASPARAMETER"
+      ],
+      "samplingStrata": [
+        "core_discourse_nodes",
+        "core_discourse_relations",
+        "entity_role_and_study_context_relations",
+        "measurement_context_relations",
+        "scientific_entity_nodes"
+      ],
+      "sectionID": "pub:34:sec:0015",
+      "sourceArtifactID": "https://doi.org/10.1029/2023wr035337",
+      "sourceConversionStatus": "canonical_markdown_available",
+      "sourceUnitID": "pub:34:sec:0015:unit:0001",
+      "sourceUnitTextHash": "8ca2a5e10a7d94bb5b6a0b7ceb4ceca36ed733922a37ac7e3d43f6ffc0b582bf",
+      "startOffsetInDocument": 27434
+    },
+    {
+      "canonicalDocumentHash": "106154cb68f883e13e4974e25b2bbfa4ac9f2d56997b7b1ba56c63a22794d78b",
+      "characterCount": 6617,
+      "endOffsetInDocument": 8768,
+      "observedDeterministicMetadata": [
+        "heading",
+        "prose"
+      ],
+      "paperID": "79",
+      "partition": "reliability",
+      "routedScoredNodeOperationalTargetIDs": [
+        "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
+        "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+        "PUB-N-A-DOM04-VARIABLE",
+        "PUB-N-A-DOM11-EVALUATIONMETRIC",
+        "PUB-N-A-DOM12-PARAMETER",
+        "PUB-N-A-P07-RESEARCHPROBLEM",
+        "PUB-N-A-P09-RESEARCHGOAL",
+        "PUB-N-A-P13-METHOD",
+        "PUB-N-A-P14-EXPERIMENT",
+        "PUB-N-A-P21-CONTRIBUTION",
+        "PUB-N-A-P26-DATADESCRIPTION"
+      ],
+      "routedScoredRelationOperationalTargetIDs": [
+        "PUB-R-C-P06-RESOLVES",
+        "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+        "PUB-R-C-P15-USESTOOL",
+        "PUB-R-C-P16-MENTIONSVARIABLE",
+        "PUB-R-C-P25-REPORTSMETRIC",
+        "PUB-R-C-P27-HASPARAMETER",
+        "PUB-R-C-P31-MENTIONSTOOL",
+        "PUB-R-C-P33-HASCODEREPOSITORY"
+      ],
+      "samplingStrata": [
+        "core_discourse_nodes",
+        "core_discourse_relations",
+        "entity_role_and_study_context_relations",
+        "measurement_context_relations",
+        "scientific_entity_nodes"
+      ],
+      "sectionID": "pub:79:sec:0004",
+      "sourceArtifactID": "https://doi.org/10.1111/1752-1688.12946",
+      "sourceConversionStatus": "canonical_markdown_available",
+      "sourceUnitID": "pub:79:sec:0004:unit:0001",
+      "sourceUnitTextHash": "3599ea744e6184a414f135b707eec0785deffd566d565e73166d95dddef505c8",
+      "startOffsetInDocument": 2151
+    }
+  ],
+  "status": "final_and_binding_for_human_core_gold_only"
+}

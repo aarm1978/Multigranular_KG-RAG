@@ -1,0 +1,1056 @@
+{
+  "id": "resp_0900e9da8694c691016a9ef3b12df487d2b32b7162d67e3d66",
+  "object": "response",
+  "created_at": 1788801969,
+  "status": "completed",
+  "background": false,
+  "billing": {
+    "payer": "developer"
+  },
+  "completed_at": 1788802010,
+  "error": null,
+  "frequency_penalty": 0.0,
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": 32768,
+  "max_tool_calls": null,
+  "model": "gpt-5.6-sol",
+  "moderation": null,
+  "output": [
+    {
+      "id": "rs_0900e9da8694c691016a9ef3b357a087d2a78dd08840e30a3e",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABqnvPa8uSKWNRrMNcbHkFZAOBAq_pZiwDI_zSwqyekdrfb4H7iWN96V8kMcIOypusLqRQyWZWftJ8Jl2h4m5lEcpVhnlH_qXp_dEUl4mWxrqsaqhD1ey5p6gQsbvFieqg8l4NePXhcGkajIVr86dC_7MVNQiBnPlY9nTQ3Y7VnbiGW2b4OaEJ3wiGgARKrsWtitCU7FUWhSO-TRJWAebIE9lEtJiONCwCxoaHspw5NAcIsj-uQ4gAVKek4Di_nf7uhyMYeylMDK520nRuVMPobJexpiWljDoH4SSHWY5Yb3uDmmHsF5wMeUDZrh6F90x69KNfjaq2i9Cx0FrgM3nRpO4N2cNRVXjsO_OUevehVKdJCxstDwQgGahKss32TjGn2oM9UzPq7_XJVbrvS0dptD5jtbaNfJ4uKM470Uv4duSFVbEICZ8m4J3rZTFPWAD21UkpaWejO_c06N6Mvop0dTk9rrKO0HfwPY4xZwC9QC0qrCOy4487PuFY46RaPfhtZurGJhJzS2nWoEdtEXrLtQv1j6_sgEMHCmzLTdxaKwHijsaOM6e2P6u8QDIU54Bl0GhFCPw6qtHp44WOW27N8PWj0rO0PW6opRNiT4welYxqY_NHxgH8LCPAtup2rY1GPzPRFWaNBo8Tmc7Pkrl_P5xH7bDTe5jzwplN7qv5WAZqiCQHYt2-lIS3CVQqcfhs8ABpdZVLazvToD3kB6v4GR3S3JaV3VVtkDHSbY611WQbIQ1elGNQoQ1QhVd9W3DvIf99YiE4n8Vhb5DfrC0rE0OtzSbXY5wsjCld6_v2SR3JltoVcijgm6QB08TnXRbc4Sl87W24e3zVIqg-SZI8OOov2mRr9LM4z7t6MHSICr95ti-zvE3HUOaA1esG3MKPUjFrqzJ5ofLacbDfCPclGbQFgy_TGYJCF1xixrjOv21lff3EOHcf2hem1Gqk-Ol6OR6rMURW8XNdnDA3Ujc4fD4DYCkrblCyprJ5RhB2zTtCaiNb3UJQVaBE4g_wZj1Z2C6W7hCL3jit7qrZuHgNMpq786U8w3BidhWoCY8XoGAwWXtnl2uHcNGh2SY6rGTLlNN_bQ5Y_NoAgp6Xm_Xglubnid4M5LsEPpSuWDhjkaTFppz7JPpuzi6v9J1vErckO3bIZsvmLj1uRbhUUvX-6hJsc-c_qfXuyGBJ0fDB62AP7oeDmgPketT7pyee0gIeWG9l0JHRZVVepwQFZltQDoxi4W29xByrmhwg9jEkMqowhWG6e_G7ARmgg8RmzlX1eHs-XrM8D0d3KCCTrzgUV20j2nN2OqSvsdG2GlyfI7GeM-HWY7eLeX-e1J7qe0-O7oWa8ghhcBxdxubKU4ONal09WxgTUNf1n_oXYU4KTEzXqFicV-_bqy49z202YhtFNXkSedJU4ZIwk2GXbah1QMMQODTsJIzfDkf_-FDlas_Kfc0LWWVVqgVDZ1hcojd0yEBfMObWwFAuRgcrFMYKrVR2CU597-xqzs3VXdV_pFeovpQidMM3tNUfkm81JZ5lw8e9RNVZ03ootLqa-NapSTnSG738EijWpugcw5lpIaBmOt-Sd2H1Xts2SWAagWEjsJU_e9LR4bpggQGGJoAdQucBMXK0m5Z85Uc-tHDvt1MVjK8em75Uc1CKKV_RQzmXqAnkrzvWulC0rs6RfcAoJZ-3mlcDV6ra2ObiMtCfhD-rPD20XOUnAgRcB_C_GDDcBstrmJ3_cW6Z3asOLy8vEj0ir0CPqCL4n0VwAf-o17Rr00wC0Nb3orqlC377D-vEY4rbrgfOJPxdWjMirW6cAqkpFj6zHGnLLkegs0EDCeVZQUfVp85vBry7Vees5joYE1n2LbSpbjmIViTGwqlZpDUXkp2wnxvu1D-rFXROOJuLcOUhqL2DyX1xGorJbrNlIoLSV9wPRpv6_KvmtLsUQBGi7xgi8C691PT0ON0a8mFKu2535jAS53m1CAMTJTMNMD8rKcTKTzxbXZLUpFoNUsDkqzzlEz7kMgcLN-xA3TKWMDCr5_YalyR6rsFUBN7bQt9BlQKR1engOgdDTSo0ZI54rMzzKcpR6k-YjbTQxgjPT0GVK79qFcrBuLjfewn_GhA9QlIgCj25PLf5B_ZbGTRRlbu5uI5I9_8ghXp_VtHktSlBOTNtrbMylHIRMO7HxQe14iltxqLUzcc-kN3nxK0Axjc7OhP3QnPYPZ3zW_WB0s3vwkHqRnGT1kjgtyuAs8JykIQhvP77KcsQiw5TQ-mu7_y9mcc8NU9GfQrH56W858FtIHY5s_Br9JEPVbL78vNouHGRyPOQRMXWKeb0FcsAN4E5papbm8BKUP5TljJqz4rrnx4sFE0NtAhcWv1nRPLKK5POinHLaSlX6PrihPv8YqVTWgaT7U0P_zmgm23_QSbgXSxJZNaDrNvflZBEbOCS15DEEeIJXOt4zDFGhe830atLDG5vZzKu24uUIjADx0QVgSxMfmLuE5WIPLa0RV9VAQRV8UbYMpHTAh_b92mqxjPdhibeT_TrvOwezH4cOf_86RzAUCiyvPPSKZGSlu7bFmMykGiMsE_MPnXufsZMTSLzCWWYj6jhejzT-CRzr2qpEsHGvcwPFSg0rhALHILy2L3k7e-sRjn1aWNXdir31r2SaQIoafV61GRRFlMjKoHA6pnm0-atc4KoE3sup93oELht927v5qgLFzPPA9-M_GwtSkDxW_WQI6y5t5AFG2_580qDjVDGGYTCEPjdUS_T9PLN8J3zSgEnKMGNq_lYjr9pMiAqRzVMAhsxOC9-DDDzAYNj6i4UjolHs5iCjrKc6Gn0iX7iVmGqXz7LxFyhsxsFCEZuhnJlA6ylCdjVfTzdXR-8oYIBtsWpOCC23UQ4DJ1OvB6_H6z_9cGv8TjT_Lyi7sePGszs_WRIT4iCeWo6dRG0byhjRA2oVny0gEi1HME4ab8VMg5hRYylw_QPZBafHEanTVbsNeJh0IVT-DJiS0Fg35gw-bVd19bUCnYc5sTC7FcNvv-UK7cvKfF2Sw3L5SUyiiHA8IGcMOQLAwZjSMZw5N8F1WLTPcelB0DhSn-RZ0ZbjeX3YlCKK72jxzQC991Gb7WaYyE5XQI-GhTgjb5wB5QEX7jr2zwdtecPs9psdbQ3IlFLgDxntHvm1yw5fBLxI2r4vWMhxmRzS9rrRqLNfN1d0eBEc865-TBjY38Ns-jPfqopqZCZtj8ZR_KA55VguOusdGkJxmgRmaMBGKZOqEOKuGC5ypZy4GGLM_gfynWgUMv6qTLd3iSX_UPFo6CZLUVZOxRLUYUi84ttYEYRLGO6mAilX1TukEiKgW_Q8QnM4gTCTHaHOadDObZG7xVM9aSZSodxnswk-rVE429ooD6YU7IZllR9fIEJDgECbOZfEIf96R2RvXWNSnZ5Gr0JvHDbLbJ69MwEA_v6-WuZ-oeQKZMnrBtKhMbIrW8WxBK_lW2of-Fk0qsmkD3tADPkshN0nXUHxIrf07LAY1az8HONksZ1NYQzU_G_VjROsV5nETwJdyvrmHUfUCMN9TByn4u_JENv5tPZD73gXhgzY-BZBbAlPUs30inoPj7WwXI6WKsrIsuyrSoy7u8B_ScwcPSFiCXlHCjcT6Wa8iPwxw-aEZD4_z_bqI1x4W_e1irtWO6TeH9SrPlfzs2k8yivG_8hRBqLynS872pERsPa3GgiUCC9iTHDs9CeeHHTQcQVtB1QaZzr2PdEgskgN467PDpLcSDnpUGm5cTaVqi9QAr9zAWbePDs6zm57zr1PHPIGjV4-gMO5YmLdPqkJ1ug1fQ-dQs49Y-mEBTbYq98xNDGP24Uj3xgL0xosKIZHEZcJAforcrLz0jGyIcRqXoVQqBAp2IYXwAMZdVOrhC8WbPlC0Du-QJ-6IaWVmjFuvA_HDRVjWmVtWLPA6nymikiYrvxzmDVTvQMAC_LRKHBAb0x_rh_6UtH_4YIJfIplnvoA63yjXl-LuGzkqJ_h2qNAZT4OLPBjPSSLjmVlc7YMWHS2R_OTL3ZCWSM3BmHiK1_7XRvphh_P3suBDwQvd6di8b4GKvdWuLq1o2R1UeRFo2g6bqztnNLZdBkkHVtDO_Pm1l0zSOUfexuRf98hVi8V4hPzRiUcQOuTlv6WH4Fx0eWG5Gn5uWY0ZoPz5AqSVtluyaJQG6JXLK2_ldYXvb3Jxo5tb54s3p_c0biQ2MOdn8gv_sESk-fNfDAj-fOo_vswCA4hNZDn8TIhF6mZje7nIWeI-gdwmOGnoYFTnzIjxFD5Ofd9e79874RDOq3S8tPwqLHlY_-JpUKuXqRim2f8gY--Ak0uPBKpIVqU-0GlOTU3tPKF8T7EQYnSBF0mulyOVSQHEKODebxImCZ3xpbSTWN8_6ahwWENUzBQ0ZMTDri87r5OddTrlAxNCke2HFlUFfK6W0cO3lSzImajrcvzxpsekapLq1LAJmPJJIQUH5JDduOEAFbiU8IECNq-DijFGIrQQK-eceAvVAB9Iz_BlDOdDo589TSvGgfCPA2njm70jN0SRcSzp8cssaWv202-yIECW7FV0ebsogxOXEeFJEiAqPx41iyG-LaoxhOVCJAqlvu9l7DKUUfwIsqnFvwAxtn_Q2WwBN7eoKWMjaERC4GsqPv8p8j0t_c5y6FMgMXTwwMdAi1npNI1pyFvMYd3HwZvdy9J94TxuOEuFWX9DOUoWnWWlR1NV0ND1G-1DxJdw8avPIcbtUbBYoHwsNauJUg8yQcOGV_ZylZAqvjRuGqatW28gCUUAejo7YIEN1kH2vC0Fh2cCR987DcnzJZ6Ucv9wgRHDE6Vq9tk12DjM0Yy7wB1wc69WauOdLCN2D6HXcWpkpawAmcougyiyh37hL2uUhuAoVfnl6v52nmSl2k3hI3thdEBZi6QyKXfaDxMr3lwc9TLf6bIy8OpGh8n7UgNjhQ893IAl6y2WgLOdFpZ2nCAO2yCXwxc6I36x7UYncexb7VB4AeS_Kb_SD1KdMB4gj59yi9YHexiNr_tl7ksE4KzQhmkLJd6eHE5guXKzhDkw2iQkbp5R33B3nKq2eEZC0EwTV2ztc1KJGf-D_BDF4XMGoBvhq-CzS8jLkzhCjuzGsw9uM6G",
+      "summary": []
+    },
+    {
+      "id": "rs_0900e9da8694c691016a9ef3bc03a487d28fc9d5641b69f889",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABqnvPaYEQrrvb0nYPrQAjAF6epUKGroOTs5lONAYQuJXVIw2q_B9uUnofqPIgtIXd4AAL5ILJlQq_WOCWCp59hQEHA9SkStJQXZn3J3le5qCqF-L_vwVzjNaPLiIUqBzGiwF_TFBdLrv176HOHRIrtVULaZ5Z7jaqKA8KuVVj_EGjf0Rq3Ir33qSzmZUAtUv1wToJdm602nXmwHXPjsLuSPNa3QGeEo1llxxLis6PNMM3jHp1P_3SMfByNw83HQKPtc-zHKaBInHJzBXCT-9GK262eyv6dmEda_d6OttGa65sUOwmwBBxSn9QjRF_VKXIixqeels4QS09nvAXnWds5BreY5-yf2oF7tezVmN2tmcbwfq6ZBF_YFvfXWapXGab5buLVwtlH5F4fc3kYhwntVF02VYEHhsTBfx2FqJreRcZk__zCEiNiLqF1ZkhsI7sF_6jHNfr8xyzY7hB8A1FVToU9q1oyz3lEXMsvwm9O8WECt-fja8BAM3z3W5YjBzquxW9KVVORsfmnl7DWjH1Z-z3iX9vfxbnSDZnrRyb90a3Wh0KNuE1fPGS-dZTBljv2XZPDV_Cnw1kFyYMPMiLBu6YO1KXpa5r7EPebX08ECIn-QyFWChmb8u9UhD7WtpRVAZjEWvEYpNAzt-WP__8n9m0tK2-QaUCyw122OPo5NzGHGKkb2ebiqzVJdVzys740RXWJ4NOMOVUmxtvUaJDWJ5cHC3EeD4jrYiUIIgHQYWNhVjFA_3K797erULrkkhCcoFL8zbVz4c6VxSLYYJEaDzlz2_Ba07fHqmKjepJbEHab-f3cinPEhklvk1Y89bgSldb81nQe6eqIHiCBdtg0Vk_NQPSz4743bbMQDycAW28KYOB0zjFs7uc6IckyvrBmhnxpfnN0RyVOqHg6UqvZjamhgGj3A4CTRcC5iNNH-W3ik-V5KAqFiCrWN5CI4p8cID3sdyoWu8L-mskEMQGAOSsd71HKe5TwpycpZpR5o0epQgBlXzNm0qR5-FS3TbEFd1uW-RZQDc4IZwxkry6wIHYbXldELjUrSPuLVYUJ8F_wjpJUi41thl7iPj5WQetSezTZNLz364KDOo5nPxk7nLt6J3Cu82wgoNaqhEQBdOVuqek5AFS-4yVN5cK2gKD8jUEekErSEPKKXF-BWP9SeU-T1f-DUYA6DYbyC6YOaVkK0e25tY2asrcT4xg4QywccTNv0uFM6kdJs4egZDJX1LcoV-SJX6qNmWVG-PRn0IR1uSyqLPce5nAmDlbHeYO9K4OWnUXTu3Jji9vt1arAMEUSBxlYa8SFlr0NC0C--4fdC6wU_9kBUn0_pEf2Qa0XEVk_ywC35rpinpfFZReAnbz19nn06A4m8TKUClklCJc4g85LGH0XYdziGVxCuDQzy8ri10ip6XPRUT7wSiRiv1CHczyZRZaikwg4rWzGIhsI8NGtOkobyaDSQIZfExdl01Q5yXUQvXE-AVVvHlIDsu1dYZxkLQnB5L4-TKIfz67W3SbgHGUmgspA_S-lLFSSXqg5ciwjjPk8sFEn5fHx4g4GwykIgRAFesD5WroqE5Rqd2xYqO9HcROBOt9tBubqR3ov4Vt6D0T-YWinODNZG37Qx20T1MRQzq4zoUBaw_fW6lfMQMqE1Hu3KKmlkGIFPctWNa_-jkBWpJVw2fP1hly1Te6l_PkAY0WZd_l-qydn4inLZVpAwLq3FDrlnFmm-tyhzNUNEW7dC--I18bq5koUocXVpa1Yqq75KXru1A7xuegc064MAv0EFBgVMlBgMsYYmaH_Rbd7aV5iwXY0GIwPZmws-o_KHFhAkCGHPJGlpQy_8d1yuSlihc7tZ9--RGuB6IKaIQ7UOOgavsINX4St5VKz4HQmJMXcBCSN6-0KxeMh9JEJAJlyXTvda03-LN5qyu2BOthJr9BrbrMQs7OynoJIGXXn7tYOftVnht9q_eQjS6A01vwydcyJInqLeY_34x11HWV4jKDx-MdNrNfJC_7jSd1FN-87ie9kaUWsmfh0ZwwZX2SZlIiQvgr3TUyRvthHcqN6r3A6MBpfIjgZZhqTl2VJpHHDIV8eb70h9NmhP0TX4QWkWotkJZYmNtg9n7Rb_ECAfbFqq_MlbIqWg0nRIOxF0XtuHv2r7QqjFQsKqqPh_-s34zS072RUDQ0eUtgTnoXNuEkDFtT680ouBl7OK4oDqHtZXT7khi5NcL7EU5yFdT6brlS8ByRWu0MwOrrKw23xcoNJyHSNKMtDlraZ3H15XVCkVXkgK7ibwF2Jrit5VnffvWEDJneH4PucXL5Pl4o0Lj-5_z-Q8TvG1i5YvL1gLGCw2fUHXKCXcrBiGR8Ooi8DXi3EI2lbE-lfbBhTULl-KkVGGkZKvSzquuT533MTsK97x0VhT20rvyIhS3_LsJ6rDrOMN6yetcAJcGeqQk-_k59zI2hNXMrXT6vw5dYFNZTkLkXjpDVQK2V79TuPRTeIHf2tj2ra2bI4MCPwqn0ZrP5EJbtXWKthHg9naT3Z9IOscBELJSFGoIHPhVG-HKtWm7gJlNqBKXVLSq0WTEI3icYy_P7cKpWrnKtVZLQlHXt_lhzwwFNA5vETlwmPSU8NoeBay0-mSmIbogzw9fBlS8TrfQEPYZiex34Xb5ydhjrZILOBX2Gmup-oZuS5dXjiGMfiMXDrA8Sf3rlr3dfmmFUmvB1EofpOo6Rlyistm1vbUpAnSSKBuDthAvJjpdlBRlp1FYODVP51FAiTWPqn_TpZlJoSBG4O8hF-ScPyU1veqzq6hQDdSf8-63Z6LxKi4RQ5TpIk-jYBDuDbEYH2_GwpJ0OXc9eAaIewmX6jYm_d6V66t6GopHRza-emRqWB0nNshBAm23xrkzq7CbrqGXyo_bLEzet5MEz2kmKjucQsXM8OL38B3B_oh49urJ4iGXcCHrSeXjBzkygXKXmIvgGbhZk5TFwovCpZhK8IIvSIQJIXM28pwtRWoeQNaC0pBgBwzkK4e3Uzdfc3E94MvHHqBAfgLC5PvcdUbkw5mIaOl_TBDi-3C-8AeYhu8vnq4B16DJnQuxDem6knIX4p78pdcWxFvcupu7S4t6rhboxWjcjL-0B2kDNFDO9sdhi2SsqM2E5C9rGCU6TCP2_MS0frCW7emLDWDV5M1oMW1ECSywEw4sAAsIESI3_pJwwyqGGqTNbVB6UOo75dQxXmX5Gsm8mtaT178iu67o7ezJBg5UA-wUsRZ06GXTt1qheYpU98Lph_4iHsFVukf8DoVE8UHgm5F5O1UEOtUyjXbqoY7rt23fol-V23quOSw9FDgM7Ooj7rmdA_ZCKYCO8vOhOKYCph-Re-LVBcwORWAL_rOkMFABELaqGPfoduv6gvLIyKgTEow4_sPbsxDk5M8u0zta6NHgS3dM8TjFzzQMVY1Thw_ttxKqsoe74ndcqONbYquisoGmFdtmLkOJtGG_RLt8voPrHSdHbMfnztdp936PP9NRtE7rsNsc1ZtbW0R-9dOQe7e6LwYz86d0KKtRHO_v0LQcv0xIPOz3ub3BjlzyHy78B1tlXQifGODm71ZP0_ZJCvt58ngGQPaHFGGY3lbivx3SEBQpjhjL97D-RQ0BacaC7HrHPcaZTAEJIk4hi7JzvZF6yFxiR_ttQfMc55rhPpRUJQC-JBXetvuhNFk_iIBqCeS3xh7wmPuacMjuXLI3xgh1qn-fKAxAtug-_4BXfrP5AcpnA3yfGdk4Rhfr-iiogPEkmo5gBvlgoNNDImDMmQzwrXucrJzHv09c5I1KiBW5X1X2dEcJ5hfoKtUp8DV-qRkkaSSIuZcuAWSGkWnztc-s6-pLCmCIhNkVbD7C_f6CIFqUQCq21DjqjToJwiM9FuGLh8P5UuV6Fwa4hiZiRu5mdFV-ZYyeihQEzozk5w0UxJmzMwFg0Cq-nzbsjwZmDyiQpB_4U6uv2iXtbtP22eMVK-T6VorBjwgYmjlzYsi2VNXP4803n_eaN9HhJls8tnwNfn6s2e44vPqhcsosSNQUHup45WvKzxdyF8aYbbsqzPiykWOtq-O9dnGGVEPFChes_Bud-GESFvbs7OReY6jIJJSTf0WN5BHvdruBP-Hs6pRukVFnKQKtI9R-1uYHAuIdF5fus_8PVx4yxkf4y1wzQCX9NSn8EKnRl0hHiVLsKCjZJ_0SHUTAFIdLhFE5xIwp0eOwNE54aWcIiVpA6LQZtOKgxKuK_VnVUrVSTGHqklwMTOkHtn90CGUIUaqP1ppHMuiKwEe9DEZwIYmgDTjKMNzQFZ3zBjdHkvz1OoLxc7CJYlhJ346AQ9g0s4rzHxDsTxSQH6ihhLTSwKA0fjpOa1UOR3GZxVgmeNI62TVDa5P8Jh9i5-rCeJGOp5TyaAlce-D_ejS3tzTy6zRXzcOaRW1j7uXCbCuwU0W3-t7y3yBX0h6446sxLfB9p-gNWcE_8kuM23Z7WTjPMqGcQ_QZBLuYc88A_QPKmW55miNH34xTa2XWaYlMVBmSs3P3SZyO7YAuiWNmectqezkaojQI1gjbzlxk_wIafsj2r2XEz6ZBLVWW1qxDSJ1VdmNv1p-cEyNa3r-2lcIlhmxmG4H_sw6K6IV0Imvswh0h1dlkBGGucx8GzlUDETlj1EwFaKaVWyunLkrvYFVN4UzR1rcCooMiP9wD7MlPpkySyZyy4nfYuCWTqiuX5DQCJq_Vp8PlW6vBfI-F78j7zr6YuIgqOv7R4eA2pFKvz6bqoOjvm-6owbBX4E5cvQ5XKnAijj-o4pQ4VOgaQWha2qG5w-Q7pseilV7z8ES5_JnDBArY50q573Lgu0Ox18zwZ4HdWFHEg9te_GNRbAszs-TqLCISwCXdQyUdvBad9wX9lOMOH87uZihDmLmf4MwJ5bXquQj-sTkil0aSUgT-4-lZbKdQEVlq6sJmkjR3E1RiccAdkDNne0K7rrZHsywRoJf8OKzrkmEwY6viR6Itcr_XLFlgQ_uqKlRIvHjzZ-29Z16er_6Q==",
+      "summary": []
+    },
+    {
+      "id": "rs_0900e9da8694c691016a9ef3c35f0487d28437807c2c076948",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABqnvPaMHbRULQFkOLdCrzhZcq_4sj3GdoTAZD-lr8cCpxOXwNLAuby0G8BeRREMxFYgtPE1N1ryVGJM58tRLzIsLFWjeshpXSiU0g5IK0VcqJXvapamANV1oyJPbpKKCuxOgfcm_4lDtbw43FciIQJzmSAmxOzWJpCZIlY2kRQLWxUvOr9LfK_x_4ks6YNzgzBngJQ0WCqK3Y6gUxlDsBdVcHnoC3X0EARHQ9KjqxaFv9Jq1Td8x7BKJk7RUnUgTqewDnVoq4Zl2VJoZb_WGJPzNRfrJtDzgMhWdBF1JjA0bBRY28mlRPoUJZ57Hm9yujtY7vYXXy_BK3fdiw6trTgHEjd9-LNqMiFeCUglKziujRhnJB_He2o6x-w0UqApeJrwfZKnS_cIhIdB4QYsbNhFa27_sO-nTbdCoct7aX0W5YgFjdf7XuTCZYDObMXdkkexgDL498gBDk1JAq3R63k4AlqiwptbAsfHsDD_3MzgyjbZ7PnmL3fj8O3gaEH-0NqvN_dqho2vGQfRGosBVk7cr3Buak-owLOBMAacdFYTFZviKWKCd7Vh1eVgB9_urwAlHbbs7T56hRzo9228HBEOVthhpuq4L_YSoBg0LU4UVJ4OXSs2oMRW0GJ39yDshlfy-mb1Cuz5AsbkPesjOD2OrgngJc0cF_evX2TkuFvdF_O9FDf-TX4IgThGlDteeeM78MIwQYvsO9u_c3VgExJ6TNwdeSI1E4PznEpLsGT_V5imxB8-1D4WM24RdtnqF0muFJTL-J324f7U5QoFhm5R_MpxDEv-k9HaGxIuk8aFmVCovokOd5ADHfML5o-go40KtQXDvv7I0YuvZLvUXfutQNYJUKkJKwLybOtJVoxMyosK358IkdnXZWh3J6r2zHFI9IJ4KSHVwoyX-5Nr8ybRGh9BJog9ALiYcjjyCPSlgphCAWwMhiE0M21W5OzUYA1-vP5t7fCk2rpMQb7ibvPv_vsHoClPyRqpQj67C9ng4BkV_qFm9B2w2NpxrRFV66lT-HxSPYVEd3Eucqay-g0Jw09O-hYdX1eFefm2cP7ZzdxW-mASTR-F33QW3fSVRk6Z1MwuKd-ZvrlIzX3WuZbkW5-5FGCGqJvFqIn_nkAFjNNY0SGV4Jeumbrvlz-g6RFgQWcX5qGRqlz4_9WYESISLq0jiJBIQ-k9bck8fm_g2vKNnyr5s2Z6V2DR7QfRUfpeKd8vlprm-1Onmn83cef_ewXeGsPiRqDxd2MZDrNpzmW6i7oQATiYo-hxsvg9dUufM4u1FRCGBKW4pXKvFl9mG4JFc6IggTtSwVyu4RQh63zCRjMaYLpzOY-5gPs28FjqiqcQXwsBfB20F_4JHptWZE5f3Ev8UOAFM7ERhaduLyzHt8jSb0xNlIJtbAbiruRKMenYWQYI0gE_xLOD3ez-lvr4PYt7y0ca75cx1qT87n9FHzf3rE5r72GrFF-HufAfICfdKVcaDjHfP2oKyLU-PnbyFPRX94-_heygwGYE3doUr1kvgj2qCbrlWhVoP5zeCO0Jd7bHUdUIBkNjlNxDWIfr4m_KTwV4wCZmFJ57ytuB4_yc2MHpfbhRgr9h1TXTBb62GYAcNVhqi5VEuJ8PRl_F-vGvx1Y8HrWlkH2mdDpdUQDiE2hV7QqBwQ8cN4VcJbgr0WT-_mAP7w2QjZEVU5gl76mwr_OlCzDuGw5V2g7wFc77rHfN4tU5UrPp1mKp1eXjmP53bOa8kYAxoJ7ZG92qoYyuOj4iKxli7jhbjYY1nFbzLAoE3sXASEfDq09EgE0XurdXKrbugpSDzKJH3jPcuLGX-gdQJPpKP1n_tWVhG1wKCsLeISBe5TSteqqMzcFa7RdkiIt_lB82SnsIKgnFkC3mdzsZZlzjLenTFxjC74tR6jXX1uZsj0gDB3Kx7Jzjn_gmIALMS3GMGXEoEXtwrpIXntB_uNS-Sdg-k9QEoOSlI7jEraUV5fu0M9FHZNxyc_H2ctr9ua-csfdKyxDZHilnAMzbKIZCXHdF7JkjhNzmomdjgW5W5nVcx-7GyNR7D-TPzp-CussRc-_-4iBYxzrtArGpXdzX3pkRBeeZzRt6o3yL3c-Jqxl8epiHPL_5G6qA-SCJkMOr68WD6OcwJ1oB_EiTU0meyDAyZ2uNRQC3KOfNF1joQpeSw_tAhDo203ycmMYKvpYCS4mHaGq4JrXLP9VWtjqdPXV-RyyxbYu-3HmnS74M-FS868Wm9mZCgHWvovvpExSD3DariwppBtZf1OOW0KExmf4i9zbtIUiNcZWkkDXVPxrS3OTqhCaC24xA2GWS2Wl5nmMsNnuccN1J5lEAbNB9u3XtT8X_lXXFWWL8R5TdNxbf1Kqn0g_k1UrpuXrbWaOqGgkI9Eb41wBvEV2yaAYENNHMpExKr-Mc8xQDrIY7f8GEB8px6BtaMgDqi_jTnLm5PASQ_lgGagfXPp8xnpg76y8fXuBPxh4ZSMXiCPqyKk7TQbiNokIJrNkQcMPtnH0kyVatDeipqcq-B2KDu9Nbri0p2K2qs-nnUp6hxBcOrGU8TPqXDidE_XQSB1tPgPRou2TrgaYFBOSizWBDL7vBH4kKMNubbyYZCskDuM5-8SbPqm3F7ywBhqpFflG_4K3pvAAOCJzdwQjWQhZOEnXOP_AmVn8r1XtVSoVNfrWzf641zzwDcFyFJcE-k5q46wmNajPF1pdy1pHpOGkxnCKH0T1bjR5bU6TJRyOqzIPB9j3sNDbGVgOqHJs-NwOz0Xjo8zk0U2Li80SNLExp4ao4fYcAUHX_P1daa87eNqJXGyea3r6BpBcjE8JIUKNXMypz6eW5qQMoa4jydTmVocsnLHU4dIbGP1jlPadALFy6ODpx2S6ZJYeZwJQxraUx_wwhBFuwaK9yPK8JQoJOh9jpD3ioqAiPElwQtuNZ-GYMMeUTIHBvGy7bJ8NBJUPqBz6-WMi2iCSSha6ioq6KmzPCBU8app9iwGhUZgXPdIyX1J8dmO0UvkacRsvBjmqKKWW5g6JJrqVxE_RKQ_ONR8SHTGefZcTdrOD2PlqPHNXEimMJVQ96e4hdQk3fcbbNCEvOhlCdGZVhpz_HAICVK6gx87UFWuLy7X_nMeMRs74v4SlAClCY40Bzc1QS0LTubcYoFe7hxnTl9npuUeqhFanHssEaWMzGIJw14PEi3eLM1cLD440rhr_-NMNnNe7mcVbYK_itfqXIUxej36MpGV_F7NLE65LZs3RKmLiOuxEH9choWMQMLykCIX8T4R_kgnQjI9ozflkG5O9Ujs8HMmE6DhSReqBWKLkt3r5lRqsEbZmJ_U5SfDl7bNetlp2JPB-Sw7XBljlSSqm81cORYASPpSwKoK9Vy4AUn59dGoCAU_0vNLy2uyQT658o8Y1gXURqwq7_iaNyMLLV_R9LdJ42uAE4A0GjkeaQ8BsYcF3bgwATGJ7M7EjKSTUHIwv94O0XHwpfZ_fodXFKb68z2uusBFPkRNLEzj0uUGtPZVxueVBvtgIir3U_uxfFysMoSq0-avZImF2wWJ_Gq9b0YSfXDZLO8MFMC7MvVgAepm3R-BWDk5OQz8Dij_5eR96OFNw7CFMJI7JV3l-Cms8TY1N7fihjPaGiTJ5Q9m-z7H5weMMXBXE0QtwvOqtAT8_mHPn88qwB2rZe7413onJwjJM4DLraFuIgU6TZvZBPUOCYX5733aCzc3BVVFbJPHQUINxAcZJyY53PFm2nzegl_goC8qjGhHDfNDZLnxwMy0l7xxgtn0qTb5tBtsoO_dHRo8tLSS6tEhtz4RQFMPnmEVYTMpZn0cVs1PeLeRu62p7plg5KBas4fmqnokQG8bp_q1JbUlWGvv78amhCb1iFt2yAjtc6mWMDSneTdxDVG4eOTAYdFImt48xKOIhVLJaLvP5oegtcxu6mUprNDM8QV45CeU3e0VrzdGOvIEHd7l16R5TOhbVSWOgx9nvgXvMZ14qZ9abIqgTI948RkAAAUfEc01SgfaTq3U9pCctKYVThdLVJb7lH8LWwv_-vdflKbuAMmdnvwagKW4laEsxlyyVPEkWytPDbWrRammTycED-qhT-Fmg3UmaSHBw8U8Ipzj9l-MhVw8WhrLPHdXZ0AIq7bY8swEsDsJ0fgeSeOJhjmrL_RHLRnvqb9Uy-MkIlF2-_I2OgXr2paM35YgXTJ6IMv8tts8GZYNA34TfftYhm80vA0Pd5A0rqaIr-xuHtrdkke6YKNI6beU0EpsaHfy0xOnyrEz05D5FgSdMs9euesb8VRhJ3RLbWKz5pF7XjOi7-xQbXHBIqKjdcqC6PciQSRcJ6WWnHLzge6r3rI9jDH-fmQJsBYZ0lWBP175i0rJOdlYyGelx3CDu0QaYWpjh2zuM2GHAGh_UCDbmXnfUamIL1yt79Y3N2U6o7WnjqVnG9JN1lFZWp8JQhU2ELTfuVdwoSEm_pigVB87-s-i4KmCKylOKZUYBkLaz_oWd-WwZU4UQl0zlU6-HLNCbr09wMgQVsgyVghsSCRxKbLHbrB5ZXIfCD_hrkyZZJ5A1dHMGaFj4dAHp8AelxfosGhiFw8TTSsre6SSHd_WFe_gAJZPbLqatSe7py0Tyohw4hN7a7aWxpilgAUR25lTxmBucfJnrZjT2MlicPEAwVEH7EZldLMYILfSfnjlrVglJlyeMIcGE_g87wdkAGSPBazfcDTaSGGhve73jQoQkuAuGlB3_UIvtO8YzzGy1LMndEGlWiZzlWw1tUAWkopdHV9Rdz_KRs3kAIjnGPmVLBPJAjzcPwOgvXNPoTt3-F6FSyeSAwBVQ4OcgRtHtY49AbMlAlS4tKrXBbZUACvCmD75o4y32tkzmUwUiTir7FTA6NVnbWuiu0wRLD3CK_fvj3S-xMomRyDcoDx-SY0-yCGCRcYxS0XIDY-go",
+      "summary": []
+    },
+    {
+      "id": "rs_0900e9da8694c691016a9ef3cac2a487d29e5866a29b80dcc8",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABqnvPat71dXS_lCskEqyedboTiBHT6xurQt5FDShAI0qEbcxB6RC1fGlCPgrc4N8aeQxhwA_uyBFaF695qfOsRddE6RY2E1KE1T9xtFyfIz5UjH7Bi8Qy6WzvkoVFE7YNyRIjruKmgMm97F9ZBjW9lmPzxtYlYcK5jYV6ClC_u5yMW6eWf8UkbNG0R2OOP6JYHoLDQmTL-ZVqHbCZlmF8Tx6_DRPktsZmiBYV4ltWk4LfB3h58FmU-avIG1u04BsxkxO7usdCdJw-3Mfy_JUdN8l8CPiygvGHLIn0-7XQNTRH7ZLNi2SK5MwwHTw8zP972pBTHBtg30KLwq4D9MFWDtMROzWgbthreVJZYIoRaoW8hQg-_0ko87h6cZGnHTagEIbh1qBAfZ7yxFUPzMFWGQJq_pfQrKZXaBlgnrw4ZEk01UQH87oXxvrO2J4-N0BzU1siu9jRbVb6cFLK2M8wlKdQL1QEatjNQhEswp0KOdQRRDvYfPXbkPwIAcwlKFEV0_lC-i6-TnsJ_nIefP_qEgt8Tius7oSgLu-CUics5JKdDieNEnW_Er8xYKGsIBXOkWKfSGvvtM5WHJ70FUc-vKxgh2FsBxj8X3H028IfsaQPZtU2-KkLhyKhPTJ2ECArwNGccQ3yVM-bP8o_Lq3zl7Hw73rZuWXKs_GSLQe99PE-Wue0lYkHht1CQ1kpEzJdC1z8jorIPTMfZZDu-jM4jAO_IsrNqmYB1Z86UVyZ95AbG8C4zDQkxbqRm4KmZIDLOA35cVbo1QLER93jeoTywAe5xRAQkRrsFapWwURUgFUGp6g6M3AU5MbVNIRqijGGQJ05WFU9iTZ5Nzatk9eDDgvKoEdJ1TZN9zMdn5JSwsgjBlXXItg5qCEXtzdMzptY665bGvpAiE-0YWD-Ra1slcaCH9ZrSmdbR6WMG5CALSuJM2n8Zakap58gJ2w2J4nmoVLEsVXG19LiKY2Hlpx1VdyTwhWRCqD61MPESzfePaO8ks_wTfOxy2OHpetEkgth3W2hdRCRdOKeur_cV2UuvsbGcmBiPUn02uU7McpvVElLUpo_igk5kuyNXlPJ8oaSmQ9bYJ_2K1yCosp65suBKcd0tpMN5LtpsLtzOJa2TidYrRNQnSt-lGtmagaqugRZcGZF313EkrlaUjY9SNpq2GKpPP6CGe4FLuKEAyturj3kQ5SfzYXFOXL1EKUu_LTLt3WhCSbJxlYtMp2WUKeynsQxTNWyMAqmdpIJ9MnmHwz7JNHBG2mGSZ0wfmsF-2q7Q6hZOHNCQfh1q_occVyg5XjT0Uzt7iKAIa_Gy0Y_kctzs4vD8FGOiSG1y4UOJZGBx9NsOw-7eco0ya08j51E80NMBCc0CGK7sgGxxbihbNca_gIBJ44diaMOjGoJuOUiJXhFl_msPtoA0CDatppaHWK2oYQ3wVxq6WWyd1F5WHvLbxbABb43bBVJTZ5Gyj6iUqgw5eVNYnAJye0mMSIQ3MogZA3_qv0TPQdKQh5UXXLaDJ64LU-1N0SKBDdXZikSZgR9YM-6rL2avwPiWtypdTglcXrJoh1is0LqBTUX26jYSE9C_xGssTIFMNCSL5DsOtAoYoIUuKR6Ki-3JyWVumJnBNNXf8SDsasQ7f2XUeZT8iJnjRIzaxHzEpMOUKduHHocg13JoojifyONoY-ituj5L0s1vCeLZ_jtmc60VBWdG5grs3hQ07DTNPWcBsFIs5iGk33aIglngJepGn0E_XaEjhrtMfEqjK8SJvz6sO4BUVJOSt4NnIUD9BfORavLSbx3Jda72JnBgcvmjoSN8drwTtbNDNqlsx1hOhR9oTnZlZ5BaMMz22nzGB01Vyg2YD-rIJU6VCMI8nzvQEtstT0GffpUa-vsRVeNO3NM_U-2k29E_Xo35xphZUW919yIRGfwACtieRm60XEuYIKhf723pBJwt24CBApz6bJaAPyiW7euefytWtrCzf-xnFe2KrOxrB2M3s9UAB0VQqjfLYVbIhKIWijSftNYiLe9i6MGHU4YrxH1n-Fe_l4ZjyHxkfw3dlf3tYAaMOpJrU3glgfXnqZAcAab0T-f9lucwru-YAYQJw5arcUBBzST9FkpCfgIQ_rhLaWU01bMKteGOuhU_zPDxpiteBgTmfQLAhsOLw3RhQPzD7AzWIERv47Zv2dck5QRyRvnfm61VQWm4Bk2dI4yLH7nQ3SdpsLYO3KYKWfKfM8oG0E0qS2Yt6EVWLfIU92TAJR7wZsPfrC9kIovfH4fQ2ClE3l2Qzz9JfiL1nk6dVcEUU6GCmeJMIbG89GAB",
+      "summary": []
+    },
+    {
+      "id": "msg_0900e9da8694c691016a9ef3cda6b487d28213dc70148903d4",
+      "type": "message",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "annotations": [],
+          "logprobs": [],
+          "text": "{\"abstentions\":[],\"candidateEdges\":[],\"candidateNodes\":[{\"action\":\"propose_new\",\"artifactScope\":\"source_artifact\",\"attributes\":[],\"candidateID\":\"node-0001\",\"className\":\"Background\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0001\"],\"existingNodeID\":null,\"identityScope\":\"source_local\",\"label\":\"OWP FIM is linked with the NWM for operational purposes, utilizing streamflow inputs, to produce FIM at a continental scale.\",\"labelMode\":\"verbatim\",\"normalizedLabelProposal\":null,\"ontologyClassID\":\"A-P05\",\"operationalTargetID\":\"PUB-N-A-P05-BACKGROUND\",\"origin\":\"open_discovery\",\"provisionalIdentity\":false},{\"action\":\"propose_new\",\"artifactScope\":\"source_artifact\",\"attributes\":[],\"candidateID\":\"node-0002\",\"className\":\"ResearchGoal\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0002\"],\"existingNodeID\":null,\"identityScope\":\"source_local\",\"label\":\"We evaluated various validation data sources for operational use\",\"labelMode\":\"verbatim\",\"normalizedLabelProposal\":null,\"ontologyClassID\":\"A-P09\",\"operationalTargetID\":\"PUB-N-A-P09-RESEARCHGOAL\",\"origin\":\"open_discovery\",\"provisionalIdentity\":false},{\"action\":\"propose_new\",\"artifactScope\":\"source_artifact\",\"attributes\":[],\"candidateID\":\"node-0003\",\"className\":\"ResearchProblem\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0003\"],\"existingNodeID\":null,\"identityScope\":\"source_local\",\"label\":\"the three data sources mentioned do not have streamflow information, which is required by OWP FIM\",\"labelMode\":\"verbatim\",\"normalizedLabelProposal\":null,\"ontologyClassID\":\"A-P07\",\"operationalTargetID\":\"PUB-N-A-P07-RESEARCHPROBLEM\",\"origin\":\"open_discovery\",\"provisionalIdentity\":false},{\"action\":\"propose_new\",\"artifactScope\":\"source_artifact\",\"attributes\":[],\"candidateID\":\"node-0004\",\"className\":\"ResearchProblem\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0004\"],\"existingNodeID\":null,\"identityScope\":\"source_local\",\"label\":\"this would introduce hydro-climatic uncertainties that could impact the results of adding a multi-fluvial source extension to HAND\",\"labelMode\":\"verbatim\",\"normalizedLabelProposal\":null,\"ontologyClassID\":\"A-P07\",\"operationalTargetID\":\"PUB-N-A-P07-RESEARCHPROBLEM\",\"origin\":\"open_discovery\",\"provisionalIdentity\":false},{\"action\":\"propose_new\",\"artifactScope\":\"source_artifact\",\"attributes\":[],\"candidateID\":\"node-0005\",\"className\":\"ResearchProblem\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0005\"],\"existingNodeID\":null,\"identityScope\":\"source_local\",\"label\":\"limit the information available to only a single source of inundation at a specific site\",\"labelMode\":\"verbatim\",\"normalizedLabelProposal\":null,\"ontologyClassID\":\"A-P07\",\"operationalTargetID\":\"PUB-N-A-P07-RESEARCHPROBLEM\",\"origin\":\"open_discovery\",\"provisionalIdentity\":false},{\"action\":\"propose_new\",\"artifactScope\":\"source_artifact\",\"attributes\":[],\"candidateID\":\"node-0006\",\"className\":\"ResearchGoal\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0006\"],\"existingNodeID\":null,\"identityScope\":\"source_local\",\"label\":\"we investigated the use of existing HEC-RAS based models to address the limitations caused by hydro-climatic uncertainties and sparse streamflow inputs\",\"labelMode\":\"verbatim\",\"normalizedLabelProposal\":null,\"ontologyClassID\":\"A-P09\",\"operationalTargetID\":\"PUB-N-A-P09-RESEARCHGOAL\",\"origin\":\"open_discovery\",\"provisionalIdentity\":false},{\"action\":\"propose_new\",\"artifactScope\":\"source_artifact\",\"attributes\":[],\"candidateID\":\"node-0007\",\"className\":\"Background\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0007\"],\"existingNodeID\":null,\"identityScope\":\"source_local\",\"label\":\"Our HAND based approach coupled with SRCs requires streamflow as input and is agnostic as to the source of that streamflow whether forecasted, observed, or probablistic.\",\"labelMode\":\"verbatim\",\"normalizedLabelProposal\":null,\"ontologyClassID\":\"A-P05\",\"operationalTargetID\":\"PUB-N-A-P05-BACKGROUND\",\"origin\":\"open_discovery\",\"provisionalIdentity\":false},{\"action\":\"propose_new\",\"artifactScope\":\"source_artifact\",\"attributes\":[],\"candidateID\":\"node-0008\",\"className\":\"Theme\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0008\"],\"existingNodeID\":null,\"identityScope\":\"source_local\",\"label\":\"evaluation of our relative elevation CFIM method\",\"labelMode\":\"verbatim\",\"normalizedLabelProposal\":null,\"ontologyClassID\":\"A-P06\",\"operationalTargetID\":\"PUB-N-A-P06-THEME\",\"origin\":\"open_discovery\",\"provisionalIdentity\":false},{\"action\":\"propose_new\",\"artifactScope\":\"source_artifact\",\"attributes\":[],\"candidateID\":\"node-0009\",\"className\":\"ResearchGoal\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0009\"],\"existingNodeID\":null,\"identityScope\":\"source_local\",\"label\":\"separate out errors introduced by NWM inputs and processes\",\"labelMode\":\"verbatim\",\"normalizedLabelProposal\":null,\"ontologyClassID\":\"A-P09\",\"operationalTargetID\":\"PUB-N-A-P09-RESEARCHGOAL\",\"origin\":\"open_discovery\",\"provisionalIdentity\":false}],\"deferredRecords\":[],\"evidenceSpans\":[{\"evidenceSpanID\":\"evidence-0001\",\"evidenceText\":\"OWP FIM is linked with the NWM for operational purposes, utilizing streamflow inputs, to produce FIM at a continental scale.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0002\",\"evidenceText\":\"We evaluated various validation data sources for operational use\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0003\",\"evidenceText\":\"the three data sources mentioned do not have streamflow information, which is required by OWP FIM\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0004\",\"evidenceText\":\"this would introduce hydro-climatic uncertainties that could impact the results of adding a multi-fluvial source extension to HAND\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0005\",\"evidenceText\":\"limit the information available to only a single source of inundation at a specific site\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0006\",\"evidenceText\":\"we investigated the use of existing HEC-RAS based models to address the limitations caused by hydro-climatic uncertainties and sparse streamflow inputs\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0007\",\"evidenceText\":\"Our HAND based approach coupled with SRCs requires streamflow as input and is agnostic as to the source of that streamflow whether forecasted, observed, or probablistic.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0008\",\"evidenceText\":\"evaluation of our relative elevation CFIM method\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0009\",\"evidenceText\":\"separate out errors introduced by NWM inputs and processes\",\"locatorAnchor\":null}]}"
+        }
+      ],
+      "phase": "final_answer",
+      "role": "assistant"
+    }
+  ],
+  "parallel_tool_calls": true,
+  "presence_penalty": 0.0,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "prompt_cache_retention": "24h",
+  "reasoning": {
+    "context": "all_turns",
+    "effort": "medium",
+    "mode": "standard",
+    "summary": null
+  },
+  "safety_identifier": null,
+  "service_tier": "default",
+  "store": false,
+  "temperature": 1.0,
+  "text": {
+    "format": {
+      "type": "json_schema",
+      "description": null,
+      "name": "publication_model_authorable_payload",
+      "schema": {
+        "$defs": {
+          "abstention": {
+            "additionalProperties": false,
+            "description": "Explicit semantic abstention for a plausible task. Absence of a candidate is not automatically an abstention, and processing failures are represented elsewhere.",
+            "properties": {
+              "abstentionID": {
+                "pattern": "^abstention-[0-9]{4}$",
+                "type": "string"
+              },
+              "competingOperationalTargetIDs": {
+                "items": {
+                  "enum": [
+                    "PUB-N-A-P05-BACKGROUND",
+                    "PUB-N-A-P06-THEME",
+                    "PUB-N-A-P07-RESEARCHPROBLEM",
+                    "PUB-N-A-P08-RESEARCHQUESTION",
+                    "PUB-N-A-P09-RESEARCHGOAL",
+                    "PUB-N-A-P10-RESEARCHSIGNIFICANCE",
+                    "PUB-N-A-P23-HYPOTHESIS"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "deferredRecordID": {
+                "$ref": "#/$defs/nonEmptyStringOrNull"
+              },
+              "evidenceSpanIDs": {
+                "items": {
+                  "pattern": "^evidence-[0-9]{4}$",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "operationalTargetID": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "PUB-N-A-P05-BACKGROUND",
+                      "PUB-N-A-P06-THEME",
+                      "PUB-N-A-P07-RESEARCHPROBLEM",
+                      "PUB-N-A-P08-RESEARCHQUESTION",
+                      "PUB-N-A-P09-RESEARCHGOAL",
+                      "PUB-N-A-P10-RESEARCHSIGNIFICANCE",
+                      "PUB-N-A-P23-HYPOTHESIS"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "rationale": {
+                "maxLength": 2000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "reason": {
+                "enum": [
+                  "insufficient_evidence",
+                  "ambiguous_class",
+                  "ambiguous_relation",
+                  "unresolved_endpoint",
+                  "invalid_domain_range",
+                  "target_outside_ontology",
+                  "incomplete_source_text",
+                  "unrecoverable_table_structure",
+                  "visual_only_evidence",
+                  "equation_only_evidence",
+                  "unresolved_cross_reference"
+                ],
+                "type": "string"
+              },
+              "relatedCandidateIDs": {
+                "items": {
+                  "pattern": "^node-[0-9]{4}$",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "scope": {
+                "const": "operational_target",
+                "type": "string"
+              }
+            },
+            "required": [
+              "abstentionID",
+              "scope",
+              "operationalTargetID",
+              "deferredRecordID",
+              "reason",
+              "evidenceSpanIDs",
+              "competingOperationalTargetIDs",
+              "relatedCandidateIDs",
+              "rationale"
+            ],
+            "type": "object"
+          },
+          "evidenceSpan": {
+            "additionalProperties": false,
+            "description": "One contiguous evidence span. A span may not cross a source-unit boundary.",
+            "properties": {
+              "evidenceSpanID": {
+                "pattern": "^evidence-[0-9]{4}$",
+                "type": "string"
+              },
+              "evidenceText": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "locatorAnchor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "evidenceSpanID",
+              "evidenceText",
+              "locatorAnchor"
+            ],
+            "type": "object"
+          },
+          "nonEmptyStringOrNull": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "abstentions": {
+            "items": {
+              "$ref": "#/$defs/abstention"
+            },
+            "type": "array"
+          },
+          "candidateEdges": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {},
+              "required": [],
+              "type": "object"
+            },
+            "maxItems": 0,
+            "type": "array"
+          },
+          "candidateNodes": {
+            "items": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed or linked publication node candidate.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_new",
+                      "type": "string"
+                    },
+                    "artifactScope": {
+                      "const": "source_artifact",
+                      "type": "string"
+                    },
+                    "attributes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {},
+                        "required": [],
+                        "type": "object"
+                      },
+                      "maxItems": 0,
+                      "type": "array"
+                    },
+                    "candidateID": {
+                      "pattern": "^node-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "className": {
+                      "const": "Background",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "existingNodeID": {
+                      "type": "null"
+                    },
+                    "identityScope": {
+                      "const": "source_local",
+                      "type": "string"
+                    },
+                    "label": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "labelMode": {
+                      "const": "verbatim",
+                      "description": "The authoritative candidate label is always the exact source-grounded surface form. Normalized labels are represented only as non-authoritative proposals.",
+                      "type": "string"
+                    },
+                    "normalizedLabelProposal": {
+                      "anyOf": [
+                        {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Optional non-authoritative normalization proposed from the evidence-grounded label. It is not evidence and may not be used for identity, linking, merging, or consolidation unless separately validated or adjudicated."
+                    },
+                    "ontologyClassID": {
+                      "const": "A-P05",
+                      "type": "string"
+                    },
+                    "operationalTargetID": {
+                      "const": "PUB-N-A-P05-BACKGROUND",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "provisionalIdentity": {
+                      "const": false,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalTargetID",
+                    "ontologyClassID",
+                    "className",
+                    "label",
+                    "labelMode",
+                    "normalizedLabelProposal",
+                    "identityScope",
+                    "artifactScope",
+                    "provisionalIdentity",
+                    "existingNodeID",
+                    "deferredRecordID",
+                    "attributes",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed or linked publication node candidate.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_new",
+                      "type": "string"
+                    },
+                    "artifactScope": {
+                      "const": "source_artifact",
+                      "type": "string"
+                    },
+                    "attributes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {},
+                        "required": [],
+                        "type": "object"
+                      },
+                      "maxItems": 0,
+                      "type": "array"
+                    },
+                    "candidateID": {
+                      "pattern": "^node-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "className": {
+                      "const": "Theme",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "existingNodeID": {
+                      "type": "null"
+                    },
+                    "identityScope": {
+                      "const": "source_local",
+                      "type": "string"
+                    },
+                    "label": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "labelMode": {
+                      "const": "verbatim",
+                      "description": "The authoritative candidate label is always the exact source-grounded surface form. Normalized labels are represented only as non-authoritative proposals.",
+                      "type": "string"
+                    },
+                    "normalizedLabelProposal": {
+                      "anyOf": [
+                        {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Optional non-authoritative normalization proposed from the evidence-grounded label. It is not evidence and may not be used for identity, linking, merging, or consolidation unless separately validated or adjudicated."
+                    },
+                    "ontologyClassID": {
+                      "const": "A-P06",
+                      "type": "string"
+                    },
+                    "operationalTargetID": {
+                      "const": "PUB-N-A-P06-THEME",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "provisionalIdentity": {
+                      "const": false,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalTargetID",
+                    "ontologyClassID",
+                    "className",
+                    "label",
+                    "labelMode",
+                    "normalizedLabelProposal",
+                    "identityScope",
+                    "artifactScope",
+                    "provisionalIdentity",
+                    "existingNodeID",
+                    "deferredRecordID",
+                    "attributes",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed or linked publication node candidate.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_new",
+                      "type": "string"
+                    },
+                    "artifactScope": {
+                      "const": "source_artifact",
+                      "type": "string"
+                    },
+                    "attributes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {},
+                        "required": [],
+                        "type": "object"
+                      },
+                      "maxItems": 0,
+                      "type": "array"
+                    },
+                    "candidateID": {
+                      "pattern": "^node-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "className": {
+                      "const": "ResearchProblem",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "existingNodeID": {
+                      "type": "null"
+                    },
+                    "identityScope": {
+                      "const": "source_local",
+                      "type": "string"
+                    },
+                    "label": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "labelMode": {
+                      "const": "verbatim",
+                      "description": "The authoritative candidate label is always the exact source-grounded surface form. Normalized labels are represented only as non-authoritative proposals.",
+                      "type": "string"
+                    },
+                    "normalizedLabelProposal": {
+                      "anyOf": [
+                        {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Optional non-authoritative normalization proposed from the evidence-grounded label. It is not evidence and may not be used for identity, linking, merging, or consolidation unless separately validated or adjudicated."
+                    },
+                    "ontologyClassID": {
+                      "const": "A-P07",
+                      "type": "string"
+                    },
+                    "operationalTargetID": {
+                      "const": "PUB-N-A-P07-RESEARCHPROBLEM",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "provisionalIdentity": {
+                      "const": false,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalTargetID",
+                    "ontologyClassID",
+                    "className",
+                    "label",
+                    "labelMode",
+                    "normalizedLabelProposal",
+                    "identityScope",
+                    "artifactScope",
+                    "provisionalIdentity",
+                    "existingNodeID",
+                    "deferredRecordID",
+                    "attributes",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed or linked publication node candidate.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_new",
+                      "type": "string"
+                    },
+                    "artifactScope": {
+                      "const": "source_artifact",
+                      "type": "string"
+                    },
+                    "attributes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {},
+                        "required": [],
+                        "type": "object"
+                      },
+                      "maxItems": 0,
+                      "type": "array"
+                    },
+                    "candidateID": {
+                      "pattern": "^node-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "className": {
+                      "const": "ResearchQuestion",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "existingNodeID": {
+                      "type": "null"
+                    },
+                    "identityScope": {
+                      "const": "source_local",
+                      "type": "string"
+                    },
+                    "label": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "labelMode": {
+                      "const": "verbatim",
+                      "description": "The authoritative candidate label is always the exact source-grounded surface form. Normalized labels are represented only as non-authoritative proposals.",
+                      "type": "string"
+                    },
+                    "normalizedLabelProposal": {
+                      "anyOf": [
+                        {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Optional non-authoritative normalization proposed from the evidence-grounded label. It is not evidence and may not be used for identity, linking, merging, or consolidation unless separately validated or adjudicated."
+                    },
+                    "ontologyClassID": {
+                      "const": "A-P08",
+                      "type": "string"
+                    },
+                    "operationalTargetID": {
+                      "const": "PUB-N-A-P08-RESEARCHQUESTION",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "provisionalIdentity": {
+                      "const": false,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalTargetID",
+                    "ontologyClassID",
+                    "className",
+                    "label",
+                    "labelMode",
+                    "normalizedLabelProposal",
+                    "identityScope",
+                    "artifactScope",
+                    "provisionalIdentity",
+                    "existingNodeID",
+                    "deferredRecordID",
+                    "attributes",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed or linked publication node candidate.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_new",
+                      "type": "string"
+                    },
+                    "artifactScope": {
+                      "const": "source_artifact",
+                      "type": "string"
+                    },
+                    "attributes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {},
+                        "required": [],
+                        "type": "object"
+                      },
+                      "maxItems": 0,
+                      "type": "array"
+                    },
+                    "candidateID": {
+                      "pattern": "^node-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "className": {
+                      "const": "ResearchGoal",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "existingNodeID": {
+                      "type": "null"
+                    },
+                    "identityScope": {
+                      "const": "source_local",
+                      "type": "string"
+                    },
+                    "label": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "labelMode": {
+                      "const": "verbatim",
+                      "description": "The authoritative candidate label is always the exact source-grounded surface form. Normalized labels are represented only as non-authoritative proposals.",
+                      "type": "string"
+                    },
+                    "normalizedLabelProposal": {
+                      "anyOf": [
+                        {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Optional non-authoritative normalization proposed from the evidence-grounded label. It is not evidence and may not be used for identity, linking, merging, or consolidation unless separately validated or adjudicated."
+                    },
+                    "ontologyClassID": {
+                      "const": "A-P09",
+                      "type": "string"
+                    },
+                    "operationalTargetID": {
+                      "const": "PUB-N-A-P09-RESEARCHGOAL",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "provisionalIdentity": {
+                      "const": false,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalTargetID",
+                    "ontologyClassID",
+                    "className",
+                    "label",
+                    "labelMode",
+                    "normalizedLabelProposal",
+                    "identityScope",
+                    "artifactScope",
+                    "provisionalIdentity",
+                    "existingNodeID",
+                    "deferredRecordID",
+                    "attributes",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed or linked publication node candidate.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_new",
+                      "type": "string"
+                    },
+                    "artifactScope": {
+                      "const": "source_artifact",
+                      "type": "string"
+                    },
+                    "attributes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {},
+                        "required": [],
+                        "type": "object"
+                      },
+                      "maxItems": 0,
+                      "type": "array"
+                    },
+                    "candidateID": {
+                      "pattern": "^node-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "className": {
+                      "const": "ResearchSignificance",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "existingNodeID": {
+                      "type": "null"
+                    },
+                    "identityScope": {
+                      "const": "source_local",
+                      "type": "string"
+                    },
+                    "label": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "labelMode": {
+                      "const": "verbatim",
+                      "description": "The authoritative candidate label is always the exact source-grounded surface form. Normalized labels are represented only as non-authoritative proposals.",
+                      "type": "string"
+                    },
+                    "normalizedLabelProposal": {
+                      "anyOf": [
+                        {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Optional non-authoritative normalization proposed from the evidence-grounded label. It is not evidence and may not be used for identity, linking, merging, or consolidation unless separately validated or adjudicated."
+                    },
+                    "ontologyClassID": {
+                      "const": "A-P10",
+                      "type": "string"
+                    },
+                    "operationalTargetID": {
+                      "const": "PUB-N-A-P10-RESEARCHSIGNIFICANCE",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "provisionalIdentity": {
+                      "const": false,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalTargetID",
+                    "ontologyClassID",
+                    "className",
+                    "label",
+                    "labelMode",
+                    "normalizedLabelProposal",
+                    "identityScope",
+                    "artifactScope",
+                    "provisionalIdentity",
+                    "existingNodeID",
+                    "deferredRecordID",
+                    "attributes",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed or linked publication node candidate.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_new",
+                      "type": "string"
+                    },
+                    "artifactScope": {
+                      "const": "source_artifact",
+                      "type": "string"
+                    },
+                    "attributes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {},
+                        "required": [],
+                        "type": "object"
+                      },
+                      "maxItems": 0,
+                      "type": "array"
+                    },
+                    "candidateID": {
+                      "pattern": "^node-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "className": {
+                      "const": "Hypothesis",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "existingNodeID": {
+                      "type": "null"
+                    },
+                    "identityScope": {
+                      "const": "source_local",
+                      "type": "string"
+                    },
+                    "label": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "labelMode": {
+                      "const": "verbatim",
+                      "description": "The authoritative candidate label is always the exact source-grounded surface form. Normalized labels are represented only as non-authoritative proposals.",
+                      "type": "string"
+                    },
+                    "normalizedLabelProposal": {
+                      "anyOf": [
+                        {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Optional non-authoritative normalization proposed from the evidence-grounded label. It is not evidence and may not be used for identity, linking, merging, or consolidation unless separately validated or adjudicated."
+                    },
+                    "ontologyClassID": {
+                      "const": "A-P23",
+                      "type": "string"
+                    },
+                    "operationalTargetID": {
+                      "const": "PUB-N-A-P23-HYPOTHESIS",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "provisionalIdentity": {
+                      "const": false,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalTargetID",
+                    "ontologyClassID",
+                    "className",
+                    "label",
+                    "labelMode",
+                    "normalizedLabelProposal",
+                    "identityScope",
+                    "artifactScope",
+                    "provisionalIdentity",
+                    "existingNodeID",
+                    "deferredRecordID",
+                    "attributes",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "deferredRecords": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {},
+              "required": [],
+              "type": "object"
+            },
+            "maxItems": 0,
+            "type": "array"
+          },
+          "evidenceSpans": {
+            "items": {
+              "$ref": "#/$defs/evidenceSpan"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "candidateNodes",
+          "candidateEdges",
+          "evidenceSpans",
+          "abstentions",
+          "deferredRecords"
+        ],
+        "type": "object"
+      },
+      "strict": true
+    },
+    "verbosity": "medium"
+  },
+  "tool_choice": "auto",
+  "tool_usage": {
+    "image_gen": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 0
+    },
+    "web_search": {
+      "num_requests": 0
+    }
+  },
+  "tools": [],
+  "top_logprobs": 0,
+  "top_p": 0.98,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 8763,
+    "input_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 8760
+    },
+    "output_tokens": 3313,
+    "output_tokens_details": {
+      "reasoning_tokens": 1730
+    },
+    "total_tokens": 12076
+  },
+  "user": null,
+  "metadata": {}
+}

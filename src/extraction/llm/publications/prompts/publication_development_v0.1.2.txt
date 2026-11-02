@@ -1,0 +1,27 @@
+Publication semantic extraction development prompt v0.1.2
+
+You receive one canonical Publication source unit, a bounded list of authorized operational targets, and the exact target definitions. Return only the model-authorable structured payload constrained by the supplied JSON Schema. Do not return prose or Markdown fences. The pipeline supplies trusted envelope metadata separately.
+
+Extract only assertions directly supported by the supplied source-unit text and only through authorized operational target IDs. Preserve the target's trusted ontology ID, class or relation name, action, operational signature, relation direction, and emission constraints exactly.
+
+REQUIRED LOCAL OUTPUT IDENTIFIERS
+
+Generate every local identifier required by the structured candidate format. Use the exact allowed local patterns and unique sequential values within this response, including node-0001, edge-0001, evidence-0001, and the corresponding frozen pattern for any abstention when applicable. Candidate and edge evidenceSpanIDs must reference generated evidenceSpanID values exactly.
+
+TRUSTED IDENTIFIERS
+
+Never invent or modify ontology IDs, operational target IDs, source artifact IDs, source unit IDs, deterministic entity IDs, request IDs, hashes, or pipeline metadata. Copy trusted identifiers assigned to model-authored evidence fields exactly from the bounded request. Where the schema requires a pipeline-computed evidenceHash placeholder, return null rather than inventing a hash.
+
+Use evidence first. Every node and every non-derived edge must reference one or more exact contiguous quotations from the canonical source unit. Report zero-based, half-open Unicode code-point offsets in both the unit and canonical document. Copy evidence text literally. Do not normalize evidence or fabricate offsets, entities, endpoints, relations, or semantic assertions.
+
+DETERMINISTIC EVIDENCE-COORDINATE GUIDANCE
+
+The deterministic trusted evidence-coordinate guide is an auxiliary positional aid derived from the exact sourceUnit.text. It does not establish semantic evidence or replace sourceUnit.text. Select semantic evidence only from the canonical sourceUnit.text, and copy evidenceText verbatim from it. Do not estimate offsets by counting characters in serialized JSON.
+
+For each intended evidence span, choose the first and last non-whitespace lexical or punctuation tokens belonging to the smallest complete source-supported proposition appropriate to the authorized target. Copy startOffsetInUnit and startOffsetInDocument from the selected first guide token. Copy endOffsetInUnit and endOffsetInDocument from the selected last guide token. Set evidenceText to exactly the sourceUnit.text substring between those selected boundaries, including every internal whitespace character and punctuation mark. Do not add leading or trailing whitespace merely to simplify coordinates. If valid evidence and exact coordinates cannot be supported, abstain rather than inventing or approximating coordinates. Evidence need not be a whole sentence, paragraph, line, block, or fixed-width chunk.
+
+Emit one atomic semantic assertion per candidate. A verbatim node label must occur literally inside its cited evidence. Relation evidence must positively express the relation itself; endpoint coexistence alone is insufficient. Do not infer use from citation, mention, availability, prior-work comparison, or future work. Preserve relation direction and use only endpoint reference forms authorized by the bounded request and structured response schema.
+
+Abstain with an authorized reason when evidence, class, relation, or endpoint support is insufficient. Do not disguise malformed output or processing failure as abstention. Do not directly instantiate abstract classes. Do not perform global identity resolution, cross-paper consolidation, semantic merging, or database mutation.
+
+The response is a development-stage candidate payload. It is not annotation, gold data, evaluation output, or graph acceptance.

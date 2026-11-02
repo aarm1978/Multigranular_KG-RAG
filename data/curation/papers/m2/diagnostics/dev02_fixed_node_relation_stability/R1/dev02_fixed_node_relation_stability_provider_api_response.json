@@ -1,0 +1,2776 @@
+{
+  "id": "resp_0c7bd08661dd7676016a9b2d697d8887d2ae6e998c77b5eda4",
+  "object": "response",
+  "created_at": 1788554601,
+  "status": "completed",
+  "background": false,
+  "billing": {
+    "payer": "developer"
+  },
+  "completed_at": 1788554694,
+  "error": null,
+  "frequency_penalty": 0.0,
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": 32768,
+  "max_tool_calls": null,
+  "model": "gpt-5.6-sol",
+  "moderation": null,
+  "output": [
+    {
+      "id": "rs_0c7bd08661dd7676016a9b2d6b340887d296f1676a49fe307c",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABqmy3GpDVZtyeDlOJG-0-f6et0YV6lcrLcjCETsOfIUv2WHwjRdNNAhh1FXKrYSpbsJ3ovnazg4BZx5zmTEr1a7OQ_pbjlKiSjtO4hA5oEnuXHPRHaFusCiwOla08FHX5bZ2gWQ6mfwk9v-MsniWgyxulAylzfpmOj99p5EhRl7RxrQmokcf7fw3UexObmtGqE6jkceTDczjXW6SpYWuGmJf0ICFRrMAc6qg9eCUIwDp5ctvX16gpVr0x_W_e2-Qj3aRejQNIja6tndWdbCQ5hSUVt2n2_cQ6dy7P-BjoU64uRhLsLMLEss1rbMeyFOOOd41wHNMd4BnlNXXxqs-noTOIQvOAlR7RlhUXpHO7-ZrPtVpNVJ7LZHN8AAiqCH5zHJFsaCdmesBKXz0UP2tA3rqfpp9tv7lPlg2oU60IlCECUFa0sigtGKPg1uHEL3E2RG2szdz7stUFktqyJhN7LdcFq9T9J38b7gk6QlZaLxBzQz5YmiV-Y_PFXJeQTBVHjWb8H18_swBYWtAAavHh0BnGgEPQkzj5XOwIXH6KujP7R13t3B9UV3-p12oDfhh6mM255NLhbD3BNueVcyn05bwWWw4as34OHvdZxnjA4obx0pqFXsr3CSAsQON_0-ibuXYdWGDigGFDjC8PoBOsX4L6IOA-XtjM2dPoT4pl3ldG-EoGtoSWoOx2Akm2DDyeNU_PN8DOAKyhfhlZH83poQIGambp0SicZxVHDX7JLNFzs2pYZOyeuHceGpOe7Z9TKcvE4ZSa6vBpAC4YVqvy4d1mtekTCoLlXPDCmEjLGE2jhatNK0KHdaZg2nDqSzR2NkZ-oeV55WfT7EzX9rrTrpzkr4_f5W15ky3-ftDTNtPDpqxcSm_mUw_rTk5Xpm_OVKraSIlHjW0kqf3-eQuPm1JJyHp2beipXGyyVWJaAtvVn91bvAWL-RwomaVrBjNY4vTjJdXJNwjbQ6uCHe-Wi19r9Mp-h1J0YA1jxYmVJ1sB3Qhmh8hMv9vgUAK59UZZMtZtoVyyWhgNERCcakQsdy038_34-WfmvrDjAS0vr-xzjR67XH6zN7XMK_mbyM4eBe47NsZe_OPmAZNIrXbckuKpdPo0bAQAb_OTLP6C4mHBFFUpuDopITqbrqxrVg2qEMYN1j36386wK378NBR2gsSHN2QekFAe4GKyxd5gLyagrc7ZPCKrg_JTIM-5D_Wocu0rZvrSvD0ah97fBTxOmMqfyoc3p5qupAPiHUKcQ_UFeTcGHoh_b9l1VCSDWqiVjY327WeziGw1ZGafrj3wzgjeB-fYb7HiXJiL0mzwdetAUppmaHgtWZzfxq-09AW-h8w_06tgcvks6QQ_DiXFA2UTIkjIH2ClPhT5MIsYgAid71pO93Jhih0lkZTNSuhw-vxgYFYF3pCazBRpDzgg1DTGaVzbB5gTvB8NKaNUeTERK8-RkrIjgOWWvAifwpCAa8aJW0vqw6Q06AwC2Hx9ZNZWxU1gQU0eeuKNYhUUcSPSgzShe5bKkE0Yfr76F5ougc6sDlh1kMAwkOkK_ngrgwCuVZmj_HzVsRkHpoEUagIoLkSFWDeGHciNuJ2iFSLjJbY4emnWKvovq3xinm1-K9XKcliBCjqFxUDRiOLViPeRTDSrUyIt-K7M_bks7r7ByV_QxQ1LvxEr-_fPOoIkM6mJJ72xznAkzgJE0A9lduIZjRdSSwYFfsnsIWXyDjnin2go0lYH9ODtgHxmY98I2qM3geg_tSbcR80KEfJ64PnoQxbGM-9ARA14WiYmhWfsC_21hS7Cso-TwlCaFA_zgvQdxHFq_pauEAf91Ti1NAUWozeptmmoguKdADmviuGWXpDzyTbGmnwn7u5b0-3zL9Bkdb5XPErDbP9SDaFbCKVBkJa1KwQFFKWlpXJXSwe01o0-D-nQ4u8xvew02h3VRqSaF3yf3DV4s0-oXoArHxmqo4TLsMgqPPT4mWy-LKnx6pkr6ep-gxA6AOAhQ4WTmjWu45pSxW6t93WpMxl-RtOL8YsXO1pMNO8vJyvDT74FLaDoQ2glbYm5rsbp1T6aODMTVb9tNXXO_PxscmjvkSqdGHammiQ1QhhxTs0ySifVpgNTFL80sfz5HR96hR55TpoS-WTt1k6zLH9Izw9s_wjBdC4OjFI4XHkoys7AH7V1uRkEF9OP67CSJ2x2cAKWJNsvJsUoT9hGdjF8oKxlpyxdPoDClja0vRgujTqaCZlnwoWCNExDh-IWuFdwvgr6C5TJUCARW_IAXXgOp7WPsRiMU5hCwP9YowG8dfA3dsIX6eks5L8brNZp97cF67eKyv9DOxTQLbqJOolqcoT3ZSelKE3oAXDnDoXqtQicf43JO1WumHMpe_Qkr0fL1gTfFdHQDIBmPRhEZVOeOF752UPqyHp-EvLqMf2sUuNiu7t5pj9RWVLp9gMxzfKYKPOOjVNdVLLeINAAefhO5pwQUIMV5CpktELDMc7d2emvljckkCituYDkIJfTfhbUxsYSbgFfCzG-gtHqu_WeZCGAVws3j5RX2skMLp-Rzm37wYc2_Nbdj7YY6ZOdBd6lv9z3uVYOMUuKp6Iwb-EBGyJMKkzytU8lvTH0h7sseJPvrV1z8xx49jy7eZ1cn6PvvTVpEXeXpZxpKElFrXBCGBg_MnRFNoQRoDsB76GlSuVXOt0BevhzYsNdiik1X2-bVG8k6MXkneHVOTOyyk_YIBMFOhzlI6nc5JyIQowyOMLZZeiZbIORyoZtDSFSmXt7b1dMyAc5rChkwt2tSkZOpHxyvpu0Y4Fb9lUt8kTfLLLZcfARpdefd5YUp5JvGjC4rdVFLfmh59jx_wCMwMqVmjejE9Q9Rmm0x3Lx-hgFBpzmO5mFnICN_hBwZVg083epJ4cMpuuH_X0VAVWp6zxuBOhp7F_UweOGpq7qLqywbdGPRwtuNdc0fGQyJVU31ocklrXY-7zeOgN8nVx-L-evoy1R3xLuw-khYFu45qPbLdEymWWCDxztND3sysnvOdEKDFWPrVJEd3DsTwiZOqhi0LfmL3v-fZyHT6MM8m7uYesvQAF-bUNMyyTjSnvjVtlCdQW_9SDVp-kQ39ran4XDzJ8VAOkvfenA4Y8sLvNkGUjjlj4_6JFw2eAb6RoweUQ92KFfr5k4YYaYLTKZzwzffEbQU3gqG6Kjt1crUBQuOSIjyRzw4Sd-UTL2OQvVXugZa9QYYaA55yeHwEC0fhFKA81TsFmD3UgBfNvKphDBbCY0I9d-cgnf65Orwsem5Fg-u1jMTeLUTlNQE6uRdCEzZWTziXr6Xwo0kkP7zM0jmHmvfvIEduQ1-ppS7gioS4FVMH3Av6K7AJ12AtlzI4X7ia6AMS9lXJLs8QsGPCHXNs8ojw5CdM7l3J8Qszbdf_NpKEAhhDOnFTMyFKfpzjBgkZNziZ7yMZ1z-OzWDgoYOI-BQmGXmFZfTjGlHfDf5kRSzAmqpi70KGsJkMlxmceP7oeChl_SbXdK2Kzco93AMFF1zzaolFiXEojZ_8HETHLF5spEQLllOCIs-Tfv89yGkOQjQOsQc3xHREO2Q5Uds1EMVliNkPNzGsOz268cOFn4-zteXDQolF7KqwT5YdQaYSZh3uFlSGA6ua-ClW-9Kx3XN1eh1BDm2lPN1_SP2E8v0bxUIhCC-E4epcYl37hREAhfbfhJKb_zjIC3G4uZn9vB_gp0HEmD7fCTIa4wrgjJ5SBEh1hn8pK80OXM2cjRFXmjxPlGXLS5Nw7IChgC8DV6inrnD_auZIbyzfU6-bAc48fypW_IHO3aK6_dKfGK3EfKzRRYSy7imM_apyMDYLMY6t6YzHTwxf_4IhbpS8xJmkIknSkw6YWvkovQHBtNG1vnBNXJk3a9ifBhps4KvlqAp1lzkBWx3Pr_IaPxOpnoIbG-kkWR6rvqUxbIRV7d_nM2ZLf-_vdXgUIm_piXQUHclojabDIXUxT5J6Hf4knTgk_-NbRtTQkvK138okfVg1abX-c4O5TQS8XaXaJofbRuSO9s0l7XjRM_i4sFYc-LP4jX8u2GXpx9LUylmKJhBLjMJ0IN3CzcbBD9LeG0idbnKebLvS2C_chxxY54ZWH3uyTyifFasY_9mWw5kSDJLW3Jbnh9s4IyErYR3ntqDEVUws4J0gFHvnxpRnKb_hKEbsYj2mzDpxEtDIG6EQiLl2TNfwALZbaxfAyVxoBoiPt_UzYiW-HPXXGkB43Cfc720pS9i3gYdunmx7ZxCMYeJ9jqeZXgPuGkylz2vW26x5ZtvoFh1ddspHxaVLU-r-vNWPSHuENJH4LHQGjb-gdpzFxFH3mWceP4zLES0zUQnjY1SmbrIE_M9ANAf8KVoIN3hletv7OjpUAn7mooCUsglEVxTqDDlDsuEu8quXfBUcJZQDWT-voraf8l_pPLGALqwXDo7Rz1YAFXovTDTz_j5RiTqB0STK3XaBdOjWutXqGExaAeFZvOrR-P0La19XJeI8NiEpqmScHLFzya3OPJDr_XAGbnVb49K41dxuCIFt5oFHb31GXN3",
+      "summary": []
+    },
+    {
+      "id": "rs_0c7bd08661dd7676016a9b2d7379c087d29dc2c5bbd0661c65",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABqmy3GVuysB2_OPybvTFS_VDSNU0Pzou2aVJdaGL0vlW7vmxdhj1tFET8IQECh4U5B4UqqOrCuinG7VAUJntvmngnqKEmp2i_P6MedXeog5RYqBrO9wyJDLDTedsBNtvsVCmf_SH31jIb0-1azdCbixiy07-uZ8S_j8wYmF8HrY2iiBrg8ZVY-Mm7690OY3xUmiOsJbplAHhKuJcTncj3BgngEcdi21Bk7atJUKi7644Edwne4WLvtfIPBWYkgVNgGlucVEQu4HSN_03vRptCmKr6TR74muw4rm450hxKIPrkdOUbTOg421HJqsaMjLl1FGLbiwRizTcl4G9j5rlBJG2kmMlgDRGranvqdg-FCK91G3xTkbj3JJDNtXUroxpZsFXxDbL4wLQsCmwM3aEXloWCM6sEWkxixfrRf8ZNd4ugOur2B5UduQDCYanoOXgjvAXoE2eLdpK2jZOOhLQY9A-I0L9qIKVmqwPxRuchDGEAy2ZkaQowjBjpZtckkjzuORQiZsqGmLUceFtwUxnxo0KRYgMopZFdfQhAxdxRjqcggf8qaKJpQO7qRz6tnC9qv0WVaep67S_nC282rwsacJMy3fn2quwdLo9HNorkvED16yN-4yl9wqRpeRqHnACssG1p6d4cF9_y9yDuiCNEYQiCpK3vOH-1ei4Lx0TNTSuUQ-sXSI0sgU9CwkgDorxHD5WNXBPsuyVHoaKL6Wc9A5MqLRg-gDG4CXHNNNmZvWQtgcFhYGJD1zJKiY_YTDMwCZcLyWXgLf6o5GDk1B8NGNElReiz8ZRdXNa5-hsQPbOUbxVQkULrsqGJ85K_as788MLYL-43YOgHw41e0yPkhp9LytIqBs3UnvqvFmzYj-B1e3whHLX2BlP6N-hdmlyyW0Q5TJW3wmUPwgYCvg2IoMLMfa1b_lwYU8DqsDhASONDR25ablXxM4m17Bk6T7EVeLAJAefJXIIn_bwJuHbW0-ujoNWJfPqUATmmBAcY-x8KXTxnF8JK9-9X7K7K3INuflCwAGRqvER9opXlD5IGUckY-nvAq0aFfdjBWNDTPvihb-uiAic_-owN_9sKsDgcpusWK5cHT7qZhAK5fDmoTlDo4-ko2TxgonTdAaX6dIhl7fY2GuRnOL86VjTJjdYlTRqjLL00QmYwpoIhnVVsmiiqM-4y1MjouYwCZUpvzdHg3Zbk61EGButp735rE2HlQ6v3IWveZtsi1Uj9RTvpSMLkXLTM7UlP_lHvN6-8VL-6KJfqO6kV3YNSyW9UqzjbJX85VRw9SNkJgt2__xOnkAA0l--2B9VVxE4gbIVcSheCPWV83rA-vfbluEBaxDrUzQKwepS2aqMLqt4p1DxXwN-IY1Sw5fHQWaD_Sus0TnS_PlPm-4k0n7IgJIOniHryq03L4peF587I1emfjTAF3xAgJn6vksyZgKnHQxyND0L5wrohI5On2XBTRrGUxvdpCyP5d1pCeobuT3dgbe_NLaMPpiM6lS9J0KYSb4trJZzRubo3ItxXCvE5DTQBIc4Tm5DxE4qtBru_kZwujFZs_xy9HUj7kohpnaZEDDRsLqCKZJ9Nw4WT96wCQce0dTT3QwYb-cfcqDuP1lz5DQFUXDSCwe9yCq8xLMih-DVLTGr2tFyMMmbwJME6KhhRwzjpXODII4USxx-bZ1rbPD2u5Qh0-Id_KZK8f-3K8zR4ZZqZwbIyviXDoknSuKLiaY1H9n3eBkkHpUi4VfU96gEbw_6BbKX4rhldO0Ao7CHgGvByrTYExJOYO2et5ZlXS_xi7Y-PDl-p3BBXjZDP-LAloXRB-QvZXVE3P8WuL1yzAzpTpku8m6BHQfF_xYNZozkU-kzeyRm6EZTOMsQItQV3CpDchuWJH_IaZ1VbXAsqoA_znpjsR_Hx0lBvotAsJYxLPjWdCJoyKBQ41_j06ltMZmVmztIH-XskK_5z2z6UpEHZ_Pqe4BQqiO7zfqpII6Xk7vwux9wXka1zgALgfaf2wfTMvh214TiwhRyZK4VRpnsYl9zmWtl8pLTcHhMs59ceC54z1CC0m3PnOjAV5KaiSgQgkCrhyGkpmCYD_-GQ_cbdFNC8bwMF_4Mf9EvST-y7flL2eWZom_hr1h14QhxvWdoOiCWb3B4jBynE9pR5sF-ELLItPOtWk4TRJXunPjW3nY3NTvdmsykpBoxw9goFmHO4SWvg7dXLBfXZwe2xdOZXh67W_mpPZ1FUcGP74-JQN0KvM-tkeEJ_HxsiNwEIsscty9fKO0IOXy7HMYif-hjtm8UXXfL5pq1B8rM3uMi7KTzCCqBrEAHrK7OyiWV_g3dFc-9zhVzSGRJ3dzbFZs_HPuNS95JkIIFPKWUUIbqsr6DcJMTTfY7bvo3ek2Ro7UyzvDQEZGuXFdVVwDBQIIIkckftCtAqL_tTAj4NgbpvBVo7mF3vgGwYGfqjkYytO5VU3O1Tuje71Ougl83UjYk_b5sO9Otx2tRfUS2Wjnlb9Jh_Ykw1xahNKrt6Wlx_7nruKDUPy9H26BWqcrtkeHRxC_1NybRaVGtTQTuhK6RfFiLL_Jxo17P5G4_cff5DZmVY_DYy_hiZTls_YofAYQoCkdXL-_1PA7LlKC_38_YImxqBP_fIHYhkRBaYJKjt2TmgFLInWohcgli2VceLImIvj8zWFf_2TooEyl_8lstpx_iZToi8mirGaVekSDvcJwtA2TVEk4S-fAXV_vzFSZ3SeZiFzSEs2jhTjaP8ixKu71abdyque-zuuE-ST_CldyR4Mbkw6NIc_fKYh-j0wHqSMWjIYPTbJxop-6LYoCfFpcuw8W8HKnhSg1bUihiYt1xld-ll4WTzOZVafLfLVxxdmHD2DWsvHHwmajl0A5b9Laoh4Fta2Lco0yHS2qMp0YtKQ8tApEMuGA4qo0YLTvGiUr1oeO_JLnRP5lKu5rolnkTsrDVCprF4dAFKG6K3JnnKlazRlGz8iUcu5X2SO3v4PZENFqKj5MtmTM7X2Ct6V6OnvA6zDRcqMESaMfGEVpZHOnZRobEFptrhuiEr5AjZOcOdWIU0A2Xp0hhyz3QDkOEhS-q9atVpMrh_FURCfAoI_WXV0atvxc7XnlZebqPLvc8j55K29J7RMCMe6lwv0G2ho39uIJ75Lic8H98vO2jooMb4Ze1jtqJN4vEYjGPxZXxgQCXd2CLLBgHjCZ_hlFKQJ-Dcz-1gO62fQkezZuKUCvIKv-XeMJwYJjsc3jpBavX82ndXPc8C9u5JXtX2hAFzopp4e52PA5pnHauu7hHN68j3-A-Wex1fA8HQUo8A31oyKWHg9tioHp56_uNOvwzOAnEsON7vX4hRlOkkKpTl0v6_ychjTg6nD-EUiSwhXJlehhL8c-QtwWXvG-1y4QRVT7NW6bOVoxuMjy3VpgSwCoCs2mftd-6KIjOnDJYzXelUDCQamHvnrENO3j8ncT1flgNusNy1fxpIB3mso04FKBb-mTh_pLSq9m6coyZ4OsWEiYM3ywMl7Hj4iJIllMyXvjjJt6yOYSyOfxy3CvljTbPFAyDXg3qvutDA9LpIY0b5ppUMmposehXFqkmbTKI-ZKyMiCWx4w2FnBt1WcacPtO1DusypggM9JH5ON2AkhzqPyBM2NW1EEO6DnxGJkJFTmbJeAwGlOA-jWmGmpmh1Ws4Xxf2B8b2NyqOofPmU9FAHDL2sEhfGiMmW2h1epe_bCvF52BX3qf8q7lQRLLBKHrJFlB6OJWdkmquOx9_DQQVwusAauDtM9keAyi4hmWWmTFU3fRqA-vWFsz_29PB6XTdBFwAl6TJTYA8oRxMAwB6rIAsqfpimK95w2P5xjy1Wn1nDwCz5VaNKkE-EnxO_o8a8PQnO3X5kfOE8HEMAXozNGXvp8wj1v0DkhHx0xtVlLfYGlYXwQelCIGsd7y0I242fdPEwWgAJbLkcJPIg0k-D4pn7U1GLsTBVevCukpy8oYmNh8u79QzCDZbdnwVpVq53mVrRsLxA5cJaxWKsVrubPvGy0edbDm0mEiKJIAUYqp4SEHvfMS8GkpORwecm3Ct--vOMu7LuTcfpnBSbgbMxk9qtdJ8-3ZL1nQvjJvqX12rg1LViaC-woxpokdQzZMceLu0UsqmQLlB9E9qMJ4Nz6MDGnjOqh6pYuExVGeq0XzUNfzBcXJxkY0Kzd6WGf6iOzYjaA0aKFpBnypK3k21DEsogj-5rQhLcQrmThGr89rtsaptAY0CUVppHq6xYu46j9ACfRUS9vKFjWNO9EJVYyxTrL_Ynd-UQXCSsQ3MFeJqSeoE22qA3ZN8G8v-l8oQmEjiJ4qBkLww7ZZmdTJSf_OFG09YAJKC2tLLWLnZKoX5t1-caYxciiZSpbN__oVUDCBmwtpBg1yjc9g-B2047aAoiBi-BIA6fITdgyWiklrwu4mu5ZnKWJdizFnNdLQc0LoKTmps_KN5QLkdeCSFvMKS8VzWPlv1qWvbtCglnL3HjIue6O2lPJxqwlLKIrPWJAjJu4zq-3g5nyJY9YjOAbD-r4bc7hWkn7E_PN4Ve2S2VjUC8Hl5fbpUKi7TE0CWopbYPxzD0Rin7dIQNs8r0K1-GEadcs8X_XizZ4oLv7B0Un_EEqI6DL7-ZNMaHV4sApg8Am7GTcW-ATMXiPYHsSjZyBUOeQf1Kp-mZMGsg5VFGU_6MB9EciWtQVM_U0QQ5KsC649SMLjUfmy_ZVU6yQpYpIkPxlf_pPJkxuzrXTRaoWtDyDVfHEqbv1sn0lA==",
+      "summary": []
+    },
+    {
+      "id": "rs_0c7bd08661dd7676016a9b2d7c166487d29f1ca993df30cb2b",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABqmy3GSagBc3wwxImFoJQzf6qX1t5gkBGNdp8AU8VhrRObuK2e8vQwGz4r_IwuaGfDt2x7sHEhpVu3trzouhMFc3Au03ge66ZXmdtOPZCVAnuUGV2euFH_VmKCJD55kwTmJage75m-iZtXjau0xWron3mVNB_4xneMcObmhJ16hWNIi1Upy02mdik8G4fHuW5zGIg5QpNdR6seEP1OcN3v018sjR95WidCrYT4krjvsVc_ARpxFQ-9lCUiexh13mq-kA94230SFKPimPltgBO0wA3FzNu1MUhWzmct0qkaq2PBGKKIl-xjDnwNeBWrY4--go6vj4243hpSiIhv9XlImzyLXF7LIvhG3-rPoAWlsIaVCZ43wgBwFfGFCS_JI9k2W0p9qOg9BaCxGUNH931BjjWGE8TJDK6J1vxQBGyOAsavejQc9WjmbkePrBz5i8GRTqtK5EmFJpMRzcBDbBKRNf03Hwwqvh_WtF85CwrQYtJ2dLcXA7XyiZUzrYsUfRaJAGab3Pz-013YvZYqOSkJXa0Z4EOLAZD3YF8R3fPHfvXZyiplKrFdqezCHq0eejtE-7s76KPhtE-QoJm3-RBi6iyExHx-sEvFBdV2v_mHiGK1AobBQioNpTtVxpMq1-_dJ4WoJghBoOU0VPqHNr5U96tUne5HqTD-p6nZ9FIkuDssO8uCHGqFHnMvd-LdTSEhrZoFR6anobWYPEqULrlKWWnixHslD57GsEOe0G30CPD9TIYeO5QojHlCpajKiKjD9cs2shrjN5oNOzhibHCZn0RBZQVZAau7MzRlQiM_VwxKDUIbHctSJ188ZpaPmH4WoRAUKJPB6UW_xwEFfR2LdFbgx7hTSJkVWoYLC9yR6PoNrDiinHy3ZMU3yDjxD5MT7lW1OEJ9OBQGLuGuTtjDYMdUiToal15Ype5FCjCRSPsXYiDgQc_45p5xTTlq1NEMu4YUTK_Go7Hf1ncS2uIlhwIv_EBx8TO-CeK_5SwbeKGEzYO2q1Jg4ybN7gxWnd11CDLeyx45JyUSJHVL0v_2a5NzVWlDwDj1gs62ke2ZUgIER4Bm0kjAI2OtFXhJuCG5GmHAkIDDvQ5T-xETKzoMRLqC5X_GtZd-2Z20kioh2ZptGA-RQd2e_h9E6yb3i6R8-AiCtNRVv5M170uJYVAVwCkvCwnwF70tfzjgwh4_3CpsLI_d1aeT6gfkvjBTRkivuxA_0r8LV2PVJDRRRLrIjRDvfFkvcjA-Rkc2YjoO6IU7lLJiKzdOkwfpAFHbGdLWDvSjxpNk-_hJgf4BbhmOrRouSaDKvDD7x2puXXTz5M3vW556RYVTp-KMkEkz6gSpA8fEoBE8p6LtoFD8jxTb0GlIczKOBV9hHpYRxKfIuXVxYk9WpGktYKjKFXk7x2RNeH-L18FLRZjoYgX_5LGYfUY7njVe8yVsQfFDIHwXzgrDdIzPWvUBfJdgDC4ZjMD8UXiY3W9RoB7RYBy7tUD6YN8Ph98G2LqLGXZNZ2RexUn3CHUmBjUa2m2akAU47ifcPslzG9fj40qjYmH77ihjxcXeVBEuSOuPUIQe2k5T71e7tET1YVEFPt-TIeosKHdkB9pdHE4klfvt8_Wu6vu0Nk3VBTzw17UPMgLuD0nsNktnYL3LEAQe4A41fOZ5sZzk0CDRRhkvrWcfKm29ZKkDOBj-g5OFA6wthI8SfSDIxlRutlKKD_Fv52Wp6tc-GiWmCcaBmSYI4iZitoQzdjUsBrmEe8C9uHwAj3x-N0snq_HLTW5XzU0ZNOCEHYNw5upwGbl2mlKFkstXZl0umRUvhEapJHVm6v_IvtQG3_PgU2bz2KeY3SRNnQmrA5cPYM_dzEzZjwFyFkUE69Lcqm53UQ61PAaZ33WbBCrFOiOzb35-9K3NYWBL23S6skmL5mBiRbkYuDbCvvGck1kKPRijHWV9Tms5PIm7ABqt1qrwRdDF-j6TK0R3OyvYnnF_cxWOBR0_FGk5XB-DRki8OzpRc30WU3Wi5Dd7WMDMHEa0qH_rGHtxilMS2QibVYTP1yHN1DnprHEY0ER7WsgcD_euKwXoC4CddX7L__rAp9FZMs2QEDwVcEZKfawHwn7zX9OtH2E3zKpIbM2XJgY5lIdgfQls55WLh9s6tFwuFsRIYWQR2QSrLXzaqzB3Nqe2DTuYE_eV7W9vpSf3w6Zx7ejpFcAto4I0RmyapBZ_wgHROqRyuxz1bkP9TPrcyVlfJ8LEmiZuZCBEdhAdQPQsY2TBnBze-YiFV5ahW1rgt9Hq5O1XsFlFis3EVd2tFbJrPhnd74HoEmyd1HXNY4IMSwrok7SUfuuBFHlnJB4zdlUeqwFYQMqmimqTN6IR0jeLXyLw2x6ilQk3zA84mqQXt82HN9e_4OPc5756hFpCPnMsoUjCNwTfq6yGc27L1IjqxSTmuud4wqbjYkcilp7hTeJGNdKlC8aesBbjP9T-n2gP1hBfZI1Lp0u04afCTEpN7tp2ss0AvfkOt8SXNv4P-YYBkf8O75gQ3gxLWSdLA21T_tshBrE3ZjVSD3usPk2gcl5gtSjHl0d6szwJmhwOrUURCBSRd9DeYSsQthyOx_lu3xM1ADsEOgZ0xPmcw5OIRXlPOtj7Gi26epfVXDcJRmMe2INl4zsRq8fggzxc79zVkt2tOWe7HAsqwVxwdfGxgtbFT_4Vv6s3xjlfJmCjxNYESieim7Ps8TKQizT2lu6wcc9248GOLKVUyQg5jLczOBqZ3foh6cWP0VMP3S8v0D0SMvT5-8gEx261oXDs8I_Cw_DiretldAjBnhWAFIqhOxqebpu9cHqD_YhGHffBe9XrADpKkVCuPxmDpmclqPAvhwhfApcjB7maR2gFyWE0k5-fYbXQ9TnwmLq0uE6Ko9B2q5PpX4DYS1r0BR9gs70zNL0HtUOCJw-xToqYcgEaUgnBGjndB1xNYp6nfHxkMflZsqgRMG2bS430Csak5vGwZrvtxlKKSD5ZjzC2C-W33FvUTIaYE1U8c7-WQaNI13NZqCffXrchNAW8No_-8loWjzlYWAGbicYkVMcPYhzZJh1icn-ijRTYhYiZz9Lgunv6sUHM1OYZRXRKXvpd1enuNDycvDYj53gtr_3x3U7gXeJL47aFJrPOLc9B3qwZHGDgFYYc7jIy98MdlUBlCKlKC5_eGUkFwguYg5YaDHK3NlM0c8SSxcSIfnMWNRdOOh6cofXf6UdIK8vRkaHDOHItLQsBr4oMTRwDfZsNSg6z_Pu-WEgSGwjJB1s03R1DLR161_iMCjQhyZkGJp9u60RupTbu_VD8lP2Pi7aVL5v0aS8KjxeWnbBfhsFVxjm70Sw1Z92cDyHxw8JPwPlXv4iwqyeBLJOMdD9gXWjoBiXLuL-THQx3ebgjoLDd-zqJDB0XQZEPBVNLcCeu0bZGCEC0XDvOMOfEYIlM2FSrrYB2Vp-QO3p5AJmAIx7akwfTc5Uywmb5Jlmw_zS3EzI0bWb6tpN83e-BRXKOVUcqsRjQFOT4i1Sij5aGTKois6g66z2Qqlu3Ux2T3BNmvxVvjzzGgdGY_VExhvTrWEE-TJLLgkMcge9j5rru9VRSmjBg_uhwQ-cmblxHKgikG3SzSDLYzaFBhdKX4D7SPxwPWnzdoc094H6RsIp7WkPDc0gLnwiNtAMFFfYNYTEKCN7hRlZS2qD_SZSNxfWOIq1CltqTgC0VAEW9dXiWLT8DcRY4QF24IvkTJl0oXALiIxJMYaA6GyO9QLR0h_3uHeWp_KECH78qOp03I1s6hjRSeGCd877MGBiNblbcKTCFiiJSGTZ5E5-_PpVhlSxZRT8ZZwM_uxYBlvBRSqYTuppWG9xTcHwgOJq8wVhrAxbbWjBXvhWtRTbdYoXWuyWKA_y-X0DimaA-GOfYnhIfV7knhCKuijRi3UgsBpRH858rffxpQaH1Y1U7louN_J3vbZahq1R8rKlfyp4cJsh2z1jWcMvJCf2uPpdhwOV47jmLK1f2j_XQXTtlzlzDs8pKenuesGczvANeny6GLVd_bzCNzCRtZ-KeeX7UH7ezB1A-Qoj4zybtfgsuJPTcwA0-iextORaHBVSkuecSUNYGk1DC54P6Ls6v42P1q17iLIWIaDOm0k0Z05KJfx0mvYhtXm2hEqUqdIu0Qpi1iGCKGrD0AFrZQGmZ4WUqUdQbz2aefW6dgjjYkUFdxtPNkuQXsZj0onXGdFDvcxWRXgc3CGd5ht30PND61BlYFiYt2_U0GKSrCvm3h4V2nwU=",
+      "summary": []
+    },
+    {
+      "id": "rs_0c7bd08661dd7676016a9b2d839d5887d2b6bfa3c4f40f0a0e",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABqmy3GmliJdeEjJs9oTdXbgALsTuK8jCz9cX55I4ru9D3Y9SiHYjtMcLp3bDd-fVVd33Xsr4vsEiQJWtGuGRC3MWhLXS8iTXpyfu12SrcURM9xSNad2sA-vSKm3LKt1snKU72hIvvMCRM4b5JF9P3X03ASU9PCj9dxYrIjMcr901HHg86rEK5BbNTwgYnZyfnKxW_7zGeFf6PqOl2c-fsBCrNpMUP0LVoPhy-2hLzebmlkDAW89HCCs-fkaP4S7ikC2OJd4-46rjagZ4cor8gDR4r8t2_9XJJVJFmniuOXN2XpI5R0aw9O3jynNV1GkDN9aoOx-Wh1hl595SKm03b8Z407wznNW5Inma2mX2JVDMCnWRBv54z03fdLwYO1ec1Aosk0CuDPI3HtrtlPdxbD8yU5CSbngmy_K-jlrkg-A3lrEDO129AqcjTIIedeoA9MhTYvH6g3kN8P9H8kSeQ-7dyia_vzmPpqyZbheusY0HPURsNohv0-LWd3iAski1bN8dY2wqCDVdFJB9ucqbl9XvP6yYUs9LHE2i8CU53BSUJE5sI6NnaYOJFP7fwKCBFQo9AiXStspd2DlfkC8ZL3jnc45WmmiY2KHJcQQD3HsfTtYyExUhG2aAQN55TeI9My9aL5Y6TIBNNXw2OzXfYu6j1o20o_fE79IXuQvZcaFXvM2-iZ-f-33p0EBSsHQWhwG1mZRHaT6OtgnAiyIFuULGPFL4TXxLtmgkJi_o_wa6dvzbV5aTYRnwPu_T_H_TDbSyxhND-C_6tXzRZNOaFwzDe322t3IxB5sSk9IEOoMbc2E3O7nRHwR3KaYUqr9E9uzGLqBo8aIeLD-pQRpzgYCeNvHFNrfEL2DawjpUllltH6oJLfGQx0Yhk43zi-zK0_GyvceAvyLexU6i1wuqL0v7dXJhl0CRzl7dkFMEypwTWSLv1fR077yQmEuRUxA5mTURf3heLUVBiScP7r37nF4CqXPJ8tfSq5Ca8NHqIh2Q2eShIL7YX5f4vEmu2G9htqDzVm6z1Qw0eRiNH8o1-xNlEvykusYZ9YhJ8iWkSPVTjPYzA-uza7szm2t0pEHVL4BvxO0DbBzJMdYVEyoOP_iQoQ7u03VUqq-q8oZ4AvT-wYibqQhAaiKQv3nXSrEuA54x9RFX3KIxhRMaYM67hpdbriL-9tutRtSsTVF9GVFJDHlhpzx9HSp-cBiYK9WdgqmGfuK9emZ5CWO680oAwVeKuBRESPlGZmDJumCqBi2M5a6ioVCIXArgYoknY5mL8a4nDeKvu0CDfCEtoYqMDxznXBYXpfZluvAbduo0qDn5sgatgqnXgEwlhoc74sMKDVKrkyO1XOpkFJHQVTuHtuAgIXXclbE6I0iUIKaimoTHB2lalKqPLoc4_xWa2TbLmrW5A7WqsMssFpFXrBTydJGDeOXArlSpIpMJ9ryLgL7C91-_sWUkKiYx3MYHHeNZLYQ7EzN2k4g2RpVI9f5r-QIC4g0B1O2nYe36keask4DQrx7_aPPRzHKPMR0N5lYKrFLzjhOd3vk0Cj5ydFVmfCIf49j7NQKPEKgCjEAVwCqLEgmRnRjaWEnComuZpl0HF19Lj9i0Ai987VAsa5sb2CBoha9L-psOvl7Paq_wiNhCSRwwYgj-aAz2GHQN9uFWYW_EzqZnyoCymCtDVcX1ktDGKvIaf1nWJHnciSFhZo7RAAuAHqXo8pH_OkPdVf966wipYExI7-ThZXNnfzLf_45rZIp_WlC0zAIoaJOzHIuxmBLMBaEZUsXvJ30p0icAuLlG_EWrkYZ1ejqsmmJcJ7RysQkUwiflbYGFQAqiSEYq1MqZOAZ__UnM3N1uPIw5Qcov9wECmJHcTrOWyycN6GpNg4DiJsZQGONmwJvOMzW_JeZjCdlHssF_pF2cZOTDiAfgdQo_X8BXpBXmA7oyPSki2Y25FJT_j8ryFSt_qW10GsLd712paYqJDCG1KSGmmUzRXZaqOLmtQjNqaaoQkfhHZHmlG4IuPwulu_qEgl1Hl62z-cXlLllwt7LFGq5Q39mTHD-11RkNfzl_1EaQiQcINe3UOiK_c25ZwbOnucLC2wcyCRce9id0e7Fz0Rb1eAzWmr89n6q0RiD6dv-HSDbWB4lIpSS9ILuQpVYqkxsh5sTwDDMXdFZhTO3GJ9Ju_JcBm3rgz1qfend0hzhMw8brjyWnv_rqT28lWkFgQ3R7fJgTXMWQZYu9tPoVpNoVQv9O_7ohpWxk24LJSgj1b_IatfxDtsLNt7nC2_-1KDhPp2FmSSWxeeOR9ohTSTYK0ScIw3F1u8QVdAtyGJQacQNJg1naRU5lHYRjCZhQmb0tUEX48pjPrR0A1W2U_jFBKtqRlHSXr8-2-C2bHVQfb4ifhaYUNW87jArES3BwVKLYQuR1K7mDlXsJP3ijeIz_3F9_hUJh7mIQaVdoSNGdhQFqnTgzu72zxiIqhJ_4n-tr-nfwEHZoCUtncPf7Y4m423CrxevdE6IEzr3DzYvjRnawGX3VkD1SVTwZAQLulVZQXXpB96r-Ni99vQubYIZOWI_8sfe52CkAZFj1k8gYmQYmgdwA7N3Kjw5InvH-c8NOgprg7QxlJZ7J5npaDe0Ii2OyHv01UksdGSw4sRSIXAJQq1hS8hnOuCcE9UnQup_xhTEdFNVKpOtXYacDZ_PWleFmyPi8BKkQ7aGNvnSWX29kM54vWrCTR3IZBWzX4exw6jQNiLZNVFZJYcL5P8uM07aT8IrsgYPvhEKZzeFe9VccXpkf3E0brBr-P4aDmRAeVoXiXeyXMFiNj-y4LVO0STw-xCvqEWsiDfZpvHl4lesa-rJDAPl5toDwhzPx577OqC9C7AnuX1YRt1n7Son1UVMKaXpPjAG0Yg-7JWauDh2LczEczZZpUH5tya8_6Mx5gZZRcG5zRHHZvC8lVL3gVlbRWA7ZzR7g3EXaVYoL88axBKSCuqAlmLVVkk91LNmDcWazDm_EtdrGiaTtcPqhdW5Uyht4HTRQtbq_lRqpxtSaJFtyQNxEF0kfuoYbG6VSN1BpsxR7hRmomZnifBTOXQvJ0iu7uYxBpyEIC4X3bS2eDKz1VKjwcD839YrZ1C511f67Grbc9uN7ohAb_5bCO6YzHkiWnR2yC2nvjKdVl-g79ixcwni-43oy46OEw63w8QK_ghdw5j9ymVEf52aNWmEnbfOtfURHlINqR8y9EvCxAPKiCAUcRdM9rCrfVd8mQ92bQ2PCD9-yeWhs3NFDb4kxyYthk9us3NLOpCLrHCfNo36aWPGVNm-4tpMFVLDkuCe_f7I_w4Z_Y34ZTYknsk42q4YVKUAl3qsLHfT7EoXGwqUUEzhhCQXCoY5dWGdi2ZqWqvsG6XGe-_tg0k2FKuyVQyn8aBp5WK0aWpwIvrs644E-9ZlpSFPPFKcosak71cgDo_1EAhpDSncTHu3aXB_lbgys8bg-UPtqPekp1X5sB8hsXG1g36M5FEFhoCO4ptJlWRwQOEzxfTFOt1d4Bew5tb0phqFEO_MeNsxuiRHz4UxRlv9YHknYqfhr3iX8j4DQaD2dvKW7FOReCR30UsX0u3v5RoEa8RAA9lxMJZRE4mSkLW5fhbOAkrE2F39bZcnrAylktcA2-gb7CBuZBRdywzsXSyRXQkaBniLJtx00u9JTpQC_VRqtI59cJh8hNSBUNS3n3i8x9dMhlJ7Vu8rNTeFc9trpcfnE-Geb4_R4B5wIC11FNLjyg7rfGvb-hlz0mtqyYl2YPrXG66uZmep0lD1vD855O76O6-kYcR-5n0EgHdsZbJ2s1YwdQ0QWlVLYUZOBuW6d1_J5YcK2TtaBWebDcUELzpCWUWgMQ9FY2NVImrjp1W-1e6spqBlA7qQ7BDPWjQ6Q24lMI_tbu0b_rs56J5inLos-cjvPQ4RvszAs_CdBaahvBEXe8hczKbfDzisR1q_DLmVAc-jNll_4vFBRvkl1jwu5L04f-mWuUqMBMxvfnCV7Ch5O14t-IJnKJZ4P8rcfVEeqX9Rg4X2lk8WB9fCPQT9_JzD1-5QmhtHChJEYnMEqYcxDHCpGC-l5s6kZ-ExZz-x0gD39GP-mKYJpI52nX3zYdpsygRpVChWxz3mmpOEDuSElZGXIBO3fQZfexJKGcuXtIxGjeELF1L0qRhGdKWFWq9Zmh02eE-J8_v5ExrFuiSPkReJPmkI9-3o3pkBuxF5DWS5jcBy6M5dJsZXTYevbPq8PspKOAy-6oa5G6Tnb3-c2jk5DsnP63jPdbuEqHeTHOkMTcyIMIkX7UJzrfjxBtyG0bGdR3E_9nYURdoAnkvQ1Va1bdPvsPTI6N4tuEZ7H3toH9zCK3YBjZszqg2kW-cYUngfBH7WG_MOqsSfgIqcOnaJQGxmpmjQaXTyJwqgARFS8KbAQ7O2qQ7HudDOKr5GCh8_UTyU0ixBOlK-Da4AMkMBMS8Q4mGsdloU5gElwCDw_yWnSoPylCem_g2XlK79v3OXt_a_5_3-XnrFrNg_tRhg_C61-1dbLcdbmYyULzlTe4D7xAsCMQNNqok9PIQzvybmujwHCpLWKUI8cRsp6obupBttoDM4bQLQwDeRz73voA46M0QNetSwRwscsepWhpE_0vQkdNeTUVdCi_HO6KX9cvxZj-LgqLCdgd1f-P-uPWB9NwX0cW4APjomuuvSq44GFXMzOgxIiQ793I-iOPUP0jY0yX2HwDJkWDcRVk1WB4dGljazuqwmrieJffwbGUkTgAKZJWAd-HTKVMr0x8wtnICsVZnMQiON9LUVLtWPKwF11TaJ9rMeEFkm91WKJg5nlkutaa5XepAdEQlRDzvscm1a1G4JwIhtAVoVDO_JZpFcu9WGumylLmGwNX3LnVSEsPa0tPixnXvxqxi2AUuzlSLLMMlJH4CtL0IQDCG2i12oYl9F4Z2-BRL3QBQ8-E3YY3gwE7gjfP6701g_7Fv3ojZmjc-QZECkjb0lcp0VvU9ySOw",
+      "summary": []
+    },
+    {
+      "id": "rs_0c7bd08661dd7676016a9b2d8c399487d29c2f157f53c2ad3e",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABqmy3GkvbiryrL3PLnl4sQojD-FCz1sGk1RIP1SW86AWKyr7OFc7dgGxvMK5TLfX0WoRLoDctFkCC_nok-s-umEn0qpc2YQCWuduTRQ2nclzlw0Cf28Q7HCLV-mO3D_-1ncVQ2RQm0YDuaWWaedALPZta4X8bYffWBG8M47F0d4F11Ad0uOYka6TFNX4PWAp25rZb4W5zE6hNOpk0wUtiuHhK3Dq6y9nlq1m-K0JZvER0umoU5B_O4mzubiV4pWWb7YRSfTpdUiEdVxdW09184U2P19vGcZJE5DSaJq8SY4WikxqaIBSEWyrkulfa3Nv3KFm6ns94gizSJROpkJ5oUEtjJKJum7KdPFYgz0YmSCt4GaffwAFTsWsVVjNh_HzzsYlsDPwQTA_AEfblnqglSBg65kz8KRfMWVP5AffshUiyMlekpG0e_TtTQnpR8goe14UNiX2WHDq4nYmWAl8j7ct54V1P2aiVIyo2lsn-49N7kfoELKwyuG0dLiqFXRfSTnlTxAQLICGl0z72zWrbCpYKLreXInI5JelKUQhdjpemiiIJJFCa68eb7-nLY3miaDePe2M5qD1dIdeu2r9Gwm3ZyhMTxSm2WCzPswQbpjHkHp4EctCIKzMYxyUc53YbflM_FUR2QaPLhh9PmCX_Uexyx2R7Qd7eAZaMh4ga-gjUtZHOgc_aK64RPKLjvcrfTWGJbOU-lTRDc_5t5aqzDaRX3vcJ3LmKG0VvN3i86uWh7smFH98Y_qUtDzrrKNnsWgULoSJbDKdfDwPoelprHzsYQ-CbAdBI_iDfmwEhSNxVZl8zZVzXVUU9tgRY0S_Jl3Odk84J-7hnn-u6_6yqI9_1UC_rrWj9vU6h1t627Hd15jPoVa5xLvuWUuonxIO-g68G8hyBO90QChZzW6H-x79NlX7ay830mIBWtge4-9ZJVSt6QB2infZheRhdpZJn7S9iJ4DYDRSXiQ9Sil3QyeDZ2oJu5THRAykjwu4VDN97OWTQwu4Vqby0jpVUMoho474CJFaoGcReZQHIASDmtCYAN_9XtkNpWZWJrSkAQC7XUmygDJdaA2tjAglMe78Yovz5NYXFkDJUlGHmCZPX3AzifOVK79rOtHGwXl5doc5sQ5WVoH9Sy5ZJGfXwHCydHEFAaFUZXFu7nQy8Woqix0Vz_K_Kq-Ncl5xKNCf_UzPY7rpFHOd3FQFkmugGT-_p6PHiNOZns_k_vH1rvsCMhJEGBwPjMTA19vBu8c3P4u26ztgpyd_zMM5uVgfxbNLqpWSuVOaIf6-3p1Gr71HGZo3P3ogKGk1o4Nq1B0iQbBT1iW2g_Qm1G7ZtHOGH74yYt3p2AEniC98RNYkcy8wTcerOYgBD-Xur26eMo7EoH9eu_kea06FJ-PI7bKNQ63wwjxcfCJCyvEDERTHUMAxfZIlslnYqyBLhnY1DwMSIozaM_hiS_QJHmY0AVQKBjnfsFHHQQF1j1flevIbJQnRePRNOcS53k6HHzdojApWlnG4cvOvUwPaKxf2PKOdkyBZlMdiHRCWxLgumqwxq1Pj9R50-ulLGoA6mkKl7tgBN9DZdA2-pJeH-LOv100bCnyXbYroQIFrkoHasr5c_jI-Zw3XdXKmVAd4-xUvf4-N6pmcwusQc6Zx1HxNAHvqz0-QjtHfJr702OKgKhgX8WUl7CEsIFrE9lGDqwysTu63kbNFVdgFqAyXZD8psv63QXKOBu7dLppcfSiwJjbbh5QMimKahpyHENYul5bQ_8IWJ-wz-2GxfykKfsMvftj8er3DSRq0BcDwNlV1d4TF9yhyG6q4lwTJ07aZKzHPgpZ2CzWcJlqMbZguu7Rv6ykpPxGcyUjisj4gSBiuU6ilA14C-dhFGi2aLrGBW6tnr2fukeISKe7QVThQ4SJFLhTfynqlkqxszkdhoNxlPVmWjd6gpmHAOfm6EsgN66n_S1HATObvMQEwgxcSjfS05Tl8Qu6_9HbOB7DQ4qdfL5u1umcyZIQ3w7vydPjUiRza2FRfplh83_LaQ1zrZC72jbyof-WYMZna2ezOSzJr8AqbPY_sK6EDNj0SwwgGtGHFDvb8NHpkFC-mwa0bANr7TAnyanuJRDPGx2EJAE4Atf6NkvC9kGfK_rtniOVxxfMjogKn3JdtDyC7AnaGmHhGOBuTrXPczGJDdh0aMsLrlrp-mTUUspJln9LrXtQfGsd3ESNTLnCc6YfbA1ytoeO3hi8GprAoNVDFcSGXMkDFWd41frTbT4caoSqLbiD0rzqRbC1qRJqCBzhnV_u5aoltJOdITnNqINcFwgdo-HgiMl987apXltDYpuOyKNy_e0OsXU-ZKXQ6rpAOWXesgmx3lNXMe95CFbPixHy9TQ8NUnQoQyggRoNtfhTRn8pFYYGSJeRPV2Lw091ARuCiDjDF6OfH8ej52iZdrt54Y3A-oiah2m7SJ0xomWF4-rKWYiM6OFjLtu9uKnYxWMIp6I7OAxzPvAT5OjGvahk-ddXb1m7SNdErfCsmIuwTGpjAJeBw-KNF_OX8jzxpvfi6MOB790yMpRbSpBq5uXCDpGIyLgFFuWH3WlT5NGL554WmUgZKpekbe8dZsBdZpZIw2TKOWX-IoUjWRuA23O9VKlEYntcQ_Qls45luSAW4Wc4D-6JiVuBpPrhuV4pACQrniBP3Y0_xVgNnywjCRdIJmIAIkTtY1Xx5ft0Yl9SjUvMDVJtKi5aaKbVDJfB7Iea2XTFZHbCOwPpmezXtL_m2y_f9p1wX8e7C48NU2IaMr3d5EXH57wQSIVfYo5gVQT-x-QH61MENKFlbKXiTr4yZBl5azxNZzSDTRCVwYMQYUbmaVLkux_nxJ_i8_6i1s2NZjnZcw_3hK1Pw5nq1Io5MIY1NPTltZvkolwF1Bwd2zRUaQHv943fK0vY25mkh6-GqJNyB5PcnWCjNBhHhRfHrIpkBBr0YMu5xGAhpR-kWaKgkqSUhFohxjItTJ6v3I5ZtutPOAg83a4ytBMwDQZoq3rDWtAXQJHM2izmM4qP97fzdK2SEkLB0Bp6n5w9D0MPI_v8kD0GCmodJ4wdMgvR_OzhVQocGgEFoxe2qZOBAGQ6jTc-kI_2dSsRr6RphJ7R7IBYP66NZ0JVH7nOngY2bt6QNdy9H8UeGXTKVSi1Ikc0AV-zMUhvsx7mEWKeTJnT2bPftWv8Qowpcv7tfWoXUicaPh5NxZAPNPCK5UFS4ssRdTFXMsA9sdlG6-ySuj18Rlm_KR2Gyo-GuCfZLHlGTR3EJBlqPBTQdmCTG_S2Nm3B_62VTWTSiaBgCIULsvWr_j6431ONn58byaKeiF9u9EB-E8SXVX8s4dYWna_8A54flEpVXuEF91oDs5Pg1HckUBg4to87u8OvG7PeIKPaOZ5Zs3BORT1OQJ-DIDvGMnEQTDzjMNFIKpdo0PEkxbfFhPMbJxipaZMNAtXaUlj3hmdX-XZv89mzyfWwtD2vM-UBct3J61LIJPvsSO7m4fwfWYpshoEiizbuxNN4FfdYUWm_v3h_AHZYDyrsgL0NJtAHvQj_p7WB7pnUOhkh5TsaiiheFWJQ0H-X0dKONuNFTRBCGfiQ0z3Gq1kt6j0t-mzZ_3BCG_YfXH3HlcbU1ppsEwfRNCWsWBuZtUM8k04hiiEE_6xrt2q3ngLZQbaLNjSGVI6AhQuZMOxcAWzc_y8kwWEx-Frv85mmB6_JTRt-BClep0xibx6z-0TDCD5ZGV_rF10cP3kj8rDZXN1YBNzQfSYxcDV50DtBMlnT4cApl0E0nGgrD8iq_m54DeueStUJsO-JuS-adL9z1Pxhr0_1shTso0swp2G05BPZJWKHMPhb6xBKAV8NBZ5jpAPXoiCDEXp9_XiwnE_RzH3xQfEgmUWJBLUcbCxBuiJsj38xc7n9A60qPUr7jP76A0HiykJXskmJw90Q0dXBtXe-dqlfjcr4SI--sUHkDliJVL1ZFKu-dT3ibHyLDbaCwUXkmGJkkq5pmUdPud2icb4DQetqS5_BleQKYvS8FacLQZ7UZS5-6LTMNiJ0l76_NLZNkbCJ3HnR-Y6x2PAlQDfrN1kLFjxRuQ_NX8Nm2Ah_39MyW9B02MnaElgRMNyLuXmK5bpOv4WNClPunXWHr2XorhHv_-tSzzbhBDTe1yfwbOhRQb_g34VtWyvPu0iLgCKkT3KRxEXgiTvW9vtnVxAb1HTky4KNqD8UGnDAcDPC4mD3ORzSkyg7qDcWhkI8NoBKhnrZEUCfeDsvvB_5HMDP5mXl7CaWPWe9_VSvowKzQalYMmkK0QsnPmK6uNAGlOYNQ==",
+      "summary": []
+    },
+    {
+      "id": "rs_0c7bd08661dd7676016a9b2d94a1b087d2aba77a92a5276b48",
+      "type": "reasoning",
+      "content": [],
+      "encrypted_content": "gAAAAABqmy3GwbLCSj_oRnsO50RC-sA9fMb_8H-03KJTgKO58f7sBMUIeBhqJaomNne8H3UqfewD6u43Hg4G21ILFmwR9-wXXHL8MdRLzHIJc74ss262p0cEYCffViH00Ei4hxNSygGYOnB2pRNSINxLDF7JTKLf_n3x_PzukwqNunZF6y6vUGs-aL3xR1OvBuAls0iu6w4Mbj3v7K5tKYfrQCkBikmWX8uvJ2IjPJGA6DR_yIhoLJudLRck_IhgH3oyS76poeXKaCz_qCIcKtF5xbrRcq1q97gV_sF5PfRJ1DXF5gAKAbkDNYoHAvNMHfwaCnxza4C95sZpuR7sZ1uY95TIKGt7sB3J-RpHxklxDGqxg6cpjOo26kucdQrzi-09iVsqo4LVxtCDwg9E3nBvkz5vPIczyL-65uc0XtnnltzhCmUKTbn_BOuh0CJckbeFwK-ss5x0kx2878e0JcCkuFRaT0KYskVz7o8s1tTZyfMTZsIgSaEL1Nyl8NSDAk3HVdwk2f2mRGRNh2s6PZyxKOqosCqN9KjS6HGION4z1qyvagnujaCFWEB42veK8FA0t_-X2ea9roVYRte41RzCD6F9_eCMCGEH4uWvLdePCNaQc37dH33KWzsf-Wqhciuv-Y2PK1n6rNA7lKG60XYQriCOPRRtjqMiDk2Xq_J_E8XpPUS9yKh00Q4e3-zmpsiSGEbjZiaQ2IBQqtIgdLF3wYhEf0RTP2Qf-7loiROifpZx8ldjDls95EoSLT837soddmkKF6d3RE1wIOh8mLET7dul4_gsAF67lTVKeNzYVjAwxQmTpUclPoRCz_2aTARFhoLk2Yd66sJDVKfqhdkv8DTun7MM1xxk3wFi_ghiNbxcVJekbKpZtItxaXUrM6Rqcgcjudj7j0ixsAw8SaMjTGUlu44G1zMTbCkf7KtR7pJLKG-40J_62dYrjsOLisHLgLTJ7Yhd6hf42xVnCvi8noS4prtdvXiTuc0uz3GkKsPheMkFZo7SDDjy9A-kLiMrFR8nxntnbhfPJQy1DIX0S0qdA7yGkoKhktLPp6ER9Fboep1S-T4bAY_hdnDvhF810gleo9xYcoL3ncn3aHf43QD-8dwSqNt2pzaLZ6Q-WxMiYcj1NADyNEmhSSp9b8XQG1X6bEZLirq3EPRrEGM6muvTHSkX1u7_mOBmUJhYfRGgRvWP1OZFDxiGp9Lt89PdNv0PEYeKgN_05AdfFBbCCGyyI6hQtRsB3DaoSekog8xjq4UmPZwP1N3T8bVEBBGXIYfQPEL5WyYzts-2xpFkBJme3Fazvfx5IzgzFuaNIaUUrbK0BCYEpMowhMbNr7k6e56MpjGjXL92z0qO8oBURNdwmsBXDhQa6YwgLHLrwF8lBiyR1cgs3JS5jJxRTW-ITaqS9u2-elFJxwVxZU63zlv3mLHwqbGy0lUHpT4jsHZ-UgK6Dik_ULKHyCAb023iKZZG6BcTvUmNgyp9a1PLx9rbGRfu3H0jD_CK6gyV9CmiE4ndPKIzjMsql2SsChdiFxbEJ9DdFbJa7giK236wDYnfibbiQoS3n9bQhZSo2VmPcO_wzGUr6pfcvF7xf42SjIAo8wFGj73_-l8LYEvG1q12beZaWLWAIB5FHVv-SnRZV8dAvq_n9P98eKGf4SKtxZ8L9xHBaw3dQXZXzXu8SgIC4pn2wj9UFGgDltyNA2ZKqqC5DzTR0N0iNL_wNE3cvuhlO9g_cleQudLKkY3Ppv9rFjK8bNRmZTDnwGw-b7BJN5yIOcRECV41K6t9cGLjGpL5BUAdbo54r1RZumVkFMsUDKOcd4DE2hbHvzOS8ivNiyvnDtH-NAfSfrSml-AMZs2GVuTw92vRJHBINBtz-qbgIRWvBSarXB4u1NKkIseiLyIiiUFQ5fGnWKwcFPreuBuTlrOnMPg5DcMIRrMqN4rmkY59c4SMtde4PhXvLNJ8ezHk6pIE7CPyXaJqPng3iAV3HboY1Q8vGTMP6q3r3NFpuDCaCEHQvdPuPVKklGZiLeUGIpYQw33rPtaIP1NfoCKVCQ5eQrHlCuiUMp_d2ZAfHTpHZOBQklg5hNfuavwvWLWSVDO4fFDLmtSa0alIHnOxI9F6IYv-OTuUmcdRCMWfT_p-xqWMaH0298k3ybkQ2VhAK2hcMILKoRvOxNcrwOhJLWj1A70chHkUxI6BzlFMCPQ3XH_BcAAUMKA_5TyYyKqGzcshZaQL2KR9LMeY2muJGsnZ5rCoCHQhgffRw7J7NkYDDjthyW_QvEDuWdcUCCTTJtiUnPupZ49Cc_cCGdwKNf1Wrv5nhBzwSV3BpiKufhkwlaAB10vt-MwUkKOQ0yzLIEyfwO6ubJObAS3tSFVfw9gleT_tEwySQzpQ2YE8IIir9w4mIXtIv4Eq8vEaHIj1V4aefbuOuLp-i3PoPkHfph7d2eJwMx3cwoIVcyqqYdAR-u7tNIM7mcu__5kIgSikcCZjxemJkVuQUpd1W9N5YvDh1A2vJN2VSi-TJXUclOKrummdDF_ROqfnHHt84Tl8t75EsTgyur4MW1AdVbkfx1gk5jxZe_vYVxFgMZGUAJRJz00iFnDKg4XS18GYNpFZvHOybX382sUV8eh1VXyorqqY05UEi7Sah8iG-n4blkTtP6ZCddqcq7cbuLLSlxvA0tUl5VrrugU-AMuPKJYwhen1O09ox6KOkBhuG55qypbPSJwjtUl32p4oVWqoyzjIBNoB4PEIOvjHgy4U4B61j1jVubfUnOU5c1ieoWxm_WgN1LQhBKldSAtV7pcbvgwM1q1Kns8MsJFMS-OaXLqEk5ZxQzn5WKJL0CJ8APJi9Z0oXv9i_g57jXePMnTIKPW2Pt-lOEhSP535An68ENHy_9KdUp9nCHJaGQXVcz6rtzj0-RiTKdP8XeRfCuLc1JH_qZWr5YpN0i1qBitm4oizukyotUJR4nEBnQIOurS9b_M9RFUrFx4lNZKsSFvwjWc392DwNTZM3PJ8wYBkncU8Il3apcq7hsLsSlHFWurzJ42pwp_Xlz0W61_M4vOMXQHCF_NIrc1z1xzdXM4V0EAHa6maxsFri_dq9HKmoaCanNm80KomfQsBfbLUb7euG3o5o-03HOIisAwuTbNhG_V8VWunmB93FwIBEYpP4b1kZg0tCYXHpGah7tOKgKEiORqo1M1eEGINLLCsurJkw_UJLoJgWYdV7xCJjdvb0aCtcP7m0glAC1j66zQduxDdQeE14zyT9TtY45ZpkWO94Er0GNi5ohwmsiF2_UJYVU-mJKgaRSGmmI-xi8b5_tXyBjff9Nd5_so7udilQ6ZiQisecymM_enZMfdOISEemC_qNjRlxg26kpiZdKAd8o5cM-yI7bVQ_6h_MU7azK3AKcOlpNRfJ5-PKSLQQtbbLcczPdO7l27oRR407t6FlsCW6Qu9qGGXvn7YK1b99geFrzo--P80Y8DBtR_yrgw5WtpELvmsnwq19OI9dQeanQTMNAjq11QZInhOYETKaujWr2GfesVWQQlCxTz19CtrKdZNGDfsJzuzF84eio0nmpVw2hdoWmUtpU3msiVvoqSgItyR0U23XjTk2TUjp66iphFg3r9wcsotfCG2iExDzKkAe59WUlH4G3lycV0nUzcsOUsclwV5muaoMYHkMckXIER3jiJBygddbPTuWnBVRCDJ-3bBS5s1SUUHNcBXdbw1u0106-rdYZjnR1twYN23-_qT8aVV-5_aFu-5xU0kZkOtuq1GD7MdeLfYB9BbVrGkMRvtyOUvIBmchFz668zE_u5V5sbhL5dgJjnogCWkdTNjO72kMdDiEcsdCq4Zbo3oQMiuRyxAzwZhVuewySPyoYxTzPqgzrUMtZJPxijwSqZc500A8DFBEOf9wuVS7xO_G6IN75UwY5bfunpROzOAA9RYVEbwY5nJLlNfkxjIUBiClZbe9ifQHadkgXj1B3nzKckK8Z23Lxrb_-H1PL_U8Op_g6jqtX7cR7TQ9ybSK0Pp5f_7Ncoq9KzpIp60lYGRv-cuiMI9QlFqAkRvYufEkXNuDT5P1Bkyur9uHKU5fM6-RdkcFadzT6ZlEEKNRcqVPR1uSwOiRE3xNQ1L6C_2ujKOswaY_a8NOkGrZVBpBkmKfkmZNAxO_xoA-mkDlA85utFkVLK5ea6OvvKnMk9wjAPg7Y00KZblk9oY0OzJbl65zvRQQJfGFLMtLMYUx5ig8jbv2QFYVEWaAyLMQ9xxQnR9aOeNdhwVx9LqAWCB_5efs7kz8_iL3uJAfgWcu4l9Cm1LtHFHN-ErNAoMxWqZ-UzswPSH3bS1xOclh5Ib0OpFHi_0qSTK61l0kWmcAgqcvPCuFtWTA233aK0Pv_NGXeUMZXxnLZJD5PD1D5-9jc9qlch0M1b8oqqXsbaivB6rF62Hiu8nX-EIJvq34Po44_ITHnHiuWHObjl_KeqqWandM0omiW08wFD98JcJFMqm8KMOQsCUSEIJOSGJCHJH2LewxsdrWi3Iewy_azxiSgGPl9jOJG4b4e96tJFXtCZTGm5x0Os6",
+      "summary": []
+    },
+    {
+      "id": "msg_0c7bd08661dd7676016a9b2d9cece887d28ad3fa3a11b84a8b",
+      "type": "message",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "annotations": [],
+          "logprobs": [],
+          "text": "{\"abstentions\":[{\"abstentionID\":\"abstention-0010\",\"competingOperationalTargetIDs\":[],\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0022\"],\"operationalTargetID\":\"PUB-R-C-P11-RELATESTO-LOCAL-SEMANTIC-TARGET\",\"rationale\":\"The RelatedResearch passage explicitly concerns CSI, POD, and FAR, but the authorized range excludes EvaluationMetric endpoints and no supported in-range local semantic target is identified.\",\"reason\":\"invalid_domain_range\",\"relatedCandidateIDs\":[],\"scope\":\"candidate_relation\"},{\"abstentionID\":\"abstention-0020\",\"competingOperationalTargetIDs\":[],\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0010\"],\"operationalTargetID\":\"PUB-R-C-P26-EVALUATES\",\"rationale\":\"The passage explicitly states that the metrics evaluate inundation extents, whose fixed endpoint is a Variable; Variable is outside the authorized range of evaluates, and the text does not identify a particular fixed Method or ComputationalModel as the evaluated object.\",\"reason\":\"invalid_domain_range\",\"relatedCandidateIDs\":[],\"scope\":\"candidate_relation\"}],\"candidateEdges\":[{\"action\":\"propose_edge\",\"candidateID\":\"edge-0001\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0001\"],\"ontologyRelationID\":\"C-P06\",\"operationalRelationID\":\"PUB-R-C-P06-RESOLVES\",\"origin\":\"open_discovery\",\"relationName\":\"resolves\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-027\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-035\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0002\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0002\"],\"ontologyRelationID\":\"C-P07\",\"operationalRelationID\":\"PUB-R-C-P07-PRODUCES\",\"origin\":\"open_discovery\",\"relationName\":\"produces\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-024\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-014\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0003\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0003\"],\"ontologyRelationID\":\"C-P12\",\"operationalRelationID\":\"PUB-R-C-P12-HASLIMITATION-FINDING-BRANCH\",\"origin\":\"open_discovery\",\"relationName\":\"hasLimitation\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-012\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-017\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0004\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0004\"],\"ontologyRelationID\":\"C-P13\",\"operationalRelationID\":\"PUB-R-C-P13-USESMODEL-PAPER-BRANCH\",\"origin\":\"open_discovery\",\"relationName\":\"usesModel\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"https://doi.org/10.1029/2022wr032039\",\"referenceType\":\"deterministic_node\"},\"target\":{\"referenceID\":\"DEV02-FIXN-031\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0005\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0005\"],\"ontologyRelationID\":\"C-P13\",\"operationalRelationID\":\"PUB-R-C-P13-USESMODEL-PAPER-BRANCH\",\"origin\":\"open_discovery\",\"relationName\":\"usesModel\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"https://doi.org/10.1029/2022wr032039\",\"referenceType\":\"deterministic_node\"},\"target\":{\"referenceID\":\"DEV02-FIXN-032\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0006\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0006\"],\"ontologyRelationID\":\"C-P13\",\"operationalRelationID\":\"PUB-R-C-P13-USESMODEL-PAPER-BRANCH\",\"origin\":\"open_discovery\",\"relationName\":\"usesModel\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"https://doi.org/10.1029/2022wr032039\",\"referenceType\":\"deterministic_node\"},\"target\":{\"referenceID\":\"DEV02-FIXN-033\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0007\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0007\"],\"ontologyRelationID\":\"C-P13\",\"operationalRelationID\":\"PUB-R-C-P13-USESMODEL-METHOD-BRANCH\",\"origin\":\"open_discovery\",\"relationName\":\"usesModel\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-027\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-033\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0008\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0006\"],\"ontologyRelationID\":\"C-P14\",\"operationalRelationID\":\"PUB-R-C-P14-APPLIESTO\",\"origin\":\"open_discovery\",\"relationName\":\"appliesTo\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-022\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-033\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0009\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0012\"],\"ontologyRelationID\":\"C-P16\",\"operationalRelationID\":\"PUB-R-C-P16-MENTIONSVARIABLE\",\"origin\":\"open_discovery\",\"relationName\":\"mentionsVariable\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-002\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-040\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0010\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0009\"],\"ontologyRelationID\":\"C-P16\",\"operationalRelationID\":\"PUB-R-C-P16-MENTIONSVARIABLE\",\"origin\":\"open_discovery\",\"relationName\":\"mentionsVariable\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"https://doi.org/10.1029/2022wr032039\",\"referenceType\":\"deterministic_node\"},\"target\":{\"referenceID\":\"DEV02-FIXN-040\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0011\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0010\"],\"ontologyRelationID\":\"C-P16\",\"operationalRelationID\":\"PUB-R-C-P16-MENTIONSVARIABLE\",\"origin\":\"open_discovery\",\"relationName\":\"mentionsVariable\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"https://doi.org/10.1029/2022wr032039\",\"referenceType\":\"deterministic_node\"},\"target\":{\"referenceID\":\"DEV02-FIXN-042\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0012\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0011\"],\"ontologyRelationID\":\"C-P16\",\"operationalRelationID\":\"PUB-R-C-P16-MENTIONSVARIABLE\",\"origin\":\"open_discovery\",\"relationName\":\"mentionsVariable\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"https://doi.org/10.1029/2022wr032039\",\"referenceType\":\"deterministic_node\"},\"target\":{\"referenceID\":\"DEV02-FIXN-043\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0013\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0013\"],\"ontologyRelationID\":\"C-P17\",\"operationalRelationID\":\"PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH\",\"origin\":\"open_discovery\",\"relationName\":\"studiesFeature\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"https://doi.org/10.1029/2022wr032039\",\"referenceType\":\"deterministic_node\"},\"target\":{\"referenceID\":\"DEV02-FIXN-045\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0014\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0014\"],\"ontologyRelationID\":\"C-P17\",\"operationalRelationID\":\"PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH\",\"origin\":\"open_discovery\",\"relationName\":\"studiesFeature\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"https://doi.org/10.1029/2022wr032039\",\"referenceType\":\"deterministic_node\"},\"target\":{\"referenceID\":\"DEV02-FIXN-046\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0015\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0015\"],\"ontologyRelationID\":\"C-P18\",\"operationalRelationID\":\"PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH\",\"origin\":\"open_discovery\",\"relationName\":\"studiesPlace\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"https://doi.org/10.1029/2022wr032039\",\"referenceType\":\"deterministic_node\"},\"target\":{\"referenceID\":\"DEV02-FIXN-028\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0016\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0015\"],\"ontologyRelationID\":\"C-P18\",\"operationalRelationID\":\"PUB-R-C-P18-STUDIESPLACE-METHOD-BRANCH\",\"origin\":\"open_discovery\",\"relationName\":\"studiesPlace\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-022\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-028\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0017\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0016\"],\"ontologyRelationID\":\"C-P20\",\"operationalRelationID\":\"PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE\",\"origin\":\"open_discovery\",\"relationName\":\"usesDataset\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"https://doi.org/10.1029/2022wr032039\",\"referenceType\":\"deterministic_node\"},\"target\":{\"referenceID\":\"DEV02-FIXN-003\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0018\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0017\"],\"ontologyRelationID\":\"C-P25\",\"operationalRelationID\":\"PUB-R-C-P25-REPORTSMETRIC\",\"origin\":\"open_discovery\",\"relationName\":\"reportsMetric\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-010\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-004\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0019\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0017\"],\"ontologyRelationID\":\"C-P25\",\"operationalRelationID\":\"PUB-R-C-P25-REPORTSMETRIC\",\"origin\":\"open_discovery\",\"relationName\":\"reportsMetric\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-010\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-005\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0020\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0017\"],\"ontologyRelationID\":\"C-P25\",\"operationalRelationID\":\"PUB-R-C-P25-REPORTSMETRIC\",\"origin\":\"open_discovery\",\"relationName\":\"reportsMetric\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-010\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-006\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0021\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0023\"],\"ontologyRelationID\":\"C-P25\",\"operationalRelationID\":\"PUB-R-C-P25-REPORTSMETRIC\",\"origin\":\"open_discovery\",\"relationName\":\"reportsMetric\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-010\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-007\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0022\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0023\"],\"ontologyRelationID\":\"C-P25\",\"operationalRelationID\":\"PUB-R-C-P25-REPORTSMETRIC\",\"origin\":\"open_discovery\",\"relationName\":\"reportsMetric\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-010\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-008\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0023\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0023\"],\"ontologyRelationID\":\"C-P25\",\"operationalRelationID\":\"PUB-R-C-P25-REPORTSMETRIC\",\"origin\":\"open_discovery\",\"relationName\":\"reportsMetric\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-010\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-009\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0024\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0003\"],\"ontologyRelationID\":\"C-P25\",\"operationalRelationID\":\"PUB-R-C-P25-REPORTSMETRIC\",\"origin\":\"open_discovery\",\"relationName\":\"reportsMetric\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-012\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-009\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0025\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0019\"],\"ontologyRelationID\":\"C-P27\",\"operationalRelationID\":\"PUB-R-C-P27-HASPARAMETER\",\"origin\":\"open_discovery\",\"relationName\":\"hasParameter\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-023\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-029\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0026\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0019\"],\"ontologyRelationID\":\"C-P27\",\"operationalRelationID\":\"PUB-R-C-P27-HASPARAMETER\",\"origin\":\"open_discovery\",\"relationName\":\"hasParameter\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-023\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-030\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0027\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0020\"],\"ontologyRelationID\":\"C-P27\",\"operationalRelationID\":\"PUB-R-C-P27-HASPARAMETER\",\"origin\":\"open_discovery\",\"relationName\":\"hasParameter\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-011\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-029\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0028\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0020\"],\"ontologyRelationID\":\"C-P27\",\"operationalRelationID\":\"PUB-R-C-P27-HASPARAMETER\",\"origin\":\"open_discovery\",\"relationName\":\"hasParameter\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-011\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-030\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0029\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0020\"],\"ontologyRelationID\":\"C-P27\",\"operationalRelationID\":\"PUB-R-C-P27-HASPARAMETER\",\"origin\":\"open_discovery\",\"relationName\":\"hasParameter\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-033\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-029\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0030\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0020\"],\"ontologyRelationID\":\"C-P27\",\"operationalRelationID\":\"PUB-R-C-P27-HASPARAMETER\",\"origin\":\"open_discovery\",\"relationName\":\"hasParameter\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"DEV02-FIXN-033\",\"referenceType\":\"accepted_local_candidate\"},\"target\":{\"referenceID\":\"DEV02-FIXN-030\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0031\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0021\"],\"ontologyRelationID\":\"C-P30\",\"operationalRelationID\":\"PUB-R-C-P30-MENTIONSCONCEPT\",\"origin\":\"open_discovery\",\"relationName\":\"mentionsConcept\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"https://doi.org/10.1029/2022wr032039\",\"referenceType\":\"deterministic_node\"},\"target\":{\"referenceID\":\"DEV02-FIXN-001\",\"referenceType\":\"accepted_local_candidate\"}},{\"action\":\"propose_edge\",\"candidateID\":\"edge-0032\",\"deferredRecordID\":null,\"evidenceSpanIDs\":[\"evidence-0008\"],\"ontologyRelationID\":\"C-P31\",\"operationalRelationID\":\"PUB-R-C-P31-MENTIONSTOOL\",\"origin\":\"open_discovery\",\"relationName\":\"mentionsTool\",\"relationScope\":\"intra_source\",\"source\":{\"referenceID\":\"https://doi.org/10.1029/2022wr032039\",\"referenceType\":\"deterministic_node\"},\"target\":{\"referenceID\":\"DEV02-FIXN-039\",\"referenceType\":\"accepted_local_candidate\"}}],\"candidateNodes\":[],\"deferredRecords\":[],\"evidenceSpans\":[{\"evidenceSpanID\":\"evidence-0001\",\"evidenceText\":\"Given these limitations, we investigated the use of existing HEC-RAS based models to address the limitations caused by hydro-climatic uncertainties and sparse streamflow inputs.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0002\",\"evidenceText\":\"To handle multiple intersections, we opted to use a filter to select the median discharge value attributed to each NWM reach. This partially handles the influence of neighboring cross sections that could cause flow discontinuities and mass conservation issues.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0003\",\"evidenceText\":\"Additionally, the stream network of the InFRM furnished models are of higher stream densities and bifurcation ratios, as evident in Figure [8](#page-16-1), leading to a significant amount of FNs along headwater streams with unit Horton-Strahler order due to the lack of representation of these additional headwater streams in the NWM network.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0004\",\"evidenceText\":\"By using the same HEC-RAS derived discharges and FIM extents for creating maps with OWP FIM, we are able to separate out errors introduced by NWM inputs and processes including land surface interactions, groundwater fluxes, atmospheric forcings, hydraulic routing, and others that would have potentially affected our conclusions if we had used NWM forecasted discharges.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0005\",\"evidenceText\":\"We elected to spatially intersect the HEC-RAS cross sections with the NWM stream network assigning the 1% and 0.2% flow rates to each NWM reach.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0006\",\"evidenceText\":\"Due to this fact, evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6 (Base Level Engineering (BLE) Tools and Resources, [2021](#page-27-21); estBFE Viewer, [2021;](#page-30-22) USACE, [2022\\\\)](#page-30-23).\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0007\",\"evidenceText\":\"Given these limitations, we investigated the use of existing HEC-RAS based models to address the limitations caused by hydro-climatic uncertainties and sparse streamflow inputs.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0008\",\"evidenceText\":\"Due to this fact, evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6 (Base Level Engineering (BLE) Tools and Resources, [2021](#page-27-21); estBFE Viewer, [2021;](#page-30-22) USACE, [2022\\\\)](#page-30-23).\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0009\",\"evidenceText\":\"OWP FIM is linked with the NWM for operational purposes, utilizing streamflow inputs, to produce FIM at a continental scale.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0010\",\"evidenceText\":\"The metrics employed in this study to evaluate inundation extents include CSI, Probability of Detection (POD), and False Alarm Ratio (FAR) and are presented in Equations [6](#page-17-0)[\u20138,](#page-17-1) respectively.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0011\",\"evidenceText\":\"BLE cross sections are intersected with NWM reaches and the median recurrence discharge for 1% and 0.2% levels are selected per NWM V2.1 Full Resolution (FR) flowpaths.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0012\",\"evidenceText\":\"This data set was selected due to its large spatial coverage, availability of cross-sections with streamflow information, higher level of sophistication when compared to HAND, engineering scale detail, and a storied use in the literature as an evaluation data set (Afshari et al., [2018](#page-27-11); Bates et al., [2016;](#page-27-28) Cook & Merwade, [2009;](#page-27-29) Criss & Nelson, [2022;](#page-27-30) Follum et al., [2017](#page-28-30); Hu & Demir, [2021](#page-28-31); Li & Demir, [2022](#page-28-32); Li et al., [2022;](#page-28-33) Rajib et al., [2016;](#page-29-33) Wing et al., [2017;](#page-30-31) Wing et al., [2017](#page-30-31); Zheng, Maidment, et al., [2018](#page-30-12); Zheng, Maidment, et al., [2018](#page-30-12)).\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0013\",\"evidenceText\":\"We selected 49 available HUC8s, shown in Figure [7](#page-16-0), which span about 185 thousand km2 across nine states.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0014\",\"evidenceText\":\"Illustrates Base Level Engineering (BLE) cross sections and flowpaths at the HUC8 12100203 near the confluences of West Fork Plum Creek and Clear Fork Plum Creek with Plum Creek.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0015\",\"evidenceText\":\"Due to this fact, evaluation of our relative elevation CFIM method was conducted by comparison to the HEC-RAS 1D models produced within FEMA region 6 (Base Level Engineering (BLE) Tools and Resources, [2021](#page-27-21); estBFE Viewer, [2021;](#page-30-22) USACE, [2022\\\\)](#page-30-23).\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0016\",\"evidenceText\":\"BLE maps are produced for two recurrence flows, 1% (100 years) and 0.2% (500 years), using 1D HEC-RAS models. The maps are used as benchmarks for validation purposes of OWP FIM.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0017\",\"evidenceText\":\"The metrics employed in this study to evaluate inundation extents include CSI, Probability of Detection (POD), and False Alarm Ratio (FAR) and are presented in Equations [6](#page-17-0)[\u20138,](#page-17-1) respectively.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0019\",\"evidenceText\":\"We elected to spatially intersect the HEC-RAS cross sections with the NWM stream network assigning the 1% and 0.2% flow rates to each NWM reach.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0020\",\"evidenceText\":\"BLE maps are produced for two recurrence flows, 1% (100 years) and 0.2% (500 years), using 1D HEC-RAS models. The maps are used as benchmarks for validation purposes of OWP FIM.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0021\",\"evidenceText\":\"Using the NWM as a source of streamflow input would be a logical choice due to its operational use, but this would introduce hydro-climatic uncertainties that could impact the results of adding a multi-fluvial source extension to HAND.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0022\",\"evidenceText\":\"Some work by Gerapetritis and Pelissier ([2004\\\\)](#page-28-34) denotes CSI a good proxy for measuring a forecasting system's utility in protecting life and property and has been shown as mathematically optimized when POD = 1 \u2212 FAR.\",\"locatorAnchor\":null},{\"evidenceSpanID\":\"evidence-0023\",\"evidenceText\":\"To calculate these secondary metrics, one must define three primary metrics starting with true positives (TP) which is predicted wet and wet in the BLE benchmark data set. The two types of errors consist of false positives (FP), or type I errors, which is dry in the benchmark but predicted wet and false negatives (FN), or type II errors, which is wet in the benchmark but predicted dry.\",\"locatorAnchor\":null}]}"
+        }
+      ],
+      "phase": "final_answer",
+      "role": "assistant"
+    }
+  ],
+  "parallel_tool_calls": true,
+  "presence_penalty": 0.0,
+  "previous_response_id": null,
+  "prompt_cache_key": null,
+  "prompt_cache_retention": "24h",
+  "reasoning": {
+    "context": "all_turns",
+    "effort": "medium",
+    "mode": "standard",
+    "summary": null
+  },
+  "safety_identifier": null,
+  "service_tier": "default",
+  "store": false,
+  "temperature": 1.0,
+  "text": {
+    "format": {
+      "type": "json_schema",
+      "description": null,
+      "name": "publication_model_authorable_payload",
+      "schema": {
+        "$defs": {
+          "abstention": {
+            "additionalProperties": false,
+            "description": "Explicit semantic abstention for a plausible task. Absence of a candidate is not automatically an abstention, and processing failures are represented elsewhere.",
+            "properties": {
+              "abstentionID": {
+                "pattern": "^abstention-[0-9]{4}$",
+                "type": "string"
+              },
+              "competingOperationalTargetIDs": {
+                "items": {
+                  "enum": [
+                    "PUB-R-C-P06-RESOLVES",
+                    "PUB-R-C-P07-PRODUCES",
+                    "PUB-R-C-P11-RELATESTO-LOCAL-SEMANTIC-TARGET",
+                    "PUB-R-C-P12-HASLIMITATION-FINDING-BRANCH",
+                    "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+                    "PUB-R-C-P13-USESMODEL-METHOD-BRANCH",
+                    "PUB-R-C-P14-APPLIESTO",
+                    "PUB-R-C-P15-USESTOOL",
+                    "PUB-R-C-P16-MENTIONSVARIABLE",
+                    "PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH",
+                    "PUB-R-C-P17-STUDIESFEATURE-METHOD-BRANCH",
+                    "PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH",
+                    "PUB-R-C-P18-STUDIESPLACE-METHOD-BRANCH",
+                    "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
+                    "PUB-R-C-P23-MENTIONSMODEL",
+                    "PUB-R-C-P24-MENTIONSDATASET",
+                    "PUB-R-C-P25-REPORTSMETRIC",
+                    "PUB-R-C-P26-EVALUATES",
+                    "PUB-R-C-P27-HASPARAMETER",
+                    "PUB-R-C-P30-MENTIONSCONCEPT",
+                    "PUB-R-C-P31-MENTIONSTOOL"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "deferredRecordID": {
+                "$ref": "#/$defs/nonEmptyStringOrNull"
+              },
+              "evidenceSpanIDs": {
+                "items": {
+                  "pattern": "^evidence-[0-9]{4}$",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "operationalTargetID": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "PUB-R-C-P06-RESOLVES",
+                      "PUB-R-C-P07-PRODUCES",
+                      "PUB-R-C-P11-RELATESTO-LOCAL-SEMANTIC-TARGET",
+                      "PUB-R-C-P12-HASLIMITATION-FINDING-BRANCH",
+                      "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+                      "PUB-R-C-P13-USESMODEL-METHOD-BRANCH",
+                      "PUB-R-C-P14-APPLIESTO",
+                      "PUB-R-C-P15-USESTOOL",
+                      "PUB-R-C-P16-MENTIONSVARIABLE",
+                      "PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH",
+                      "PUB-R-C-P17-STUDIESFEATURE-METHOD-BRANCH",
+                      "PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH",
+                      "PUB-R-C-P18-STUDIESPLACE-METHOD-BRANCH",
+                      "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
+                      "PUB-R-C-P23-MENTIONSMODEL",
+                      "PUB-R-C-P24-MENTIONSDATASET",
+                      "PUB-R-C-P25-REPORTSMETRIC",
+                      "PUB-R-C-P26-EVALUATES",
+                      "PUB-R-C-P27-HASPARAMETER",
+                      "PUB-R-C-P30-MENTIONSCONCEPT",
+                      "PUB-R-C-P31-MENTIONSTOOL"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "rationale": {
+                "maxLength": 2000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "reason": {
+                "enum": [
+                  "insufficient_evidence",
+                  "ambiguous_class",
+                  "ambiguous_relation",
+                  "unresolved_endpoint",
+                  "invalid_domain_range",
+                  "target_outside_ontology",
+                  "incomplete_source_text",
+                  "unrecoverable_table_structure",
+                  "visual_only_evidence",
+                  "equation_only_evidence",
+                  "unresolved_cross_reference"
+                ],
+                "type": "string"
+              },
+              "relatedCandidateIDs": {
+                "items": {
+                  "pattern": "^edge-[0-9]{4}$",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "scope": {
+                "enum": [
+                  "source_unit",
+                  "operational_target",
+                  "deferred_record",
+                  "candidate_relation"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "abstentionID",
+              "scope",
+              "operationalTargetID",
+              "deferredRecordID",
+              "reason",
+              "evidenceSpanIDs",
+              "competingOperationalTargetIDs",
+              "relatedCandidateIDs",
+              "rationale"
+            ],
+            "type": "object"
+          },
+          "deferredRecordResolution": {
+            "additionalProperties": false,
+            "description": "Non-authoritative disposition proposed for one deterministic Phase B deferred record. The proposal is validated separately and is not an adjudication or graph-acceptance outcome.",
+            "properties": {
+              "deferredRecordID": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "evidenceSpanIDs": {
+                "items": {
+                  "pattern": "^evidence-[0-9]{4}$",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "proposedDisposition": {
+                "enum": [
+                  "resolved_accepted",
+                  "resolved_rejected",
+                  "remain_deferred",
+                  "insufficient_evidence",
+                  "out_of_scope",
+                  "type_conflict",
+                  "unsupported_role"
+                ],
+                "type": "string"
+              },
+              "proposedOperationalTargetID": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "PUB-N-A-C01-REPOSITORY-EXACT-URL-OMITTED-BY-PHASE-B",
+                      "PUB-N-A-C01-REPOSITORY-EXISTING-EXACT-ENDPOINT",
+                      "PUB-N-A-C01-REPOSITORY-NAMED-WITHOUT-EXACT-IDENTITY",
+                      "PUB-N-A-D01-DATASETRESOURCE-EXACT-IDENTIFIER-OMITTED-BY-PHASE-B",
+                      "PUB-N-A-D01-DATASETRESOURCE-EXISTING-EXACT-ENDPOINT",
+                      "PUB-N-A-DOM02-TOOL-EXISTING-EXACT-ENDPOINT",
+                      "PUB-N-A-DOM02-TOOL-NEW-FROM-PUBLICATION-PROSE",
+                      "PUB-N-A-DOM03A-PROCESSBASEDMODEL",
+                      "PUB-N-A-DOM03B-CONCEPTUALMODEL",
+                      "PUB-N-A-DOM03C-STATISTICALMODEL",
+                      "PUB-N-A-DOM03D-MLMODEL",
+                      "PUB-N-A-DOM04-VARIABLE",
+                      "PUB-N-A-DOM05-CONCEPT",
+                      "PUB-N-A-DOM07A-WATERSHED",
+                      "PUB-N-A-DOM07B-RIVERREACH",
+                      "PUB-N-A-DOM07C-GAUGE",
+                      "PUB-N-A-DOM07D-WATERBODY",
+                      "PUB-N-A-DOM07E-AQUIFER",
+                      "PUB-N-A-DOM07F-VPU",
+                      "PUB-N-A-DOM08-NAMEDPLACE",
+                      "PUB-N-A-DOM11-EVALUATIONMETRIC",
+                      "PUB-N-A-DOM12-PARAMETER",
+                      "PUB-N-A-DOM13-ALGORITHM",
+                      "PUB-N-A-P05-BACKGROUND",
+                      "PUB-N-A-P06-THEME",
+                      "PUB-N-A-P07-RESEARCHPROBLEM",
+                      "PUB-N-A-P08-RESEARCHQUESTION",
+                      "PUB-N-A-P09-RESEARCHGOAL",
+                      "PUB-N-A-P10-RESEARCHSIGNIFICANCE",
+                      "PUB-N-A-P11-DEFINITION",
+                      "PUB-N-A-P12-THEORETICALBASIS",
+                      "PUB-N-A-P13-METHOD",
+                      "PUB-N-A-P14-EXPERIMENT",
+                      "PUB-N-A-P15-EXAMPLES",
+                      "PUB-N-A-P16-FINDING",
+                      "PUB-N-A-P17-DISCUSSION",
+                      "PUB-N-A-P18-RELATEDRESEARCH",
+                      "PUB-N-A-P19-LIMITATION",
+                      "PUB-N-A-P20-CONCLUSION",
+                      "PUB-N-A-P21-CONTRIBUTION",
+                      "PUB-N-A-P22-FUTUREWORK",
+                      "PUB-N-A-P23-HYPOTHESIS",
+                      "PUB-N-A-P24-CLAIM",
+                      "PUB-N-A-P25-DATASETMENTION-EXISTING-PHASE-B-INSTANCE",
+                      "PUB-N-A-P25-DATASETMENTION-NEW-FROM-PROSE",
+                      "PUB-N-A-P26-DATADESCRIPTION",
+                      "PUB-R-C-P06-RESOLVES",
+                      "PUB-R-C-P07-PRODUCES",
+                      "PUB-R-C-P08-TESTEDBY-HYPOTHESIS-BRANCH",
+                      "PUB-R-C-P09-SUPPORTS",
+                      "PUB-R-C-P11-RELATESTO-LOCAL-SEMANTIC-TARGET",
+                      "PUB-R-C-P12-HASLIMITATION-FINDING-BRANCH",
+                      "PUB-R-C-P13-USESMODEL-METHOD-BRANCH",
+                      "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+                      "PUB-R-C-P14-APPLIESTO",
+                      "PUB-R-C-P15-USESTOOL",
+                      "PUB-R-C-P16-MENTIONSVARIABLE",
+                      "PUB-R-C-P17-STUDIESFEATURE-METHOD-BRANCH",
+                      "PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH",
+                      "PUB-R-C-P18-STUDIESPLACE-METHOD-BRANCH",
+                      "PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH",
+                      "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
+                      "PUB-R-C-P23-MENTIONSMODEL",
+                      "PUB-R-C-P24-MENTIONSDATASET",
+                      "PUB-R-C-P25-REPORTSMETRIC",
+                      "PUB-R-C-P26-EVALUATES",
+                      "PUB-R-C-P27-HASPARAMETER",
+                      "PUB-R-C-P28-USESALGORITHM",
+                      "PUB-R-C-P29-REFERENCESDATASET-EXACT-OMITTED-IDENTIFIER",
+                      "PUB-R-C-P30-MENTIONSCONCEPT",
+                      "PUB-R-C-P31-MENTIONSTOOL",
+                      "PUB-R-C-P32-REFERENCESREPOSITORY",
+                      "PUB-R-C-P33-HASCODEREPOSITORY"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "rationale": {
+                "maxLength": 2000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "relatedCandidateIDs": {
+                "items": {
+                  "pattern": "^(node|edge)-[0-9]{4}$",
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "deferredRecordID",
+              "proposedDisposition",
+              "proposedOperationalTargetID",
+              "relatedCandidateIDs",
+              "evidenceSpanIDs",
+              "rationale"
+            ],
+            "type": "object"
+          },
+          "evidenceSpan": {
+            "additionalProperties": false,
+            "description": "One contiguous evidence span. A span may not cross a source-unit boundary.",
+            "properties": {
+              "evidenceSpanID": {
+                "pattern": "^evidence-[0-9]{4}$",
+                "type": "string"
+              },
+              "evidenceText": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "locatorAnchor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "evidenceSpanID",
+              "evidenceText",
+              "locatorAnchor"
+            ],
+            "type": "object"
+          },
+          "nonEmptyStringOrNull": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sha256": {
+            "description": "Lowercase hexadecimal SHA-256 digest.",
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "stringOrNull": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "abstentions": {
+            "items": {
+              "$ref": "#/$defs/abstention"
+            },
+            "type": "array"
+          },
+          "candidateEdges": {
+            "items": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P06",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P06-RESOLVES",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "resolves",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-022",
+                            "DEV02-FIXN-023",
+                            "DEV02-FIXN-024",
+                            "DEV02-FIXN-025",
+                            "DEV02-FIXN-026",
+                            "DEV02-FIXN-027"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-035"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P07",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P07-PRODUCES",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "produces",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-010",
+                            "DEV02-FIXN-011",
+                            "DEV02-FIXN-022",
+                            "DEV02-FIXN-023",
+                            "DEV02-FIXN-024",
+                            "DEV02-FIXN-025",
+                            "DEV02-FIXN-026",
+                            "DEV02-FIXN-027"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-012",
+                            "DEV02-FIXN-013",
+                            "DEV02-FIXN-014"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P11",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P11-RELATESTO-LOCAL-SEMANTIC-TARGET",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "relatesTo",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-034"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-001",
+                            "DEV02-FIXN-022",
+                            "DEV02-FIXN-023",
+                            "DEV02-FIXN-024",
+                            "DEV02-FIXN-025",
+                            "DEV02-FIXN-026",
+                            "DEV02-FIXN-027",
+                            "DEV02-FIXN-035"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P12",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P12-HASLIMITATION-FINDING-BRANCH",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "hasLimitation",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-012",
+                            "DEV02-FIXN-013",
+                            "DEV02-FIXN-014"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-015",
+                            "DEV02-FIXN-016",
+                            "DEV02-FIXN-017",
+                            "DEV02-FIXN-018",
+                            "DEV02-FIXN-019",
+                            "DEV02-FIXN-020",
+                            "DEV02-FIXN-021"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P13",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P13-USESMODEL-PAPER-BRANCH",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "usesModel",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "https://doi.org/10.1029/2022wr032039"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "deterministic_node",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-031",
+                            "DEV02-FIXN-032",
+                            "DEV02-FIXN-033"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P13",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P13-USESMODEL-METHOD-BRANCH",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "usesModel",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-022",
+                            "DEV02-FIXN-023",
+                            "DEV02-FIXN-024",
+                            "DEV02-FIXN-025",
+                            "DEV02-FIXN-026",
+                            "DEV02-FIXN-027"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-031",
+                            "DEV02-FIXN-032",
+                            "DEV02-FIXN-033"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P14",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P14-APPLIESTO",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "appliesTo",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-022",
+                            "DEV02-FIXN-023",
+                            "DEV02-FIXN-024",
+                            "DEV02-FIXN-025",
+                            "DEV02-FIXN-026",
+                            "DEV02-FIXN-027"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-031",
+                            "DEV02-FIXN-032",
+                            "DEV02-FIXN-033"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P15",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P15-USESTOOL",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "usesTool",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "https://doi.org/10.1029/2022wr032039"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "deterministic_node",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-039"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P16",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P16-MENTIONSVARIABLE",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "mentionsVariable",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "referenceID": {
+                              "enum": [
+                                "https://doi.org/10.1029/2022wr032039"
+                              ],
+                              "type": "string"
+                            },
+                            "referenceType": {
+                              "const": "deterministic_node",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "referenceType",
+                            "referenceID"
+                          ],
+                          "type": "object"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "referenceID": {
+                              "enum": [
+                                "DEV02-FIXN-002"
+                              ],
+                              "type": "string"
+                            },
+                            "referenceType": {
+                              "const": "accepted_local_candidate",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "referenceType",
+                            "referenceID"
+                          ],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-040",
+                            "DEV02-FIXN-041",
+                            "DEV02-FIXN-042",
+                            "DEV02-FIXN-043"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P17",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P17-STUDIESFEATURE-PAPER-BRANCH",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "studiesFeature",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "https://doi.org/10.1029/2022wr032039"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "deterministic_node",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-036",
+                            "DEV02-FIXN-037",
+                            "DEV02-FIXN-038",
+                            "DEV02-FIXN-044",
+                            "DEV02-FIXN-045",
+                            "DEV02-FIXN-046"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P17",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P17-STUDIESFEATURE-METHOD-BRANCH",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "studiesFeature",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-022",
+                            "DEV02-FIXN-023",
+                            "DEV02-FIXN-024",
+                            "DEV02-FIXN-025",
+                            "DEV02-FIXN-026",
+                            "DEV02-FIXN-027"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-036",
+                            "DEV02-FIXN-037",
+                            "DEV02-FIXN-038",
+                            "DEV02-FIXN-044",
+                            "DEV02-FIXN-045",
+                            "DEV02-FIXN-046"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P18",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P18-STUDIESPLACE-PAPER-BRANCH",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "studiesPlace",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "https://doi.org/10.1029/2022wr032039"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "deterministic_node",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-028"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P18",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P18-STUDIESPLACE-METHOD-BRANCH",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "studiesPlace",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-022",
+                            "DEV02-FIXN-023",
+                            "DEV02-FIXN-024",
+                            "DEV02-FIXN-025",
+                            "DEV02-FIXN-026",
+                            "DEV02-FIXN-027"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-028"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P20",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P20-USESDATASET-NEW-PROSE-EVIDENCE",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "usesDataset",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "https://doi.org/10.1029/2022wr032039"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "deterministic_node",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-003"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P23",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P23-MENTIONSMODEL",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "mentionsModel",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "https://doi.org/10.1029/2022wr032039"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "deterministic_node",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-031",
+                            "DEV02-FIXN-032",
+                            "DEV02-FIXN-033"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P24",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P24-MENTIONSDATASET",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "mentionsDataset",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "https://doi.org/10.1029/2022wr032039"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "deterministic_node",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-003"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P25",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P25-REPORTSMETRIC",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "reportsMetric",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-010",
+                            "DEV02-FIXN-011",
+                            "DEV02-FIXN-012",
+                            "DEV02-FIXN-013",
+                            "DEV02-FIXN-014"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-004",
+                            "DEV02-FIXN-005",
+                            "DEV02-FIXN-006",
+                            "DEV02-FIXN-007",
+                            "DEV02-FIXN-008",
+                            "DEV02-FIXN-009"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P26",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P26-EVALUATES",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "evaluates",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-004",
+                            "DEV02-FIXN-005",
+                            "DEV02-FIXN-006",
+                            "DEV02-FIXN-007",
+                            "DEV02-FIXN-008",
+                            "DEV02-FIXN-009"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-022",
+                            "DEV02-FIXN-023",
+                            "DEV02-FIXN-024",
+                            "DEV02-FIXN-025",
+                            "DEV02-FIXN-026",
+                            "DEV02-FIXN-027",
+                            "DEV02-FIXN-031",
+                            "DEV02-FIXN-032",
+                            "DEV02-FIXN-033"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P27",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P27-HASPARAMETER",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "hasParameter",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-010",
+                            "DEV02-FIXN-011",
+                            "DEV02-FIXN-022",
+                            "DEV02-FIXN-023",
+                            "DEV02-FIXN-024",
+                            "DEV02-FIXN-025",
+                            "DEV02-FIXN-026",
+                            "DEV02-FIXN-027",
+                            "DEV02-FIXN-031",
+                            "DEV02-FIXN-032",
+                            "DEV02-FIXN-033"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-029",
+                            "DEV02-FIXN-030"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P30",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P30-MENTIONSCONCEPT",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "mentionsConcept",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "https://doi.org/10.1029/2022wr032039"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "deterministic_node",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-001"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "description": "One proposed publication relation candidate with edge-specific evidence.",
+                  "properties": {
+                    "action": {
+                      "const": "propose_edge",
+                      "type": "string"
+                    },
+                    "candidateID": {
+                      "pattern": "^edge-[0-9]{4}$",
+                      "type": "string"
+                    },
+                    "deferredRecordID": {
+                      "type": "null"
+                    },
+                    "evidenceSpanIDs": {
+                      "items": {
+                        "pattern": "^evidence-[0-9]{4}$",
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "ontologyRelationID": {
+                      "const": "C-P31",
+                      "type": "string"
+                    },
+                    "operationalRelationID": {
+                      "const": "PUB-R-C-P31-MENTIONSTOOL",
+                      "type": "string"
+                    },
+                    "origin": {
+                      "const": "open_discovery",
+                      "type": "string"
+                    },
+                    "relationName": {
+                      "const": "mentionsTool",
+                      "type": "string"
+                    },
+                    "relationScope": {
+                      "enum": [
+                        "intra_source",
+                        "inter_source"
+                      ],
+                      "type": "string"
+                    },
+                    "source": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "https://doi.org/10.1029/2022wr032039"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "deterministic_node",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    },
+                    "target": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "referenceID": {
+                          "enum": [
+                            "DEV02-FIXN-039"
+                          ],
+                          "type": "string"
+                        },
+                        "referenceType": {
+                          "const": "accepted_local_candidate",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "referenceType",
+                        "referenceID"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "candidateID",
+                    "action",
+                    "origin",
+                    "operationalRelationID",
+                    "ontologyRelationID",
+                    "relationName",
+                    "relationScope",
+                    "source",
+                    "target",
+                    "deferredRecordID",
+                    "evidenceSpanIDs"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "candidateNodes": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {},
+              "required": [],
+              "type": "object"
+            },
+            "maxItems": 0,
+            "type": "array"
+          },
+          "deferredRecords": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {},
+              "required": [],
+              "type": "object"
+            },
+            "maxItems": 0,
+            "type": "array"
+          },
+          "evidenceSpans": {
+            "items": {
+              "$ref": "#/$defs/evidenceSpan"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "candidateNodes",
+          "candidateEdges",
+          "evidenceSpans",
+          "abstentions",
+          "deferredRecords"
+        ],
+        "type": "object"
+      },
+      "strict": true
+    },
+    "verbosity": "medium"
+  },
+  "tool_choice": "auto",
+  "tool_usage": {
+    "image_gen": {
+      "input_tokens": 0,
+      "input_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 0
+    },
+    "web_search": {
+      "num_requests": 0
+    }
+  },
+  "tools": [],
+  "top_logprobs": 0,
+  "top_p": 0.98,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 31872,
+    "input_tokens_details": {
+      "cache_write_tokens": 31869,
+      "cached_tokens": 0
+    },
+    "output_tokens": 9160,
+    "output_tokens_details": {
+      "reasoning_tokens": 3106
+    },
+    "total_tokens": 41032
+  },
+  "user": null,
+  "metadata": {}
+}

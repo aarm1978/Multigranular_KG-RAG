@@ -7,24 +7,24 @@ source_scope: publications
 stage_scope: llm_semantic_overlay
 binding_human_readable_source: docs/publication_llm_extraction_target_inventory.md
 ontology:
-  version: 0.1.3
-  validated_owl_sha256: ecfcd7058b3404dd1a02875654cc8c7f905e20bdf2e559b4498aa2e7d0f12a57
+  version: 0.1.4
+  validated_owl_sha256: 7d94a10aca96dd098d40f50fbd66d0c53f92a5b5f0d317621e7b29da71bc2635
   spec_path: src/ontology/ontology_spec.yaml
-  spec_sha256_of_reviewed_copy: a940dd79ac0c8b10980b3a17739d2f03ac5b0c23ce80dffb0bb90009cf19db54
+  spec_sha256_of_reviewed_copy: 363cb4f92a2fc82f993baf808da56bc7d38bbb355669dd01ca03686c3551982d
   source_class_declarations: 75
-  source_relation_declarations: 125
+  source_relation_declarations: 126
 reviewed_sources:
 - path: docs/publication_llm_extraction_target_inventory.md
-  sha256: b2055e9735c64c5dc5d712fa96bdc95cb4137c75390261902fbc3055fc3d9ffa
+  sha256: fcf5619006def7839f910881099f1534341b3b36fc64ad23e920311b9d07cba9
   role: binding operational inventory
 - path: docs/publication_ontology_observations_register.md
   sha256: d06dbdf64fa7bd2ac81c7c1e97d16eebb8ded3d432396414c03a3e0ebca79d5e
   role: binding observation and implementation decisions
 - path: docs/ontology_inventory.md
-  sha256: 4940bca14cf3bc29550b6bda94b49b34676848107941f276fac35c1e5deeb9ee
+  sha256: 9cf993ca137cf0dfd12da5e5942d02c08964b136989d8e4ab20b8f118aeb16c3
   role: publication routing categories and human-readable ontology inventory
 authority_order:
-- frozen ontology 0.1.3 specification and generated OWL
+- frozen ontology 0.1.4 specification and generated OWL
 - frozen deterministic Phase B outputs and tests
 - final Publication Pilot 1 human-readable target inventory
 - publication ontology observations register
@@ -934,7 +934,7 @@ node_targets:
   positive_criterion: Theory, conceptual framework, or scientific principle that grounds the study, hypothesis, method, or
     interpretation.
   boundary: Exclude mere theory mentions and applied procedures. No TheoreticalBasis grounding relation is declared in ontology
-    0.1.3.
+    0.1.4.
 - row: 21
   operational_id: PUB-N-A-P13-METHOD
   ontology_ids:
@@ -2199,7 +2199,7 @@ relation_targets:
     status: S
     anchor: schema:funder
     type: prov
-    note: 'Non-logical funding_agency note only; ontology 0.1.3 does not declare Award -> Organization.'
+    note: 'Non-logical funding_agency note only; ontology 0.1.4 does not declare Award -> Organization.'
   operational_relation: fundedBy
   raw_operational_signature: Paper → Award
   operational_signatures:
@@ -2219,7 +2219,7 @@ relation_targets:
   evaluation_mode: not_attempted
   positive_criterion: Publication funding parsing.
   boundary: Publication implementation gap, not an LLM target. An Award-to-funding-organization relation is not formally
-    declared in ontology 0.1.3 and remains outside Publication Pilot 1.
+    declared in ontology 0.1.4 and remains outside Publication Pilot 1.
 - row: 6
   operational_id: PUB-R-C-P01-HASAUTHOR
   ontology_ids:

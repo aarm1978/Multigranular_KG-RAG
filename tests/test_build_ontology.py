@@ -22,6 +22,7 @@ SPEC_PATH = PROJECT_ROOT / "src/ontology/ontology_spec.yaml"
 OWL_PATH = PROJECT_ROOT / "src/ontology/ciroh_ontology.owl"
 BUILDER_PATH = PROJECT_ROOT / "src/ontology/build_ontology.py"
 INVENTORY_PATH = PROJECT_ROOT / "docs/ontology_inventory.md"
+HISTORICAL_015 = PROJECT_ROOT / "tests/fixtures/ontology/v0.1.5"
 HUB_OUTPUT_PATH = PROJECT_ROOT / "data/interim/documents/ciroh_hub_nodes_edges.json"
 FROZEN_OUTPUT_HASHES = {
     PROJECT_ROOT / "data/interim/papers/publication_nodes_edges.json": "675049dae5c3dfed6f492ad0aa79e27fc1a9b37d0ecbc13ab3cf1a69cdb8efaf",
@@ -125,6 +126,7 @@ D26_RANGE = {
     "Parameter",
     "Algorithm",
     "Repository",
+    "Organization",
 }
 D26_EVIDENCE = (
     "pipeline-derived from accepted evidence-backed entity occurrence; "
@@ -282,11 +284,44 @@ def inventory_table_ids() -> set[str]:
 
 
 class OntologyFormalizationPatchTests(unittest.TestCase):
-    """Verify the complete ontology 0.1.4 regression suite."""
+    """Retain historical 0.1.5 expectations and verify current shared semantics."""
 
-    def test_spec_version_is_0_1_4(self) -> None:
-        """The authoritative specification records candidate version 0.1.4."""
-        self.assertEqual(load_spec()["ontology"]["version"], "0.1.4")
+    def test_spec_version_is_0_1_5(self) -> None:
+        """The preserved historical specification records version 0.1.5."""
+        historical = yaml.safe_load((HISTORICAL_015 / "ontology_spec.yaml").read_text())
+        self.assertEqual(historical["ontology"]["version"], "0.1.5")
+
+    def test_agent_based_model_source_and_generated_class(self) -> None:
+        """A-DOM03e is a minted ComputationalModel subclass."""
+        declaration = next(
+            item for item in load_spec()["classes"] if item["id"] == "A-DOM03e"
+        )
+        self.assertEqual(declaration["name"], "AgentBasedModel")
+        self.assertEqual(declaration["parent"], "ciroh:ComputationalModel")
+        self.assertEqual(declaration["iri"], "ciroh:AgentBasedModel")
+
+        generated = entity_for_inventory_id(parse_owl(), "A-DOM03e")
+        self.assertEqual(generated.tag, f"{{{NS['owl']}}}Class")
+        self.assertEqual(generated.get(RDF_ABOUT), "#AgentBasedModel")
+        self.assertIn(
+            "#ComputationalModel",
+            {
+                item.get(RDF_RESOURCE)
+                for item in generated.findall("rdfs:subClassOf", NS)
+            },
+        )
+
+    def test_organization_hybrid_extraction_and_publication_locus(self) -> None:
+        """A-AG02 retains deterministic loci and adds Publication prose extraction."""
+        declaration = next(
+            item for item in load_spec()["classes"] if item["id"] == "A-AG02"
+        )
+        self.assertEqual(declaration["name"], "Organization")
+        self.assertEqual(declaration["extraction"], "hybrid")
+        self.assertEqual(
+            declaration["locus"],
+            "affiliation; awards[].funding_agency; publication body prose",
+        )
 
     def test_d26_source_declaration(self) -> None:
         """D-26 preserves the complete researcher-approved source declaration."""
@@ -317,11 +352,30 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
         self.assertEqual(relation["alt_anchor"], "dcterms:references")
         self.assertTrue(relation["consol"])
 
-    def test_generated_version_is_0_1_4(self) -> None:
-        """The generated ontology records the patched semantic version."""
-        version = parse_owl().find("owl:Ontology/owl:versionInfo", NS)
+    def test_generated_version_is_0_1_5(self) -> None:
+        """The preserved historical OWL records its original semantic version."""
+        version = ET.parse(HISTORICAL_015 / "ciroh_ontology.owl").getroot().find("owl:Ontology/owl:versionInfo", NS)
         self.assertIsNotNone(version)
-        self.assertEqual(version.text, "0.1.4")
+        self.assertEqual(version.text, "0.1.5")
+
+    def test_c_p34_source_and_generated_has_component_property(self) -> None:
+        """C-P34 merges into the existing hasComponent object property."""
+        relation = relation_by_id("C-P34")
+        self.assertEqual(relation["name"], "hasComponent")
+        self.assertEqual(as_set(relation["domain"]), {"Tool", "ComputationalModel"})
+        self.assertEqual(as_set(relation["range"]), {"Tool", "ComputationalModel"})
+        self.assertEqual(relation["evidence"], "paper prose with a verbatim quoted span")
+
+        properties = object_properties(parse_owl(), "hasComponent")
+        self.assertEqual(len(properties), 1)
+        prop = properties[0]
+        self.assertEqual(property_inventory_ids(prop), {"C-P34", "C-DC19"})
+        self.assertEqual(
+            property_expression_members(prop, "domain"), {"Tool", "ComputationalModel"}
+        )
+        self.assertEqual(
+            property_expression_members(prop, "range"), {"Tool", "ComputationalModel"}
+        )
 
     def test_generated_d26_mentions_property(self) -> None:
         """The generated generic mention property exactly realizes D-26."""
@@ -425,7 +479,8 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
         self.assertEqual(uses_dataset["name"], "usesDataset")
         self.assertEqual(references_dataset["name"], "referencesDataset")
         self.assertEqual(uses_dataset["domain"], references_dataset["domain"])
-        self.assertEqual(uses_dataset["range"], references_dataset["range"])
+        self.assertEqual(uses_dataset["range"], ["DatasetResource", "DatasetMention"])
+        self.assertEqual(references_dataset["range"], "DatasetResource")
         self.assertEqual(uses_dataset["maps_to"], "D-01")
         self.assertEqual(references_dataset["maps_to"], "D-05")
 
@@ -501,7 +556,8 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
 
     def test_generated_object_property_count_is_91(self) -> None:
         """The approved declarations generate 91 distinct object properties."""
-        self.assertEqual(len(parse_owl().findall("owl:ObjectProperty", NS)), 91)
+        historical = ET.parse(HISTORICAL_015 / "ciroh_ontology.owl").getroot()
+        self.assertEqual(len(historical.findall("owl:ObjectProperty", NS)), 91)
 
     def test_has_sub_page_machine_id_and_narrative_alias(self) -> None:
         """C-DC02i remains formal while C-DC21 is comment-only traceability."""
@@ -536,7 +592,7 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
             "C-DC22": ("references", "DocumentationPage", "DocumentationPage", "D-15"),
             "C-DC23": ("referencesFeature", "DocumentationPage", "HydrologicFeature", "D-18"),
             "C-DC24": ("mentionsModel", "DocumentationPage", "ComputationalModel", "D-21"),
-            "C-DC25": ("mentionsDataset", "DocumentationPage", "DatasetResource", "D-21"),
+            "C-DC25": ("mentionsDataset", "DocumentationPage", ["DatasetResource", "DatasetMention"], "D-21"),
         }
         for inventory_id, declaration in expected.items():
             with self.subTest(inventory_id=inventory_id):
@@ -589,11 +645,11 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
                 self.assertEqual(property_expression_members(properties[0], "range"), ranges)
                 self.assertEqual(property_inventory_ids(properties[0]), inventory_ids)
 
-    def test_source_relation_declaration_count_is_126(self) -> None:
-        """The approved specification has 126 relations and retains 75 classes."""
-        spec = load_spec()
-        self.assertEqual(len(spec["classes"]), 75)
-        self.assertEqual(len(spec["relations"]), 126)
+    def test_source_declaration_counts_are_0_1_5(self) -> None:
+        """The approved 0.1.5 source adds one class and one relation declaration."""
+        spec = yaml.safe_load((HISTORICAL_015 / "ontology_spec.yaml").read_text())
+        self.assertEqual(len(spec["classes"]), 76)
+        self.assertEqual(len(spec["relations"]), 127)
         all_ids = [entry["id"] for section in ("classes", "relations") for entry in spec[section]]
         self.assertEqual(len(all_ids), len(set(all_ids)))
 
@@ -851,6 +907,7 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
                 )
             self.assertEqual(first.read_bytes(), second.read_bytes())
             self.assertEqual(first.read_bytes(), third.read_bytes())
+            self.assertEqual(first.read_bytes(), OWL_PATH.read_bytes())
             self.assertEqual(
                 hashlib.sha256(first.read_bytes()).hexdigest(),
                 hashlib.sha256(second.read_bytes()).hexdigest(),
@@ -859,6 +916,186 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
                 hashlib.sha256(first.read_bytes()).hexdigest(),
                 hashlib.sha256(third.read_bytes()).hexdigest(),
             )
+
+
+class Ontology017CandidateTests(unittest.TestCase):
+    """Check the prospective amendment without migrating frozen outputs."""
+
+    def test_candidate_artifact_hash_and_property_counts(self) -> None:
+        """Pin the build candidate, not a claim of completed HermiT validation."""
+        self.assertEqual(hashlib.sha256(OWL_PATH.read_bytes()).hexdigest(), "ac64435ca02a703bdee8168a045a3897d7f6f5be1a8e25e6cdf485c66c85e0fa")
+        root = parse_owl()
+        self.assertEqual(len(root.findall("owl:ObjectProperty", NS)), 92)
+        self.assertEqual(len(root.findall("owl:DatatypeProperty", NS)), 20)
+
+    def test_only_approved_v017_source_changes(self) -> None:
+        """Reversing the version and two ranges recovers exact frozen v0.1.6 bytes."""
+        raw = SPEC_PATH.read_bytes()
+        self.assertEqual(raw.count(b'version: "0.1.7"'), 1)
+        restored = raw.replace(b'version: "0.1.7"', b'version: "0.1.6"')
+        for identifier in ("C-C15", "C-DC25"):
+            lines = [line for line in restored.splitlines(keepends=True)
+                     if f"id: {identifier},".encode() in line]
+            self.assertEqual(len(lines), 1)
+            self.assertIn(b"range: [DatasetResource, DatasetMention]", lines[0])
+            restored = restored.replace(lines[0], lines[0].replace(
+                b"range: [DatasetResource, DatasetMention]", b"range: DatasetResource"))
+        self.assertEqual(hashlib.sha256(restored).hexdigest(),
+                         "47f035081d4e883146a479130c1f4c4751f0c40358fd1a8d154b43b36e34371e")
+
+    def test_approved_dataset_signatures_generate_union_ranges(self) -> None:
+        """Both approved signatures use OWL unions, with original domains and IDs."""
+        root = parse_owl()
+        for identifier, name, domain, merged_domains, ids in (
+            ("C-C15", "usesDataset", "Repository", {"Repository", "Paper"}, {"C-C15", "C-P20"}),
+            ("C-DC25", "mentionsDataset", "DocumentationPage", {"DocumentationPage", "Paper"}, {"C-DC25", "C-P24"}),
+        ):
+            with self.subTest(inventory_id=identifier):
+                declaration = relation_by_id(identifier)
+                self.assertEqual(declaration["name"], name)
+                self.assertEqual(declaration["domain"], domain)
+                self.assertEqual(declaration["range"], ["DatasetResource", "DatasetMention"])
+                prop = entity_for_inventory_id(root, identifier)
+                self.assertEqual(property_inventory_ids(prop), ids)
+                self.assertEqual(property_expression_members(prop, "domain"), merged_domains)
+                self.assertEqual(property_expression_members(prop, "range"), {"DatasetResource", "DatasetMention"})
+                ranges = prop.findall("rdfs:range", NS)
+                self.assertEqual(len(ranges), 1)
+                self.assertIsNone(ranges[0].get(RDF_RESOURCE))
+                union = ranges[0].find("owl:Class/owl:unionOf", NS)
+                self.assertIsNotNone(union)
+                self.assertEqual(union.get(f"{{{NS['rdf']}}}parseType"), "Collection")
+                self.assertEqual(len(union.findall("rdf:Description", NS)), 2)
+
+    def test_historical_authorities_are_byte_preserved(self) -> None:
+        """Pin the exact pre-amendment authorities, including validated OWL."""
+        expected = {
+            "ontology_spec.yaml": "eac8ec2e0eeec380d05e75c804dc386e9e8aaf8f443b79e20a25a163e513efc5",
+            "ciroh_ontology.owl": "ce5f6d3d8ac926dc8ff872c9a36066758a86068b6681417bf7edc6aaeccf1e71",
+            "ontology_inventory.md": "a69a401e1d8a8e6cefd16f2a94a28793e699d6970795c5ae04acf661520b61ef",
+        }
+        for name, digest in expected.items():
+            self.assertEqual(hashlib.sha256((HISTORICAL_015 / name).read_bytes()).hexdigest(), digest)
+
+    def test_candidate_version_counts_and_approved_source_delta(self) -> None:
+        """Retain the 0.1.6 additions/notes and only the approved 0.1.7 ranges."""
+        old = yaml.safe_load((HISTORICAL_015 / "ontology_spec.yaml").read_text())
+        new = load_spec()
+        self.assertEqual(new["ontology"]["version"], "0.1.7")
+        self.assertEqual(parse_owl().find("owl:Ontology/owl:versionInfo", NS).text, "0.1.7")
+        self.assertEqual((len(new["classes"]), len(new["relations"])), (77, 130))
+        for section, additions in (("classes", {"A-D13"}), ("relations", {"C-D27", "C-D28", "C-D29"})):
+            before = {x["id"]: x for x in old[section]}
+            after = {x["id"]: x for x in new[section]}
+            self.assertEqual(len(after), len(new[section]))
+            self.assertEqual(set(after) - set(before), additions)
+            self.assertLessEqual(set(before), set(after))
+            for key, declaration in before.items():
+                retained = dict(after[key])
+                if key in {"A-C07", "A-AG-R2"}:
+                    retained["note"] = declaration["note"]
+                if key in {"C-C15", "C-DC25"}:
+                    self.assertEqual(retained["range"], ["DatasetResource", "DatasetMention"])
+                    retained["range"] = declaration["range"]
+                self.assertEqual(retained, declaration, key)
+        prefixes = {x["prefix"]: x for x in new["prefixes"]}
+        for entry in old["prefixes"]:
+            self.assertEqual(prefixes[entry["prefix"]], entry)
+        self.assertEqual(set(prefixes) - {x["prefix"] for x in old["prefixes"]}, {"dcat"})
+        self.assertEqual(prefixes["dcat"]["use"], "reference")
+        for key in set(old) - {"ontology", "classes", "relations", "prefixes"}:
+            self.assertEqual(new[key], old[key], key)
+
+    def test_previous_generated_iris_and_branches_remain(self) -> None:
+        """Preserve prior OWL entities, imports, subclass and property branches."""
+        old = ET.parse(HISTORICAL_015 / "ciroh_ontology.owl").getroot()
+        new = parse_owl()
+        current = {e.get(RDF_ABOUT): e for e in new if e.get(RDF_ABOUT) is not None}
+        for entity in old:
+            iri = entity.get(RDF_ABOUT)
+            if iri is None or entity.tag == f"{{{NS['owl']}}}Ontology":
+                continue
+            self.assertIn(iri, current)
+            retained = current[iri]
+            self.assertEqual(entity.tag, retained.tag, iri)
+            self.assertLessEqual(property_inventory_ids(entity), property_inventory_ids(retained))
+            for axis in ("domain", "range"):
+                self.assertLessEqual(property_expression_members(entity, axis), property_expression_members(retained, axis), (iri, axis))
+            for tag in ("rdfs:subClassOf", "rdfs:subPropertyOf", "owl:inverseOf", "owl:equivalentClass", "owl:equivalentProperty"):
+                before = {ET.tostring(e, encoding="unicode").strip() for e in entity.findall(tag, NS)}
+                after = {ET.tostring(e, encoding="unicode").strip() for e in retained.findall(tag, NS)}
+                self.assertLessEqual(before, after, (iri, tag))
+        imports = lambda root: {e.get(RDF_RESOURCE) for e in root.findall("owl:Ontology/owl:imports", NS)}
+        self.assertEqual(imports(old), imports(new))
+        self.assertFalse(any("dcat" in str(iri) for iri in imports(new)))
+
+    def test_new_merged_branches_and_service_boundary(self) -> None:
+        """Assert the approved signatures and annotation-only DCAT endpoint reuse."""
+        root = parse_owl()
+        expected = {
+            "hasContributor": ({"DatasetResource", "Repository", "DocumentationPage"}, {"Person"}, {"C-D27", "C-C04", "C-DC05"}),
+            "fundedBy": ({"Paper", "DatasetResource", "Award"}, {"Award", "Organization"}, {"A-AG-R2", "C-D09", "C-D28"}),
+            "servesDataset": ({"DataService"}, {"DatasetResource"}, {"C-D29"}),
+        }
+        for name, (domain, range_, ids) in expected.items():
+            props = object_properties(root, name)
+            self.assertEqual(len(props), 1)
+            self.assertEqual(property_expression_members(props[0], "domain"), domain)
+            self.assertEqual(property_expression_members(props[0], "range"), range_)
+            self.assertEqual(property_inventory_ids(props[0]), ids)
+        service = entity_for_inventory_id(root, "A-D13")
+        self.assertEqual(service.get(RDF_ABOUT), "#DataService")
+        self.assertIn("http://www.w3.org/ns/dcat#DataService", {e.get(RDF_RESOURCE) for e in service.findall("rdfs:subClassOf", NS)})
+        for name, anchor in (("endpointURL", "dcat:endpointURL"), ("serviceType", "schema:serviceType")):
+            prop = next(e for e in root.findall("owl:DatatypeProperty", NS) if e.get(RDF_ABOUT) == f"#{name}")
+            self.assertEqual(prop.find("rdfs:domain", NS).get(RDF_RESOURCE), "#DataService")
+            self.assertEqual(prop.find("rdfs:range", NS).get(RDF_RESOURCE), "http://www.w3.org/2001/XMLSchema#string")
+            self.assertIn(anchor, {e.text for e in prop.findall("ciroh:reuseAnchor", NS)})
+            self.assertIsNone(prop.find("owl:equivalentProperty", NS))
+            self.assertIsNone(prop.find("rdfs:subPropertyOf", NS))
+        self.assertFalse(any(e.get(RDF_ABOUT) == "http://www.w3.org/ns/dcat#endpointURL" for e in root))
+
+    def test_all_saved_output_endpoints_fit_generated_signatures(self) -> None:
+        """Check actual edges, including historical HydroShare IDs, by merged IRI."""
+        root = parse_owl()
+        classes = {x["id"]: x for x in load_spec()["classes"]}
+        parents = {
+            e.get(RDF_ABOUT): {p.get(RDF_RESOURCE) for p in e.findall("rdfs:subClassOf", NS) if p.get(RDF_RESOURCE)}
+            for e in root.findall("owl:Class", NS)
+        }
+
+        def members(prop: ET.Element, axis: str) -> set[str]:
+            """Read exact class IRIs in a direct or union signature."""
+            expression = prop.find(f"rdfs:{axis}", NS)
+            if expression is None:
+                return set()
+            direct = expression.get(RDF_RESOURCE)
+            return {direct} if direct else {e.get(RDF_ABOUT) for e in expression.findall("owl:Class/owl:unionOf/rdf:Description", NS)}
+
+        def ancestry(iri: str) -> set[str]:
+            """Compute local named-class closure without invoking a reasoner."""
+            found, pending = {iri, NS["owl"] + "Thing"}, [iri]
+            while pending:
+                for parent in parents.get(pending.pop(), set()) - found:
+                    found.add(parent)
+                    pending.append(parent)
+            return found
+
+        properties = {e.get(RDF_ABOUT).split("#")[-1]: e for e in root.findall("owl:ObjectProperty", NS)}
+        for path in FROZEN_OUTPUT_HASHES:
+            graph = json.loads(path.read_text())
+            node_types = {}
+            for node in graph["nodes"]:
+                key = node["inventoryId"]
+                key = FROZEN_NODE_COMPATIBILITY.get((key, node["class"]), key)
+                self.assertIn(key, classes)
+                node_types[node["id"]] = ancestry(entity_for_inventory_id(root, key).get(RDF_ABOUT))
+            signatures = {(e["relation"], frozenset(node_types[e["source"]]), frozenset(node_types[e["target"]])) for e in graph["edges"]}
+            for relation, source, target in signatures:
+                with self.subTest(graph=path.name, relation=relation, source=source, target=target):
+                    self.assertIn(relation, properties)
+                    self.assertTrue(source & members(properties[relation], "domain"))
+                    self.assertTrue(target & members(properties[relation], "range"))
 
 
 if __name__ == "__main__":

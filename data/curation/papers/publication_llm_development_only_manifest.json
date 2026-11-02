@@ -1,0 +1,82 @@
+{
+  "manifestVersion": "0.1.0",
+  "purpose": "publication_llm_development_only",
+  "status": "approved_for_development",
+  "pilot1ArtifactDisjoint": true,
+  "pilot1ArtifactIds": [
+    "10",
+    "15",
+    "16",
+    "18",
+    "34",
+    "37",
+    "46",
+    "54",
+    "79",
+    "276",
+    "87",
+    "87-corrigendum"
+  ],
+  "units": [
+    {
+      "developmentId": "DEV-01",
+      "sourceUnitID": "pub:17:sec:0007:unit:0001",
+      "sourcePublicationID": "17",
+      "selectionRationale": "Introduction framing with flood risk, societal motivation, climate context, and the scientific need addressed by the study."
+    },
+    {
+      "developmentId": "DEV-02",
+      "sourceUnitID": "pub:17:sec:0033:unit:0001",
+      "sourcePublicationID": "17",
+      "selectionRationale": "Evaluation design linking OWP FIM and the National Water Model to validation datasets, HEC-RAS comparisons, and operational tradeoffs."
+    },
+    {
+      "developmentId": "DEV-03",
+      "sourceUnitID": "pub:36:sec:0020:unit:0001",
+      "sourcePublicationID": "36",
+      "selectionRationale": "Data-method unit with repeated extrapolation, uncertainty handling, named phosphorus variables, thresholds, and spatial aggregation."
+    },
+    {
+      "developmentId": "DEV-04",
+      "sourceUnitID": "pub:36:sec:0026:unit:0001",
+      "sourcePublicationID": "36",
+      "selectionRationale": "Compact quantitative results reporting cluster-level phosphorus balances, ranges, correlation, and statistical significance."
+    },
+    {
+      "developmentId": "DEV-05",
+      "sourceUnitID": "pub:219:sec:0003:unit:0001",
+      "sourcePublicationID": "219",
+      "selectionRationale": "Methods unit describing drought-index and precipitation datasets, spatial and temporal coverage, observations, proxies, and reconstruction procedures."
+    },
+    {
+      "developmentId": "DEV-06",
+      "sourceUnitID": "pub:219:sec:0008:unit:0001",
+      "sourcePublicationID": "219",
+      "selectionRationale": "Results unit comparing nine machine-learning models with RMSE, NSE, KGE, feature selection, and interpretation of performance differences."
+    },
+    {
+      "developmentId": "DEV-07",
+      "sourceUnitID": "pub:243:sec:0003:unit:0001",
+      "sourcePublicationID": "243",
+      "selectionRationale": "Introduction framing the societal role and uncertainty of geoscientific models and motivating differentiable process/ML integration."
+    },
+    {
+      "developmentId": "DEV-08",
+      "sourceUnitID": "pub:243:sec:0013:unit:0001",
+      "sourcePublicationID": "243",
+      "selectionRationale": "Closest substantive method/result alternative: differentiable numerical modeling, neural-network coupling, hydrologic models, datasets, variables, and quantitative NSE comparisons."
+    },
+    {
+      "developmentId": "DEV-09",
+      "sourceUnitID": "pub:270:sec:0005:unit:0001",
+      "sourcePublicationID": "270",
+      "selectionRationale": "Model-configuration unit covering TELEMAC-2D, SISYPHE, numerical schemes, equations, parameter choices, and coupled versus decoupled operation."
+    },
+    {
+      "developmentId": "DEV-10",
+      "sourceUnitID": "pub:270:sec:0010:unit:0001",
+      "sourcePublicationID": "270",
+      "selectionRationale": "Conclusion comparing TELEMAC-2D/SISYPHE with the slumping model, summarizing performance limitations, and recommending future integration."
+    }
+  ]
+}

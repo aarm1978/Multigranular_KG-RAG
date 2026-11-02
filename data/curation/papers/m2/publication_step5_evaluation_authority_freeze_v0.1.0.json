@@ -1,0 +1,64 @@
+{
+  "artifactType": "publication_step5_evaluation_authority_freeze_record",
+  "recordVersion": "0.1.0",
+  "status": "frozen_closed",
+  "closureDate": "2026-09-27",
+  "authority": {
+    "authorityID": "publication-step5-evaluation-authority",
+    "version": "0.1.0",
+    "path": "docs/publication_step5_evaluation_authority_v0.1.md",
+    "sha256": "c101a024d0ad540373aa97bfa9f35ee22d517479b49400b6e34f8896f65105a9",
+    "status": "FROZEN"
+  },
+  "researcherApprovedPreFreezeCheckpoint": "859e510de829d62028dbfca50d6a6b4e32f27e31",
+  "freezeGate": {
+    "sections17_1Through17_10": "satisfied",
+    "step5Status": "FROZEN/CLOSED",
+    "step6Status": "authorized_not_executed"
+  },
+  "freezeTimeArtifacts": [
+    {
+      "path": "data/curation/papers/m2/step5_freeze/publication_pool_n6_selection_freeze_v0.1.0.json",
+      "artifactSha256": "1941439b44bc6f8b5a645aeed0638d39f2e48d599d22ac882a207e75dd110fbe",
+      "trackedFileSha256": "4839bcef9293f3d50ae1c80f10464a138a3f2d505c36388d3c945be0e86af3e3"
+    },
+    {
+      "path": "data/curation/papers/m2/step5_freeze/publication_pool_n6_c1_evaluation_envelopes_freeze_v0.1.0.json",
+      "artifactSha256": "bdd90dae198442a0aff6fd7d5a1bc45bb6bf32e618d3c4204142bf8ec7bdbde7",
+      "trackedFileSha256": "626d89687baa9eefad0a3398495fd8eb67bae3afe14bbd13473f88cf2c2c7a04"
+    },
+    {
+      "path": "data/curation/papers/m2/step5_freeze/publication_pool_secondary_review_subset_freeze_v0.1.0.json",
+      "artifactSha256": "655cb9f2076614d5dcb2dc321261fdeb993657328bf83553c614d69eb235d0dc",
+      "trackedFileSha256": "515642a5c19ef58b3bc690c9c7a49552cc9b2fed6031aef2491af248c0ce58a7"
+    },
+    {
+      "path": "data/curation/papers/m2/step5_freeze/publication_step5_role_exposure_ledger_schema_v0.1.0.json",
+      "artifactSha256": "4458d62c5492bc3938e06c7d4360adb682114c9f23fa1187f035e87028574191",
+      "trackedFileSha256": "c42fc3020e56e626c2e372c626ccbc63bb427bb171d1c5174886c6b7c9ff4b00"
+    },
+    {
+      "path": "data/curation/papers/m2/step5_freeze/scierc_external_anchor_source_freeze_v0.1.0.json",
+      "artifactSha256": "10be1f68f8ef675ad28396b2541045df173dc413558dcaeb9b4ce9a0eae41c21",
+      "trackedFileSha256": "47869e3c724ed3eee35319dd860ac7b0e032deed0b1d4d5a27da52dac8018f7c"
+    },
+    {
+      "path": "data/curation/papers/m2/step5_freeze/scierc_external_anchor_adapter_freeze_v0.1.0.json",
+      "artifactSha256": "2f861607264c48d0faba9fb40d55da20a3141ec578e30e2327c655aa6e41a640",
+      "trackedFileSha256": "d68cba4baf3c40cc90297fce51fa1f5458cacd73305dbd38908ef48b2fff5016"
+    },
+    {
+      "path": "data/curation/papers/m2/step5_freeze/publication_step5_deterministic_controls_validation_v0.1.0.json",
+      "artifactSha256": "e45602eefd56e02862446aeb2221a35fb25fe576c1b9aa80dbd4f463793e7919",
+      "trackedFileSha256": "29f2a35a3046c370fe6d12d0c4a42500a545e5591465187bd4bbc52789594b86"
+    }
+  ],
+  "closureExecutionBoundary": {
+    "c1ProviderModelExecutionOccurred": false,
+    "pooledReferenceExecutionOccurred": false,
+    "humanAdjudicationOccurred": false,
+    "completenessAuditOccurred": false,
+    "sciercExecutionOccurred": false,
+    "statement": "Step 5 closure used deterministic file/hash/closure-consistency checks only; no later-stage execution occurred."
+  }
+}

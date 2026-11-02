@@ -1,0 +1,273 @@
+{
+  "admissionReviewSha256": "5b8e772c99a586ed89e8132cbafdbefc1d5d5c8100a511736859a3114757056f",
+  "date": "2026-10-30",
+  "decisions": [
+    {
+      "acceptanceBasis": "policy_conditional_inclusion",
+      "candidateID": "step-custom-toggle",
+      "caseID": "R01",
+      "changesToHistoricalResponse": false,
+      "changesToSourceLocalProjection": false,
+      "family": "ciroh_hub",
+      "inventoryId": "A-DC06",
+      "judgment": "supported",
+      "judgmentScope": "source-grounding-and-semantic-typing-diagnostic",
+      "originalEvidenceQuoteSha256": [
+        "7008324c66e8b59debdb52f38ca2c7cecedfa7ffefb62fb5eaefab81006e9603"
+      ],
+      "ownerID": "hub:page:42fcf7a977e48d6c7917",
+      "rationale": "The quoted instructions explicitly direct the user to toggle between individually selected map files. The accepted Step and its documented procedural parent path are congruent; this does not establish code execution.",
+      "requestID": "ciroh_hub:v042:procedures_and_dependents:aa5ba9145cacfa02e300387da934d8fea4d838fc84a4ee4ed7b6bf2c8c35b01e",
+      "requestSha256": "aa5ba9145cacfa02e300387da934d8fea4d838fc84a4ee4ed7b6bf2c8c35b01e",
+      "responseTextSha256": "4602758e10ede7393830b9cca5f003f716a8af867a2b54ce016c9ea0da4c7dda"
+    },
+    {
+      "acceptanceBasis": "policy_conditional_inclusion",
+      "candidateID": "step-6",
+      "caseID": "R02",
+      "changesToHistoricalResponse": false,
+      "changesToSourceLocalProjection": false,
+      "family": "ciroh_hub",
+      "inventoryId": "A-DC06",
+      "judgment": "supported",
+      "judgmentScope": "source-grounding-and-semantic-typing-diagnostic",
+      "originalEvidenceQuoteSha256": [
+        "c243c18a3f85f885dfdd6959e5e8e8bce07604844f31d93edb01345a76fb6134"
+      ],
+      "ownerID": "hub:page:7f3d1af6c8f7caafde09",
+      "rationale": "The cited Cell 6 heading identifies a concrete instruction to save results to CSV. Neighboring source context includes the corresponding illustrative code. Treat as a documented Step, not proof of successful execution.",
+      "requestID": "ciroh_hub:v042:procedures_and_dependents:472192ef7ea3a1e80c74273312f9a8e02f7288d9a99a7e8d2f255f2dbb8685ba",
+      "requestSha256": "472192ef7ea3a1e80c74273312f9a8e02f7288d9a99a7e8d2f255f2dbb8685ba",
+      "responseTextSha256": "c66d039985bb35d13e7db1094870b2ac8f48e967665f1a36653bed7b29a186b1"
+    },
+    {
+      "acceptanceBasis": "policy_ordinary_inclusion",
+      "candidateID": "algorithm-clark-routing",
+      "caseID": "R03",
+      "changesToHistoricalResponse": false,
+      "changesToSourceLocalProjection": false,
+      "family": "ciroh_hub",
+      "inventoryId": "A-DOM13",
+      "judgment": "questionable",
+      "judgmentScope": "source-grounding-and-semantic-typing-diagnostic",
+      "originalEvidenceQuoteSha256": [
+        "088c59cf3cd63c60c9081a906f85f46da9c0177ca0389af4f8c5d6df24a0c7d4"
+      ],
+      "ownerID": "hub:page:1575c80e00676b0730ad",
+      "rationale": "The quote names Clark routing as a compute-heavy hydrologic operation, but does not clearly distinguish the named hydrologic Method from a specific Algorithm implementation. A clark_routing() function exists in broader page context, yet that implementation is not the referenced identity in the cited claim. Preserve the Algorithm candidate unchanged and record ontological typing ambiguity; no automatic retyping.",
+      "requestID": "ciroh_hub:v042:scientific_occurrences:25e7f035193cdc2820d3213609de5349c373e13309800765dbafead3be4bc201",
+      "requestSha256": "25e7f035193cdc2820d3213609de5349c373e13309800765dbafead3be4bc201",
+      "responseTextSha256": "b9523c26c90b10b71dec9a349055eed8b1f8f403de1bae1250678bcf21044786"
+    },
+    {
+      "acceptanceBasis": "policy_ordinary_inclusion",
+      "candidateID": "edge-describes-ng iab",
+      "caseID": "R04",
+      "changesToHistoricalResponse": false,
+      "changesToSourceLocalProjection": false,
+      "family": "ciroh_hub",
+      "inventoryId": "C-DC07",
+      "judgment": "supported",
+      "judgmentScope": "source-grounding-and-semantic-typing-diagnostic",
+      "originalEvidenceQuoteSha256": [
+        "faa5c62dd9f52e9411c7893c2cce108eed5a0fd0607f7cbe207a29474be2d6af"
+      ],
+      "ownerID": "hub:page:c94245db9d10ee53af68",
+      "rationale": "The source explicitly characterizes NGIAB as a Docker container with prebuilt models and explains its relation to datastreamcli; the documentation-to-Tool describesTool relation is supported by the stated description.",
+      "requestID": "ciroh_hub:v042:products_and_references:9809844b26bdde5ee933a7c0c5248198b4168d779904bba5ce8e3ef48ecad2b1",
+      "requestSha256": "9809844b26bdde5ee933a7c0c5248198b4168d779904bba5ce8e3ef48ecad2b1",
+      "responseTextSha256": "72bd4797401d5894c1060626ef9cf9e4f6e87ac4548feb32327f7f6acc0665e0"
+    },
+    {
+      "acceptanceBasis": "policy_conditional_inclusion",
+      "candidateID": "purpose-data-processing",
+      "caseID": "R05",
+      "changesToHistoricalResponse": false,
+      "changesToSourceLocalProjection": false,
+      "family": "github",
+      "inventoryId": "C-C07",
+      "judgment": "supported",
+      "judgmentScope": "source-grounding-and-semantic-typing-diagnostic",
+      "originalEvidenceQuoteSha256": [
+        "0cc761c10213ee95aafc044a24deca4aeb18f980bf7382a9ce08e771ed316266"
+      ],
+      "ownerID": "github:repo:982280858",
+      "rationale": "The documentation describes processing scientific hydrologic network inputs (GeoPackage) and creating NetCDF/CSV outputs. This supports the repository-level controlled purpose Data processing; it does not imply this is its only purpose.",
+      "requestID": "github:v042:software_roles_and_use:92f80c41f3ac36c7a798c9a4b691e48b0043a1106a7b8d70f7eee9d508f74c7e",
+      "requestSha256": "92f80c41f3ac36c7a798c9a4b691e48b0043a1106a7b8d70f7eee9d508f74c7e",
+      "responseTextSha256": "d310267cf668bd1e0c7cdfed0070928bab4a59acd6abbcf115e5191e65935952"
+    },
+    {
+      "acceptanceBasis": "policy_conditional_inclusion",
+      "candidateID": "function-random-rain",
+      "caseID": "R06",
+      "changesToHistoricalResponse": false,
+      "changesToSourceLocalProjection": false,
+      "family": "github",
+      "inventoryId": "A-C08",
+      "judgment": "supported",
+      "judgmentScope": "source-grounding-and-semantic-typing-diagnostic",
+      "originalEvidenceQuoteSha256": [
+        "0a90f7c74479c9f81b73b1d548ead0e40651ae5fbabb6968d9cb29c971ba8546"
+      ],
+      "ownerID": "github:repo:807668057",
+      "rationale": "The descriptive prose explicitly names the random_rain function and states that it generates rainfall-event sequences for bucket simulations; a prose-described Function is warranted.",
+      "requestID": "github:v042:software_roles_and_use:0467f23ead2fa3518d1b7fb599c3a92aff733a4d208c081dcd6b390dbf5ae4b9",
+      "requestSha256": "0467f23ead2fa3518d1b7fb599c3a92aff733a4d208c081dcd6b390dbf5ae4b9",
+      "responseTextSha256": "eca4cccbe1b65c314477c690298bda0d321c4e50a1526bebfd7e44f64e8db162"
+    },
+    {
+      "acceptanceBasis": "policy_ordinary_inclusion",
+      "candidateID": "dataset-camels",
+      "caseID": "R07",
+      "changesToHistoricalResponse": false,
+      "changesToSourceLocalProjection": false,
+      "family": "github",
+      "inventoryId": "A-D01",
+      "judgment": "supported",
+      "judgmentScope": "source-grounding-and-semantic-typing-diagnostic",
+      "originalEvidenceQuoteSha256": [
+        "0a4a3a3b4243b9d8d67a467a91b21903fda2f449d1637f5b90e1ef30dc24b4e5"
+      ],
+      "ownerID": "github:repo:807667921",
+      "rationale": "The README identifies the original CAMELS data and explains that the repository includes only selected sample basins to reduce size. Support applies to the named CAMELS dataset reference, not a claim that the repository sample is the complete original dataset.",
+      "requestID": "github:v042:software_roles_and_use:8445ab26049c912b454334c218e30254a48aa654cf7a190a00673941c252bf01",
+      "requestSha256": "8445ab26049c912b454334c218e30254a48aa654cf7a190a00673941c252bf01",
+      "responseTextSha256": "d2f859c68e3c8a8065363c13635069b96ed361eab04efcf26fc9630963ce5ec4"
+    },
+    {
+      "acceptanceBasis": "policy_ordinary_inclusion",
+      "candidateID": "tool-teehr-library",
+      "caseID": "R08",
+      "changesToHistoricalResponse": false,
+      "changesToSourceLocalProjection": false,
+      "family": "github",
+      "inventoryId": "A-DOM02",
+      "judgment": "supported",
+      "judgmentScope": "source-grounding-and-semantic-typing-diagnostic",
+      "originalEvidenceQuoteSha256": [
+        "ff0d6a57010d76b0d2cd1196f8e390e99c10e90e0ae05ba70b61f6302868e8a0"
+      ],
+      "ownerID": "github:repo:634661554",
+      "rationale": "The cited sentence names the TEEHR library as a software resource for model-output evaluation; classifying this described library as a Tool is supported, without asserting that it was executed.",
+      "requestID": "github:v042:software_roles_and_use:c187db7b761668380cbeda1c6693054d4e382c9c6e879944c8a47ef9f1cbfff1",
+      "requestSha256": "c187db7b761668380cbeda1c6693054d4e382c9c6e879944c8a47ef9f1cbfff1",
+      "responseTextSha256": "7a6327385207d0db84d84b18080afcbca425b11d02803c8ad7ee4b607e685c43"
+    },
+    {
+      "acceptanceBasis": "policy_conditional_inclusion",
+      "candidateID": "edge-measurement-nwm-peak",
+      "caseID": "R09",
+      "changesToHistoricalResponse": false,
+      "changesToSourceLocalProjection": false,
+      "family": "hydroshare",
+      "inventoryId": "C-D17",
+      "judgment": "supported",
+      "judgmentScope": "source-grounding-and-semantic-typing-diagnostic",
+      "originalEvidenceQuoteSha256": [
+        "c6e3c6bd191c1db3bee1c71ba802f70006148256b450e7d08986f0a15973aaab"
+      ],
+      "ownerID": "0ef4366e7711478fa2637f5049b4881a",
+      "rationale": "The README individuates an approximately 66.42 cms maximum peak flow as an NWM retrospective model-based estimate, including reach context and 1979–2023 period. The DatasetResource hasMeasurement association supports a documented modeled measurement, not a field observation or independently verified notebook execution.",
+      "requestID": "hydroshare:v042:observations_and_geography:efb6bb262a41665c813b2d509ce502cbe3f7668879f3decfd431fbfd1367d528",
+      "requestSha256": "efb6bb262a41665c813b2d509ce502cbe3f7668879f3decfd431fbfd1367d528",
+      "responseTextSha256": "467752184b75ea705a958af70068e5b8148be01119d552fe7594007890488bd3"
+    },
+    {
+      "acceptanceBasis": "policy_conditional_inclusion",
+      "candidateID": "edge-measurement-observed-2001",
+      "caseID": "R10",
+      "changesToHistoricalResponse": false,
+      "changesToSourceLocalProjection": false,
+      "family": "hydroshare",
+      "inventoryId": "C-D17",
+      "judgment": "supported",
+      "judgmentScope": "source-grounding-and-semantic-typing-diagnostic",
+      "originalEvidenceQuoteSha256": [
+        "e508f8cecb1f69a1ca5e39ef5cf895cb131b569ca0872f30b9572ae0cfd6d6cf"
+      ],
+      "ownerID": "3200bab682ec4c3287147cbe40e768ee",
+      "rationale": "The README reports an observed maximum peak flow of approximately 82.13 cms for the overlapping comparison period, linked to year 2001. The observation is individually evidenced and is distinct from the modeled estimate.",
+      "requestID": "hydroshare:v042:observations_and_geography:9e9826053a66475d719b5f06a31318c5a27ef096fcd58166fefb821ee1aa9757",
+      "requestSha256": "9e9826053a66475d719b5f06a31318c5a27ef096fcd58166fefb821ee1aa9757",
+      "responseTextSha256": "6c2d9ec66a327e22070f726791fab60cd13a1bc0f136ab1c6b3ce227f5f17d82"
+    },
+    {
+      "acceptanceBasis": "policy_ordinary_inclusion",
+      "candidateID": "tool-tethys",
+      "caseID": "R11",
+      "changesToHistoricalResponse": false,
+      "changesToSourceLocalProjection": false,
+      "family": "hydroshare",
+      "inventoryId": "A-DOM02",
+      "judgment": "supported",
+      "judgmentScope": "source-grounding-and-semantic-typing-diagnostic",
+      "originalEvidenceQuoteSha256": [
+        "9c837635b04601421b93855a280d641824970222d08e52a675621b2e776123f3"
+      ],
+      "ownerID": "88e0ebf2719c492381efcb27fba71032",
+      "rationale": "The source explicitly identifies Tethys Visualizer by name as a software application in setup-and-run instructions. This supports an identified Tool entity, without establishing successful runtime execution.",
+      "requestID": "hydroshare:v042:software_and_processing:4a2f42d922c98bd9c264a88d04f2f5b36f8f16e357464a55fca983d3104b79f9",
+      "requestSha256": "4a2f42d922c98bd9c264a88d04f2f5b36f8f16e357464a55fca983d3104b79f9",
+      "responseTextSha256": "c1883214f8b9ac6eeaff183bda3214346d912bd649d9ae8af08c51aa67a3f4a1"
+    },
+    {
+      "acceptanceBasis": "policy_ordinary_inclusion",
+      "candidateID": "concept-hydraulic-geometry",
+      "caseID": "R12",
+      "changesToHistoricalResponse": false,
+      "changesToSourceLocalProjection": false,
+      "family": "hydroshare",
+      "inventoryId": "A-DOM05",
+      "judgment": "supported",
+      "judgmentScope": "source-grounding-and-semantic-typing-diagnostic",
+      "originalEvidenceQuoteSha256": [
+        "79ea7811f6832f5bb261259b089cc1798ccf13708e9e6fd4de7babfe9379d081"
+      ],
+      "ownerID": "56e0ac25249d4451845a843eb3154954",
+      "rationale": "The quoted dataset description explicitly names bankfull downstream hydraulic geometry for alluvial rivers as the subject of the data compilation. The scientific Concept entity is supported.",
+      "requestID": "hydroshare:v042:observations_and_geography:bbed7b16523000cfdcb78721d18b15c36f44f0a8014879bde909f7672d1803a1",
+      "requestSha256": "bbed7b16523000cfdcb78721d18b15c36f44f0a8014879bde909f7672d1803a1",
+      "responseTextSha256": "ea9c01d803338c6fb54372d7b4052668847bfdd010f3b3f7e9788a139ce02f86"
+    }
+  ],
+  "evidenceSource": "Researcher confirmation in the ChatGPT Dissertation CS conversation, after assistant-assisted review and clarification of R03/R09.",
+  "independentOrBlindedReview": false,
+  "interpretation": "Diagnostic judgments only: no population-level precision/recall/F1, no independent gold, no evidence of exhaustive completeness. R03 is an unresolved semantic typing concern; one selected questionable case is not evidence of a systematic error. Historical production and v4.1 remain immutable.",
+  "originalPackageHashesManifestSha256": "90e958fc72a9f4708583a5b847f1d166630be8b6c71e567a510d58f430ced748",
+  "originalSelection": "12 sampled admitted cases, exactly two per family x ordinary/conditional basis, selected by original Codex package.",
+  "reviewMarkdownSha256": "32416257351eefaa1872dddb394daf2cbad4a8b5f638d74508d2be8634d18b85",
+  "reviewerRole": "researcher (confirmation); assistant provided prior analysis and draft rationales",
+  "samplingTiming": "post-production; not prospectively predeclared before LLM extraction",
+  "status": "researcher_confirmed_chatgpt_assisted",
+  "summary": {
+    "coveredStrata": 6,
+    "newSelectiveExceptionJudgments": 0,
+    "questionable": 1,
+    "selectiveExceptionsPreviouslyResearcherApproved": 3,
+    "supported": 11,
+    "totalJudgments": 12,
+    "unableToDetermine": 0,
+    "unsupported": 0
+  },
+  "title": "Study 2 Step 13 — post-production diagnostic review, researcher-confirmed",
+  "archiveProvenance": {
+    "outerUploadedArchive": {
+      "filename": "closure-review.zip",
+      "sha256": "f87dc2f2640b67ef0fca32e475339a80b2671cfbbb68e69d3323e780875e8b17",
+      "verificationBasis": "Researcher-confirmed container identity and nesting, 2026-10-30; outer archive not independently inspected in this closure task."
+    },
+    "innerOriginalReviewPackage": {
+      "memberPath": "closure-review/v1/researcher-review.zip",
+      "sha256": "8392d4e8a94bb5e4f38a19d1a6b82d70c0ede442b6d33ec86dfed234dcf089c5",
+      "verificationBasis": "Local bytes hashed; all nine scientific review members match the original local package."
+    },
+    "confirmedDecisionDelivery": {
+      "filename": "step13_diagnostic_review_confirmed_2026-10-30.zip",
+      "sha256": "12420bb56c5dc952f58a6634c1f45ed2aaf61220ccdaf1595f6e27bdd46b5b8d",
+      "jsonMember": "step13_diagnostic_review_researcher_confirmed_2026-10-30.json",
+      "jsonMemberSha256": "a2be10105dea025854b82ad2b57da1e5bb46667ec37ddfe84a35bb4b7b43e794"
+    },
+    "clarification": "Different nested archive containers, not conflicting copies; no provenance exception waiver. Original archives and judgments remain unchanged."
+  }
+}
