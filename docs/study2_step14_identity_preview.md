@@ -75,3 +75,6 @@ Focused validation: `python -m unittest tests.test_step14_identity_preview -v`.
 The fixtures cover accepted exact IDs, class/role conflicts, nonidentity references,
 Publication local/link occurrences, names/provisional scopes, version ambiguity,
 contradictory multi-key bridges, input preservation, ordering, hashes and output boundaries.
+
+The separate [semantic candidate preparation stage](study2_step14_semantic_candidates.md)
+reuses the verified input loader without executing these identity proposals.

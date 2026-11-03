@@ -174,10 +174,8 @@ def prepare(graph: dict, native_rows: Iterable[dict], classes: dict[str, str]) -
                 blockers=BLOCKERS)
 
 
-def run(output: Path = OUTPUT) -> dict:
-    """Verify frozen inputs and write a fresh ignored preview, never a graph."""
-    require(not output.exists(), 'OUTPUT_ALREADY_EXISTS')
-    require(output.resolve().is_relative_to(Path('var/study2_step14').resolve()), 'STEP14_OUTPUT_REQUIRED')
+def verified_inputs() -> tuple[dict, dict, Path, dict]:
+    """Load frozen v4 inputs once for additive offline Step 14 consumers."""
     pins = {}
     def check(path: Path, expected: str) -> None:
         """Record and verify immutable inputs before consuming them."""
@@ -192,9 +190,17 @@ def run(output: Path = OUTPUT) -> dict:
     check(spec_path, summary['inputHashes'][str(spec_path)])
     owl = Path('src/ontology/ciroh_ontology.owl'); check(owl, summary['inputHashes'][str(owl)])
     spec = yaml.safe_load(spec_path.read_text())
+    return json.loads((ROOT / 'snapshot.json').read_bytes()), spec, sidecar, pins
+
+
+def run(output: Path = OUTPUT) -> dict:
+    """Verify frozen inputs and write a fresh ignored preview, never a graph."""
+    require(not output.exists(), 'OUTPUT_ALREADY_EXISTS')
+    require(output.resolve().is_relative_to(Path('var/study2_step14').resolve()), 'STEP14_OUTPUT_REQUIRED')
+    graph, spec, sidecar, pins = verified_inputs()
     with sidecar.open() as handle:
         native = (json.loads(line) for line in handle)
-        result = prepare(json.loads((ROOT / 'snapshot.json').read_bytes()), native,
+        result = prepare(graph, native,
                          {c['name']: c['id'] for c in spec['classes']})
     result['inputHashes'] = pins
     result['implementationSha256'] = sha(Path(__file__))
