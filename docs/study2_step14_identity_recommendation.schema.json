@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Step 14 unadjudicated recommendation, never an identity decision",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "const": "recommendation_only"
+    },
+    "caseID": {
+      "type": "string"
+    },
+    "caseSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "assessments": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "occurrenceIDs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true,
+            "minItems": 2,
+            "maxItems": 64
+          },
+          "identityLevel": {
+            "enum": [
+              "entity",
+              "reference_target",
+              "conceptual",
+              "unresolved"
+            ]
+          },
+          "recommendation": {
+            "enum": [
+              "same_entity_candidate",
+              "shared_reference_target_only",
+              "conceptual_similarity_only",
+              "different_entities_candidate",
+              "abstain"
+            ]
+          },
+          "granularityAssessment": {
+            "type": "string"
+          },
+          "versionAssessment": {
+            "type": "string"
+          },
+          "ownerReferenceAssessment": {
+            "type": "string"
+          },
+          "evidenceIDs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true,
+            "minItems": 0,
+            "maxItems": 64
+          },
+          "conflictEvidenceIDs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true,
+            "minItems": 0,
+            "maxItems": 64
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1
+          },
+          "missingInformation": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true,
+            "minItems": 0,
+            "maxItems": 64
+          }
+        },
+        "required": [
+          "occurrenceIDs",
+          "identityLevel",
+          "recommendation",
+          "granularityAssessment",
+          "versionAssessment",
+          "ownerReferenceAssessment",
+          "evidenceIDs",
+          "conflictEvidenceIDs",
+          "rationale",
+          "missingInformation"
+        ]
+      }
+    },
+    "unassessedOccurrenceIDs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "minItems": 0,
+      "maxItems": 64
+    },
+    "abstentionReason": {
+      "type": "string"
+    },
+    "contextSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "required": [
+    "status",
+    "caseID",
+    "caseSha256",
+    "assessments",
+    "unassessedOccurrenceIDs",
+    "abstentionReason",
+    "contextSha256"
+  ]
+}
