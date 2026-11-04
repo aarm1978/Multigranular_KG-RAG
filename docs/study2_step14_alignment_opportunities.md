@@ -137,23 +137,106 @@ saved data, not hardcoded to the researcher's observed run.
 From the repository root in the existing environment:
 
 ```bash
-conda run -n multigranular-kg python -m src.evaluation.step14_alignment_opportunities
+python -m src.evaluation.step14_alignment_opportunities
 ```
 
-Fresh ignored destination: `var/study2_step14/alignment-opportunities/v1/`:
+Fresh ignored v2 destination: `var/study2_step14/alignment-opportunities/v2/` (v1 is never overwritten):
 
 - `report.md`: denominators, opportunity tiers, queue coverage and limitations.
 - `inventory.json`: compact stratified relation summaries, pilot cases and separately
   retained oversized cross-family summaries.
 - `pilot-review-queue.tsv`: bounded evidence and source pointers for selected cases.
+- `shared-reference-hubs.jsonl`: provisional exact-key groups, distinct documentary referrers, unchanged predicates, versions and bounded recovery pointers.
 - `manifest.json`: input/output/implementation hashes and diagnostic-only status.
 
 Existing destinations are refused; `--output` may name another fresh path below the
 same diagnostic root. The CLI disables network connections. No full-corpus run took
-place in Codex; actual relation coverage remains pending the researcher-terminal run.
+place in Codex; v2 relation coverage remains pending the researcher-terminal run.
 
-Focused tests: `python -m unittest tests.test_step14_alignment_opportunities -v`.
+Focused tests: `python -m unittest tests.test_step14_alignment_opportunities tests.test_step14_shared_references -v`.
 Synthetic fixtures cover exact targets versus locators, owner versus reference
 identity, non-promotion, class compatibility, duplicate evidence, missing provenance,
 native/derived lineage, reproducible selection, zero coverage, hashes and reversible
 output behavior.
+
+
+## v2: exact GitHub provenance recovery
+
+A bounded inspection of eight frozen curated Repository roots and nine accepted
+edge examples found that `RepoContext.lineage("repo root")` deliberately omits
+optional `rawSource`. The v1 family discriminator required that field for GitHub,
+although each sampled root had its original numeric repository ID, full name,
+HTML URL, canonical key, repo-root lineage and deterministic metadata evidence.
+All eight pass the new exact constructor-contract check. No provenance is inferred
+from graph IDs, labels, neighbors or a URL prefix.
+
+The recovery requires `A-C01`/Repository, curated status, positive integer repoId,
+`github_numeric_id`, matching `github-repo-id:` canonical key, fullName/htmlUrl
+agreement, `phaseAField=repo root`, phaseAVersion, and matching metadata evidence
+sourceArtifact/API sourceLocation, extractionMethod, evidenceText and version.
+Other absent provenance stays unresolved. The new source/target recovery counters
+measure endpoint occurrences restored by this rule, not accepted alignments.
+
+The hash-verified saved v1 inventory contains 551 source-unconfirmed occurrences
+across referencesDataset, usesDataset, referencesRepository, referencePublication,
+usesTool and usesModel. Of these, 527 have compatible signatures and confirmed
+target provenance (35, 92, 36, 48, 276 and 40 respectively). Another 99 implementedBy
+occurrences have unconfirmed target provenance. These counts identify potential
+suppression; only the researcher-run v2 can measure opportunity changes. A sampled
+referencePublication edge (`github:edge:referencePublication:78085a50fecd916924e6`)
+has original CITATION.cff evidence and its Paper stub's own DOI, while its curated
+repository source was unconfirmed. Missing family classification is distinct from
+missing evidence on the source-local projected semantic nodes, whose evidence is
+in the immutable native sidecar.
+
+The 11,702 GitHub hasFile occurrences have the separate historical File-versus-
+RepoFile signature incompatibility. Recovering repository provenance does not make
+their signatures compatible or change frozen acceptance. The remaining unknown
+historical relation signatures are also left unchanged.
+
+## v2: shared external-reference groups
+
+This diagnostic reads all v4 targets in Paper, DatasetResource, Repository, Tool
+and Dependency, including targets absent from the previous semantic preparation.
+The implementation explicitly lists eligible accepted predicates and independently
+requires their exact ontology signature and recorded edge evidence. Exclusions
+remain in denominators. Groups never create entities, edges or pairwise connections.
+
+- **A:** existing typed own DOI, HydroShare resource ID, GitHub numeric ID, or an
+  explicitly established `github_repository_url` root. The original constructor's
+  canonical-key wrappers are read without URL resolution or new normalization.
+  A fully verified curated GitHub root also supplies its recorded root URL. These
+  are repository-record keys, never commit/implementation equivalences. Existing
+  software/repository DOI regimes and accepted DatasetResource hasIdentifier DOI
+  assertions retain record scope.
+- **B:** exact target locator fields and original evidence-bound local literal
+  declarations. GitHub branch/file/clone locators remain distinct from root keys;
+  DOI resolver URLs and HydroShare resource URLs are not promoted to record IDs.
+- **C:** ecosystem-qualified package declarations without proven registry/release
+  identity, or exact original names when no stronger key exists. No alias/fuzzy
+  expansion occurs. Package `versionSpec` is read from the accepted dependsOn edge;
+  absent or divergent constraints are retained, not silently reconciled.
+
+Each key is grouped within its target class and scope. Multiple keys can describe
+the same target; group totals overlap and are not unioned transitively. Separate
+accepted-edge denominators and shared-edge counts deduplicate original edge IDs.
+Singleton groups remain visible to distinguish possible from observed shared hubs.
+Matching curated-artifact IDs are exact A-key candidates, never adjudications.
+
+Referrers resolve only through original curated-artifact fields and evidence,
+including explicit native owner IDs and accepted sourceDeclarations. GitHub file
+sourceArtifact tree/SHA, sourceLocation blob/SHA/path and evidence.version must
+agree with an explicitly recorded curated repository root. Root metadata and file
+snapshots then count as one original artifact. Ambiguous aliases and unavailable
+owners remain unresolved; edge source adjacency is not a fallback. Explicit
+materialized_repository_file mirror pages are conservatively excluded from distinct
+referrer counts, with their IDs reported. Undocumented mirrors cannot be inferred.
+Distinct originating artifacts are documentary counts, never independent scientific
+confirmation, even when their quotations differ. Repeated edges or quotations from
+one artifact cannot inflate that artifact count.
+
+Outputs preserve target IDs, exact predicates, identifier scopes, version variants,
+origin IDs/families, membership hashes and bounded graph/native evidence references.
+The pinned inputs recover complete edge membership by the same deterministic rules;
+no raw evidence dump or high-degree artifact-pair expansion is written. Shared
+citations imply neither shared methods nor functional/scientific equivalence.

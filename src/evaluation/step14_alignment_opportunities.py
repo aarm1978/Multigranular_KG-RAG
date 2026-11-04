@@ -15,9 +15,9 @@ from src.evaluation import step14_semantic_candidates as candidates
 from src.evaluation import step14_semantic_review as review
 from src.evaluation import step14_identifier_scope_triage as triage
 
-OUTPUT = Path('var/study2_step14/alignment-opportunities/v1')
+OUTPUT = Path('var/study2_step14/alignment-opportunities/v2')
 TRIAGE_PIN = '529ffeddd981461fddeabdaa539a6758cae7a653f3378f1cc4b4aae4574e01d3'
-VERSION = 'step14-alignment-opportunities/0.1.0'
+VERSION = 'step14-alignment-opportunities/0.2.0'
 ARTIFACTS = {'Paper', 'DatasetResource', 'Repository', 'DocumentationPage'}
 PRIORITY_CLASSES = ('Tool', 'Algorithm', 'MLModel', 'ProcessBasedModel', 'ConceptualModel')
 TIERS = ('a_explicit_external_target', 'b_strong_record_candidate_to_observed_artifact',
@@ -46,6 +46,24 @@ def walk(value: object):
     elif isinstance(value, list):
         for child in value:
             yield from walk(child)
+
+
+def github_root_family(node: dict) -> str | None:
+    """Recover only the exact repository_node/metadata_evidence constructor contract."""
+    a = node.get('attributes', {}); ev = node.get('evidence', {}); lineage = node.get('internalLineage', {})
+    repo_id = a.get('repoId'); full_name = a.get('fullName'); url = a.get('htmlUrl')
+    if (node.get('class') == 'Repository' and node.get('inventoryId') == 'A-C01'
+            and node.get('curationStatus') == 'curated' and type(repo_id) is int and repo_id > 0
+            and node.get('identityRegime') == 'github_numeric_id'
+            and node.get('canonicalKey') == f'github-repo-id:{repo_id}'
+            and isinstance(full_name, str) and len(full_name.split('/')) == 2 and all(full_name.split('/'))
+            and url == 'https://github.com/' + full_name
+            and lineage.get('phaseAField') == 'repo root' and lineage.get('phaseAVersion')
+            and ev.get('sourceArtifact') == url and ev.get('sourceLocation') == 'https://api.github.com/repos/' + full_name
+            and ev.get('extractionMethod') == 'deterministic' and ev.get('evidenceText')
+            and ev.get('version') is not None):
+        return 'github'
+    return None
 
 
 def support(evidence: object, provenance: dict, reference: dict, family: str | None = None) -> dict:
@@ -148,10 +166,13 @@ def inventory(graph: dict, native_rows, derived_rows, dossier: list[dict], triag
     """Count accepted edges once, preserving every predicate and reporting provenance limits."""
     nodes = {n['id']: n for n in graph['nodes']}; edges = {e['id']: e for e in graph['edges']}
     identity.require(len(nodes) == len(graph['nodes']) and len(edges) == len(graph['edges']), 'DUPLICATE_GRAPH_ID')
-    ns = defaultdict(list); es = defaultdict(list)
+    ns = defaultdict(list); es = defaultdict(list); local_identifiers = defaultdict(set)
     for n in nodes.values():
         if n.get('evidence'):
-            ns[n['id']].append(support(n['evidence'], {}, dict(channel='v4_inline_node', nodeID=n['id']), candidates.deterministic_family(n)))
+            old_family = candidates.deterministic_family(n)
+            item = support(n['evidence'], {}, dict(channel='v4_inline_node', nodeID=n['id']), old_family or github_root_family(n))
+            item['legacyFamilies'] = {old_family} if old_family else set()
+            ns[n['id']].append(item)
     for e in edges.values():
         if e.get('evidence'):
             es[e['id']].append(support(e['evidence'], {}, dict(channel='v4_inline_edge', edgeID=e['id']), candidates.deterministic_family(e)))
@@ -163,6 +184,11 @@ def inventory(graph: dict, native_rows, derived_rows, dossier: list[dict], triag
         store = ns if row['kind'] == 'nodes' else es
         identity.require(gid in (nodes if row['kind'] == 'nodes' else edges), 'NATIVE_GRAPH_ID_MISSING')
         ev = n.get('boundEvidence', n.get('evidenceOccurrences', []))
+        if row['kind'] == 'nodes':
+            local_identifiers[gid]  # Native occurrences do not gain deterministic own-ID authority.
+            exact = n.get('originalCandidate', {}).get('exactIdentifier')
+            if isinstance(exact, str) and exact and any(exact in e.get('evidenceText', '') for e in ev):
+                local_identifiers[gid].add(exact)
         store[gid].append(support(ev, pr, dict(channel='native-provenance', graphID=gid,
             nativeRecordSha256=row['nativeRecordSha256'], provenanceSha256=candidates.token(row['provenance']))))
     rule_families = {'C-P05': 'publications', 'C-P10': 'publications', 'C-P12-Paper': 'publications',
@@ -175,6 +201,7 @@ def inventory(graph: dict, native_rows, derived_rows, dossier: list[dict], triag
         es[eid].append(support(row['evidence'], row['provenance'], dict(channel='derivation-provenance', edgeID=eid,
             recordSha256=candidates.token(row)), rule_families.get(row['rule'])))
     origins = {nid: combine(ns[nid]) for nid in nodes}
+    legacy_confirmed = {nid: confirmed(dict(origins[nid], families=set().union(*(i.get('legacyFamilies', i['families']) for i in ns[nid])))) for nid in nodes}
     artifact_families = defaultdict(set)
     for o in origins.values():
         for artifact in o['artifacts']:
@@ -204,6 +231,7 @@ def inventory(graph: dict, native_rows, derived_rows, dossier: list[dict], triag
         c for c in candidates.descendants(class_specs, 'ComputationalModel') if not class_specs[c].get('abstract')}
     counts = Counter({k: 0 for k in ('acceptedRelationOccurrences', 'potentiallyRelevantTargetOccurrences',
         'directIndependentArtifactConnections', 'possibleCrossFamilyAlignmentOccurrences', 'evidenceProvenanceConfirmed',
+        'sourceProvenanceRecoveredByExactRootContract', 'targetProvenanceRecoveredByExactRootContract',
         'bothEndpointProvenanceConfirmed', 'sourceEndpointProvenanceConfirmed', 'targetEndpointProvenanceConfirmed', 'ontologyCrossMarkedOccurrences')}); signature_cache = {}; grouped = {}; incidents = defaultdict(set); quote_edges = defaultdict(set)
     def owner(nid: str) -> bool:
         """Only existing curated artifact records count as independently observed owners."""
@@ -249,6 +277,8 @@ def inventory(graph: dict, native_rows, derived_rows, dossier: list[dict], triag
         counts['possibleCrossFamilyAlignmentOccurrences'] += possible_cross
         counts['evidenceProvenanceConfirmed'] += evidence_ok
         counts['bothEndpointProvenanceConfirmed'] += source_ok and target_ok
+        counts['sourceProvenanceRecoveredByExactRootContract'] += source_ok and not legacy_confirmed[s]
+        counts['targetProvenanceRecoveredByExactRootContract'] += target_ok and not legacy_confirmed[t]
         counts['sourceEndpointProvenanceConfirmed'] += source_ok
         counts['targetEndpointProvenanceConfirmed'] += target_ok
         counts['ontologyCrossMarkedOccurrences'] += schema_cross
@@ -271,7 +301,11 @@ def inventory(graph: dict, native_rows, derived_rows, dossier: list[dict], triag
     counts['quoteHashesReusedByMultipleEdges'] = sum(len(v)>1 for v in quote_edges.values())
     counts['edgeOccurrencesWithReusedQuote'] = len(set().union(*(v for v in quote_edges.values() if len(v)>1)))
     queue, queue_coverage = pilot_queue(dossier, incidents)
-    return dict(summary=dict(sorted(counts.items())), tierCounts={t: sum(g['acceptedOccurrences'] for g in grouped.values() if g['tier']==t) for t in TIERS},
+    from src.evaluation.step14_shared_references import shared_references
+    hubs = shared_references(graph, origins, {eid: combine(es[eid]) for eid in edges}, signature_cache, local_identifiers)
+    counts['curatedRootNodesWithRecoveredProvenance'] = sum(confirmed(origins[n]) and not legacy_confirmed[n] for n in nodes)
+    return dict(sharedReferenceGroups=hubs['groups'], sharedReferenceSummary=hubs['summary'],
+        summary=dict(sorted(counts.items())), tierCounts={t: sum(g['acceptedOccurrences'] for g in grouped.values() if g['tier']==t) for t in TIERS},
         possibleCrossFamilyByTier={t: sum(g['acceptedOccurrences'] for g in grouped.values() if g['tier']==t and g['possibleCrossFamily']) for t in TIERS},
         relationInventory=[grouped[k] for k in sorted(grouped)], pilotQueue=queue, pilotCoverage=queue_coverage,
         oversizedCrossFamily=[deepcopy(b) for b in sorted(oversized, key=lambda b:b['blockID']) if b['crossFamily']],
@@ -312,6 +346,10 @@ def run(output: Path = OUTPUT) -> dict:
     for path, expected in pins.items():
         identity.require(identity.sha(Path(path)) == expected, 'INPUT_CHANGED_DURING_DIAGNOSTIC:' + path)
     output.mkdir(parents=True, exist_ok=False)
+    groups = result.pop('sharedReferenceGroups')
+    with (output / 'shared-reference-hubs.jsonl').open('xb') as handle:
+        for group in groups:
+            handle.write(identity.encoded(group) + b'\n')
     (output / 'inventory.json').write_bytes(identity.encoded(result) + b'\n')
     with (output / 'pilot-review-queue.tsv').open('w', newline='', encoding='utf-8') as handle:
         writer = csv.writer(handle, delimiter='\t'); writer.writerow(['blockID','class','families','members','acceptedPredicates','boundedEvidenceAndPointers','identityDecision'])
@@ -328,11 +366,23 @@ def run(output: Path = OUTPUT) -> dict:
     for r in result['relationInventory']:
         denominators[(r['predicate'], ','.join(r['sourceFamilies']) or 'unknown')] += r['acceptedOccurrences']
     report += [f'| {p} | {f} | {n} |' for (p,f),n in sorted(denominators.items())]
+    shared = result['sharedReferenceSummary']
+    report += ['', '## Exact GitHub provenance recovery', '',
+        'Curated repository roots may omit optional rawSource. v2 requires the recorded numeric ID, canonical key, fullName/htmlUrl, repo-root lineage and metadata evidence to agree exactly. Recovery counters measure endpoint occurrences, not new alignments. Historical hasFile signature exclusions remain unchanged.',
+        '', '## Shared external-reference hubs', '',
+        *[f'- {k}: {v}' for k,v in shared['denominators'].items()],
+        f"- Provisional groups: {shared['groups']}; shared groups: {shared['sharedGroups']}; distinct accepted edges in shared groups: {shared['acceptedUniqueEdgesInSharedGroups']}",
+        '', '| Category | Tier | Referrer scope | Groups |', '|---|---|---|---:|',
+        *[f"| {r['category']} | {r['tier']} | {r['scope']} | {r['groups']} |" for r in shared['coverage']],
+        '', 'Category totals (including zeros): '+json.dumps(shared['groupsByCategory'],sort_keys=True),
+        '', 'Tier totals (including zeros): '+json.dumps(shared['groupsByTier'],sort_keys=True),
+        '', *['- '+s for s in shared['limitations']]]
     report += ['', '## Limitations', '', *['- '+s for s in LIMITS]]
     (output / 'report.md').write_text('\n'.join(report)+'\n', encoding='utf-8')
     manifest = dict(version=VERSION, diagnosticOnly=True, graphWrites=0, providerCalls=0, inputHashes=pins,
-        implementationSha256=identity.sha(Path(__file__)), summary=result['summary'], tierCounts=result['tierCounts'], possibleCrossFamilyByTier=result['possibleCrossFamilyByTier'], pilotCoverage=result['pilotCoverage'],
-        outputHashes={n:identity.sha(output/n) for n in ('inventory.json','pilot-review-queue.tsv','report.md')}, limitations=LIMITS)
+        implementationSha256=identity.sha(Path(__file__)), sharedReferenceImplementationSha256=identity.sha(Path('src/evaluation/step14_shared_references.py')),
+        sharedReferenceSummary=result['sharedReferenceSummary'], summary=result['summary'], tierCounts=result['tierCounts'], possibleCrossFamilyByTier=result['possibleCrossFamilyByTier'], pilotCoverage=result['pilotCoverage'],
+        outputHashes={n:identity.sha(output/n) for n in ('inventory.json','pilot-review-queue.tsv','report.md','shared-reference-hubs.jsonl')}, limitations=LIMITS)
     (output / 'manifest.json').write_bytes(identity.encoded(manifest)+b'\n')
     return manifest
 
