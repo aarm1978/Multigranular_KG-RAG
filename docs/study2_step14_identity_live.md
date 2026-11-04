@@ -96,7 +96,9 @@ through the existing credential loader, without printing or persisting the key. 
 selected case does not finish as a locally validated recommendation.
 
 The smoke selection is deterministic: first case by stable case ID in each of
-shared tier A, shared tier B and lexical strata, deduplicated if necessary. Inspect
+shared tier A, shared tier B and lexical strata, deduplicated if necessary, plus
+the largest previously size-withheld case if none is already selected (case ID
+breaks size ties). Inspect
 smoke validation/status before running all cases. The complete run reuses the same
 prepared directory and skips already completed attempts, so successful smoke cases
 are not called twice. Exact selection is also supported, for example:
@@ -105,7 +107,7 @@ are not called twice. Exact selection is also supported, for example:
 python -m src.evaluation.step14_identity_live run --live --case-id C001 --concurrency 1
 ```
 
-Default ignored destination: `var/study2_step14/semantic-identity-live/v1/`.
+Default corrected ignored destination: `var/study2_step14/semantic-identity-live/v2/`.
 `prepare --output <fresh-directory>` and `run --output <same-directory>` may select
 a different fresh path under `semantic-identity-live/`. Existing preparation
 outputs are refused. Input/request/audit/implementation drift blocks execution.
@@ -160,7 +162,7 @@ Focused tests mock every provider call and forbid sockets:
 python -m unittest tests.test_step14_identity_live tests.test_step14_semantic_identity_pilot -v
 ```
 
-## Verified offline checkpoint
+## Historical 486f6dc offline checkpoint
 
 Bounded offline assembly of the saved 43 cases completed with networking disabled
 and no API-key loading. All ten previously withheld payloads were reconstructed;
@@ -172,9 +174,76 @@ all 43 requests. The deterministic smoke IDs are `C005`, `C001`, `C002`.
 
 The checked assembly is ignored under
 `var/study2_step14/semantic-identity-live/preflight-audit-v3/`; it contains no live
-attempts. Default commands above prepare a separate fresh `v1/` execution folder.
+attempts. That historical assembly remains unchanged. Current commands prepare a separate
+fresh `v2/` execution folder with the corrected projection below.
 The original pilot package remained hash-identical. Nineteen focused synthetic
 runner/contract tests passed, including interrupted-response recovery, duplicate
 risk gating, process locking, alias/citation validation, drift checks and bounded
 concurrency. No provider compatibility or scientific identity result is claimed
 until the researcher runs and reviews live smoke outputs.
+
+
+## Field-role correction after independent review
+
+The corrected projection is `step14-identity-live/0.2.0`. Regenerate requests in a
+fresh directory; never edit existing request bodies or manifests to bypass drift
+checks. Provider execution, gpt-6.1-sol/medium, five outcomes, strict wire schema,
+local validation, exact bindings, Batch-compatible bodies and resumption are
+unchanged.
+
+- `attributes.sourceRepoId` is retained as
+  `attributes.sourceContext.referringRepositoryId`, not an entity identifier.
+  Existing entity `repoId` and all explicit entity versions remain unchanged.
+- `occurrenceDecision`, `typeEvidenceCategory` and `targetIsCurated` are withheld
+  from the model as upstream classification/corpus-status metadata. Original values
+  remain unchanged in the audit validation context.
+- A direct `sourceDeclarations.version` becomes
+  `sourceDeclarations.sourceContext.sourceDeclarationVersion`, with an explicit
+  source-capture-or-unresolved role. It is **not established as an entity version**.
+  The value is not discarded, and an explicit nested entity/version object retains
+  its original version. No commit-shaped string is classified by its spelling.
+- There is no suffix-wide hash deletion. Only explicitly named audit-authority
+  hashes are excluded. Entity-level `sha256`, `contentHash`, `modelHash`, file
+  checksums and other scientific checksum fields survive. In a source declaration,
+  `file_sha256`/`content_sha256` are retained as source checksums rather than target
+  checksums. Full original values always remain in audit sidecars.
+
+The pinned real-case check verified **all 43 serialized request projections** against
+the prior `486f6dc` assembly: unchanged original validation context/evidence
+bindings, complete selected quotations, occurrence membership, ontology classes,
+labels, entity versions, accepted predicates, model/reasoning and strict schema.
+It checked four referring `sourceRepoId` occurrences and 100 direct declaration
+versions in request contexts (counts can include repeated records across cases).
+No upstream classification or target-curation flag survives as a structural field.
+Synthetic tests additionally cover scientific checksums, absent from these actual
+entity/relation attribute samples, and explicit nested entity versions.
+
+The original pilot retained **419 of 421 recorded relation-evidence occurrences**
+in its selected relation context. It omitted **one of three** for each of:
+
+- `referencePublication`:
+  `github:local-edge:cba80d0b786b694eada4b6004290388039b02d1e85bc672c949332013ab24192`
+- `usesTool`:
+  `hydroshare:local-edge:7f528b0dcf89cbcbe8fb90b16675a43d246aaa426345e1ce1bfaa990f5a6cc38`
+
+These two omitted occurrences are **not added** by the correction. The report and
+manifest retain their exact edge IDs, original graph references and counts.
+Previously selected pilot evidence is not exhaustive source evidence. The earlier
+runner's documented source-declaration quote recovery is unchanged; no new cases,
+quotations or evidence bindings were added in this correction.
+
+The corrected offline check is ignored under
+`var/study2_step14/semantic-identity-live/projection-correction-v1/`. It has 43 cases,
+zero live attempts, 787,636 serialized request bytes total and a 53,565-byte maximum.
+Smoke coverage is now `C005`, `C001`, `C002`, **`C014`**; C014 was previously withheld
+and exercises the largest corrected high-context request. Twenty-two focused tests
+passed with the real-case check enabled:
+
+```bash
+STEP14_PROJECTION_REVIEW_ROOT=var/study2_step14/semantic-identity-live/projection-correction-v1 python -m unittest tests.test_step14_identity_live tests.test_step14_semantic_identity_pilot -v
+```
+
+The real-data check explicitly compares against the saved prior offline assembly;
+without the environment variable it is skipped, not presented as a successful real
+verification. All tests forbid sockets. No live provider compatibility or identity
+judgment was evaluated.

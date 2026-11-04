@@ -1,6 +1,7 @@
 """No-network tests for concise context, immutable binding and durable live-run resumption."""
 from copy import deepcopy
 import json
+import os
 from pathlib import Path
 import socket
 import tempfile
@@ -203,6 +204,91 @@ class LiveTests(unittest.TestCase):
                 m.fcntl.flock(lock,m.fcntl.LOCK_EX|m.fcntl.LOCK_NB)
                 with self.assertRaisesRegex(ValueError,'RUN_ALREADY_ACTIVE'):m.execute(root,call=lambda body:self.response())
             self.assertFalse((root/'attempts').exists())
+
+    def test_field_roles_preserve_entity_versions_and_scientific_checksums(self):
+        """Referrer/classifier/capture data must not masquerade as target entity attributes."""
+        attrs=dict(repoId=900,sourceRepoId=123,version='entity-2.1',sha256='scientific-checksum',
+            contentHash='scientific-content',modelHash='trained-model-checksum',authoritySha256='audit',
+            sourceDeclarations=[dict(version='capture-commit',occurrenceDecision='upstream-decision',
+                typeEvidenceCategory='upstream-category',file_sha256='source-file-checksum',
+                entity={'version':'explicit-nested-entity-version','sha256':'nested-scientific-checksum'})])
+        original=deepcopy(attrs);projected=m.clean(attrs)
+        self.assertEqual(attrs,original)
+        self.assertEqual(projected['repoId'],900);self.assertNotIn('sourceRepoId',projected)
+        self.assertEqual(projected['sourceContext']['referringRepositoryId'],123)
+        for k in ('version','sha256','contentHash','modelHash'):self.assertEqual(projected[k],attrs[k])
+        declaration=projected['sourceDeclarations'][0]
+        self.assertNotIn('version',declaration)
+        self.assertEqual(declaration['sourceContext']['sourceDeclarationVersion'],'capture-commit')
+        self.assertEqual(declaration['sourceContext']['sourceChecksums']['file_sha256'],'source-file-checksum')
+        self.assertEqual(declaration['entity'],attrs['sourceDeclarations'][0]['entity'])
+        self.assertNotIn('occurrenceDecision',declaration);self.assertNotIn('typeEvidenceCategory',declaration)
+        self.assertEqual(m.clean({'targetIsCurated':True,'version':'target-release'}),{'version':'target-release'})
+
+    def test_smoke_adds_high_context_formerly_withheld_case_without_case_changes(self):
+        """Retain stratum representatives and add only smoke coverage, never a new candidate."""
+        records=[];original={}
+        for number,selection,size,held in [(1,'shared_tier_A',10,False),(2,'shared_tier_B',20,False),
+                (3,'lexical',30,False),(4,'lexical',200,True),(5,'lexical',100,True)]:
+            cid=f'C{number:03d}';original[cid]={'requestSizeExceeded':held}
+            records.append(dict(custom_id=cid,sizes={'requestBytes':size},audit=dict(originalCaseID=cid,
+                validationRequest={'payload':{'case':{'candidateContexts':[{'selection':selection}]}}})))
+        saved=deepcopy(records)
+        self.assertEqual(m.smoke_cases(records,original),['C001','C002','C003','C004'])
+        self.assertEqual(records,saved)
+
+    @unittest.skipUnless(os.environ.get('STEP14_PROJECTION_REVIEW_ROOT'),'Set the prepared real-case root for the bounded 43-case verification')
+    def test_all_43_pinned_real_model_projections(self):
+        """Check actual serialized inputs and unchanged audits, not just synthetic field examples."""
+        root=Path(os.environ['STEP14_PROJECTION_REVIEW_ROOT'])
+        baseline=Path('var/study2_step14/semantic-identity-live/preflight-audit-v3')
+        manifest=m.verify_run(root);old_manifest=m.load(baseline/'manifest.json')
+        self.assertEqual(manifest['sourceManifestSha256'],m.INPUT_PIN)
+        self.assertEqual(len(manifest['cases']),43)
+        self.assertEqual([(r['caseID'],r['originalCaseID']) for r in manifest['cases']],
+                         [(r['caseID'],r['originalCaseID']) for r in old_manifest['cases']])
+        self.assertTrue(any(r['previouslyWithheld'] for r in manifest['cases'] if r['caseID'] in manifest['smokeCaseIDs']))
+        def keys(value):
+            """Inspect structural fields without censoring words inside original quotations."""
+            if isinstance(value,dict):
+                for k,v in value.items():yield k;yield from keys(v)
+            elif isinstance(value,list):
+                for v in value:yield from keys(v)
+        referrers=0;declaration_versions=0
+        for rec in manifest['cases']:
+            cid=rec['caseID'];body=m.load(root/'requests'/f'{cid}.json');audit=m.load(root/'audit'/f'{cid}.json')
+            for name in (f'requests/{cid}.json',f'audit/{cid}.json'):
+                self.assertEqual(m.identity.sha(baseline/name),old_manifest['outputHashes'][name])
+            old_body=m.load(baseline/'requests'/f'{cid}.json');old_audit=m.load(baseline/'audit'/f'{cid}.json')
+            self.assertEqual(audit['validationRequest'],old_audit['validationRequest'])
+            self.assertEqual(audit['evidenceBindings'],old_audit['evidenceBindings'])
+            for setting in ('model','reasoning','text','max_output_tokens','store'):self.assertEqual(body[setting],old_body[setting])
+            visible=json.loads(body['input']);old_visible=json.loads(old_body['input'])
+            self.assertFalse({'sourceRepoId','occurrenceDecision','typeEvidenceCategory','targetIsCurated'}.intersection(keys(visible)))
+            self.assertEqual([(e['evidenceID'],e['text']) for e in visible['evidence']],[(e['evidenceID'],e['text']) for e in old_visible['evidence']])
+            self.assertEqual([(r['relationID'],r['predicate']) for r in visible['acceptedRelations']],[(r['relationID'],r['predicate']) for r in old_visible['acceptedRelations']])
+            raw=audit['validationRequest']['payload'];aliases=audit['aliases']
+            raw_nodes={r['occurrenceID']:r for r in raw['occurrences']};raw_edges={r['edgeID']:r for r in raw['acceptedRelations']}
+            for projected in visible['occurrences']+visible['acceptedRelations']:
+                if 'occurrenceID' in projected:
+                    r=raw_nodes[aliases[projected['occurrenceID']]];attrs=r['fields']['attributes']['value']
+                    for field in ('versions','labels'):self.assertEqual(projected[field],r['fields'][field].get('value'))
+                    self.assertEqual(projected['ontologyClass'],r['ontologyClass'])
+                else:r=raw_edges[aliases[projected['relationID']]];attrs=r['attributes']['value']
+                if 'sourceRepoId' in attrs:
+                    referrers+=1;self.assertEqual(projected['attributes']['sourceContext']['referringRepositoryId'],attrs['sourceRepoId'])
+                for i,decl in enumerate(attrs.get('sourceDeclarations',[])):
+                    if 'version' in decl:
+                        declaration_versions+=1;d=projected['attributes']['sourceDeclarations'][i]
+                        self.assertNotIn('version',d)
+                        self.assertEqual(d['sourceContext']['sourceDeclarationVersion'],decl['version'])
+                        self.assertEqual(d['sourceContext']['versionRole'],'source_capture_or_unresolved_not_entity_version')
+        self.assertEqual(referrers,4);self.assertEqual(declaration_versions,100)
+        coverage=manifest['pilotEvidenceCoverage']
+        self.assertEqual(coverage['originalPilotOmittedRelationEvidence'],2)
+        self.assertEqual({r['acceptedPredicate'] for r in coverage['omittedRelations']},{'referencePublication','usesTool'})
+        self.assertFalse(coverage['exhaustiveSourceEvidence']);self.assertFalse(coverage['omittedEvidenceRetrieved'])
+        self.assertFalse((root/'attempts').exists())
 
 
 if __name__=='__main__':unittest.main()
