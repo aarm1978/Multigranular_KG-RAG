@@ -1,4 +1,4 @@
-# Scoped Step 13 recovery/submission runtime; not a full-project lockfile.
+# Scoped Step 13 transport and Step 14 local retrieval runtime; not a full-project lockfile.
 # Existing preprocessing and ontology environments remain authoritative for their tasks.
 name: multigranular-kg
 channels:
@@ -11,5 +11,6 @@ dependencies:
       - PyYAML==6.0.2
       - jsonschema==4.23.0
       - packaging==24.2
+      - numpy==2.2.6
 # unittest is supplied by Python. SDK transitive dependencies are resolved by pip.
 # openpyxl/pybtex (corpus rebuilding) and owlready2 (ontology work) are out of scope.
