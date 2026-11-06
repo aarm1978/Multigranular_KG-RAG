@@ -1,11 +1,14 @@
 """Read-only validation of the fixed prospective Step 14 proposal document.
 
-No generation, adjudication, ledger update, canonical allocation, or provider call.
+The 43-case triage is provisional ChatGPT-assisted review. Separate append-only
+records carry only the subsequent explicit researcher approvals. No generation,
+decision-making, ledger update, canonical allocation, or provider call occurs here.
 Run from the repository root with the saved, ignored live/v2 package available.
 """
 from __future__ import annotations
 
 import json
+import argparse
 import socket
 from collections import Counter
 from pathlib import Path
@@ -16,7 +19,7 @@ from src.evaluation import step14_identity_live as live
 DOCUMENT = Path('docs/study2_step14_identity_adjudication_proposals_v0.1.json')
 PACKAGE = Path('var/study2_step14/semantic-identity-live/v2')
 PACKAGE_PIN = 'c2712f7e90b04c64e039a21302fb5b05ef922508f47b5a461ece813cb638662c'
-# Fixed proposal scopes from the researcher's directions, not an identity rule.
+# Fixed provisional ChatGPT-assisted triage scopes, not researcher approvals.
 PARTIAL_SCOPES = {
     'C004': [[7, 9], [6, 8]], 'C014': [list(range(1, 13)) + list(range(15, 22))],
     'C016': [], 'C018': [[10, 17, 19], [11, 22]], 'C023': [[1, 2, 3, 4, 5]],
@@ -25,6 +28,32 @@ PARTIAL_SCOPES = {
     'C036': [[1, 2]],
 }
 NO_ENTITY_CASES = {'C009', 'C024', 'C027', 'C038', 'C041', 'C042'}
+APPROVALS = Path('docs/evaluation/study2_step14_identity_approvals_batch01.jsonl')
+APPROVED_COMPLETE = {
+    'C001', 'C002', 'C003', 'C005', 'C006', 'C007', 'C008', 'C010',
+    'C011', 'C012', 'C013', 'C015', 'C017', 'C019', 'C021', 'C022',
+    'C026', 'C029', 'C030', 'C033', 'C037', 'C039', 'C040', 'C043',
+}
+APPROVED_PARTIAL = {
+    'C023': [1, 2, 3, 4, 5], 'C028': [1, 2], 'C032': [1, 2],
+    'C035': [1, 5, 6, 8, 12, 15, 18], 'C036': [1, 2],
+}
+TRIAGE_CASES_PIN = '7c3ed82ca55b9dc089e49254c78c4ebf271c671d2ae069d894e6ee0129a9b33a'
+REVIEW_ATTRIBUTION = (
+    'Provisional ChatGPT-assisted 43-case triage; not researcher adjudication or '
+    'independent/blinded review. Only the 29 subsets in the subsequent approval '
+    'record have received explicit researcher approval.'
+)
+
+
+def validate_attribution(document: dict) -> None:
+    """Keep historical proposals separate from subsequent researcher decisions."""
+    require(document['reviewAuthority'] == REVIEW_ATTRIBUTION, 'Review attribution drift')
+    require(document['subsequentApprovalRecord'] == {
+        'file': str(APPROVALS), 'approvedSubsets': 29, 'approvedOccurrences': 99,
+        'remainingUnapprovedOccurrences': 133, 'proposalStatusesAreHistorical': True,
+    }, 'Approval attribution drift')
+    require(live.token(document['cases']) == TRIAGE_CASES_PIN, 'Underlying proposals changed')
 
 
 def require(condition: bool, message: str) -> None:
@@ -135,7 +164,7 @@ def validate_case(case: dict, schema: dict) -> tuple[set[str], int]:
         require(case['disposition'] == 'partial_or_conditional_review', 'Partial disposition drift')
         require([s['memberAliases'] for s in case['proposedEntitySubsets']] ==
                 [[f'O{i:03}' for i in group] for group in PARTIAL_SCOPES[alias]],
-                'Researcher-directed subset boundaries changed')
+                'Provisional triage subset boundaries changed')
     elif alias in NO_ENTITY_CASES:
         require(case['disposition'] == 'no_entity_merge_proposed', 'No-merge disposition drift')
     else:
@@ -148,6 +177,7 @@ def validate_case(case: dict, schema: dict) -> tuple[set[str], int]:
 
 def validate(document: dict) -> dict:
     """Validate all 43 fixed cases without scientific adjudication or writes."""
+    validate_attribution(document)
     require(document['status'] == 'prospective_proposals_only' and document['approvalStatus'] == 'not_approved', 'Approval forbidden')
     require(document['noTransitiveUnion'] is True, 'Union forbidden')
     require(document['sourcePackage']['sha256'] == PACKAGE_PIN, 'Wrong package pin')
@@ -189,10 +219,81 @@ def validate(document: dict) -> dict:
     return dict(coverage=coverage, dispositions=counts, status='validated_proposals_only')
 
 
+def validate_approvals(document: dict, records: list[dict], *, verify_files: bool = True) -> dict:
+    """Check the explicit first approval batch against unchanged proposal bindings.
+
+    This deliberately avoids replaying the already verified full input chain or
+    provider-response validation. Hash-check only the directly reused authorities.
+    Synthetic tests can disable filesystem checks; the CLI always enables them.
+    """
+    validate_attribution(document)
+    expected_cases = sorted(APPROVED_COMPLETE | APPROVED_PARTIAL.keys())
+    require([r['caseAlias'] for r in records] == expected_cases, 'Approval batch scope changed')
+    proposal_hash = live.identity.sha(DOCUMENT)
+    references = [document[k] for k in ('sourcePackage', 'pilotPackage', 'policy')]
+    approved = set()
+    cases = {c['caseAlias']: (i, c) for i, c in enumerate(document['cases'])}
+    for record in records:
+        alias = record['caseAlias']
+        index, case = cases[alias]
+        subset = case['proposedEntitySubsets'][0]
+        members = ([o['alias'] for o in case['occurrences']] if alias in APPROVED_COMPLETE
+                   else [f'O{i:03}' for i in APPROVED_PARTIAL[alias]])
+        require(subset['memberAliases'] == members, 'Approved scope differs from proposal')
+        occurrence_ids = [next(o['occurrenceID'] for o in case['occurrences'] if o['alias'] == m)
+                          for m in members]
+        require(subset['occurrenceIDs'] == occurrence_ids, 'Original occurrence resolution failed')
+        require(not approved.intersection(occurrence_ids), 'Implicit union or duplicate approval')
+        expected = dict(
+            decisionID='step14-identity-batch01:' + alias, revision=1, supersedes=None,
+            decisionStatus='approved_entity_identity',
+            decisionAuthority='researcher_explicit_batch01_instruction',
+            authorityStatement='The researcher has now explicitly approved the following batch of entity-identity proposals: 24 complete cases and five specified partial subsets. Approval does not authorize canonical-ID allocation, graph consolidation, ontology changes, or edits to frozen outputs.',
+            caseAlias=alias,
+            proposalReference=dict(file=str(DOCUMENT), sha256=proposal_hash, jsonPointer=f'/cases/{index}'),
+            caseID=case['originalCaseID'], caseSha256=case['caseSha256'], contextSha256=case['contextSha256'],
+            sourcePackage=document['sourcePackage'], pilotPackage=document['pilotPackage'], policy=document['policy'],
+            audit=case['audit'], originalCandidateIDs=case['originalCandidateIDs'],
+            ontologyClass=case['ontologyClass'], identityLevel='entity', memberAliases=members,
+            occurrenceIDs=occurrence_ids, granularity=subset['granularity'],
+            versionAndRoleRestrictions=case['versionAndRoleRestrictions'], subsetRestriction=subset['restriction'],
+            conflictScope=subset.get('conflictScope'),
+            supportingEvidenceIDs=[case['evidenceBindings'][e]['evidenceID'] for e in subset['supportingEvidenceAliases']],
+            conflictingEvidenceIDs=[case['evidenceBindings'][e]['evidenceID'] for e in subset['conflictingEvidenceAliases']],
+            retainedReviewConcerns=case['reviewConcerns'], originalModelRecommendation=case['originalModelRecommendation'],
+            originalRawResponse=case['originalRawResponse'],
+            rationale='Explicit researcher approval of this exact proposed subset at its stated granularity. ' + case['evidenceReview'],
+            materializationStatus='not_authorized', transitiveUnionAuthorized=False,
+        )
+        require(record == expected, f'Approval record differs from authorized scope/restrictions: {alias}')
+        approved.update(occurrence_ids)
+        references.extend(record[k] for k in ('proposalReference', 'audit', 'originalModelRecommendation', 'originalRawResponse'))
+    universe = {o['occurrenceID'] for c in document['cases'] for o in c['occurrences']}
+    require(len(approved) == 99 and len(universe - approved) == 133, 'Approval coverage mismatch')
+    if verify_files:
+        # A file hash binds all internal JSON pointers; check each file only once.
+        checked = {}
+        for reference in references:
+            name, digest = reference['file'], reference['sha256']
+            if name not in checked:
+                verify_reference(reference)
+                checked[name] = digest
+            require(checked[name] == digest, 'Inconsistent authority hash')
+    return dict(approvedSubsets=len(records), approvedOccurrences=len(approved),
+                remainingUnapprovedOccurrences=len(universe - approved), canonicalIDsAllocated=0)
+
+
 def main() -> None:
     """Run the focused offline check; no output or ledger files are written."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--approvals-only', action='store_true', help='Check batch 01 without a full package audit')
+    args = parser.parse_args()
     with patch.object(socket.socket, 'connect', side_effect=RuntimeError('Offline validation')):
-        print(json.dumps(validate(live.load(DOCUMENT)), sort_keys=True))
+        document = live.load(DOCUMENT)
+        records = [json.loads(line) for line in APPROVALS.read_text().splitlines()]
+        result = {} if args.approvals_only else validate(document)
+        result['researcherApprovalBatch01'] = validate_approvals(document, records)
+        print(json.dumps(result, sort_keys=True))
 
 
 if __name__ == '__main__':

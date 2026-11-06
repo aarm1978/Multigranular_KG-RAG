@@ -2,9 +2,10 @@
 
 ## Status, authority, and verified scope
 
-**Prospective proposals only; no case is researcher-approved or formally
-adjudicated.** This document records the preliminary scientific review supplied by
-the researcher, with a ChatGPT-assisted check against the saved selected evidence.
+**Historical provisional triage, followed by a bounded researcher approval batch.**
+The 43-case triage was provisional ChatGPT-assisted review, not researcher
+adjudication. Only the 29 subsets listed below have subsequently received explicit
+researcher approval. The original proposals and LLM recommendations remain intact.
 It is not independent/blinded annotation, a new acceptance policy, or a claim of
 population precision/recall. The [evaluation decisions](evaluation_decisions.md)
 and frozen order-50 metrics remain unchanged.
@@ -35,12 +36,49 @@ verified offline without regeneration or provider calls.
 | Whole-case entity-identity proposals | 26 |
 | Partial or conditional review cases | 11 |
 | Cases with no entity merge proposed | 6 |
-| Approved identities / allocated canonical IDs | 0 / 0 |
+| Subsequently approved entity-identity subsets / occurrences | 29 / 99 |
+| Remaining unapproved occurrences / allocated canonical IDs | 133 / 0 |
 
-The 26/11/6 counts describe the researcher's **proposed disposition categories**,
+The 26/11/6 counts describe the provisional ChatGPT-assisted **triage categories**,
 not accepted matches. Whole-case proposals can contain flagged members requiring
 interpretation. C016 is a partial/conditional review case with **no entity subset**
 proposed. Unresolved or excluded members are not declared different entities.
+
+## Subsequent researcher approval — batch 01
+
+The [append-only decision records](evaluation/study2_step14_identity_approvals_batch01.jsonl)
+record **24 complete cases**: C001, C002, C003, C005, C006, C007, C008,
+C010, C011, C012, C013, C015, C017, C019, C021, C022, C026, C029, C030,
+C033, C037, C039, C040, C043; and **five partial subsets only**:
+
+- C023: O001–O005
+- C028: O001–O002
+- C032: O001–O002
+- C035: O001, O005, O006, O008, O012, O015, O018
+- C036: O001–O002
+
+These are 29 approved subsets covering 99 distinct original occurrences. All
+other 133 occurrences remain unapproved, not rejected. In particular, C020 and
+C031 remain proposals. Approval is limited to the recorded class and granularity:
+named-technique approval is not trained-model identity, and C032 approves only
+the NWM v2.1 pair. All original evidence, version/source-role restrictions, conflict
+citations, and review flags remain attached, including C002's trained-algorithm
+wording, C021's year discrepancy, and C033's sparse title context. Approval does
+not rewrite these assertions or claim that their underlying uncertainty vanished.
+
+Each decision has its own ID/revision, explicit researcher authority, rationale,
+case/context/package/proposal hashes, exact occurrence set, evidence IDs, original
+candidate memberships, and unmodified recommendation references. Decision IDs
+identify decisions, not canonical entities. Initial revisions have no superseded
+decision. Future corrections must append a new revision with a supersession
+reference; do not rewrite these records. The original pilot ledger template is
+unchanged. No transitive union, canonical allocation, ontology change, or graph
+materialization is authorized.
+
+Case entries and JSON proposal statuses below preserve the **pre-approval triage**;
+read the separate decision records for subsequent approval, rather than interpreting
+historical `not_approved` proposal fields as current decision status. No case
+disposition, proposed membership, or original model recommendation was rewritten.
 
 ## How to audit and read the case entries
 
@@ -515,9 +553,10 @@ they are distinct from ordinary missing identity evidence:
 Missing deployment IDs, unspecified releases, weak module-list evidence (C036/O003),
 or ambiguous submodule context (C023/O006) are ordinary evidence limitations. They
 must remain unresolved without inventing an ontology amendment or scientific fact.
-Any later approval must follow the existing append-only decision contract, preserve
+Any further approval must follow the existing append-only decision contract, preserve
 all original assertions and model recommendations, and precede a separately
-authorized canonical-materialization design. The existing ledger stays untouched.
+authorized canonical-materialization design. The original pilot ledger stays untouched;
+batch 01 records its decisions separately under that contract.
 
 ## Focused offline validation
 
@@ -526,6 +565,25 @@ From the repository root in the existing `multigranular-kg` environment:
 ```bash
 python -m src.evaluation.step14_identity_proposals_validation
 ```
+
+For the focused batch-01 approval check, without repeating the full package audit:
+
+```bash
+python -m src.evaluation.step14_identity_proposals_validation --approvals-only
+```
+
+Batch-01 validation confirmed 29 approved subsets, 99 approved occurrences, and
+133 remaining unapproved occurrences. Direct proposal/audit/recommendation hashes
+were checked without repeating the full corpus authority audit. The original 43
+case objects remain identical to the pre-approval proposal artifact; only top-level
+attribution metadata changed. Focused checks:
+
+```bash
+python -m unittest tests.test_step14_identity_approvals tests.test_step14_semantic_identity_pilot tests.test_step14_identity_live -q
+```
+
+Result: 29 tests run, 28 passed, one optional real-projection audit skipped. No
+provider calls, frozen-output edits, canonical allocations, or graph writes.
 
 The validator reads only; it writes no output or ledger and blocks network
 connections. It verifies pinned package/input/attempt bytes, reproduces local
