@@ -2,6 +2,8 @@
 
 > Operational milestone checkpoint, 2026-10-30. This navigation aid does not replace methodological authorities. Historical handoffs remain in Git history.
 
+**Step 14 scope update (2026-11-06):** On `feature/cross-source-semantic-alignment`, follow the [researcher-approved prospective scope and completion decision v0.1](../study2_step14_scope_and_completion_decision_v0.1.md). It bounds candidate discovery and completion without approving additional identity cases or canonical allocation; the Step 13 checkpoint below remains historical authority.
+
 ## Current checkpoint
 
 **Study 2 Step 13: CLOSED / ACCEPTED within documented scientific limits.** See [completion acceptance](../handoffs/STUDY2_STEP13_COMPLETION_ACCEPTANCE.md) and [researcher-confirmed diagnostic decisions](../evaluation/study2_step13_diagnostic_review_confirmed_2026-10-30.json).
