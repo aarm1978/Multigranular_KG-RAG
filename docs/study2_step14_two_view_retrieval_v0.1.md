@@ -44,8 +44,10 @@ billable token count. Batches contain at most 64 inputs and 240,000 UTF-8 bytes.
 See the [official API reference](https://developers.openai.com/api/reference/resources/embeddings/methods/create).
 
 Only `embed --execute` makes requests, using the official SDK, the researcher's
-existing `OPENAI_API_KEY`, timeout 600 seconds and `max_retries=0`. No credential
-setup or storage is performed. An exclusive execution lock protects concurrency.
+shared `src.extraction.llm.publications.openai_provider.load_openai_api_key()`
+loader, passed explicitly to the SDK. It checks `OPENAI_API_KEY` in the process
+environment first, then the repository's ignored `.env`. Timeout remains 600 seconds
+and `max_retries=0`. No credentials are printed, recorded or stored by this module. An exclusive execution lock protects concurrency.
 Each batch has an fsynced intent before dispatch, an authentic response and a
 sanitized outcome with usage and response hash. Completed batches are verified and
 skipped on resume. An intent without a completed verified outcome stops execution;
@@ -94,24 +96,35 @@ separate preview without overwriting earlier artifacts:
 micromamba run -n multigranular-kg python -m src.evaluation.step14_two_view_retrieval preview --output var/study2_step14/two-view-retrieval/preview-v3
 ```
 
+Credential-loading correction (2026-11-09): preserve the original `v1/`
+preparation and failed `embeddings/batch-000000/` intent/outcome unchanged. Its
+implementation pin no longer matches this corrected module; do not reset or
+redispatch it. Prepare a fresh `v2/`. First unset the manually exported key so
+the shared loader uses the established repository `.env` key:
+
+```bash
+unset OPENAI_API_KEY
+```
+
 Offline full preparation (immutable inputs and occurrence mappings):
 
 ```bash
-micromamba run -n multigranular-kg python -m src.evaluation.step14_two_view_retrieval prepare --output var/study2_step14/two-view-retrieval/v1
+micromamba run -n multigranular-kg python -m src.evaluation.step14_two_view_retrieval prepare --output var/study2_step14/two-view-retrieval/v2
 ```
 
-**Provider stage — researcher only**, after inspecting preview/summary and with the
-existing key available in the terminal environment. The same command resumes only
-completed/never-dispatched batches:
+**Two-batch live smoke test — researcher terminal only**, after inspecting the
+fresh v2 preview/summary. Run once; the limit is two **new** batches per invocation,
+not a lifetime cap. Completed batches are verified and skipped; uncertain or failed
+outcomes stop without redispatch. Inspect both outcomes before continuing:
 
 ```bash
-micromamba run -n multigranular-kg python -m src.evaluation.step14_two_view_retrieval embed --root var/study2_step14/two-view-retrieval/v1 --execute
+micromamba run -n multigranular-kg python -m src.evaluation.step14_two_view_retrieval embed --root var/study2_step14/two-view-retrieval/v2 --execute --max-new-batches 2
 ```
 
 Offline exact retrieval, after all embeddings complete:
 
 ```bash
-micromamba run -n multigranular-kg python -m src.evaluation.step14_two_view_retrieval retrieve --root var/study2_step14/two-view-retrieval/v1 --output var/study2_step14/two-view-retrieval/retrieval-v1 --top-k 10 --query-block 32 --target-block 512
+micromamba run -n multigranular-kg python -m src.evaluation.step14_two_view_retrieval retrieve --root var/study2_step14/two-view-retrieval/v2 --output var/study2_step14/two-view-retrieval/retrieval-v2 --top-k 10 --query-block 32 --target-block 512
 ```
 
 Preparation produces `manifest.json`, `summary.json`, `preview.json`,

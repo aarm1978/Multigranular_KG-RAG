@@ -164,11 +164,49 @@ class TwoViewTests(unittest.TestCase):
             client=Mock();client.embeddings.create.return_value=self.response(1)
             context=Mock();context.__enter__=Mock(return_value=client);context.__exit__=Mock(return_value=False)
             constructor=Mock(return_value=context)
-            with patch.dict(sys.modules,{'openai':SimpleNamespace(OpenAI=constructor)}),patch.object(r,'verify_prepared',return_value=({},inputs,[])):
+            with patch.dict(sys.modules,{'openai':SimpleNamespace(OpenAI=constructor)}),patch.object(r,'verify_prepared',return_value=({},inputs,[])), \
+                 patch('src.extraction.llm.publications.openai_provider.load_openai_api_key',return_value='synthetic-test-key'):
                 self.assertEqual(r.embed(root,1)['newBatches'],1)
                 self.assertEqual(r.embed(root,1)['newBatches'],0)
             self.assertEqual(client.embeddings.create.call_count,1)
-            constructor.assert_called_with(timeout=600,max_retries=0,base_url='https://api.openai.com/v1')
+            constructor.assert_called_with(api_key='synthetic-test-key',timeout=600,max_retries=0,base_url='https://api.openai.com/v1')
+
+    def test_shared_loader_environment_precedence_and_dotenv_fallback(self):
+        """Use the real shared parser with synthetic credentials and a temporary file."""
+        import os
+        import sys
+        from src.extraction.llm.publications import openai_provider as provider
+        real_loader = provider.load_openai_api_key
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);env=root/'.env'
+            env.write_text('OPENAI_API_KEY="synthetic-file-key"\n')
+            original=env.read_bytes();r.write(root/'manifest.json',dict(test=True))
+            inputs=[dict(text='Tool',textSha256=r.digest('Tool'))]
+            for environment,expected in [({'OPENAI_API_KEY':'synthetic-process-key'},'synthetic-process-key'),({},'synthetic-file-key')]:
+                constructor=Mock();context=constructor.return_value
+                context.__enter__=Mock(return_value=Mock());context.__exit__=Mock(return_value=False)
+                with self.subTest(environment=bool(environment)),patch.dict(os.environ,environment,clear=True), \
+                     patch.dict(sys.modules,{'openai':SimpleNamespace(OpenAI=constructor)}), \
+                     patch.object(provider,'load_openai_api_key',side_effect=lambda:real_loader(env_path=env)) as loader, \
+                     patch.object(r,'verify_prepared',return_value=({},inputs,[])),patch.object(r,'execute_batch'):
+                    r.embed(root,1)
+                    loader.assert_called_once_with()
+                    self.assertEqual(constructor.call_args.kwargs['api_key'],expected)
+                    context.__enter__.return_value.embeddings.create.assert_not_called()
+                self.assertEqual(env.read_bytes(),original)
+                self.assertNotIn(expected,(root/'manifest.json').read_text())
+
+    def test_offline_cli_routes_do_not_load_credentials(self):
+        """Preview, prepare and retrieve never consult the shared credential loader."""
+        import sys
+        from src.extraction.llm.publications import openai_provider as provider
+        for command in ('preview','prepare','retrieve'):
+            argv=['module',command,'--output','unused']
+            if command=='retrieve':argv+=['--root','unused']
+            with self.subTest(command=command),patch.object(sys,'argv',argv), \
+                 patch.object(provider,'load_openai_api_key',side_effect=AssertionError('Offline credential access')) as loader, \
+                 patch.object(r,'prepare',return_value={}),patch.object(r,'retrieve',return_value={}),patch('builtins.print'):
+                r.main();loader.assert_not_called()
 
     def test_bad_vectors_and_batch_limits(self):
         """Do not accept missing/duplicate indices, nonfinite vectors or empty inputs."""

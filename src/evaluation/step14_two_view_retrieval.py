@@ -273,12 +273,14 @@ def execute_batch(folder: Path, batch: list[dict], preparation_sha: str, create)
 def embed(root: Path, max_batches: int | None = None) -> dict:
     """Researcher-only SDK execution; resume completed batches, never uncertain ones."""
     from openai import OpenAI
+    from src.extraction.llm.publications.openai_provider import load_openai_api_key
     _, inputs, _ = verify_prepared(root)
     require(bool(inputs), 'NO_ELIGIBLE_INPUTS')
     directory = root/'embeddings'; directory.mkdir(exist_ok=True)
     with (directory/'execution.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        with OpenAI(timeout=600, max_retries=0, base_url='https://api.openai.com/v1') as client:
+        with OpenAI(api_key=load_openai_api_key(), timeout=600, max_retries=0,
+                    base_url='https://api.openai.com/v1') as client:
             completed = 0; dispatched = 0
             for index, batch in enumerate(batches(inputs)):
                 folder = directory/f'batch-{index:06d}'
