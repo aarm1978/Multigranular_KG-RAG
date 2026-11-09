@@ -12,7 +12,7 @@ from src.evaluation import step14_evidence_review_batch as batch
 
 r = batch.retrieval
 require = r.require
-VERSION = 'step14-referent-groups/0.1.0'
+VERSION = 'step14-referent-groups/0.1.1'
 ROOT = Path('var/study2_step14/referent-groups')
 INVENTORY = Path('var/study2_step14/semantic-candidates/v1')
 CONTRACT = Path('docs/study2_step14_referent_groups_v0.1.md')
@@ -33,9 +33,12 @@ def member(row: dict, line: int) -> dict:
     return result
 
 
-def propose(block: dict, records: dict) -> dict | None:
+def propose(block: dict, records: dict, oversized_members: list[str] | None = None) -> dict | None:
     """Keep one direct original key; never combine overlapping blocks or infer identity."""
     ids = block['occurrenceIDs']; key = block['key']
+    if block.get('status') == 'oversized_not_expanded':
+        require(ids == [] and oversized_members is not None, 'OVERSIZED_SERIALIZATION_DRIFT')
+        ids = sorted(oversized_members)
     require(len(ids) == len(set(ids)) == block['memberCount'], 'BLOCK_MEMBERSHIP_DRIFT')
     require(r.candidates.token(ids) == block['membershipSha256'], 'MEMBERSHIP_HASH_DRIFT')
     require(all(x in records for x in ids), 'UNKNOWN_MEMBER')
@@ -118,9 +121,14 @@ def run(output: Path) -> dict:
         records[oid] = member(row, line)
         records[oid]['priorMemberships'] = {k: prior[oid][k] for k in
             ('reviewedCaseIDs', 'priorApprovalDecisionIDs', 'reservedQueueBlockIDs', 'existingBlockIDs')}
+    # Reuse pinned preflight's inventory-derived direct block memberships.
+    oversized = defaultdict(list)
+    for oid, metadata in prior.items():
+        for bid in metadata['oversizedBlockIDs']:
+            oversized[bid].append(oid)
     groups = []; omitted = []
     for block in r.rows(INVENTORY/'candidate-blocks.jsonl'):
-        group = propose(block, records)
+        group = propose(block, records, oversized.get(block['blockID']))
         if group is None: omitted.append(block['blockID'])
         else: groups.append(group)
     attach_approvals(groups, approvals)
@@ -150,7 +158,7 @@ def run(output: Path) -> dict:
     # Single bounded set: round-robin family/basis strata, then small actionable groups.
     pools = defaultdict(list)
     for i, g in enumerate(groups):
-        if len(g['occurrenceIDs']) <= 16:
+        if g['originalBlock'].get('status') != 'oversized_not_expanded' and len(g['occurrenceIDs']) <= 16:
             pools[(tuple(g['sourceFamilies']), g['basis'])].append(i)
     for pool in pools.values():
         pool.sort(key=lambda i: (-int(len(groups[i]['sourceFamilies'])>1),

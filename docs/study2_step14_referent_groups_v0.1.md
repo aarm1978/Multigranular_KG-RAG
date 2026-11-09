@@ -1,6 +1,6 @@
 # Step 14 direct-key referent grouping preparation v0.1
 
-Authority: implementation preparation `step14-referent-groups/0.1.0` under the
+Authority: implementation preparation `step14-referent-groups/0.1.1` under the
 [approved scope](study2_step14_scope_and_completion_decision_v0.1.md) and
 [identity/granularity policy](study2_step14_identity_granularity_adjudication_v0.1.md).
 No new identity cases or scientific equivalences are approved.
@@ -60,3 +60,10 @@ block bookkeeping IDs, not canonical entity identifiers.
 
 Focused check: `python -m unittest discover -s tests -p test_step14_referent_groups.py`.
 Full processing and counts are reserved for the researcher's terminal.
+
+Implementation 0.1.1 reconstructs omitted oversized membership from the pinned
+embedding preflight, which derived it from the original occurrence inventory.
+The original empty list and oversized status remain unchanged in `originalBlock`;
+the reconstructed list must match both original member count and membership hash.
+Ordinary-block checks remain strict. Oversized groups are excluded from the bounded
+review shortlist, without pair expansion or identity decisions.

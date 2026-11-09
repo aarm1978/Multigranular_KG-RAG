@@ -74,6 +74,29 @@ class GroupsTests(unittest.TestCase):
         bad=block(['a','b']);bad['membershipSha256']='bad'
         with self.assertRaisesRegex(ValueError,'MEMBERSHIP_HASH_DRIFT'):g.propose(bad,rows)
 
+    def test_oversized_serialization_and_corruption(self):
+        """Reconstruct omitted membership, preserving original bytes and hash guards."""
+        ids=[f'n{i:03}' for i in range(33)]
+        rows={oid:g.member(record(oid),i) for i,oid in enumerate(ids)}
+        original=block(ids)
+        original.update(status='oversized_not_expanded',occurrenceIDs=[])
+        before=deepcopy(original)
+        result=g.propose(original,rows,list(reversed(ids)))
+        self.assertEqual(result['occurrenceIDs'],ids)
+        self.assertEqual(result['originalBlock'],before)
+        self.assertEqual(original,before)
+        self.assertFalse(result['automaticMergeEligible'])
+        self.assertIsNone(result['canonicalID'])
+        with self.assertRaisesRegex(ValueError,'BLOCK_MEMBERSHIP_DRIFT'):
+            g.propose(original,rows,ids[:-1])
+        with self.assertRaisesRegex(ValueError,'MEMBERSHIP_HASH_DRIFT'):
+            g.propose(original,rows,ids[:-1]+['wrong'])
+        with self.assertRaisesRegex(ValueError,'OVERSIZED_SERIALIZATION_DRIFT'):
+            g.propose(original,rows)
+        ordinary=block(ids);ordinary['occurrenceIDs']=[]
+        with self.assertRaisesRegex(ValueError,'BLOCK_MEMBERSHIP_DRIFT'):
+            g.propose(ordinary,rows,ids)
+
     def test_existing_output_refused_before_reading_inputs(self):
         """Repeated execution cannot overwrite a preparation."""
         with tempfile.TemporaryDirectory() as temporary:
