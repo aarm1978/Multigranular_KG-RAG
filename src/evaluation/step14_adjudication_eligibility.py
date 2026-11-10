@@ -5,6 +5,7 @@ import argparse
 from collections import Counter, defaultdict
 import hashlib
 import json
+import re
 from pathlib import Path
 import socket
 import sqlite3
@@ -19,27 +20,48 @@ require = r.require
 ROOT = Path('var/study2_step14/adjudication-eligibility')
 GROUPS = grouping.ROOT/'v1'
 PRIOR_BATCH = b.ROOT/'v1'
-VERSION = 'step14-adjudication-eligibility/0.1.0'
-CONTRACT = Path('docs/study2_step14_adjudication_eligibility_v0.1.md')
-POLICIES = ('literal', 'context_either', 'context_both')
-INSTRUCTION = ('Assess only the explicitly listed pairs independently under the pinned Step 14 identity/granularity policy. '
-    'Distinguish entity identity, reference-target coincidence, conceptual similarity, different referents and insufficient evidence. '
-    'Preserve class, family/release/implementation/instance distinctions. Missing specificity is uncertainty. '
-    'Do not infer identity from names, scores, shared quotations or transitivity; do not extend prior approvals. '
-    'Return recommendations only with supporting/conflicting evidence references and uncertainty, never canonical IDs or approvals.')
+VERSION = 'step14-adjudication-eligibility/0.2.0'
+CONTRACT = Path('docs/study2_step14_adjudication_eligibility_v0.2.md')
+POLICIES = ('dual', 'alias_extended', 'ambiguity_extended')
+INSTRUCTION = ('Assess only the listed pairs independently. Distinguish same scientific referent at compatible class/granularity, '
+    'shared reference target, conceptual similarity, distinct referents, and insufficient evidence. '
+    'Preserve family, release, implementation and trained-instance distinctions. Missing specificity is uncertainty. '
+    'Shared names or quotations are not proof of identity. Do not infer transitivity. '
+    'Cite local evidence IDs for supporting/conflicting evidence; return recommendations, not approvals.')
 CRITERIA = dict(version=VERSION, status='proposed_requires_researcher_decision',
-    recommendedForDiscussion='context_either', alternatives={
-        'literal':'Unapproved original retrieved pair with nonempty literal evidence and provenance at both endpoints.',
-        'context_either':'Literal alternative plus at least one endpoint with three distinct non-generic words beyond its label words.',
-        'context_both':'Literal alternative plus that mechanical contextual cue at both endpoints; restrictive sensitivity alternative.'},
-    rationale='Compare evidence readiness without choosing uncalibrated cosine cutoffs or request quotas. Context cues are not semantic sufficiency judgments.',
-    scoreUse='Two-dimensional 0.1-width cosine bins by class and scope; scores never determine identity or eligibility.',
-    nominationUse='Original top-k nomination in either view is sufficient; reciprocity and both-view nomination are descriptive signals.',
-    holds='Exact approved subset is already covered. Missing literal/provenance is held. Context-only nonselection is deferred, not rejected identity.',
-    uncertainty='Version differences, unknown granularity, generic names, weak label binding and shared quotes remain review flags, not identity decisions.',
-    units='Direct-key groups are presentation containers only; otherwise exact endpoint-centered stars. Split into at most eight explicit pairs per unit, with no limit on total units.',
-    accounting='Only original pairs are eligible; never add leaf-to-leaf pairs, transitive unions or cross-class retrieval.',
-    workload='UTF-8 bytes/4 proxy from actual serialized context, plus byte upper bound; not tokenizer-exact, billable usage or a dollar estimate.')
+    recommendedForDiscussion='alias_extended', alternatives={
+        'dual':'Name cosine >= .85 AND evidence cosine >= .80, contextual evidence at both endpoints, and reciprocal nomination OR a distinctive shared lexical/reference cue.',
+        'alias_extended':'dual OR either cosine >= .95 with contextual evidence at both endpoints and reciprocal nomination OR a distinctive shared lexical/reference cue.',
+        'ambiguity_extended':'alias_extended OR explicit version/implementation/family uncertainty with max cosine >= .85, min cosine >= .65, contextual evidence at both endpoints, reciprocity AND distinctive cue.'},
+    thresholds=dict(nameDual=.85,evidenceDual=.80,exceptionalSingle=.95,ambiguityHigh=.85,ambiguityLow=.65),
+    rationale='Upper-tail screening hypotheses informed by bounded joint distributions and contrasting authentic cases, not fitted identity probabilities or request quotas.',
+    distinctiveCue='Shared non-generic label token occurring in at most 1% of eligible occurrences, or a literal shared URL/DOI reference. Cues nominate; they never establish identity.',
+    context='At least three distinct non-generic words beyond label words in a selected literal fragment. Necessary availability signal, not semantic sufficiency.',
+    holds='Exact approved subsets excluded. Every other nonselected pair stays unresolved, with explicit screening reasons.',
+    units='Direct-key referent containers or explicit anchor-centered stars, separated by recorded class/version/granularity signature; split at 12 entities or 12000 UTF-8 context bytes. No induced comparisons.',
+    workload='Actual compact serialized contexts; UTF-8 bytes/4 proxy and byte upper bound. No score/provenance/prior-recommendation metadata is model-facing.')
+
+
+def selection_signals(left: dict, right: dict, scores: dict, reciprocal: bool, frequencies: Counter, population: int) -> dict:
+    """Propose corroborated score routes without adjudicating identity or excluding unknown versions."""
+    shared = b.name_tokens(left) & b.name_tokens(right)
+    rare = sorted(w for w in shared if frequencies[w] <= max(1, population*.01))
+    def references(row: dict) -> set:
+        """Keep literal locator cues; never infer their ownership or equivalence."""
+        return {m for e in row['selectedEvidence'] for m in re.findall(r'https?://[^\s<>]+|10\.\d{4,9}/[^\s<>]+', e['literalExcerpt'])}
+    refs = sorted(references(left) & references(right))
+    cue = bool(rare or refs)
+    context = all(evidence_features(x)['contextual'] for x in (left,right))
+    explicit = (bool(left['versions'] or right['versions']) or
+        any(re.search(r'\b(?:trained|implementation|instance|version|release|architecture|family)\b', e['literalExcerpt'], re.I)
+            for x in (left,right) for e in x['selectedEvidence']))
+    corroborated = context and (reciprocal or cue)
+    dual = corroborated and scores['name'] >= .85 and scores['evidence'] >= .80
+    single = corroborated and max(scores.values()) >= .95
+    ambiguous = context and reciprocal and cue and explicit and max(scores.values()) >= .85 and min(scores.values()) >= .65
+    return dict(dual=dual, exceptionalSingle=single, ambiguityReview=ambiguous,
+        distinctiveSharedTokens=rare, sharedLiteralReferences=refs, contextualBoth=context,
+        reciprocal=reciprocal, explicitSpecificitySignal=explicit)
 
 
 def evidence_features(endpoint: dict) -> dict:
@@ -54,7 +76,7 @@ def evidence_features(endpoint: dict) -> dict:
         genericName=not bool(b.name_tokens(endpoint)))
 
 
-def assess(pair: dict, occurrences: dict, queued: dict | None = None) -> dict:
+def assess(pair: dict, occurrences: dict, queued: dict | None = None, frequencies: Counter | None = None) -> dict:
     """Reconcile exact approvals, retain single-view paths and expose ambiguity."""
     left, right = (occurrences[x] for x in pair['occurrenceIDs'])
     require(left['ontologyClass'] == right['ontologyClass'] == pair['ontologyClass'], 'CLASS_BINDING_DRIFT')
@@ -64,9 +86,6 @@ def assess(pair: dict, occurrences: dict, queued: dict | None = None) -> dict:
     approved = bool(review['sharedMemberships']['approved'])
     literal = all(x['literal'] for x in features)
     contextual = sum(x['contextual'] for x in features)
-    eligibility = dict(literal=not approved and literal,
-        context_either=not approved and literal and contextual >= 1,
-        context_both=not approved and literal and contextual == 2)
     flags = []
     if any(x['weakLabelContext'] for x in features): flags.append('weak_label_context')
     if any(x['genericName'] for x in features): flags.append('generic_name_collision_risk')
@@ -77,6 +96,12 @@ def assess(pair: dict, occurrences: dict, queued: dict | None = None) -> dict:
     if {e['fullQuoteSha256'] for e in left['selectedEvidence']} & {e['fullQuoteSha256'] for e in right['selectedEvidence']}:
         flags.append('shared_quote_not_independent_confirmation')
     scores = {v:sum(d['nomination']['scores'][v] for d in pair['directions'])/len(pair['directions']) for v in r.VIEWS}
+    frequencies = frequencies if frequencies is not None else Counter(w for x in occurrences.values() for w in b.name_tokens(x))
+    signals = selection_signals(left,right,scores,len(pair['directions'])==2,frequencies,len(occurrences))
+    allowed = not approved and literal
+    eligibility = dict(dual=allowed and signals['dual'],
+        alias_extended=allowed and (signals['dual'] or signals['exceptionalSingle']),
+        ambiguity_extended=allowed and (signals['dual'] or signals['exceptionalSingle'] or signals['ambiguityReview']))
     pathway = '+'.join(sorted(pair['nominationViews']))
     queued_case = (queued or {}).get(pair['pairKeySha256'])
     if queued_case:
@@ -86,12 +111,12 @@ def assess(pair: dict, occurrences: dict, queued: dict | None = None) -> dict:
         previousEvidenceBatchCase=queued_case, approvedSubsetIDs=review['sharedMemberships']['approved'],
         previousUnresolved=not approved and (not review['newPair'] or bool(queued_case)),
         newRelativeToAuthorities=review['newPair'] and not bool(queued_case),
-        flags=flags, contextualEndpoints=contextual, scores=scores, pathway=pathway,
+        selectionSignals=signals, flags=flags, contextualEndpoints=contextual, scores=scores, pathway=pathway,
         reciprocal=len(pair['directions']) == 2,
         directedViewSignals=[dict(queryID=d['nomination']['queryID'], targetID=d['nomination']['targetID'],
             nominatedBy=d['nomination']['nominatedBy'], scores=d['nomination']['scores']) for d in pair['directions']],
         reasons={p:('already_exactly_approved' if approved else 'missing_literal_or_provenance' if not literal else
-                    'eligible_proposal' if eligibility[p] else 'thin_context_deferred_not_rejected') for p in POLICIES})
+                    'eligible_proposal' if eligibility[p] else 'insufficient_identity_context' if not signals['contextualBoth'] else 'score_or_corroboration_not_selected_unresolved') for p in POLICIES})
 
 
 def bin_score(value: float) -> int:
@@ -108,46 +133,71 @@ def unit_key(ids: list[str], index: dict, groups: dict) -> str:
     return 'center:'+min(ids)
 
 
-def context_payload(pairs: list, endpoints: dict, approvals: dict) -> dict:
-    """Build the actual proposed review context, including only explicit pairs."""
+def compact_context(pairs: list, endpoints: dict) -> tuple[dict, dict]:
+    """Whitelist scientific fields; bind short local IDs through a separate provenance sidecar."""
     ids = sorted({x for pair in pairs for x in pair['occurrenceIDs']})
-    decisions = sorted({d for oid in ids for d in endpoints[oid]['priorMemberships']['approved']})
-    return dict(instructions=INSTRUCTION, pairs=pairs, occurrences=[endpoints[x] for x in ids],
-                originalApprovalRecords=[approvals[x] for x in decisions],
-                identityDecisionsAuthorized=False)
+    aliases = {oid:f'E{i+1}' for i,oid in enumerate(ids)}
+    entities = []; links = {}; evidence = {}
+    source_ids={source:f'S{i+1}' for i,source in enumerate(sorted({source for oid in ids for source in endpoints[oid]['sourceArtifacts']}))}
+    for oid in ids:
+        row = endpoints[oid]; alias = aliases[oid]; fragments = []
+        for i,e in enumerate(row['selectedEvidence'][:2]):
+            eid=f'{alias}Q{i+1}'; quote=e['literalExcerpt'][:420]
+            fragments.append(dict(id=eid,text=quote))
+            evidence[eid]=dict(occurrenceID=oid,originalFragment=e,usedStart=0,usedEnd=len(quote),
+                shortened=len(quote)<len(e['literalExcerpt']))
+        # Administrative CFF/capture metadata is not reinterpreted as a scientific version.
+        versions={k:v for k,v in row['versions'].items() if k in ('version','versionNumber','commitSHA','fork','forkParent')}
+        relations=[]
+        for i,relation in enumerate(row.get('incidentContext',[])[:3]):
+            rid=f'{alias}R{i+1}'
+            relations.append(dict(id=rid,**relation['modelFields']))
+            evidence[rid]=relation['originalReference']
+        entities.append(dict(id=alias,ontologyClass=row['ontologyClass'],names=row['labels'],
+            sourceFamilies=row['sourceFamilies'], sources=[source_ids[x] for x in row['sourceArtifacts']], incidentRelations=relations, sourceRole='Source-local occurrence; referent role must be established from quotation.',
+            recordedVersionOrImplementation=versions,granularity=row['granularity'],evidence=fragments))
+        links[alias]=row
+    explicit=[dict(id=f'P{i+1}',entities=[aliases[x] for x in p['occurrenceIDs']]) for i,p in enumerate(pairs)]
+    payload=dict(instructions=INSTRUCTION,entities=entities,pairs=explicit)
+    sidecar=dict(entities=links,sources={v:k for k,v in source_ids.items()},evidence=evidence,pairs={f'P{i+1}':p for i,p in enumerate(pairs)})
+    return payload,sidecar
 
 
 def emit_units(db: sqlite3.Connection, output: Path, endpoints: dict, approvals: dict) -> dict:
-    """Stream bounded contexts, storing references once and counting actual payload bytes."""
+    """Package coherent explicit comparisons with context-size bounds; save each payload once."""
     stats = {}
-    with (output/'review-units.jsonl').open('x') as stream:
+    db.execute('CREATE TABLE emitted(hash TEXT PRIMARY KEY)')
+    with (output/'llm-contexts.jsonl').open('x') as contexts, (output/'unit-sidecars.jsonl').open('x') as sidecars, (output/'review-units.jsonl').open('x') as stream:
         for policy in POLICIES:
             units = total = pair_count = baseline = maximum = 0
             pending = []; current = None
             def flush() -> None:
-                """Persist one bounded explicit-pair unit, not an identity group."""
-                nonlocal units, total, maximum
-                if not pending: return
-                payload = context_payload(pending, endpoints, approvals)
-                size = len(r.identity.encoded(payload)); total += size; maximum = max(maximum, size); units += 1
-                row = dict(policy=policy, container=current, pairs=list(pending),
-                    occurrenceIDs=sorted({x for p in pending for x in p['occurrenceIDs']}),
-                    contextSha256=r.candidates.token(payload), contextUTF8Bytes=size,
-                    unitID=r.candidates.token([policy,current,[p['pairKeySha256'] for p in pending]]),
-                    contextRecipe='instructions in criteria.json; exact occurrences in contexts.jsonl; prior-decisions.jsonl; pairs here')
-                stream.write(r.identity.encoded(row).decode()+'\n')
-            for container, data in db.execute(f'SELECT container, detail FROM pairs WHERE {policy}=1 ORDER BY container, pairkey'):
-                pair = json.loads(data)
-                if current != container or len(pending) == 8:
-                    flush(); pending = []
-                current = container; pending.append(pair); pair_count += 1
-                baseline += len(r.identity.encoded(context_payload([pair],endpoints,approvals)))
+                """Store compact context once; approvals, scores and all hashes remain local."""
+                nonlocal units,total,maximum
+                if not pending:return
+                payload,sidecar=compact_context(pending,endpoints)
+                data=r.identity.encoded(payload);size=len(data);total+=size;maximum=max(maximum,size);units+=1
+                h=hashlib.sha256(data).hexdigest()
+                if db.execute('SELECT 1 FROM emitted WHERE hash=?',(h,)).fetchone() is None:
+                    db.execute('INSERT INTO emitted VALUES(?)',(h,))
+                    # Wrapper key is local; only payload is LLM-facing.
+                    contexts.write(r.identity.encoded(dict(contextID=h,payload=payload)).decode()+'\n')
+                uid=r.candidates.token([policy,current,[p['pairKeySha256'] for p in pending]])
+                sidecars.write(r.identity.encoded(dict(unitID=uid,contextID=h,policy=policy,container=current,**sidecar)).decode()+'\n')
+                stream.write(r.identity.encoded(dict(unitID=uid,policy=policy,contextID=h,pairCount=len(pending),contextUTF8Bytes=size)).decode()+'\n')
+            for container,data in db.execute(f'SELECT container, detail FROM pairs WHERE {policy}=1 ORDER BY container, pairkey'):
+                pair=json.loads(data)
+                if current != container:flush();pending=[]
+                current=container
+                proposed=pending+[pair]
+                payload,_=compact_context(proposed,endpoints)
+                if pending and (len(payload['entities'])>12 or len(r.identity.encoded(payload))>12000):flush();pending=[]
+                pending.append(pair);pair_count+=1
+                baseline+=len(r.identity.encoded(compact_context([pair],endpoints)[0]))
             flush()
-            stats[policy] = dict(eligiblePairs=pair_count, ungroupedRequests=pair_count, proposedReviewUnits=units,
-                actualContextUTF8Bytes=total, approximateInputTokens=(total+3)//4,
-                utf8ByteTokenUpperBound=total, maximumUnitBytes=maximum,
-                pairwiseContextUTF8Bytes=baseline, pairwiseApproximateInputTokens=(baseline+3)//4,
-                requestsSavedByPackaging=pair_count-units)
+            stats[policy]=dict(eligiblePairs=pair_count,ungroupedRequests=pair_count,proposedReviewUnits=units,
+                actualContextUTF8Bytes=total,approximateInputTokens=(total+3)//4,utf8ByteTokenUpperBound=total,
+                maximumUnitBytes=maximum,pairwiseApproximateInputTokens=(baseline+3)//4,requestsSavedByPackaging=pair_count-units)
     return stats
 
 
@@ -181,6 +231,24 @@ def run(output: Path) -> dict:
     approvals = {x['decisionID']:x for x in approval_rows}
     endpoints = b.enrich([dict(occurrenceIDs=list(occurrences))], occurrences)
     for oid,row in endpoints.items(): row['priorMemberships'] = occurrences[oid]['priorMemberships']
+    # Reuse existing accepted incident context where available; do not reconstruct the KG.
+    relation_path=r.preflight.PILOT/'accepted-relation-context.jsonl'
+    pilot_manifest=r.load(r.preflight.PILOT/'manifest.json')
+    pins[str(relation_path)]=pilot_manifest['outputHashes'][relation_path.name]
+    r.preflight.pilot.verify(relation_path,pins[str(relation_path)],{})
+    for line,relation in enumerate(r.rows(relation_path),1):
+        for field,other,direction in [('sourceID','targetID','outgoing'),('targetID','sourceID','incoming')]:
+            oid=relation[field]
+            if oid not in endpoints:continue
+            other_row=occurrences.get(relation[other])
+            fields=dict(direction=direction,predicate=relation['acceptedPredicate'],
+                otherClass=other_row['ontologyClass'] if other_row else 'not supplied in semantic inventory',
+                otherNames=other_row['labels'] if other_row else [],
+                literalEvidence=[x['excerpt'][:240] for x in relation['evidence'][:1]])
+            endpoints[oid].setdefault('incidentContext',[]).append(dict(modelFields=fields,
+                originalReference=dict(file=str(relation_path),line=line,recordSha256=r.candidates.token(relation),
+                    sourceID=relation['sourceID'],targetID=relation['targetID'],omittedEvidenceCount=relation['omittedEvidenceCount'])))
+
     groups = {}; index = defaultdict(set)
     for group in r.rows(GROUPS/'groups.jsonl'):
         bid = group['proposalID']; require(bid not in groups,'DUPLICATE_GROUP')
@@ -190,7 +258,8 @@ def run(output: Path) -> dict:
     output.mkdir(parents=True)
     db = sqlite3.connect(output/'accounting.sqlite')
     db.execute('PRAGMA cache_size=-16384'); db.execute('PRAGMA temp_store=FILE')
-    db.execute('CREATE TABLE pairs(pairkey TEXT PRIMARY KEY, container TEXT, literal INT, context_either INT, context_both INT, detail TEXT)')
+    db.execute('CREATE TABLE pairs(pairkey TEXT PRIMARY KEY, container TEXT, dual INT, alias_extended INT, ambiguity_extended INT, detail TEXT)')
+    frequencies=Counter(w for row in occurrences.values() for w in b.name_tokens(row))
     counters = Counter(); outcomes = Counter(); strata = Counter(); joint = Counter(); selected_joint = Counter(); flags = Counter(); examples = {}
     digest = hashlib.sha256(); previous = None
     with (b.SOURCE/'pairs.jsonl').open('rb') as source:
@@ -201,7 +270,7 @@ def run(output: Path) -> dict:
             require(previous is None or tuple(ids)>previous,'PAIR_ORDER_DRIFT'); previous = tuple(ids)
             require(pair['pairKeySha256']==r.candidates.token(ids),'PAIR_HASH_DRIFT')
             for direction in pair['directions']: reconciliation.validate_nomination(direction['nomination'],occurrences)
-            a = assess(pair,occurrences,queued); counters['originalPairs'] += 1
+            a = assess(pair,occurrences,queued,frequencies); counters['originalPairs'] += 1
             counters[a['priorStatus']] += 1
             counters['reciprocalPairs'] += int(a['reciprocal'])
             for signal in a['directedViewSignals']:
@@ -221,10 +290,10 @@ def run(output: Path) -> dict:
             detail = dict(pairKeySha256=pair['pairKeySha256'],occurrenceIDs=ids, originalReference=ref,
                 scope=pair['scope'],ontologyClass=pair['ontologyClass'],sourceFamilyPair=pair['sourceFamilyPair'],
                 assessment=a, originalPriorReview=pair['review'])
-            db.execute('INSERT INTO pairs VALUES(?,?,?,?,?,?)',(pair['pairKeySha256'],unit_key(ids,index,groups),
+            db.execute('INSERT INTO pairs VALUES(?,?,?,?,?,?)',(pair['pairKeySha256'],unit_key(ids,index,groups)+':'+r.candidates.token([[occurrences[x]['ontologyClass'],occurrences[x]['versions'],occurrences[x]['granularity']] for x in ids]),
                 *(int(a['eligible'][p]) for p in POLICIES),json.dumps(detail,sort_keys=True)))
             # Deterministic small examples across pathways and ambiguity, not an accuracy sample.
-            categories = ['pathway:'+a['pathway']]+a['flags']+[a['reasons']['context_either']]
+            categories = ['pathway:'+a['pathway']]+a['flags']+[a['reasons']['alias_extended']]
             if len(set(a['eligible'].values())) > 1:
                 categories.append('alternative_disagreement:'+','.join(p for p in POLICIES if a['eligible'][p]))
             for category in categories:
@@ -238,7 +307,7 @@ def run(output: Path) -> dict:
     require(digest.hexdigest()==rm['outputHashes']['pairs.jsonl'],'PAIR_FILE_HASH_DRIFT')
     for policy in POLICIES:require(sum(n for (p,_),n in outcomes.items() if p==policy)==counters['originalPairs'],'ACCOUNTING_DRIFT')
     workload=emit_units(db,output,endpoints,approvals); db.close()
-    for name,rows in [('contexts.jsonl',endpoints.values()),('prior-decisions.jsonl',approval_rows)]:
+    for name,rows in [('prior-decisions.jsonl',approval_rows)]:
         with (output/name).open('x') as stream:
             for row in rows:stream.write(r.identity.encoded(row).decode()+'\n')
     chosen=[]
@@ -257,19 +326,19 @@ def run(output: Path) -> dict:
         outcomes={p:{reason:n for (policy,reason),n in outcomes.items() if policy==p} for p in POLICIES},
         workload=workload,flags=dict(flags),providerCalls=0,identityDecisions=0,
         limitations=['Exact-class blocking is inherited from retrieval; no new cross-class discovery.',
-            'No score cutoff is scientifically calibrated; alternatives measure mechanical evidence readiness only.',
+            'Score cutoffs are proposed upper-tail selection hypotheses, not calibrated identity probabilities.',
             'Context word count is a transparent proposed heuristic, not demonstrated semantic sufficiency.',
             'Generic names, release/instance ambiguity and comparison quotations can produce false positives.',
             'Truncated selected windows and lexical screening can conceal equivalence; nonselection is not rejection.',
-            'Eight-pair packaging is a presentation bound, not a population quota; overlapping groups never imply transitivity.',
+            'Referent containers and anchor stars are context packaging, never transitive identity groups.',
             'Token estimates use actual serialized draft contexts, not final provider envelopes or billing tokenization.'])
     r.write(output/'summary.json',summary)
     text=['# Step 14 eligibility alternatives (not approved)','',
           f"Original pairs: {counters['originalPairs']}; approved subsets: 29 / 99 occurrence memberships.",'',
           '| Alternative | Eligible pairs | Review units | Approximate input tokens |','|---|---:|---:|---:|']
     for p,w in workload.items():text.append(f"| {p} | {w['eligiblePairs']} | {w['proposedReviewUnits']} | {w['approximateInputTokens']} |")
-    text+=['','Proposed discussion starting point: context_either. The researcher must select criteria; no dispatch is authorized.',
-           'literal preserves thin-context opportunities at higher review burden; context_both can miss name-only/evidence-only equivalents.',
+    text+=['','Proposed discussion starting point: alias_extended. The researcher must select criteria; no dispatch is authorized.',
+           'dual requires corroborated joint agreement; alias_extended preserves exceptional single-view signals; ambiguity_extended includes explicit specificity questions.',
            'Inspect distributions.json for joint scores and class/scope/family imbalance; examples.json exposes ambiguity rather than adjudicating it.','',*summary['limitations']]
     (output/'summary.md').write_text('\n'.join(text)+'\n')
     for path,h in pins.items():r.preflight.pilot.verify(Path(path),h,{})
@@ -281,7 +350,7 @@ def run(output: Path) -> dict:
 def main() -> None:
     """Run without network access; existing output directories are immutable."""
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output',type=Path,default=ROOT/'v1')
+    parser.add_argument('--output',type=Path,default=ROOT/'v2')
     args=parser.parse_args()
     with patch.object(socket.socket,'connect',side_effect=RuntimeError('OFFLINE_ONLY')), patch.object(socket.socket,'connect_ex',side_effect=RuntimeError('OFFLINE_ONLY')):
         print(json.dumps(run(args.output),sort_keys=True))
