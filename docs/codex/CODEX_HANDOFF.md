@@ -4,6 +4,27 @@
 
 **Step 14 scope update (2026-11-06):** On `feature/cross-source-semantic-alignment`, follow the [researcher-approved prospective scope and completion decision v0.1](../study2_step14_scope_and_completion_decision_v0.1.md). It bounds candidate discovery and completion without approving additional identity cases or canonical allocation; the Step 13 checkpoint below remains historical authority.
 
+## Step 14 production recommendation preparation (2026-11-11)
+
+Semantic calibration is closed by researcher decision. Production selects the original
+pilot instructions plus `step14-semantic-calibration/0.1.0` clarification, **without**
+the v3 category clarification. See [production recommendation contract](../study2_step14_production_recommendations_v0.1.md).
+Instruction SHA-256: `02484da6f9e5d85880091940dec0ca91079f1943861fabffcab92aa7497f3b63`.
+Development/held-out/category diagnostics cover 83/89/39 matched pairs; selection is
+not a gold-standard accuracy claim or approval of identities.
+
+Offline preparation: `var/study2_step14/production-batch/v1/`, 14,549 requests,
+73,422 queued pairs; 20 prior completed assessments and 609 prior group overlaps
+remain separately accounted from the 74,051-pair pool. Six complete-line files,
+119,290,216 bytes; local complete-body bytes/4 estimate 29,365,970 input tokens.
+This is not provider-confirmed usage. Existing native Batch journal/transport is reused;
+15-billion configured capacity is not assumed available. No provider counts or
+submissions occurred. Researcher gates: `src.evaluation.step14_production_batch`
+`count --execute`, then `submit --execute`, then `collect --execute`; verify/status
+are offline. See the contract for uncertainty recovery and capacity STOP behavior.
+All outputs remain unapproved recommendations; no canonical allocation or KG writes.
+Historical checkpoint text below describes Step 13, not the current Step 14 status.
+
 ## Current checkpoint
 
 **Study 2 Step 13: CLOSED / ACCEPTED within documented scientific limits.** See [completion acceptance](../handoffs/STUDY2_STEP13_COMPLETION_ACCEPTANCE.md) and [researcher-confirmed diagnostic decisions](../evaluation/study2_step13_diagnostic_review_confirmed_2026-10-30.json).
