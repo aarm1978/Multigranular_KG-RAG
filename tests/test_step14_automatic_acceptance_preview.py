@@ -26,7 +26,7 @@ class PreviewTests(unittest.TestCase):
             category=category, modelIdentityLevel='entity', ontologyClass='Tool',
             familyCombination=['publications'], identityScope='within_artifact',
             nominationOrigin='alias_extended', unitID=key,
-            assessment=dict(evidenceIDs=['Q1','Q2'], conflictEvidenceIDs=[],missingInformation=[],
+            assessment=dict(evidenceIDs=['E1Q1','E2Q1'], conflictEvidenceIDs=[],missingInformation=[],
                 granularityAssessment='Same named tool at project granularity.',
                 versionAssessment='No entity release conflict is established.',
                 ownerReferenceAssessment='Both evidence excerpts concern the tool itself.'))
@@ -34,8 +34,12 @@ class PreviewTests(unittest.TestCase):
     def inputs(self, ids, edges):
         """Create complete container metadata with only the supplied comparisons."""
         pairs = {x['pairKeySha256']:x for x in edges}
-        bindings = {k:dict(evidence={'Q1':{'occurrenceID':v['occurrenceIDs'][0]},
-                                    'Q2':{'occurrenceID':v['occurrenceIDs'][1]}}) for k,v in pairs.items()}
+        bindings = {k:dict(
+            entities={f'E{i+1}':dict(occurrenceID=oid,endpointRecordSha256='saved')
+                      for i,oid in enumerate(v['occurrenceIDs'])},
+            evidence={f'E{i+1}Q1':dict(occurrenceID=oid,selectedFragmentIndex=0,
+                      usedStart=0,usedEnd=20,shortened=False)
+                      for i,oid in enumerate(v['occurrenceIDs'])}) for k,v in pairs.items()}
         members = {oid:self.member(oid) for oid in ids}
         endpoints = {oid:dict(selectedEvidence=[{'literalExcerpt':'source text'}]) for oid in ids}
         raw = dict(groupID='group', occurrenceIDs=ids, originalKey=[p.triage.queue.LEXICAL,'Tool','name'],
@@ -163,7 +167,7 @@ class PreviewTests(unittest.TestCase):
                             'The referents are a base dataset and a derived product.'):
             g,pairs,m,e,b,_=self.inputs(['a','b'],[self.pair('a','b')])
             assessment=next(iter(pairs.values()))['assessment']
-            assessment.update(conflictEvidenceIDs=['Q1','Q2'],versionAssessment=explanation)
+            assessment.update(conflictEvidenceIDs=['E1Q1','E2Q1'],versionAssessment=explanation)
             row=p.simulate(g,pairs,m,e,[],b)
             self.assertEqual(row['state'],p.HELD)
             self.assertIn('demonstrated_incompatibility',row['holdKinds'])
@@ -187,6 +191,60 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(summary['provisionalAcceptedGroups'],0)
         self.assertEqual(len(prs),2)
         self.assertTrue(all(row['state']==p.HELD for row in rows))
+
+    def test_quote_relation_and_mixed_citations_accept_without_mutation(self):
+        """Authentic Q/R sidecar shapes resolve through the local entity alias."""
+        for citations in (['E1Q1','E2Q1'], ['E1R1','E2R1'], ['E1Q1','E2R1'],
+                          ['E1R1','E2Q1'], ['E1Q1','E1R1','E2R1']):
+            with self.subTest(citations=citations):
+                g,pairs,m,e,b,_=self.inputs(['a','b'],[self.pair('a','b')])
+                pair=next(iter(pairs.values()));binding=b[pair['unitID']]
+                for alias in ('E1','E2'):
+                    binding['evidence'][alias+'R1']=dict(
+                        file='saved/accepted-relation-context.jsonl',line=7,recordSha256='saved-relation')
+                pair['assessment']['evidenceIDs']=citations
+                before=copy.deepcopy((pairs,b))
+                result=p.simulate(g,pairs,m,e,[],b)
+                self.assertTrue(result['safeguards']['B']['assessmentEvidenceBoundToBothEndpoints'])
+                self.assertEqual(result['state'],p.ACCEPTED)
+                self.assertEqual(result['identityDecisions'],0)
+                self.assertEqual((pairs,b),before)
+
+    def test_malformed_or_incomplete_citations_fail_closed(self):
+        """Malformed IDs cannot borrow a plausible reference or cover missing endpoints."""
+        g,pairs,m,e,b,_=self.inputs(['a','b'],[self.pair('a','b')])
+        binding=next(iter(b.values()))
+        for bad in ('Q1','E1','E0Q1','E01Q1','E1Q0','E1R01','E1X1','E1Q1extra','E1Q1\n','E1Q1R1'):
+            with self.subTest(evidenceID=bad):
+                trial=copy.deepcopy(binding)
+                trial['evidence'][bad]=trial['evidence']['E1Q1']
+                self.assertFalse(p.evidence_covers_endpoints([bad,'E2Q1'],trial,['a','b']))
+        for cited in ([],None,'E1Q1',['E1Q1'],['E1Q1','E1Q1'],['E1Q99','E2Q1'],[{},'E2Q1']):
+            with self.subTest(cited=cited):
+                self.assertFalse(p.evidence_covers_endpoints(cited,binding,['a','b']))
+
+    def test_missing_alias_wrong_endpoint_and_inconsistent_quote_hold(self):
+        """Every citation must bind to this comparison, even if both endpoints are cited."""
+        for defect in ('missing_alias','missing_entity_id','wrong_endpoint','inconsistent_quote',
+                       'missing_quote_id','empty_relation','extra_wrong_endpoint'):
+            with self.subTest(defect=defect):
+                g,pairs,m,e,b,_=self.inputs(['a','b'],[self.pair('a','b')])
+                pair=next(iter(pairs.values()));binding=b[pair['unitID']]
+                if defect=='missing_alias':del binding['entities']['E1']
+                elif defect=='missing_entity_id':del binding['entities']['E1']['occurrenceID']
+                elif defect=='wrong_endpoint':binding['entities']['E1']['occurrenceID']='outside'
+                elif defect=='inconsistent_quote':binding['evidence']['E1Q1']['occurrenceID']='b'
+                elif defect=='missing_quote_id':del binding['evidence']['E1Q1']['occurrenceID']
+                elif defect=='empty_relation':
+                    binding['evidence']['E1R1']={}
+                    pair['assessment']['evidenceIDs']=['E1R1','E2Q1']
+                else:
+                    binding['entities']['E3']={'occurrenceID':'outside'}
+                    binding['evidence']['E3R1']={'file':'saved/relations.jsonl','line':3,'recordSha256':'saved'}
+                    pair['assessment']['evidenceIDs'].append('E3R1')
+                result=p.simulate(g,pairs,m,e,[],b)
+                self.assertFalse(result['safeguards']['B']['assessmentEvidenceBoundToBothEndpoints'])
+                self.assertEqual(result['state'],p.HELD)
 
     def test_synthetic_artifact_run_and_hash_guard(self):
         """Verify saved-input integration, repeatability and failure before publication."""

@@ -5,6 +5,7 @@ import argparse
 from collections import Counter, defaultdict
 import json
 from pathlib import Path
+import re
 import socket
 from unittest.mock import patch
 
@@ -125,6 +126,33 @@ def guarded_state(guards: dict[str, bool | None]) -> str:
     return ACCEPTED if guards and all(value is True for value in guards.values()) else HELD
 
 
+def evidence_covers_endpoints(cited: list[str], binding: dict, occurrence_ids: list[str]) -> bool:
+    """Resolve quote/relation citations via local entity aliases without changing provenance."""
+    if not isinstance(cited, list) or not cited or not isinstance(binding, dict):
+        return False
+    refs, entities = binding.get('evidence'), binding.get('entities')
+    if not isinstance(refs, dict) or not isinstance(entities, dict):
+        return False
+    expected, covered = set(occurrence_ids), set()
+    for eid in cited:
+        match = re.fullmatch(r'(E[1-9][0-9]*)([QR])[1-9][0-9]*', eid) if isinstance(eid, str) else None
+        if match is None or eid not in refs:
+            return False
+        entity = entities.get(match[1])
+        ref = refs[eid]
+        if not isinstance(entity, dict) or not isinstance(ref, dict) or not ref:
+            return False
+        oid = entity.get('occurrenceID')
+        if not isinstance(oid, str) or oid not in expected:
+            return False
+        if match[2] == 'Q' and 'occurrenceID' not in ref:
+            return False
+        if 'occurrenceID' in ref and ref['occurrenceID'] != oid:
+            return False
+        covered.add(oid)
+    return covered == expected
+
+
 def simulate(group: dict, pairs: dict, members: dict, endpoints: dict,
              decisions: list[dict], bindings: dict) -> dict:
     """Evaluate saved evidence contracts without extracting new semantic judgments."""
@@ -152,10 +180,8 @@ def simulate(group: dict, pairs: dict, members: dict, endpoints: dict,
     for pair in selected:
         assessment = pair.get('assessment') or {}
         binding = bindings.get(pair.get('unitID'), {})
-        refs = binding.get('evidence', {})
         cited = assessment.get('evidenceIDs', [])
-        if (not cited or any(eid not in refs for eid in cited) or
-                not set(pair['occurrenceIDs']) <= {refs[eid]['occurrenceID'] for eid in cited if eid in refs}):
+        if not evidence_covers_endpoints(cited, binding, pair['occurrenceIDs']):
             bound_evidence = False
     route_b = dict(guards,
         assessmentEvidenceBoundToBothEndpoints=bool(selected) and bound_evidence,
