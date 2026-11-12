@@ -1,5 +1,23 @@
 # CODEX_HANDOFF.md
 
+## Prospective Step 14 policy amendment (2026-11-12)
+
+The [automatic identity acceptance amendment](../study2_step14_automatic_identity_acceptance_v0.1.md)
+supersedes only universal per-case human approval for future production. A frozen
+automatic procedure may accept identities with independent bounded probabilistic,
+model-blind human evaluation; automatically accepted is not human verified.
+Historical checkpoints below, the 29 pilot approvals and frozen outputs retain
+their original authority. No identities or canonical mappings are approved here.
+
+Focused offline feasibility consumer: `src.evaluation.step14_automatic_acceptance_preview`,
+using saved `adjudication-triage/v1` and its pinned sidecars. A/B safeguards and the
+one-time 60/80/100-judgment evaluation blueprint are provisional. No sample is drawn.
+Current saved granularity is unspecified and referent/version compatibility is not
+mechanically certified; the consumer holds such groups rather than inventing
+compatibility. Corpus execution remains researcher-terminal work. Next decision:
+resolve that bounded safeguard interpretation and freeze production acceptance
+rules before sampling; retain the ontology gate before canonicalization/Step 15.
+
 > Operational milestone checkpoint, 2026-11-11. This navigation aid does not replace methodological authorities. Historical handoffs remain in Git history.
 
 **Step 14 scope update (2026-11-06):** On `feature/cross-source-semantic-alignment`, follow the [researcher-approved prospective scope and completion decision v0.1](../study2_step14_scope_and_completion_decision_v0.1.md). It bounds candidate discovery and completion without approving additional identity cases or canonical allocation; the Step 13 checkpoint below remains historical authority.
