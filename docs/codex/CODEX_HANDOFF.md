@@ -1,31 +1,43 @@
 # CODEX_HANDOFF.md
 
-> Operational milestone checkpoint, 2026-10-30. This navigation aid does not replace methodological authorities. Historical handoffs remain in Git history.
+> Operational milestone checkpoint, 2026-11-11. This navigation aid does not replace methodological authorities. Historical handoffs remain in Git history.
 
 **Step 14 scope update (2026-11-06):** On `feature/cross-source-semantic-alignment`, follow the [researcher-approved prospective scope and completion decision v0.1](../study2_step14_scope_and_completion_decision_v0.1.md). It bounds candidate discovery and completion without approving additional identity cases or canonical allocation; the Step 13 checkpoint below remains historical authority.
 
-## Step 14 production recommendation preparation (2026-11-11)
+## Step 14 recommendation-generation checkpoint (2026-11-11)
 
-Semantic calibration is closed by researcher decision. Production selects the original
-pilot instructions plus `step14-semantic-calibration/0.1.0` clarification, **without**
-the v3 category clarification. See [production recommendation contract](../study2_step14_production_recommendations_v0.1.md).
+**Recommendation generation: CLOSED with four retained invalid units / six unresolved
+pairs. Step 14 itself remains OPEN.** Researcher-confirmed final consolidation:
+**14,545 validated units / 73,416 unique pairs**, comprising 14,528 original Batch
+units and 17 isolated live recoveries. Local output:
+`var/study2_step14/live-recovery/v1/consolidated-v1/` (`recommendations.jsonl`,
+`summary.json`). Dataset SHA-256, verified against the saved bytes:
+`51b48500fd3cd41d5e421effaadf3b495ae6e54cdf1818c40a3edd116c3468ec`.
+
+The unresolved units are `step14:U002220`, `step14:U004656`, `step14:U005240`
+(one pair each), and `step14:U005870` (three pairs). They remain excluded, not
+repaired or promoted. No further replay is planned. The summary's `complete=false`
+correctly records incomplete pair coverage; checkpoint closure does not override it.
+Original Batch and supplemental live accounting remain separate. The 20 prior
+completed pair assessments and 609 prior group overlaps remain separately accounted
+from the 74,051-pair candidate pool.
+
+Semantic calibration is closed. Selected instructions remain the original pilot plus
+`step14-semantic-calibration/0.1.0` clarification, **without** the v3 category
+clarification; see [production contract](../study2_step14_production_recommendations_v0.1.md).
 Instruction SHA-256: `02484da6f9e5d85880091940dec0ca91079f1943861fabffcab92aa7497f3b63`.
-Development/held-out/category diagnostics cover 83/89/39 matched pairs; selection is
-not a gold-standard accuracy claim or approval of identities.
+The 83/89/39-pair calibration diagnostics and final recommendations are not gold-standard
+accuracy estimates or approved identities. Preserve all historical contracts,
+calibration artifacts, production journals, raw receipts and ignored recovery outputs.
 
-Offline preparation: `var/study2_step14/production-batch/v1/`, 14,549 requests,
-73,422 queued pairs; 20 prior completed assessments and 609 prior group overlaps
-remain separately accounted from the 74,051-pair pool. Six complete-line files,
-119,290,216 bytes; local complete-body bytes/4 estimate 29,365,970 input tokens.
-This is not provider-confirmed usage. Existing native Batch journal/transport is reused;
-15-billion configured capacity is not assumed available. No provider counts or
-submissions occurred. Researcher gates: `src.evaluation.step14_production_batch`
-`count --execute`, then `submit --execute`, then `collect --execute`; verify/status
-are offline. See the contract for uncertainty recovery and capacity STOP behavior.
-All outputs remain unapproved recommendations; no canonical allocation or KG writes.
-Historical checkpoint text below describes Step 13, not the current Step 14 status.
+**Next workstream:** focused offline recommendation/coverage analysis, bounded identity
+adjudication, the existing ontology decision gate, canonical consolidation and KG
+assembly under their applicable authorities. No automatic approvals, canonical
+allocations or KG writes follow from this checkpoint. Follow the existing scope and
+identity/granularity policies; do not reopen recommendation generation.
+Historical sections below describe Step 13, not the current Step 14 status.
 
-## Current checkpoint
+## Historical Step 13 checkpoint
 
 **Study 2 Step 13: CLOSED / ACCEPTED within documented scientific limits.** See [completion acceptance](../handoffs/STUDY2_STEP13_COMPLETION_ACCEPTANCE.md) and [researcher-confirmed diagnostic decisions](../evaluation/study2_step13_diagnostic_review_confirmed_2026-10-30.json).
 
@@ -58,6 +70,6 @@ The researcher completed the **v4 evaluation-only order-50 measurement**, govern
 
 Bounded read-only residual review: `var/study2_step13/residual-source-anchoring/v1/` (`synthesis.md`, `diagnostic.json`, `representatives.json`), reproducible with `src.evaluation.residual_source_anchoring`. All 472 exact IDs reconcile. 445 source-bound occurrences are outside active family D-26 profiles; four Hub nodes have provenance-only anchoring (three Procedures, one Paper); 23 deterministic Publication Tools retain unresolved bibliographic roles. These are mechanical triage classifications, not independent semantic judgments. Existing held edge/evidence/parent-path failures remain held. No blanket mentions expansion or automatic residual repair is authorized.
 
-**Step 14 alignment is the next separately authorized workstream; its implementation has not begun.** The 445 potential weak-mention extensions remain a separately governed prospective option, not part of this frozen checkpoint. **Step 15 obligation:** every retained entity should have an explicitly navigable, evidence-grounded source provenance path, separate from substantive semantic relationships. Check connected entities too: zero-degree auditing alone does not establish source reachability. Any residual weak-mention/source-anchor amendment requires a separate researcher decision. Graph reachability is distinct from source provenance: zero-degree nodes have no nonempty graph path, but their original evidence remains traceable. Preserve this boundary rather than optimizing toward zero isolates. No semantic alignment or final KG assembly occurred in this task.
+**At the historical Step 13 transition, Step 14 alignment had not begun; the current workstream is recorded above.** The 445 potential weak-mention extensions remain a separately governed prospective option, not part of this frozen checkpoint. **Step 15 obligation:** every retained entity should have an explicitly navigable, evidence-grounded source provenance path, separate from substantive semantic relationships. Check connected entities too: zero-degree auditing alone does not establish source reachability. Any residual weak-mention/source-anchor amendment requires a separate researcher decision. Graph reachability is distinct from source provenance: zero-degree nodes have no nonempty graph path, but their original evidence remains traceable. Preserve this boundary rather than optimizing toward zero isolates. No semantic alignment or final KG assembly occurred in this task.
 
 Follow local `AGENTS.md`. Do not repeat completed extraction, diagnostic reviews or corpus evaluations; do not modify historical journals, frozen outputs or ontology. Provider calls, graph writes and semantic alignment require their own authorization. Step 14A remains optional/default skipped under the existing policy. Preserve exact source-local identities and evidence before any later resolution.
