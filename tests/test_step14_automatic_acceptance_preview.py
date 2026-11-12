@@ -132,6 +132,43 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(summary['evaluationCasesDrawn'],0)
         self.assertEqual(p.evaluate([other,raw],pairs,m,e,[],oversized,b),(rows,prs,summary))
 
+    def test_oversized_null_and_known_cross_family_summaries(self):
+        """Keep all 25 synthetic blocks, with only 17 supplied cross-family summaries."""
+        oversized=[]
+        for i in range(25):
+            block=dict(blockID=f'large-{i}',key=[p.triage.queue.LEXICAL,'Tool','generic'],
+                       memberCount=1000000,occurrenceIDs=[],membershipSha256=f'saved-{i}')
+            known=(dict(blockID=block['blockID'],crossFamily=True,
+                        sourceFamilyDistribution={'publications':999999,'github':1},
+                        membershipSha256=block['membershipSha256']) if i<17 else None)
+            oversized.append(dict(originalBlock=block,knownSummary=known))
+        before=copy.deepcopy(oversized)
+        rows,pairs,summary=p.evaluate([],{}, {},{},[],oversized,{})
+        self.assertEqual(summary['oversizedScopes'],25)
+        self.assertEqual(sum(row['identityScope']=='between_families' for row in rows),17)
+        self.assertEqual(pairs,[])
+        self.assertEqual(summary['candidateKnownOccurrences'],0)
+        for i,row in enumerate(rows):
+            self.assertEqual(row['occurrenceIDs'],[])
+            self.assertEqual(row['memberCount'],1000000)
+            self.assertEqual(row['state'],p.HELD)
+            self.assertEqual(row['originalBlock'],oversized[i]['originalBlock'])
+            self.assertEqual(row['savedSummary'],oversized[i]['knownSummary'])
+            if i<17:
+                self.assertEqual(row['familyCombination'],['github','publications'])
+            else:
+                self.assertIsNone(row['savedSummary'])
+                self.assertEqual(row['familyCombination'],'unknown_not_reexpanded')
+                self.assertEqual(row['identityScope'],'unknown_not_reexpanded')
+        # Missing and explicit null summaries serialize identically, without inferred scope.
+        missing=copy.deepcopy(oversized[-1]);del missing['knownSummary']
+        missing_rows,_,_=p.evaluate([],{}, {},{},[],[missing],{})
+        self.assertEqual(p.r.identity.encoded(rows[-1]),p.r.identity.encoded(missing_rows[0]))
+        scopes={row['value']:row['count'] for row in summary['groupDistributions']
+                if row['dimension']=='identityScope'}
+        self.assertEqual(scopes,{'between_families':17,'unknown_not_reexpanded':8})
+        self.assertEqual(oversized,before)
+
     def test_two_member_llm_acceptance_and_capture_metadata(self):
         """Unequal raw capture metadata does not become scientific incompatibility."""
         g,pairs,m,e,b,_=self.inputs(['a','b'],[self.pair('a','b')])

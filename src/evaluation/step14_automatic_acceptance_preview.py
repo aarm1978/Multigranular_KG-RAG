@@ -288,7 +288,7 @@ def evaluate(groups: list[dict], pairs: dict, members: dict, endpoints: dict,
         memberCount=x['originalBlock']['memberCount'], state=HELD, routes=[x['originalBlock']['key'][0]],
         ontologyClass=[x['originalBlock']['key'][1]],
         familyCombination=sorted(x['knownSummary']['sourceFamilyDistribution']) if x.get('knownSummary') else 'unknown_not_reexpanded',
-        identityScope='between_families' if x.get('knownSummary', {}).get('crossFamily') else 'unknown_not_reexpanded',
+        identityScope='between_families' if (x.get('knownSummary') or {}).get('crossFamily') else 'unknown_not_reexpanded',
         originalBlock=x['originalBlock'], savedSummary=x.get('knownSummary'),
         holdReasons=['oversized_membership_and_overlap_not_expanded'], holdKinds=['oversized_unassessed'], simulationOnly=True) for x in oversized]
     all_rows = rows + overs
