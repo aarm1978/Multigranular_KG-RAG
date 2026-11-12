@@ -14,7 +14,7 @@ r = triage.r
 require = triage.require
 ROOT = triage.BASE / 'automatic-acceptance-preview'
 POLICY = Path('docs/study2_step14_automatic_identity_acceptance_v0.1.md')
-VERSION = 'step14-automatic-acceptance-preview/0.1.0'
+VERSION = 'step14-automatic-acceptance-preview/0.2.0'
 OWN_NAMESPACES = {'Paper': {'doi'}, 'DatasetResource': {'doi', 'hydroshare'},
                   'Repository': {'github'}, 'Person': {'orcid'}, 'Organization': {'ror'}}
 ACCEPTED = 'provisional_accepted'
@@ -73,6 +73,53 @@ def identifier_guard(keys: list[list], records: list[dict]) -> bool | None:
     return False
 
 
+def compatibility_signals(records: list[dict], selected: list[dict]) -> dict:
+    """Separate explicit conflicts from metadata uncertainty without interpreting prose."""
+    conflicts, ambiguity, limitations = [], [], []
+    granularities = {x.get('granularity') for x in records}
+    known = {x for x in granularities if x and x != 'unspecified_requires_context_review'}
+    if len(known) > 1:
+        conflicts.append('different_explicit_referent_granularities')
+    if len(known) != len(granularities) or not known:
+        limitations.append('structured_granularity_unspecified_prediction_not_verification')
+    # Only typed, entity-owned declarations are identity constraints.
+    by_scheme = defaultdict(list)
+    for record in records:
+        own = defaultdict(set)
+        for declaration in record.get('identifierDeclarations', []):
+            scheme = declaration.get('scheme')
+            if scheme in OWN_NAMESPACES.get(record['ontologyClass'], set()) and (
+                    declaration.get('basis') == 'deterministic_entity_own_field' or
+                    (declaration.get('basis') == 'C-D04' and scheme == 'doi' and
+                     record['ontologyClass'] == 'DatasetResource')):
+                own[scheme].add(declaration['value'])
+        for scheme, values in own.items():
+            by_scheme[scheme].append(values)
+    for scheme, values in sorted(by_scheme.items()):
+        if any(len(value) != 1 for value in values):
+            ambiguity.append('multiple_entity_owned_identifiers:' + scheme)
+        elif len(set().union(*values)) > 1:
+            conflicts.append('contradictory_entity_owned_identifiers:' + scheme)
+    if len({r.candidates.token(x['versions']) for x in records}) > 1:
+        limitations.append('raw_version_metadata_differs_role_not_inferred')
+    if any(not x['versions'] for x in records):
+        limitations.append('entity_version_unspecified_prediction_not_verification')
+    for pair in selected:
+        assessment = pair.get('assessment') or {}
+        if assessment.get('conflictEvidenceIDs'):
+            conflicts.append('model_reported_evidence_conflict')
+        if assessment.get('missingInformation'):
+            ambiguity.append('model_reported_missing_information')
+        if pair['coverageState'] != 'validated_recommendation':
+            ambiguity.append('unassessed_or_prior_comparison_requires_reconciliation')
+        elif pair['category'] == 'different_entities_candidate':
+            conflicts.append('negative_entity_recommendation')
+        elif pair['category'] != 'same_entity_candidate' or pair['modelIdentityLevel'] != 'entity':
+            ambiguity.append('non_entity_or_abstaining_recommendation')
+    return dict(demonstratedConflicts=sorted(set(conflicts)),
+                unresolvedAmbiguities=sorted(set(ambiguity)), limitations=sorted(set(limitations)))
+
+
 def guarded_state(guards: dict[str, bool | None]) -> str:
     """Only every explicitly true guard permits a provisional simulation result."""
     return ACCEPTED if guards and all(value is True for value in guards.values()) else HELD
@@ -87,16 +134,14 @@ def simulate(group: dict, pairs: dict, members: dict, endpoints: dict,
     require(len({tuple(p['occurrenceIDs']) for p in selected}) == len(selected), 'DUPLICATE_EXPLICIT_PAIR')
     prior = triage.exact_approvals(ids, decisions)
     identical_approval = any(set(a['exactApprovedOccurrenceIDs']) == set(ids) for a in prior)
-    versions = {r.candidates.token(x['versions']) for x in records}
-    # Current producer supplies no certified granularity/referent/version relation.
-    # Equal strings and fluent model prose must not substitute for that certificate.
+    signals = compatibility_signals(records, selected)
     guards = dict(classCompatible=len({(x['ontologyClass'], x['inventoryId']) for x in records}) == 1,
         sourceEvidencePresent=all(x.get('evidencePointers') and x.get('originalReference') and
                                  x['sourceFamilies'] and x['sourceArtifacts'] for x in records),
         noPreparationExclusions=not any(set(x.get('preparationFlags', [])) &
             {'missing_provenance', 'ontology_class_inventory_mismatch', 'abstract_class_retained_not_retyped'} for x in records),
-        referentCompatibility=None, granularityCompatibility=None,
-        entityVersionCompatibility=False if len(versions) > 1 else None,
+        noDemonstratedConflict=not signals['demonstratedConflicts'],
+        noUnresolvedReportedAmbiguity=not signals['unresolvedAmbiguities'],
         pilotScopeCompatible=not prior or identical_approval)
     route_a = dict(guards, exactEntityOwnedIdentifier=identifier_guard(group['originalKeys'], records))
     positive = all(p['coverageState'] == 'validated_recommendation' and
@@ -117,7 +162,9 @@ def simulate(group: dict, pairs: dict, members: dict, endpoints: dict,
         completePositiveComparisons=bool(selected) and positive and len(selected) == len(ids)*(len(ids)-1)//2,
         noModelConflictOrMissingInformation=bool(selected) and all(p.get('assessment') is not None and
             not p['assessment'].get('conflictEvidenceIDs') and not p['assessment'].get('missingInformation') for p in selected),
-        endpointSelectedEvidencePresent=evidence)
+        endpointSelectedEvidencePresent=evidence,
+        semanticAssessmentsPresent=bool(selected) and all(all(isinstance((p.get('assessment') or {}).get(field), str)
+            and p['assessment'][field].strip() for field in ('granularityAssessment', 'versionAssessment', 'ownerReferenceAssessment')) for p in selected))
     routes = sorted({key[0] for key in group['originalKeys']} | {p['nominationOrigin'] for p in selected})
     states = {'A': guarded_state(route_a) if any(k[0]==triage.queue.ID for k in group['originalKeys']) else 'not_applicable',
               'B': guarded_state(route_b)}
@@ -131,12 +178,30 @@ def simulate(group: dict, pairs: dict, members: dict, endpoints: dict,
         state = NONIDENTITY
     else:
         state = ACCEPTED if ACCEPTED in states.values() else HELD
+    route_holds = {route:sorted(k for k,v in values.items() if v is not True)
+                   for route,values in (('A',route_a),('B',route_b)) if states[route] != 'not_applicable'}
+    hold_kinds = []
+    if not guards['classCompatible'] or signals['demonstratedConflicts']:
+        hold_kinds.append('demonstrated_incompatibility')
+    if (signals['unresolvedAmbiguities'] or not guards['sourceEvidencePresent'] or not guards['noPreparationExclusions']
+            or (selected and any(not route_b[key] for key in ('assessmentEvidenceBoundToBothEndpoints',
+                'endpointSelectedEvidencePresent', 'semanticAssessmentsPresent')))):
+        hold_kinds.append('missing_evidence_or_unresolved_ambiguity')
+    if not guards['pilotScopeCompatible']:
+        hold_kinds.append('pilot_subset_scope')
+    if len(selected) < len(ids)*(len(ids)-1)//2:
+        hold_kinds.append('complete_group_comparisons')
+    if state == HELD and not hold_kinds:
+        hold_kinds.append('missing_evidence_or_unresolved_ambiguity')
     return dict(group, routes=routes, ontologyClass=sorted({x['ontologyClass'] for x in records}),
         familyCombination=sorted({f for x in records for f in x['sourceFamilies']}),
         identityScope=group_scope(records), memberCount=len(ids),
         state=state, alternativeStates=states, safeguards={'A':route_a, 'B':route_b},
-        holdReasons=sorted({name for guards_for_route in (route_a, route_b)
-                            for name, value in guards_for_route.items() if value is not True}),
+        preOverlapState=state, acceptedBy=[route for route in ('A','B') if states[route]==ACCEPTED] if state==ACCEPTED else [],
+        routeHoldReasons=route_holds, holdReasons=sorted({name for names in route_holds.values() for name in names}) if state==HELD else [],
+        holdKinds=sorted(hold_kinds) if state in (HELD, NONIDENTITY) else [],
+        evidenceInterpretation=signals,
+        missingExplicitComparisons=len(ids)*(len(ids)-1)//2-len(selected),
         exactApprovalSubsets=prior, modelNegativePairPresent=negative,
         simulationOnly=True, identityDecisions=0)
 
@@ -152,6 +217,8 @@ def prevent_overlaps(groups: list[dict]) -> None:
     for row in groups:
         if row['simulationID'] in blocked:
             row['state'] = HELD
+            row['acceptedBy'] = []
+            row['holdKinds'] = sorted(set(row.get('holdKinds', [])) | {'overlapping_complete_scopes'})
             row['holdReasons'] = sorted(set(row['holdReasons']) | {'overlapping_eligible_complete_scopes_no_union'})
 
 
@@ -197,7 +264,7 @@ def evaluate(groups: list[dict], pairs: dict, members: dict, endpoints: dict,
         familyCombination=sorted(x['knownSummary']['sourceFamilyDistribution']) if x.get('knownSummary') else 'unknown_not_reexpanded',
         identityScope='between_families' if x.get('knownSummary', {}).get('crossFamily') else 'unknown_not_reexpanded',
         originalBlock=x['originalBlock'], savedSummary=x.get('knownSummary'),
-        holdReasons=['oversized_membership_and_overlap_not_expanded'], simulationOnly=True) for x in oversized]
+        holdReasons=['oversized_membership_and_overlap_not_expanded'], holdKinds=['oversized_unassessed'], simulationOnly=True) for x in oversized]
     all_rows = rows + overs
     accepted = [x for x in rows if x['state']==ACCEPTED]
     summary = dict(version=VERSION, candidateCompleteScopes=len(rows), oversizedScopes=len(overs),
@@ -209,6 +276,16 @@ def evaluate(groups: list[dict], pairs: dict, members: dict, endpoints: dict,
         provisionalAcceptedImpliedPairs=sum(len(g['occurrenceIDs'])*(len(g['occurrenceIDs'])-1)//2 for g in accepted),
         groupDistributions=distribution(all_rows, 'group'), pairDistributions=distribution(pair_rows, 'explicit_pair'),
         heldGuardCounts=dict(sorted(Counter(reason for g in all_rows if g['state']==HELD for reason in g['holdReasons']).items())),
+        heldByKind=dict(sorted(Counter(kind for g in all_rows if g['state']==HELD for kind in g['holdKinds']).items())),
+        metadataLimitationCounts=dict(sorted(Counter(reason for g in rows
+            for reason in g['evidenceInterpretation']['limitations']).items())),
+        preOverlapAcceptedGroups=sum(g['preOverlapState']==ACCEPTED for g in rows),
+        overlapBlockedGroups=sum(g['preOverlapState']==ACCEPTED and g['state']==HELD for g in rows),
+        groupsWithMissingExplicitComparisons=sum(g['missingExplicitComparisons']>0 for g in rows),
+        acceptedByRoute={route:dict(groups=sum(route in g['acceptedBy'] for g in accepted),
+            distinctOccurrences=len({o for g in accepted if route in g['acceptedBy'] for o in g['occurrenceIDs']}),
+            explicitPairs=len({k for g in accepted if route in g['acceptedBy'] for k in g['selectedPairKeys']}),
+            impliedIdentityPairs=sum(g['memberCount']*(g['memberCount']-1)//2 for g in accepted if route in g['acceptedBy'])) for route in ('A','B')},
         alternativeStates={route:dict(Counter(g['alternativeStates'][route] for g in rows)) for route in ('A', 'B')},
         pilotApprovalSubsets=len(decisions), pilotDistinctApprovedOccurrences=len({o for d in decisions for o in d['occurrenceIDs']}),
         automaticEvaluationFrameExists=bool(accepted), evaluationCasesDrawn=0,
@@ -283,11 +360,11 @@ def run(source: Path, output: Path) -> dict:
         f"Provisional accepted groups: {summary['provisionalAcceptedGroups']}; distinct accepted occurrences: {summary['provisionalAcceptedOccurrences']}.\n\n"
         'These are simulations, not policy acceptance or human verification. See summary.json for exact group/pair/occurrence distributions and preserved route accounting. '
         'Group and pair denominators differ; route facets overlap. Oversized memberships and scope remain unknown rather than expanded.\n\n'
-        'Concrete limitation: saved granularity is unspecified and referent/version compatibility is not mechanically certified. Equal identifiers, version strings or model prose do not establish the missing conditions. '
+        'Identifier-supported and model-supported results are predictions, not verification. Missing structured granularity and raw version differences are recorded limitations, not automatic incompatibilities. Explicit conflicts, source-evidence gaps, reported ambiguity, incomplete comparisons and overlaps remain blocked. '
         'Held groups are not rejected. Historical approvals stay exact and separate. No human sample is drawn.\n\n'
         f'One-time evaluation blueprint: {POLICY}. Freeze policy/frame first; select one budget of 60, 80 or 100 complete-group judgments, '
         'with stratified inclusion probabilities and weights, blinded evidence, and a bounded whole-group check. Zero automatic yield means no evaluation frame. '
-        'Next decision: establish a reproducible safeguard interpretation before freezing production rules; no extra calls or extraction are authorized here.\n')
+        'Remaining limitation: free-text scientific conflicts not surfaced by model conflict/missing-information fields may escape these guards; raw version metadata alone does not establish entity-version roles. Freeze and independently evaluate the policy before production.\n')
     r.write(output/'manifest.json', dict(version=VERSION, inputHashes=pins,
         outputHashes={p.name:r.identity.sha(p) for p in sorted(output.iterdir())},
         simulationOnly=True, identityDecisions=0, providerCalls=0, evaluationCasesDrawn=0))
@@ -298,7 +375,7 @@ def main() -> None:
     """Run the preview offline only, into a fresh ignored output directory."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--triage', type=Path, default=triage.ROOT/'v1')
-    parser.add_argument('--output', type=Path, default=ROOT/'v1')
+    parser.add_argument('--output', type=Path, default=ROOT/'v2')
     args = parser.parse_args()
     with patch.object(socket.socket, 'connect', side_effect=RuntimeError('OFFLINE_ONLY')), \
          patch.object(socket.socket, 'connect_ex', side_effect=RuntimeError('OFFLINE_ONLY')):

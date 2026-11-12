@@ -12,11 +12,14 @@ their original authority. No identities or canonical mappings are approved here.
 Focused offline feasibility consumer: `src.evaluation.step14_automatic_acceptance_preview`,
 using saved `adjudication-triage/v1` and its pinned sidecars. A/B safeguards and the
 one-time 60/80/100-judgment evaluation blueprint are provisional. No sample is drawn.
-Current saved granularity is unspecified and referent/version compatibility is not
-mechanically certified; the consumer holds such groups rather than inventing
-compatibility. Corpus execution remains researcher-terminal work. Next decision:
-resolve that bounded safeguard interpretation and freeze production acceptance
-rules before sampling; retain the ontology gate before canonicalization/Step 15.
+The corrected v0.2.0 feasibility simulation uses LLM-positive/entity-level and
+exact entity-owned identifiers as predicted support, not human verification.
+Unspecified metadata alone no longer forces a hold; explicit conflicts, evidence
+gaps, incomplete semantic comparison sets and unsafe overlaps remain blocked.
+Raw source/capture version differences are not inferred entity-version conflicts.
+Corpus execution remains researcher-terminal work. Freeze and independently
+evaluate production rules before sampling/materialization; retain the ontology
+gate before canonicalization/Step 15.
 
 > Operational milestone checkpoint, 2026-11-11. This navigation aid does not replace methodological authorities. Historical handoffs remain in Git history.
 

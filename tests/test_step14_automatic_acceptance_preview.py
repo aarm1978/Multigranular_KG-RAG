@@ -26,7 +26,10 @@ class PreviewTests(unittest.TestCase):
             category=category, modelIdentityLevel='entity', ontologyClass='Tool',
             familyCombination=['publications'], identityScope='within_artifact',
             nominationOrigin='alias_extended', unitID=key,
-            assessment=dict(evidenceIDs=['Q1','Q2'], conflictEvidenceIDs=[],missingInformation=[]))
+            assessment=dict(evidenceIDs=['Q1','Q2'], conflictEvidenceIDs=[],missingInformation=[],
+                granularityAssessment='Same named tool at project granularity.',
+                versionAssessment='No entity release conflict is established.',
+                ownerReferenceAssessment='Both evidence excerpts concern the tool itself.'))
 
     def inputs(self, ids, edges):
         """Create complete container metadata with only the supplied comparisons."""
@@ -40,15 +43,16 @@ class PreviewTests(unittest.TestCase):
         group=p.combine_containers([raw])[0]
         return group,pairs,members,endpoints,bindings,raw
 
-    def test_positive_complete_triangle_still_holds_missing_specificity(self):
-        """Fluent positives and a complete clique do not certify unknown guards."""
+    def test_positive_complete_triangle_accepts_predicted_identity(self):
+        """Complete supported predictions pass without a semantic-truth certificate."""
         g,pairs,m,e,b,_=self.inputs(['a','b','c'],[self.pair('a','b'),self.pair('a','c'),self.pair('b','c')])
         before=copy.deepcopy((g,pairs,m,e,b))
         row=p.simulate(g,pairs,m,e,[],b)
-        self.assertEqual(row['state'],p.HELD)
+        self.assertEqual(row['state'],p.ACCEPTED)
+        self.assertEqual(row['acceptedBy'],['B'])
         self.assertTrue(row['safeguards']['B']['completePositiveComparisons'])
         self.assertTrue(row['safeguards']['B']['assessmentEvidenceBoundToBothEndpoints'])
-        self.assertIsNone(row['safeguards']['B']['granularityCompatibility'])
+        self.assertIn('structured_granularity_unspecified_prediction_not_verification',row['evidenceInterpretation']['limitations'])
         self.assertEqual((g,pairs,m,e,b),before)
 
     def test_missing_closing_edge_and_version_bridge_hold(self):
@@ -57,7 +61,8 @@ class PreviewTests(unittest.TestCase):
         m['a']['versions']={'version':'2.1'};m['c']['versions']={'version':'3.0'}
         row=p.simulate(g,pairs,m,e,[],b)
         self.assertFalse(row['safeguards']['B']['completePositiveComparisons'])
-        self.assertFalse(row['safeguards']['B']['entityVersionCompatibility'])
+        self.assertTrue(row['safeguards']['B']['noDemonstratedConflict'])
+        self.assertIn('raw_version_metadata_differs_role_not_inferred',row['evidenceInterpretation']['limitations'])
         self.assertEqual(row['state'],p.HELD)
 
     def test_exact_identifier_role_and_namespace(self):
@@ -118,9 +123,70 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(summary['oversizedScopes'],1)
         self.assertEqual(rows[-1]['occurrenceIDs'],[])
         self.assertEqual(len(prs),1)
-        self.assertFalse(summary['automaticEvaluationFrameExists'])
+        self.assertTrue(summary['automaticEvaluationFrameExists'])
+        self.assertEqual(summary['acceptedByRoute']['B']['groups'],1)
         self.assertEqual(summary['evaluationCasesDrawn'],0)
         self.assertEqual(p.evaluate([other,raw],pairs,m,e,[],oversized,b),(rows,prs,summary))
+
+    def test_two_member_llm_acceptance_and_capture_metadata(self):
+        """Unequal raw capture metadata does not become scientific incompatibility."""
+        g,pairs,m,e,b,_=self.inputs(['a','b'],[self.pair('a','b')])
+        m['a']['versions']={'commitSHA':'capture-a','cffVersion':'1.1'}
+        m['b']['versions']={'commitSHA':'capture-b','cffVersion':'1.2'}
+        before=copy.deepcopy((g,pairs,m,e,b))
+        row=p.simulate(g,pairs,m,e,[],b)
+        self.assertEqual(row['state'],p.ACCEPTED)
+        self.assertEqual(row['acceptedBy'],['B'])
+        self.assertEqual((g,pairs,m,e,b),before)
+        self.assertEqual(row['identityDecisions'],0)
+
+    def test_owned_identifier_group_accepts_without_llm_pairs(self):
+        """A complete exact own-key scope has its separate predicted acceptance route."""
+        g,pairs,m,e,b,_=self.inputs(['a','b'],[])
+        g['originalKeys']=[[p.triage.queue.ID,'DatasetResource','doi','10.1234/example']]
+        for member in m.values():
+            member.update(ontologyClass='DatasetResource',inventoryId='DatasetResource',
+                identifierDeclarations=[dict(scheme='doi',value='10.1234/example',basis='C-D04')])
+        row=p.simulate(g,pairs,m,e,[],b)
+        self.assertEqual(row['state'],p.ACCEPTED)
+        self.assertEqual(row['acceptedBy'],['A'])
+        self.assertEqual(row['missingExplicitComparisons'],1)
+        m['b']['identifierDeclarations'].append(dict(scheme='hydroshare',value='other',basis='deterministic_entity_own_field'))
+        m['a']['identifierDeclarations'].append(dict(scheme='hydroshare',value='one',basis='deterministic_entity_own_field'))
+        row=p.simulate(g,pairs,m,e,[],b)
+        self.assertEqual(row['state'],p.HELD)
+        self.assertIn('demonstrated_incompatibility',row['holdKinds'])
+
+    def test_explicit_version_referent_and_missing_information_blocks(self):
+        """Saved conflict evidence blocks even a positive prediction; ambiguity is separate."""
+        for explanation in ('Entity releases v2.1 and v3.0 conflict.',
+                            'The referents are a base dataset and a derived product.'):
+            g,pairs,m,e,b,_=self.inputs(['a','b'],[self.pair('a','b')])
+            assessment=next(iter(pairs.values()))['assessment']
+            assessment.update(conflictEvidenceIDs=['Q1','Q2'],versionAssessment=explanation)
+            row=p.simulate(g,pairs,m,e,[],b)
+            self.assertEqual(row['state'],p.HELD)
+            self.assertIn('demonstrated_incompatibility',row['holdKinds'])
+        assessment['conflictEvidenceIDs']=[]
+        assessment['missingInformation']=['Unknown referent scope.']
+        row=p.simulate(g,pairs,m,e,[],b)
+        self.assertEqual(row['state'],p.HELD)
+        self.assertIn('missing_evidence_or_unresolved_ambiguity',row['holdKinds'])
+        self.assertNotIn('demonstrated_incompatibility',row['holdKinds'])
+        assessment['missingInformation']=[]
+        m['a']['granularity']='named dataset resource';m['b']['granularity']='derived product'
+        self.assertEqual(p.simulate(g,pairs,m,e,[],b)['state'],p.HELD)
+
+    def test_real_positive_scopes_are_blocked_by_overlap(self):
+        """Two individually acceptable model pairs cannot become an automatic chain."""
+        g,pairs,m,e,b,_=self.inputs(['a','b','c'],[self.pair('a','b'),self.pair('b','c')])
+        groups=[dict(groupID=k,occurrenceIDs=v['occurrenceIDs'],selectedPairKeys=[k]) for k,v in pairs.items()]
+        rows,prs,summary=p.evaluate(groups,pairs,m,e,[],[],b)
+        self.assertEqual(summary['preOverlapAcceptedGroups'],2)
+        self.assertEqual(summary['overlapBlockedGroups'],2)
+        self.assertEqual(summary['provisionalAcceptedGroups'],0)
+        self.assertEqual(len(prs),2)
+        self.assertTrue(all(row['state']==p.HELD for row in rows))
 
     def test_synthetic_artifact_run_and_hash_guard(self):
         """Verify saved-input integration, repeatability and failure before publication."""
@@ -160,7 +226,10 @@ class PreviewTests(unittest.TestCase):
                  patch.object(p.triage.queue.approvals,'validate_approvals'), \
                  patch.object(p.socket.socket,'connect',side_effect=AssertionError('network forbidden')):
                 result=p.run(source,base/'out/first')
-                self.assertEqual(result['provisionalAcceptedGroups'],0)
+                self.assertEqual(result['provisionalAcceptedGroups'],1)
+                self.assertEqual(result['identityDecisions'],0)
+                self.assertEqual(result['graphWrites'],0)
+                self.assertEqual(ledger.read_bytes(),b'')
                 self.assertEqual(p.run(source,base/'out/second'),result)
                 for path in (base/'out/first').iterdir():
                     self.assertEqual(path.read_bytes(),(base/'out/second'/path.name).read_bytes())
