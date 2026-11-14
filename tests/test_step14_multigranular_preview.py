@@ -58,7 +58,7 @@ class OverlayTests(unittest.TestCase):
         rows,links,summary=p.overlay(pairs,endpoints,[])
         self.assertEqual(len(rows),2)
         self.assertEqual(summary['broaderUniqueOccurrences'],3)
-        self.assertEqual(summary['distinctAnchorHypotheses'],2)
+        self.assertEqual(summary['distinctAnchorHypotheses'],1)
         self.assertEqual(summary['proposedNonidentityLinks'],4)
         groups=[dict(simulationID=k,occurrenceIDs=v['occurrenceIDs']) for k,v in pairs.items()]
         before=copy.deepcopy(groups)
@@ -97,6 +97,27 @@ class OverlayTests(unittest.TestCase):
         self.assertEqual(summary['proposedNonidentityLinks'],2)
         self.assertTrue(all(x['status']=='held_ambiguous_anchor_bridge' for x in rows))
         self.assertEqual({x['occurrenceID'] for x in links if x['status']=='proposed_nonidentity_correspondence'},{'a','c'})
+
+    def test_generic_definition_and_version_categories(self):
+        """Explicit definitions support generic anchors; equal versions stay separately counted."""
+        generic=self.endpoint('a','National Water Model','National Water Model (NWM) is a hydrologic model.')
+        version=self.endpoint('b','NWM v2.1','NWM version 2.1 is available.')
+        self.assertEqual(p.broader_support(generic,version)['versionComparison'],'generic_to_version')
+        equal=self.endpoint('c','NWM v2.1','NWM version 2.1 is available.')
+        self.assertEqual(p.broader_support(version,equal)['versionComparison'],'equal_version')
+        other=self.endpoint('d','NWM v3.0','NWM version 3.0 is available.')
+        self.assertEqual(p.broader_support(version,other)['versionComparison'],'different_versions')
+        generic['selectedEvidence'][0]['literalExcerpt']='National Water Model (NWM) may be a hydrologic model.'
+        self.assertEqual(p.broader_support(generic,version)['status'],'held')
+
+    def test_anchor_stars_do_not_close_chains(self):
+        """A shared witness can support a star, but a chain cannot create a global anchor."""
+        endpoints={x:self.endpoint(x,'NWM','NWM version '+str(i)+' is available.') for i,x in enumerate('abcd',1)}
+        pairs={a+b:self.pair(a,b) for a,b in [('a','b'),('b','c'),('c','d')]}
+        rows,_,summary=p.overlay(pairs,endpoints,[])
+        self.assertEqual(len(summary['candidateAnchors']),2)
+        self.assertEqual(len(rows),3)
+        self.assertTrue(all(len(a['occurrenceIDs'])<=3 for a in summary['candidateAnchors']))
 
     def test_saved_artifact_roundtrip_preserves_approvals(self):
         """Exercise the actual consumer on tiny pinned artifacts, not corpus data."""

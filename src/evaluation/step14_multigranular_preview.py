@@ -51,7 +51,7 @@ def broader_support(left: dict, right: dict) -> dict:
                 # Hold uncertain/contrastive contexts rather than interpreting their semantics.
                 if re.search(r'\b(not|unlike|different|may|might|could|versus|vs|trained|architecture|subset|derived|build|branch|deployment|commit)\b', text):
                     continue
-                pattern = r'(?<!\w)' + re.escape(name) + r'(?:\s+\([a-z0-9 -]+\))?\s+(?:(?:version|release)\s+v?(\d+(?:\.\d+)*)\b|(?:model\s+|software\s+)?family\b)'
+                pattern = r'(?<!\w)' + re.escape(name) + r'(?:\s+\([a-z0-9 -]+\))?\s+(?:(?:version|release)\s+v?(\d+(?:\.\d+)*)\b|(?:model\s+|software\s+)?family\b|is\s+(?:a|an|the)\s+(?:[a-z-]+\s+){0,4}(?:model|modeling system|software tool|dataset)\b)'
                 for match in re.finditer(pattern, text):
                     matches[aliases[name]].append(dict(selectedEvidenceIndex=i, reference=quote['reference'],
                         literalExcerpt=quote['literalExcerpt'], qualifier=match[1] or 'family',
@@ -64,10 +64,34 @@ def broader_support(left: dict, right: dict) -> dict:
     qualifiers = [{x['qualifier'] for x in support[name]} for support in supported]
     if any(len(q) != 1 for q in qualifiers) or all(q == {'family'} for q in qualifiers):
         return dict(status='held', reason='ambiguous_or_absent_narrower_realization', links=[])
-    return dict(status='broader_candidate', reason='explicit_named_version_or_family_quotation',
+    comparison='generic_to_version' if any(q=={'family'} for q in qualifiers) else ('equal_version' if qualifiers[0]==qualifiers[1] else 'different_versions')
+    return dict(versionComparison=comparison,status='broader_candidate', reason='explicit_named_version_or_family_quotation',
         anchorDescriptor=dict(ontologyClass=left['ontologyClass'], literalName=name, granularity='named_family'),
         links=[dict(occurrenceID=e['occurrenceID'], evidence=supported[i][name],
                     relationIntent='family_anchor_identity_candidate' if qualifiers[i]=={'family'} else 'broader_correspondence_candidate') for i,e in enumerate(endpoints)])
+
+
+def reconcile_anchors(rows: list[dict]) -> list[dict]:
+    """Share a candidate anchor only through one exact evidence-bearing witness, never chains."""
+    pending={row['pairKeySha256']:row for row in rows if row['broaderSupport']['status']=='broader_candidate'}
+    anchors=[]
+    while pending:
+        witnesses=defaultdict(list)
+        for key,row in pending.items():
+            support=row['broaderSupport']
+            for link in support['links']:
+                witness=(r.candidates.token(support['anchorDescriptor']),link['occurrenceID'],r.candidates.token(link['evidence']))
+                witnesses[witness].append(key)
+        witness=min(witnesses,key=lambda w:(-len(witnesses[w]),w))
+        keys=sorted(witnesses[witness]); aid='candidate-anchor:'+r.candidates.token(list(witness))
+        anchors.append(dict(anchorHypothesisID=aid,witnessOccurrenceID=witness[1],
+            witnessEvidenceSha256=witness[2],pairKeys=keys,
+            occurrenceIDs=sorted({o for k in keys for o in pending[k]['occurrenceIDs']}),
+            descriptor=pending[keys[0]]['broaderSupport']['anchorDescriptor'],status='proposed_not_identity'))
+        for key in keys:
+            pending[key]['anchorHypothesisID']=aid
+            del pending[key]
+    return anchors
 
 
 def overlap_components(groups: list[dict]) -> list[dict]:
@@ -109,6 +133,7 @@ def overlay(pairs: dict, endpoints: dict, groups: list[dict]) -> tuple[list, lis
             # This is a local hypothesis ID, not a globally merged family or allocated canonical ID.
             row['anchorHypothesisID']='hypothesis:'+key
         rows.append(row)
+    anchors=reconcile_anchors(rows)
     descriptors = defaultdict(set)
     for row in rows:
         for link in row['broaderSupport']['links']:
@@ -135,6 +160,10 @@ def overlay(pairs: dict, endpoints: dict, groups: list[dict]) -> tuple[list, lis
         incompatibleAnchorOccurrences=sorted(o for o,d in descriptors.items() if len(d)>1),
         strata=[dict(category=k[0],ontologyClass=k[1],families=list(k[2]),scope=k[3],pairs=v)
                 for k,v in sorted(Counter((x['status'],x['ontologyClass'],tuple(x['familyCombination']),x['identityScope']) for x in rows).items())],
+        versionComparisonCounts=dict(Counter(x['broaderSupport'].get('versionComparison','unsupported') for x in rows)),
+        correspondenceStrata=[dict(scope=k[0],ontologyClass=k[1],mechanism=k[2],pairs=v) for k,v in sorted(Counter(
+            (x['identityScope'],x['ontologyClass'],x['broaderSupport'].get('versionComparison','unsupported')) for x in rows).items())],
+        candidateAnchors=anchors,
         identityDecisions=0, graphWrites=0, providerCalls=0)
     return rows,links,summary
 
@@ -178,9 +207,13 @@ def run(source: Path, output: Path) -> dict:
     components=overlap_components(eligible)
     summary['largestOverlapComponents']=components[:10]
     summary['overlapComponents']=len(components)
+    anchor_members=[set(a['occurrenceIDs']) for a in summary['candidateAnchors']]
+    summary['groupsContainedInSupportedAnchor']=sum(any(set(g['occurrenceIDs'])<=a for a in anchor_members) for g in eligible)
+    summary['anchorCoveredExactOccurrences']=len({o for a in anchor_members for o in a} & {o for g in eligible for o in g['occurrenceIDs']})
+    summary['broaderOccurrencesBeyondExactEligibility']=len({link['occurrenceID'] for link in links if link['status'].startswith('proposed_')} - {o for g in eligible for o in g['occurrenceIDs']})
     for path,h in pins.items():r.preflight.pilot.verify(Path(path),h,{})
     output.mkdir(parents=True)
-    for name,values in [('pair-overlay.jsonl',rows),('proposed-links.jsonl',links),
+    for name,values in [('pair-overlay.jsonl',rows),('proposed-links.jsonl',links),('candidate-anchors.jsonl',summary['candidateAnchors']),
                         ('exact-candidate-groups.jsonl',eligible),('overlap-components.jsonl',components),
                         ('prior-decisions.jsonl',list(r.rows(source/'prior-decisions.jsonl'))),
                         ('oversized-inventory.jsonl',[g for g in groups if not g['occurrenceIDs']])]:
@@ -195,7 +228,7 @@ def run(source: Path, output: Path) -> dict:
         f"Baseline: {len(eligible)} eligible scopes before overlap; {old['provisionalAcceptedGroups']} disjoint scopes afterward. "
         'These are complete membership hypotheses, not unique occurrences or anchors.\n\n'+
         json.dumps({k:v for k,v in summary.items() if k not in ('savedBaseline','largestOverlapComponents','strata')},indent=2)+
-        '\n\nFamily hypotheses are pair-local, not globally deduplicated scientific families. No connected-component identity is inferred. '
+        '\n\nFamily hypotheses share only an exact evidence-bearing witness; they are not globally deduplicated scientific families. No connected-component identity is inferred. '
         'Literal family/version cues are conservative development evidence, pending researcher approval. Missing cues remain held; no substantial recovery is assumed. '
         'Original evidence bindings remain attached; quotations never transfer between versions. See the proposed design for metric definitions and the evaluation gate.\n')
     r.write(output/'manifest.json',dict(inputHashes=pins,outputHashes={p.name:r.identity.sha(p) for p in sorted(output.iterdir())},status='PROPOSED_ONLY',graphWrites=0,identityDecisions=0))
@@ -206,7 +239,7 @@ def main() -> None:
     """Run only the offline overlay; require a fresh ignored output destination."""
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--baseline',type=Path,default=baseline.ROOT/'v2-null-summary-fix')
-    parser.add_argument('--output',type=Path,default=ROOT/'v1')
+    parser.add_argument('--output',type=Path,default=ROOT/'v2')
     args=parser.parse_args()
     with patch.object(socket.socket,'connect',side_effect=RuntimeError('OFFLINE_ONLY')),patch.object(socket.socket,'connect_ex',side_effect=RuntimeError('OFFLINE_ONLY')):
         print(json.dumps(run(args.baseline,args.output),sort_keys=True))

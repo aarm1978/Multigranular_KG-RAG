@@ -62,3 +62,23 @@ python -m src.evaluation.step14_multigranular_preview --baseline var/study2_step
 ```
 
 Fresh ignored destination; existing directories are refused. Outputs: `summary.json`, `report.md`, `pair-overlay.jsonl`, `proposed-links.jsonl`, `exact-candidate-groups.jsonl`, `overlap-components.jsonl`, `examples.json`, unchanged decision records, oversized inventory and input/output hash manifest. No full preview is executed in Codex. Focused synthetic tests only.
+
+## PROPOSED v2 development correction (2026-11-13)
+
+This remains unfrozen development work, not ontology approval. Researcher-reported v1 baseline: 13,608 eligible groups / 4,231 distinct occurrences, 364 disjoint provisional groups, 604 overlap components; 19 broader pairs / 27 occurrences, only seven occurrences beyond exact eligibility; zero cross-family broader pairs and zero generic support links. Sixteen broader pairs had equal explicit versions and three had different versions. These are distinct denominators, not interchangeable consolidation results.
+
+Bounded saved examples inspected for this correction include NWM 2.0 versus 1.2, GMET 2.0 versus 2.0, and repeated NCL 6.4.0 evidence. Equal-version support is no longer interpretable as newly established different-version correspondence. Cross-family NextGen excerpts concern binaries/ecosystem context, and Singularity excerpts concern containers; neither supplies the required shared broader scientific referent. They remain held rather than receiving NWM or product-family membership by association. Generic support is now permitted for an affirmative, source-bound definition such as `NAME is a hydrologic model`, with the same explicit alias expansion and version counterpart requirements. A generic definition is support for a candidate anchor, not proof of family-level granularity. Speculative/contrastive and architecture/instance contexts remain excluded. No LLM text or untyped capture-version dictionary supplies affirmative evidence.
+
+Strict candidacy remains the independent `exactCandidate` property. Broader support separately reports `generic_to_version`, `equal_version`, and `different_versions`; its scope/class/mechanism strata include unsupported cases. Examples are development illustrations only. The expanded grammar is still deliberately incomplete, and no authentic v2 yield is claimed before execution.
+
+Candidate anchors may now be shared across a deterministic star of compatible pairs only when every pair contains the **same exact occurrence with identical literal evidence binding and the same class/name/granularity descriptor**. Select the most-supported witness first, breaking ties by stable witness tuple; remove only those assigned pair hypotheses, then repeat. Strings alone never merge anchors. A-B and B-C may share the B witness; C-D cannot join that anchor without B support. This is a conservative, order-declared reconciliation strategy, not global scientific anchor uniqueness or transitive identity. Incompatible descriptor bridges remain held at the affected occurrence. Original approvals and original groups are untouched. Anchor and coverage counts include hypotheses, not approved mappings; groups contained in an anchor's supported membership are counted descriptively without approving them. Alternative star choices and unresolved homonyms remain researcher decisions.
+
+The terminal run reports independent version-comparison counts, correspondence scope/class/mechanism strata, candidate anchor memberships and witnesses, groups contained in supported anchors, exact-eligible occurrences covered by anchors, and broader-covered occurrences beyond exact eligibility. Before/after comparison must use these fields alongside the v1 baseline above. There is no confirmatory sample or production graph write.
+
+Use a fresh ignored destination:
+
+```bash
+python -m src.evaluation.step14_multigranular_preview --baseline var/study2_step14/automatic-acceptance-preview/v2-null-summary-fix --output var/study2_step14/multigranular-preview/v2
+```
+
+The existing outputs remain, with `candidate-anchors.jsonl` added. Ontology/property approval, generic-source granularity interpretation, witness-star disambiguation and production evaluation remain pending.
