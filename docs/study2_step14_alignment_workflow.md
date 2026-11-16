@@ -190,3 +190,50 @@ python -m src.evaluation.step14_alignment_workflow retrieve
 
 Skip live to submit the complete package through Batch. Do not dispatch multiple
 package versions. No additional controls or approval workflow are introduced.
+
+## Localized source-artifact context correction
+
+The current default package is `alignment-workflow/prepared-v018-source-context/`.
+It is derived only from `prepared-v018-clean`, which remains unchanged along with
+its five-request live pilot execution records. All 1,795 requests, occurrence aliases,
+source evidence, predicate options, response schemas and provider settings are retained.
+The only provider-input changes are `sourceArtifactRef` and the instruction clarification.
+
+Each occurrence gets a short request-local S1/S2/... reference, assigned in occurrence
+order using the saved endpoint's single source artifact. The member sidecar must agree.
+Missing, multiple or conflicting artifacts fail closed rather than guessing. All actual
+prepared occurrences passed this check. The local-only `source-artifact-bindings.json`
+retains exact artifact identifiers; no original artifact ID, path, hash, history or
+previous assessment is added to provider input. Occurrences sharing an artifact share
+an S alias; different artifact identifiers receive distinct aliases within each request.
+
+Instructions now explicitly state that identical wording or a shared generic procedure
+does not independently establish strict identity; different artifacts can describe the
+same named entity; and shared source membership provides context without proving
+identity or model version. Evidence-based cross-artifact identity, directed typed and
+version relationships, existing ontology constraints, and abstention remain intact.
+
+Verified actual package cases:
+
+| Request | Source-artifact references |
+|---|---|
+| W01566 | E1=S1; E2=S2 (different GitHub repositories) |
+| W00119 | E4=E5=E6=S4 (one publication) |
+| W00001 | E9=E10=S9; E11=E12=S10 (two distinct publications) |
+
+Ten focused tests and offline package hash verification passed. Mocked live and Batch
+retrieval continue to reconstruct original occurrence IDs. No pilot outcomes or
+execution claims are copied to the new package. A later rerun is a separate execution,
+not a continuation that silently reuses old dispatch records. Approximate input tokens:
+3.50–5.83 million; output estimate remains 1.80–8.98 million. No provider calls occurred.
+
+```bash
+# Offline generation (already completed; use a fresh --root to reproduce)
+python -m src.evaluation.step14_alignment_workflow source-context --source var/study2_step14/alignment-workflow/prepared-v018-clean
+python -m src.evaluation.step14_alignment_workflow verify
+# Subsequent researcher-terminal execution uses the new default package
+python -m src.evaluation.step14_alignment_workflow live --units W01566 W00119 W00001
+python -m src.evaluation.step14_alignment_workflow submit
+python -m src.evaluation.step14_alignment_workflow status
+python -m src.evaluation.step14_alignment_workflow retrieve
+```

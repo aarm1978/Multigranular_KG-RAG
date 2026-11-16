@@ -14,7 +14,7 @@ from src.evaluation import step14_anchor_pilot as pilot
 
 BASE = pilot.BASE
 SOURCE = BASE / 'alignment-workflow/prepared-v1'
-ROOT = BASE / 'alignment-workflow/prepared-v018-clean'
+ROOT = BASE / 'alignment-workflow/prepared-v018-source-context'
 SPEC = Path('src/ontology/ontology_spec.yaml')
 r = pilot.diagnostic.r
 require = pilot.require
@@ -487,6 +487,75 @@ def cleanup(source: Path, root: Path) -> dict:
     return summary
 
 
+SOURCE_CONTEXT_INSTRUCTION = """
+sourceArtifactRef is a request-local context alias, not an identity or version assertion.
+Identical wording or a shared generic procedure does not independently establish strict
+identity of an identifiable workflow or entity. Different source artifacts can refer to
+the same named entity. Shared source-artifact membership supplies context but does not
+automatically establish identity or model version. Preserve evidence-based cross-artifact
+identity, version relationships, other typed relationships, and abstention.
+"""
+
+
+def source_context_body(body: dict, aliases: dict, provenance: dict) -> tuple[dict, dict]:
+    """Add only short artifact references; keep exact source identifiers in a local sidecar."""
+    from copy import deepcopy
+    result=deepcopy(body);payload=json.loads(body['input']);sources={};bindings={}
+    for e in payload['occurrences']:
+        record=provenance[aliases[e['occurrenceID']]]
+        artifacts=(record.get('endpoint') or {}).get('sourceArtifacts',[])
+        require(len(artifacts)==1,'AMBIGUOUS_OR_MISSING_SOURCE_ARTIFACT')
+        require(artifacts==record['member']['sourceArtifacts'],'SOURCE_PROVENANCE_DISAGREEMENT')
+        artifact=artifacts[0]
+        if artifact not in sources:
+            sources[artifact]=f'S{len(sources)+1}';bindings[sources[artifact]]=artifact
+        require('sourceArtifactRef' not in e,'ALREADY_HAS_SOURCE_CONTEXT')
+        e['sourceArtifactRef']=sources[artifact]
+    result['input']=live.encode(payload).decode()
+    result['instructions']=body['instructions']+SOURCE_CONTEXT_INSTRUCTION
+    return result,bindings
+
+
+def add_source_context(source: Path, root: Path) -> dict:
+    """Transform the saved clean package only; never copy or modify execution records."""
+    require(not root.exists() and root.resolve().is_relative_to((BASE/'alignment-workflow').resolve()),'FRESH_OUTPUT_REQUIRED')
+    manifest=live.load(source/'manifest.json')
+    for name,digest in manifest['outputHashes'].items():require(r.identity.sha(source/name)==digest,'SOURCE_DRIFT')
+    require(r.identity.sha(SPEC)==manifest['inputHashes'][str(SPEC)],'ONTOLOGY_DRIFT')
+    aliases=live.load(source/'alias-bindings.json')
+    provenance={x['occurrenceID']:x for x in r.rows(source/'occurrence-provenance.jsonl')}
+    requests=list(r.rows(source/'requests.jsonl'));require(len(requests)==1795,'REQUEST_COUNT_DRIFT')
+    output=[];bindings={};sizes=[];checks={}
+    for row in requests:
+        uid=row['custom_id'];body,refs=source_context_body(row['body'],aliases[uid],provenance)
+        before=json.loads(row['body']['input']);after=json.loads(body['input'])
+        checks[uid]={e['occurrenceID']:e['sourceArtifactRef'] for e in after['occurrences']}
+        for e in after['occurrences']:e.pop('sourceArtifactRef')
+        require(before==after,'SCIENTIFIC_CONTENT_DRIFT')
+        require({k:v for k,v in body.items() if k not in ('input','instructions')}==
+                {k:v for k,v in row['body'].items() if k not in ('input','instructions')},'SETTINGS_OR_SCHEMA_DRIFT')
+        bindings[uid]=refs;sizes.append(len(live.encode(body)));output.append(dict(row,body=body))
+    require(checks['W01566']['E1']!=checks['W01566']['E2'],'W01566_SOURCE_CONTEXT')
+    require(len({checks['W00119'][a] for a in ('E4','E5','E6')})==1,'W00119_SOURCE_CONTEXT')
+    require(checks['W00001']['E11']==checks['W00001']['E12'] and
+            checks['W00001']['E9']==checks['W00001']['E10'] and
+            checks['W00001']['E11']!=checks['W00001']['E9'],'W00001_SOURCE_CONTEXT')
+    root.mkdir(parents=True)
+    for name in manifest['outputHashes']:
+        require(not name.startswith('execution/'),'EXECUTION_NOT_PREPARATION')
+        if name not in ('requests.jsonl','summary.json'):live.write(root/name,(source/name).read_bytes())
+    live.write(root/'requests.jsonl',b''.join(live.encode(row)+b'\n' for row in output))
+    live.save(root/'source-artifact-bindings.json',bindings)
+    summary=live.load(source/'summary.json');summary.update(sourceArtifactContext=True,
+        approximateInputTokens=[sum(sizes)//5,sum(sizes)//3],
+        sourceContextChecks={u:checks[u] for u in ('W01566','W00119','W00001')})
+    live.save(root/'summary.json',summary)
+    pins=dict(manifest['inputHashes']);pins[str(source/'manifest.json')]=r.identity.sha(source/'manifest.json')
+    pins[str(Path(__file__))]=r.identity.sha(Path(__file__))
+    live.save(root/'manifest.json',dict(inputHashes=pins,outputHashes={str(p.relative_to(root)):r.identity.sha(p) for p in root.iterdir() if p.is_file()}))
+    return summary
+
+
 def verify(root: Path) -> dict:
     """Verify prepared artifacts and active schema/ontology code without replaying upstream."""
     m=live.load(root/'manifest.json')
@@ -565,18 +634,19 @@ def operate(root: Path, mode: str, units: list[str] | None = None, api=None) -> 
 def main() -> None:
     """Default preparation is network-disabled; execution requires an explicit terminal subcommand."""
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('mode',choices=['cleanup','refresh','prepare','verify','validate','live','submit','status','retrieve'])
+    p.add_argument('mode',choices=['source-context','cleanup','refresh','prepare','verify','validate','live','submit','status','retrieve'])
     p.add_argument('--root',type=Path,default=ROOT);p.add_argument('--units',nargs='+')
     p.add_argument('--source',type=Path,default=SOURCE)
     p.add_argument('--response',type=Path);p.add_argument('--time-limit',type=int,default=25)
     args=p.parse_args()
-    if args.mode in ('cleanup','refresh','prepare','verify','validate'):
+    if args.mode in ('source-context','cleanup','refresh','prepare','verify','validate'):
         def timeout(signum,frame):
             """Stop bounded offline work; an incomplete package cannot be dispatched."""
             raise TimeoutError('OFFLINE_TIME_LIMIT: use a fresh root and --time-limit 0 in researcher terminal')
         signal.signal(signal.SIGALRM,timeout);signal.alarm(args.time_limit)
         with patch.object(socket.socket,'connect',side_effect=RuntimeError('OFFLINE')),patch.object(socket.socket,'connect_ex',side_effect=RuntimeError('OFFLINE')):
-            if args.mode=='cleanup':value=cleanup(args.source,args.root)
+            if args.mode=='source-context':value=add_source_context(args.source,args.root)
+            elif args.mode=='cleanup':value=cleanup(args.source,args.root)
             elif args.mode=='refresh':value=refresh(args.source,args.root)
             elif args.mode=='prepare':value=prepare(args.root)
             else:

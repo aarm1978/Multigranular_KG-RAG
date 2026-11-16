@@ -57,6 +57,25 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(w.resolve_output(aliased,bindings),value)
         with self.assertRaises(KeyError):w.resolve_output(aliased,{'E1':'model'})
 
+    def test_source_artifact_aliases_preserve_semantic_payload(self):
+        """Shared artifacts get shared local aliases, distinct artifacts never collapse."""
+        body,_=fixture();body,aliases=w.clean_body(body)
+        def provenance(a,b):
+            return {o:dict(endpoint=dict(sourceArtifacts=[v]),member=dict(sourceArtifacts=[v])) for o,v in [('model',a),('repo',b)]}
+        for a,b,expected in [('artifact-a','artifact-a',['S1','S1']),('artifact-a','artifact-b',['S1','S2'])]:
+            updated,bindings=w.source_context_body(body,aliases,provenance(a,b))
+            old=json.loads(body['input']);new=json.loads(updated['input'])
+            self.assertEqual([e['sourceArtifactRef'] for e in new['occurrences']],expected)
+            for e in new['occurrences']:e.pop('sourceArtifactRef')
+            self.assertEqual(old,new)
+            self.assertEqual(body['text'],updated['text'])
+            self.assertNotIn('artifact-a',updated['input'])
+            self.assertEqual(bindings['S1'],a)
+        bad=provenance('a','b');bad['model']['endpoint']['sourceArtifacts']=['a','c']
+        with self.assertRaisesRegex(ValueError,'AMBIGUOUS'):w.source_context_body(body,aliases,bad)
+        bad=provenance('a','b');bad['model']['member']['sourceArtifacts']=['other']
+        with self.assertRaisesRegex(ValueError,'DISAGREEMENT'):w.source_context_body(body,aliases,bad)
+
     def test_existing_hierarchy_and_signature(self):
         spec=w.yaml.safe_load(w.SPEC.read_text());h=w.ancestors(spec)
         self.assertTrue(w.fits('ProcessBasedModel','ComputationalModel',h))
@@ -105,6 +124,7 @@ class WorkflowTests(unittest.TestCase):
         body,value=fixture()
         value['ontologyGaps']=[dict(occurrenceIDs=['model','repo'],proposedMeaning='Local hypothesis',evidenceIDs=['E1Q1','E2Q1'],uncertainty='Unreviewed')]
         body,bindings=w.clean_body(body)
+        body,_=w.source_context_body(body,bindings,{o:dict(endpoint=dict(sourceArtifacts=['source']),member=dict(sourceArtifacts=['source'])) for o in bindings.values()})
         value=w.resolve_output(value,{v:k for k,v in bindings.items()})
         response=dict(status='completed',usage=dict(input_tokens=10),output=[dict(type='message',content=[dict(type='output_text',text=json.dumps(value))])])
         class API:
