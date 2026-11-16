@@ -39,6 +39,24 @@ class WorkflowTests(unittest.TestCase):
             self.assertIn('abstention',new['text']['format']['schema']['properties']['assessments']['items']['properties']['category']['enum'])
             self.assertNotIn('D-16',ids)
 
+    def test_cleanup_and_resolution_all_output_sections(self):
+        """Aliases round-trip all typed endpoint fields without altering evidence or granularity output."""
+        body,value=fixture();payload=json.loads(body['input'])
+        for e in payload['occurrences']:e['granularity']='unspecified_requires_context_review'
+        for rel in payload['allowedPredicates']:rel['signatureID']=rel['id']
+        body['input']=json.dumps(payload)
+        new,bindings=w.clean_body(body);clean=json.loads(new['input'])
+        self.assertEqual(bindings,{'E1':'model','E2':'repo'})
+        self.assertNotIn('versions',clean['occurrences'][0])
+        self.assertNotIn('granularity',clean['occurrences'][0])
+        self.assertNotIn('id',clean['allowedPredicates'][0])
+        self.assertEqual(clean['occurrences'][0]['evidence'],payload['occurrences'][0]['evidence'])
+        value['ontologyGaps']=[dict(occurrenceIDs=['model','repo'],proposedMeaning='A supported but unrepresented distinction',evidenceIDs=['E1Q1','E2Q1'],uncertainty='Hypothesis')]
+        aliased=w.resolve_output(value,{v:k for k,v in bindings.items()})
+        w.validate(aliased,new)
+        self.assertEqual(w.resolve_output(aliased,bindings),value)
+        with self.assertRaises(KeyError):w.resolve_output(aliased,{'E1':'model'})
+
     def test_existing_hierarchy_and_signature(self):
         spec=w.yaml.safe_load(w.SPEC.read_text());h=w.ancestors(spec)
         self.assertTrue(w.fits('ProcessBasedModel','ComputationalModel',h))
@@ -85,6 +103,9 @@ class WorkflowTests(unittest.TestCase):
 
     def test_live_batch_identical_bodies_and_no_double_dispatch(self):
         body,value=fixture()
+        value['ontologyGaps']=[dict(occurrenceIDs=['model','repo'],proposedMeaning='Local hypothesis',evidenceIDs=['E1Q1','E2Q1'],uncertainty='Unreviewed')]
+        body,bindings=w.clean_body(body)
+        value=w.resolve_output(value,{v:k for k,v in bindings.items()})
         response=dict(status='completed',usage=dict(input_tokens=10),output=[dict(type='message',content=[dict(type='output_text',text=json.dumps(value))])])
         class API:
             def request(self,method,path,data):
@@ -96,6 +117,7 @@ class WorkflowTests(unittest.TestCase):
             def content(self,file_id):return w.live.encode(dict(custom_id='W00002',response=dict(body=response)))+b'\n'
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);api=API();w.live.save(root/'manifest.json',{})
+            w.live.save(root/'alias-bindings.json',{u:bindings for u in ('W00001','W00002')})
             w.live.write(root/'requests.jsonl',b''.join(w.live.encode(dict(custom_id=u,body=body))+b'\n' for u in ('W00001','W00002')))
             with patch.object(w,'verify',return_value={}):
                 w.operate(root,'live',['W00001'],api)
@@ -104,6 +126,9 @@ class WorkflowTests(unittest.TestCase):
                 self.assertEqual(api.live,api.batch)
                 report=w.operate(root,'retrieve',api=api)
                 self.assertEqual(report['missing'],[])
+                for uid in ('W00001','W00002'):
+                    resolved=w.live.load(root/'execution'/f'{uid}.resolved-hypotheses.json')
+                    self.assertEqual(resolved,w.resolve_output(value,bindings))
                 self.assertEqual(report['results']['W00002']['usage'],{'input_tokens':10})
 
     def test_schema_rejects_approvals(self):

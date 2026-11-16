@@ -123,3 +123,70 @@ The historical `prepare` routine is not the v0.1.8 migration entry point; use
 are copied or provider calls made by refresh. Do not dispatch both package versions.
 The refresh passed eight focused synthetic tests and offline verification, including
 exact evidence preservation and applicability of new predicates.
+
+## Final payload cleanup — current execution package
+
+The current default is `alignment-workflow/prepared-v018-clean/` under
+`var/study2_step14/`. Both `prepared-v1` and `prepared-v018` remain unchanged.
+This is a transformation of all **1,795 existing requests**, not new selection:
+zero added/removed, unchanged candidates, evidence spans, provider model,
+reasoning settings, ontology v0.1.8 and predicate constraints.
+
+The actual model-visible audit found **10,708 occurrence slots** with long internal
+IDs, empty `versions: {}` and placeholder granularity, plus **4,466** predicate
+entries duplicating `id` and `signatureID`. All empty version objects/placeholders
+are removed; `signatureID` alone identifies predicates. The response's granularity
+assessment remains required. Original meaningful names/aliases and literal evidence
+are preserved, including scientific DOI/resource identifiers, version statements,
+URLs and code/notebook paths. A lexical scan found URL/path-like source text in
+289 requests; these source quotations are not pipeline metadata and are not edited.
+No nonempty structured version metadata existed in the audited input population.
+
+No input fields for previous predictions/scores, eligibility, blocking/adjudication,
+execution history or local provenance files/hashes were present. Remaining predicate
+fields are name, signatureID, domain, range, compatible subject/object classes,
+evidenceRequirement and meaning. Necessary ontology evidence/semantic notes remain.
+The removed internal IDs also formerly appeared repeatedly in response schema enums.
+They now use deterministic request-local `E1`, `E2`, … aliases. Quotation identifiers
+(`E1Q1`, etc.) are unchanged. `alias-bindings.json` is local-only and maps each unit's
+aliases bijectively to exact original occurrence IDs. The full original provenance
+and unit membership files remain byte-identical outside provider bodies.
+
+The contradictory instruction requiring exact quotations to affirm a relation
+between both named endpoints is removed. Independent/jointly evaluated source-local
+spans may establish compatible strict identity or support a specific directed typed
+relationship without a direct cross-artifact citation. Shared mentions, co-occurrence
+or similarity alone do not suffice. Existing signatures, strict-group safeguards,
+artifact-versus-entity roles and abstention remain authoritative. Predicate evidence
+requirements from the approved ontology are retained without reinterpretation.
+
+Native responses and `*.hypotheses.json` preserve authentic model aliases/text.
+Both live and Batch processing additionally write `*.resolved-hypotheses.json`,
+resolving structured endpoint fields in **assessments, typedRelations and ontologyGaps**.
+Evidence aliases and free-text reasoning are not rewritten. Original IDs therefore
+remain exactly recoverable without modifying authentic model output. Missing or
+inconsistent alias bindings fail validation; these files remain hypotheses, not approvals.
+
+The ignored `payload-audit.json` records transformation counts. Preparation verifies
+all source package hashes, complete occurrence reconstruction, unchanged quotations
+and predicates, no long IDs in instructions/schema, and unchanged provider settings.
+Nine focused tests passed, including alias recovery through mocked live and Batch
+retrieval. Offline package verification passed. Approximate totals now are
+**3.25–5.42 million input tokens** and **1.80–8.98 million output tokens**; output
+estimates remain the same coarse planning range, not exact counts or guarantees.
+Two Workflow predicate-empty units and the one Workflow mapping range hold remain.
+Textual citation matching validates bindings, not the scientific truth of any inference.
+
+```bash
+# Offline cleanup reproduction; destination must be fresh (already generated locally)
+python -m src.evaluation.step14_alignment_workflow cleanup --source var/study2_step14/alignment-workflow/prepared-v018
+python -m src.evaluation.step14_alignment_workflow verify
+# Later researcher-terminal execution; no calls performed during preparation
+python -m src.evaluation.step14_alignment_workflow live --units W00001
+python -m src.evaluation.step14_alignment_workflow submit
+python -m src.evaluation.step14_alignment_workflow status
+python -m src.evaluation.step14_alignment_workflow retrieve
+```
+
+Skip live to submit the complete package through Batch. Do not dispatch multiple
+package versions. No additional controls or approval workflow are introduced.

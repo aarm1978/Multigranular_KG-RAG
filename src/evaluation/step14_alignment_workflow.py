@@ -14,7 +14,7 @@ from src.evaluation import step14_anchor_pilot as pilot
 
 BASE = pilot.BASE
 SOURCE = BASE / 'alignment-workflow/prepared-v1'
-ROOT = BASE / 'alignment-workflow/prepared-v018'
+ROOT = BASE / 'alignment-workflow/prepared-v018-clean'
 SPEC = Path('src/ontology/ontology_spec.yaml')
 r = pilot.diagnostic.r
 require = pilot.require
@@ -30,8 +30,8 @@ citation, but must establish the specific predicate and direction. Never infer a
 artifact-to-artifact relationship merely because artifacts mention the same entity.
 Every admissible predicate is optional: always abstain if its evidence requirement is unmet.
 
-Also propose directed typed nonidentity relationships only when exact quotations affirm
-that relationship between the named endpoints. Use an allowed signatureID and its stated
+Propose directed typed nonidentity relationships only when jointly evaluated source-local
+evidence supports the specific predicate and direction. Use an allowed signatureID and its stated
 meaning, direction, evidence constraints and domain/range. Similarity or shared reference
 is not a relation. Entity co-occurrence is insufficient. Do not confuse a referring source
 artifact with the described entity. hasComponent is explicit composition, not family/version
@@ -138,7 +138,7 @@ def response_schema(payload: dict) -> dict:
     ids = [e['occurrenceID'] for e in payload['occurrences']]
     text = dict(type='string'); refs = dict(type='array', items=text)
     relation = pilot.obj(dict(subject=dict(type='string', enum=ids), object=dict(type='string', enum=ids),
-        signatureID=dict(type='string', enum=[r['id'] for r in payload['allowedPredicates']] or ['NO_ALLOWED_PREDICATE']),
+        signatureID=dict(type='string', enum=[r.get('signatureID', r.get('id')) for r in payload['allowedPredicates']] or ['NO_ALLOWED_PREDICATE']),
         evidenceIDs=refs, rationale=text, uncertainty=text))
     gap = pilot.obj(dict(occurrenceIDs=dict(type='array', items=dict(type='string', enum=ids)),
         proposedMeaning=text, evidenceIDs=refs, uncertainty=text))
@@ -155,7 +155,7 @@ def validate(value: dict, body: dict) -> dict:
     pilot.validate(dict(assessments=value['assessments']), original)
     endpoints = {e['occurrenceID']: e for e in payload['occurrences']}
     evidence = {q['evidenceID']: o for o,e in endpoints.items() for q in e['evidence']}
-    signatures = {x['id']:x for x in payload['allowedPredicates']}
+    signatures = {x.get('signatureID', x.get('id')):x for x in payload['allowedPredicates']}
     def check_refs(ids, refs):
         """Every proposed endpoint needs its own original supporting evidence."""
         require(refs and all(q in evidence and evidence[q] in ids for q in refs), 'RELATION_EVIDENCE_BINDING')
@@ -412,6 +412,81 @@ def refresh(source: Path, root: Path) -> dict:
     return summary
 
 
+def clean_body(body: dict) -> tuple[dict, dict]:
+    """Remove confirmed redundant metadata and alias occurrences without touching quotations."""
+    from copy import deepcopy
+    result=deepcopy(body);payload=json.loads(body['input']);bindings={}
+    for i,e in enumerate(payload['occurrences'],1):
+        alias=f'E{i}';bindings[alias]=e['occurrenceID'];e['occurrenceID']=alias
+        if e.get('versions')=={}:e.pop('versions')
+        if e.get('granularity')=='unspecified_requires_context_review':e.pop('granularity')
+    for rel in payload['allowedPredicates']:
+        if rel.get('id')==rel.get('signatureID'):rel.pop('id')
+    result['instructions']=PROMPT
+    result['input']=live.encode(payload).decode()
+    result['text']['format']['schema']=response_schema(payload)
+    return result,bindings
+
+
+def resolve_output(value: dict, bindings: dict) -> dict:
+    """Resolve only structured endpoint fields; never rewrite source text or model reasoning."""
+    from copy import deepcopy
+    require(len(bindings)==len(set(bindings.values())),'NONREVERSIBLE_ALIASES')
+    result=deepcopy(value)
+    for row in result['assessments']+result['ontologyGaps']:
+        row['occurrenceIDs']=[bindings[o] for o in row['occurrenceIDs']]
+    for row in result['typedRelations']:
+        row['subject']=bindings[row['subject']];row['object']=bindings[row['object']]
+    return result
+
+
+def cleanup(source: Path, root: Path) -> dict:
+    """Audit and clean the frozen package without selection or scientific reclassification."""
+    require(not root.exists() and root.resolve().is_relative_to((BASE/'alignment-workflow').resolve()),'FRESH_OUTPUT_REQUIRED')
+    manifest=live.load(source/'manifest.json')
+    for name,digest in manifest['outputHashes'].items():require(r.identity.sha(source/name)==digest,'SOURCE_DRIFT')
+    require(r.identity.sha(SPEC)==manifest['inputHashes'][str(SPEC)],'ONTOLOGY_DRIFT')
+    requests=list(r.rows(source/'requests.jsonl'));require(len(requests)==1795,'REQUEST_COUNT_DRIFT')
+    bindings={};audit=Counter();sizes=[];cleaned=[]
+    for row in requests:
+        before=row['body'];body,mapping=clean_body(before);uid=row['custom_id']
+        old=json.loads(before['input']);new=json.loads(body['input'])
+        require(set(old)=={'occurrences','allowedPredicates'},'UNAUDITED_INPUT_FIELDS')
+        for e,n in zip(old['occurrences'],new['occurrences']):
+            require(set(e)<={'occurrenceID','names','ontologyClass','sourceFamilies','versions','granularity','evidence'},'UNAUDITED_ENTITY_FIELDS')
+            require(all(set(q)=={'evidenceID','text'} for q in e['evidence']),'UNAUDITED_EVIDENCE_FIELDS')
+            restored=dict(n,occurrenceID=mapping[n['occurrenceID']])
+            if 'versions' not in restored:restored['versions']={}
+            if 'granularity' not in restored:restored['granularity']='unspecified_requires_context_review'
+            require(restored==e,'SCIENTIFIC_CONTENT_DRIFT')
+            audit['occurrenceAliases']+=1;audit['emptyVersionsRemoved']+=e.get('versions')=={}
+            audit['placeholderGranularityRemoved']+=e.get('granularity')=='unspecified_requires_context_review'
+        for oldrel,newrel in zip(old['allowedPredicates'],new['allowedPredicates']):
+            require(dict(newrel,id=newrel['signatureID'])==oldrel,'PREDICATE_DRIFT')
+            audit['redundantPredicateIDsRemoved']+=1
+        # Original operational IDs may only survive inside untouched scientific quotations/names.
+        surface=live.encode(dict(instructions=body['instructions'],schema=body['text']['format']['schema'])).decode()
+        require(not any(oid in surface for oid in mapping.values()),'INTERNAL_ID_SCHEMA_LEAK')
+        require({k:v for k,v in before.items() if k not in ('instructions','input','text')}==
+                {k:v for k,v in body.items() if k not in ('instructions','input','text')},'PROVIDER_SETTINGS_DRIFT')
+        bindings[uid]=mapping;sizes.append(len(live.encode(body)));cleaned.append(dict(row,body=body))
+    root.mkdir(parents=True)
+    for name in manifest['outputHashes']:
+        if name not in ('requests.jsonl','summary.json'):live.write(root/name,(source/name).read_bytes())
+    live.write(root/'requests.jsonl',b''.join(live.encode(row)+b'\n' for row in cleaned))
+    live.save(root/'alias-bindings.json',bindings)
+    live.save(root/'payload-audit.json',dict(requests=1795,changes=dict(audit),
+        absentAdministrativeFields=['execution history','prior recommendations/scores','eligibility/blocking/adjudication history','provenance hashes/paths'],
+        sourceTextPolicy='Exact evidence text and meaningful names/identifiers/URLs are unchanged; paths inside scientific excerpts are not pipeline metadata.',
+        responseGranularityPreserved=True))
+    summary=live.load(source/'summary.json');summary.update(approximateInputTokens=[sum(sizes)//5,sum(sizes)//3],payloadCleanup=dict(audit))
+    live.save(root/'summary.json',summary)
+    pins=dict(manifest['inputHashes']);pins[str(source/'manifest.json')]=r.identity.sha(source/'manifest.json')
+    pins[str(Path(__file__))]=r.identity.sha(Path(__file__))
+    live.save(root/'manifest.json',dict(inputHashes=pins,outputHashes={str(p.relative_to(root)):r.identity.sha(p) for p in root.iterdir() if p.is_file()}))
+    return summary
+
+
 def verify(root: Path) -> dict:
     """Verify prepared artifacts and active schema/ontology code without replaying upstream."""
     m=live.load(root/'manifest.json')
@@ -430,6 +505,13 @@ def process(root: Path, uid: str, body: dict, response: dict) -> dict:
         require(response.get('status')=='completed','INCOMPLETE_RESPONSE')
         value=transport.decode(live.provider.extract_model_output(response))
         report.update(validate(value,body));report['usage']=response.get('usage')
+        alias_path=root/'alias-bindings.json'
+        if alias_path.exists():
+            bindings=live.load(alias_path)[uid]
+            require(set(bindings)=={e['occurrenceID'] for e in json.loads(body['input'])['occurrences']},'ALIAS_BINDING_DRIFT')
+            live.save(root/'execution'/f'{uid}.resolved-hypotheses.json',resolve_output(value,bindings))
+        else:
+            require(not all(re.fullmatch(r'E[1-9][0-9]*',e['occurrenceID']) for e in json.loads(body['input'])['occurrences']),'MISSING_ALIAS_BINDINGS')
         live.save(root/'execution'/f'{uid}.hypotheses.json',value)
         live.save(root/'execution'/f'{uid}.ontology-gaps.json',value['ontologyGaps'])
     except Exception as exc:
@@ -483,18 +565,19 @@ def operate(root: Path, mode: str, units: list[str] | None = None, api=None) -> 
 def main() -> None:
     """Default preparation is network-disabled; execution requires an explicit terminal subcommand."""
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('mode',choices=['refresh','prepare','verify','validate','live','submit','status','retrieve'])
+    p.add_argument('mode',choices=['cleanup','refresh','prepare','verify','validate','live','submit','status','retrieve'])
     p.add_argument('--root',type=Path,default=ROOT);p.add_argument('--units',nargs='+')
     p.add_argument('--source',type=Path,default=SOURCE)
     p.add_argument('--response',type=Path);p.add_argument('--time-limit',type=int,default=25)
     args=p.parse_args()
-    if args.mode in ('refresh','prepare','verify','validate'):
+    if args.mode in ('cleanup','refresh','prepare','verify','validate'):
         def timeout(signum,frame):
             """Stop bounded offline work; an incomplete package cannot be dispatched."""
             raise TimeoutError('OFFLINE_TIME_LIMIT: use a fresh root and --time-limit 0 in researcher terminal')
         signal.signal(signal.SIGALRM,timeout);signal.alarm(args.time_limit)
         with patch.object(socket.socket,'connect',side_effect=RuntimeError('OFFLINE')),patch.object(socket.socket,'connect_ex',side_effect=RuntimeError('OFFLINE')):
-            if args.mode=='refresh':value=refresh(args.source,args.root)
+            if args.mode=='cleanup':value=cleanup(args.source,args.root)
+            elif args.mode=='refresh':value=refresh(args.source,args.root)
             elif args.mode=='prepare':value=prepare(args.root)
             else:
                 value=verify(args.root)
