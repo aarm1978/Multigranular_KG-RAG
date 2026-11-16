@@ -1,6 +1,6 @@
 # Ontology Inventory — Study 2 (Phase 1 closure)
 
-**Current semantic version:** 0.1.7, formally validated and frozen — 77 source class declarations and 130 source relation declarations. The completed 46-test focused ontology suite passed. Researcher-confirmed HermiT classification completed in 38,931 ms, with no reported errors or inconsistencies and zero named unsatisfiable classes under `owl:Nothing`. Validated OWL SHA-256: `ac64435ca02a703bdee8168a045a3897d7f6f5be1a8e25e6cdf485c66c85e0fa`. See `ontology_formalization.md` §13 for scope and limitations; §12 preserves the v0.1.6 record. Earlier authorities and extraction/evaluation artifacts remain unchanged.
+**Current semantic version:** 0.1.8 — 77 source class declarations and 132 source relation declarations. The 49-test structural suite passed. Researcher-reported HermiT classification in Protégé 5.6.5 on 2026-11-16 completed in 37,504 ms, with no reported errors or observed unsatisfiable classes. No separate OWL 2 DL profile check is claimed. OWL SHA-256: `07ee34ea844b791d6e261263bebe4adb0665176c185bf8eff99329bd03c6b913`. See `ontology_formalization.md` §14; historical release records remain intact.
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 **Companion to `Study2_Ontology_v0.1.md` (concepts + namespaces §3.1). Vocabulary reuse verified (validation 1); schema fit-checked on 6 real artifacts (validation 2, Etapa A) — GO, with the schema-change log below applied.**
@@ -431,7 +431,7 @@ reverse from a repository; no duplicate `implementsModel` inverse is declared.
 | D-13 | `dependsOnRepository` | `Repository` → `Repository` | same | `ciroh:` (no standard); library deps use `schema:softwareRequirements` | `github.com` links/dep files | — | S/E |
 | D-14 | `forkedFrom` | `Repository` → `Repository` | same | `ciroh:` | `fork` flag (det); parent via README/Binder badge | — | flag S · **parent E** |
 | D-15 | `references` (doc→doc) | `DocumentationPage` → `DocumentationPage` | same | `dcterms:references` | internal/relative links (det) | — | S |
-| D-16 | shared-domain consolidation | any module → canonical `ComputationalModel`/`Tool`/`Variable`/`Concept`/`HydrologicFeature`/**`EvaluationMetric`/`Parameter`/`Algorithm`** | cross+same | `ciroh:` | prose (LLM) + geoconnex (det) | **the mechanism** | S (E: Variable/Algorithm) |
+| D-16 | **`consolidatesTo`** | **`owl:Thing` → `ComputationalModel`/`Tool`/`Variable`/`Concept`/`HydrologicFeature`/`EvaluationMetric`/`Parameter`/`Algorithm`/`DatasetResource`/`Paper`** | cross+same | `ciroh:` | independent source-local spans or matching authoritative identifiers; resolve containing-resource versus referenced-target roles | strict identity mechanism | S |
 | D-17 | `generatedBy` | `DatasetResource` → `Repository` | cross | `prov:wasGeneratedBy` | explicit metadata/README (det/quote) | — | S explicit · F inferred |
 | D-18 | `studiesFeature`/`referencesFeature` | `Paper`/`Dataset`/`Doc` → `HydrologicFeature` | cross+same | `ciroh:` | geoconnex URI (det) + prose | yes | S/E |
 | D-19 | `announces`/`references` | `DocumentationPage`(release-note/blog) → PR(`Repository`)/page/`Tool` | cross | `ciroh:` | dated entry + PR/page links (det) | — | S |
@@ -442,6 +442,8 @@ reverse from a repository; no duplicate `implementsModel` inverse is declared.
 | D-24 | `describes` | `DocumentationPage` → `Tool`/`ComputationalModel`/`DatasetResource`/`Method` | cross | `ciroh:` | documentation body prose | yes | S |
 | D-25 | `documentedBy` | `Tool`/`ComputationalModel`/`DatasetResource`/`Method` → `DocumentationPage` | cross | `ciroh:` | inverse of `describes` | yes | S |
 | D-26 | `mentions` | `Paper`/`DatasetResource`/`Repository`/`DocumentationPage`/Publication discourse unit → `ComputationalModel`/`Tool`/`DatasetMention`/`DatasetResource`/`Variable`/`Concept`/`HydrologicFeature`/`NamedPlace`/`EvaluationMetric`/`Parameter`/`Algorithm`/`Repository`/`Organization` | intra+cross+same | `mito:mentions` (MiTO; reference-only reuse anchor) | pipeline-derived from accepted evidence-backed entity occurrence; discourse→entity requires strict evidence containment | yes | S |
+| D-27 | `isVersionOf` | `ComputationalModel` → `ComputationalModel` | cross+same | `dcterms:isVersionOf` (reuse annotation) | source-local quotations jointly establish release and specific general-model referent | no; nonidentity | E |
+| D-28 | `isVariantOf` | `Algorithm` → `Algorithm` | cross+same | `ciroh:` | explicit named variant/type relationship; co-use, co-listing or similar names insufficient | no; nonidentity | E |
 
 **D-26 generic mention semantics.** `mentions` is the weak fallback relation for an explicit, evidence-supported semantic mention when no stronger role-specific relation represents the same source→target occurrence. It does **not** imply use, study role, evaluation, reporting, description, implementation, citation, or other stronger semantics. The Publication discourse-unit branch comprises the 21 accepted discourse classes (`Background`, `Theme`, `ResearchProblem`, `ResearchQuestion`, `ResearchGoal`, `ResearchSignificance`, `Definition`, `TheoreticalBasis`, `Method`, `Experiment`, `Examples`, `Finding`, `Discussion`, `RelatedResearch`, `Limitation`, `Conclusion`, `Contribution`, `FutureWork`, `Hypothesis`, `Claim`, `DataDescription`). The bounded target range uses shared superclasses where available (`ComputationalModel`, `HydrologicFeature`) rather than enumerating their concrete subtypes.
 
@@ -546,3 +548,13 @@ all other declarations, and historical extraction authorities are unchanged.
 The shared generated OWL properties already included these union members through
 Publication branches. Formal validation is recorded in `ontology_formalization.md`
 §13; it does not establish empirical extraction quality or authorize migration.
+
+**v0.1.8 alignment amendment.** D-16 adds only Paper and DatasetResource to its
+range, retaining strict identity and original provenance. It does not equate releases,
+workflow executions, containing resources with referenced targets, or a HydroShare
+JupyterHub resource with the application. D-27 is a nontransitive, nonidentity
+release-to-general-model relationship, not an implementation-instance link or a
+license to invent a family node from an unspecified label. D-28 is an evidenced,
+directed algorithm variant relationship, not OWL class subsumption. No class is added;
+all other v0.1.7 declarations survive. Formalization, tests, local import changes and
+manual reasoner-report limitations are recorded in `ontology_formalization.md` §14.

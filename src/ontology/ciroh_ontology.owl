@@ -14,7 +14,7 @@
   <owl:imports rdf:resource="http://www.w3.org/2004/02/skos/core"/>
   <owl:imports rdf:resource="http://purl.org/net/p-plan"/>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts</rdfs:comment>
-  <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.1.7</owl:versionInfo>
+  <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.1.8</owl:versionInfo>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Generated from src/ontology/ontology_spec.yaml by build_ontology.py.</rdfs:comment>
 </owl:Ontology>
 
@@ -135,16 +135,18 @@
         <rdf:Description rdf:about="#EvaluationMetric"/>
         <rdf:Description rdf:about="#Parameter"/>
         <rdf:Description rdf:about="#Algorithm"/>
+        <rdf:Description rdf:about="#DatasetResource"/>
+        <rdf:Description rdf:about="#Paper"/>
       </owl:unionOf>
     </owl:Class>
   </rdfs:range>
   <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">D-16</inventoryId>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: D-16</rdfs:comment>
   <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S</sourceStatus>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: shared-domain consolidation — the mechanism; canonical-entity linking</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Strict same-referent occurrence-to-canonical linking for domain entities and identifiable artifact records, preserving original nodes and provenance. Does not equate distinct model releases, general model families with specific releases, workflow executions, referenced targets with containing resources, or a HydroShare JupyterHub resource record with the running application.</rdfs:comment>
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
-  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: prose (LLM) + geoconnex (det)</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: independent source-local evidence spans or matching authoritative identifiers (e.g., DOI, HydroShare ID, geoconnex); resolve containing-resource versus referenced-target roles</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>
@@ -1136,6 +1138,34 @@
   <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dcterms:isPartOf</reuseAnchor>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: dcterms:isPartOf</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: path/folder (det)</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#isVariantOf">
+  <rdfs:domain rdf:resource="#Algorithm"/>
+  <rdfs:range rdf:resource="#Algorithm"/>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">D-28</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: D-28</rdfs:comment>
+  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">E</sourceStatus>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Nonidentity algorithm variant/specialization link, distinct from software release versioning and from OWL class subsumption. Require supported direction and abstain on ambiguous algorithm names or unspecified relationships.</rdfs:comment>
+  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ciroh:</reuseAnchor>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: ciroh:</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: source-bound quotation explicitly identifying a named algorithm as a variant or type of another named algorithm; co-listing, co-use, and name similarity do not suffice</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#isVersionOf">
+  <rdfs:domain rdf:resource="#ComputationalModel"/>
+  <rdfs:range rdf:resource="#ComputationalModel"/>
+  <inventoryId rdf:datatype="http://www.w3.org/2001/XMLSchema#string">D-27</inventoryId>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inventory ID: D-27</rdfs:comment>
+  <sourceStatus rdf:datatype="http://www.w3.org/2001/XMLSchema#string">E</sourceStatus>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spec note: Nonidentity release-to-general-model correspondence; not strict identity, not a relation between arbitrary unversioned mentions, and not transitive. Do not infer a general-model canonical node solely from an underspecified label or confuse versions with implementation instances.</rdfs:comment>
+  <reuseAnchor rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dcterms:isVersionOf</reuseAnchor>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reuse anchor: dcterms:isVersionOf</rdfs:comment>
+  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Evidence locus: independent source-local quotations jointly establishing a named model release and its specific general-model referent; no direct cross-artifact citation required</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Merged conceptual relation from ontology_spec.yaml.</rdfs:comment>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Global evidence policy: asserted edges require evidence in extracted KG data.</rdfs:comment>
 </owl:ObjectProperty>

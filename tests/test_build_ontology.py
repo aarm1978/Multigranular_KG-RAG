@@ -23,6 +23,7 @@ OWL_PATH = PROJECT_ROOT / "src/ontology/ciroh_ontology.owl"
 BUILDER_PATH = PROJECT_ROOT / "src/ontology/build_ontology.py"
 INVENTORY_PATH = PROJECT_ROOT / "docs/ontology_inventory.md"
 HISTORICAL_015 = PROJECT_ROOT / "tests/fixtures/ontology/v0.1.5"
+HISTORICAL_017 = PROJECT_ROOT / "tests/fixtures/ontology/v0.1.7"
 HUB_OUTPUT_PATH = PROJECT_ROOT / "data/interim/documents/ciroh_hub_nodes_edges.json"
 FROZEN_OUTPUT_HASHES = {
     PROJECT_ROOT / "data/interim/papers/publication_nodes_edges.json": "675049dae5c3dfed6f492ad0aa79e27fc1a9b37d0ecbc13ab3cf1a69cdb8efaf",
@@ -188,6 +189,8 @@ GLOBAL_RELATION_BRANCHES = [
     ("D-24", {"DocumentationPage"}, {"Tool", "ComputationalModel", "DatasetResource", "Method"}, {"D-24", "C-DC07", "C-DC16", "C-DC27", "C-DC28"}, "mechanism", "Parent property plus four typed description subproperties"),
     ("D-25", {"Tool", "ComputationalModel", "DatasetResource", "Method"}, {"DocumentationPage"}, {"D-25"}, "global", "Inverse documentation relation"),
     ("D-26", D26_DOMAIN, D26_RANGE, {"D-26"}, "global", "Researcher-approved weak generic semantic mention relation"),
+    ("D-27", {"ComputationalModel"}, {"ComputationalModel"}, {"D-27"}, "global", "Nonidentity release-to-general-model correspondence"),
+    ("D-28", {"Algorithm"}, {"Algorithm"}, {"D-28"}, "global", "Nonidentity algorithm variant relationship"),
 ]
 
 
@@ -837,10 +840,10 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
             self.assertIn(technical_id, inventory_text)
 
     def test_global_relation_branches_have_no_unexplained_gap(self) -> None:
-        """Every D-01 through D-26 branch has a checked formal realization."""
+        """Every D-01 through D-28 branch has a checked formal realization."""
         relations = {relation["id"]: relation for relation in load_spec()["relations"]}
         audited_globals = {entry[0] for entry in GLOBAL_RELATION_BRANCHES}
-        self.assertEqual(audited_globals, {f"D-{index:02d}" for index in range(1, 27)})
+        self.assertEqual(audited_globals, {f"D-{index:02d}" for index in range(1, 29)})
 
         for global_id, domains, ranges, relation_ids, mode, rationale in GLOBAL_RELATION_BRANCHES:
             with self.subTest(global_id=global_id, domains=sorted(domains), mode=mode):
@@ -918,19 +921,78 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
             )
 
 
+class Ontology018StructuralTests(unittest.TestCase):
+    """Check the researcher-supplied additive amendment without invoking a reasoner."""
+
+    def test_exact_v017_preservation_and_authorized_delta(self) -> None:
+        """All old declarations survive, except the explicitly extended D-16 metadata."""
+        old = yaml.safe_load((HISTORICAL_017 / "ontology_spec.yaml").read_text())
+        new = load_spec()
+        self.assertEqual(new["ontology"]["version"], "0.1.8")
+        self.assertEqual(parse_owl().find("owl:Ontology/owl:versionInfo", NS).text, "0.1.8")
+        self.assertEqual(new["classes"], old["classes"])
+        before = {r["id"]: r for r in old["relations"]}
+        after = {r["id"]: r for r in new["relations"]}
+        self.assertEqual(set(after)-set(before), {"D-27", "D-28"})
+        self.assertEqual(len(after), len(new["relations"]))
+        for key, declaration in before.items():
+            retained = dict(after[key])
+            if key == "D-16":
+                self.assertEqual(set(retained["range"]), set(declaration["range"]) | {"DatasetResource", "Paper"})
+                for field in ("range", "evidence", "note"):
+                    retained[field] = declaration[field]
+            self.assertEqual(retained, declaration, key)
+        for key in set(old)-{"ontology", "relations"}:
+            self.assertEqual(new[key], old[key], key)
+        self.assertEqual(len(parse_owl().findall("owl:ObjectProperty", NS)), 94)
+        self.assertEqual(len(parse_owl().findall("owl:DatatypeProperty", NS)), 20)
+
+    def test_d16_extended_generated_range(self) -> None:
+        """Only the two approved artifact classes extend strict consolidation."""
+        prop = entity_for_inventory_id(parse_owl(), "D-16")
+        expected = {"ComputationalModel", "Tool", "Variable", "Concept", "HydrologicFeature",
+                    "EvaluationMetric", "Parameter", "Algorithm", "DatasetResource", "Paper"}
+        self.assertEqual(property_expression_members(prop, "domain"), {"Thing"})
+        self.assertEqual(property_expression_members(prop, "range"), expected)
+        self.assertNotIn("Workflow", expected)
+
+    def test_nonidentity_properties_and_no_inference_characteristics(self) -> None:
+        """Version and variant predicates preserve direction, anchors and nonidentity structure."""
+        root = parse_owl()
+        for identifier, name, cls, anchor in (
+            ("D-27", "isVersionOf", "ComputationalModel", "dcterms:isVersionOf"),
+            ("D-28", "isVariantOf", "Algorithm", "ciroh:"),
+        ):
+            with self.subTest(identifier=identifier):
+                rel = relation_by_id(identifier)
+                self.assertEqual((rel["name"], rel["domain"], rel["range"], rel["anchor"]), (name, cls, cls, anchor))
+                self.assertFalse(rel["consol"])
+                prop = entity_for_inventory_id(root, identifier)
+                self.assertEqual(property_inventory_ids(prop), {identifier})
+                self.assertEqual(property_expression_members(prop, "domain"), {cls})
+                self.assertEqual(property_expression_members(prop, "range"), {cls})
+                if identifier == "D-27":
+                    self.assertIn(anchor, {x.text for x in prop.findall("ciroh:reuseAnchor", NS)})
+                self.assertFalse(prop.findall("owl:equivalentProperty", NS))
+                self.assertFalse(prop.findall("owl:propertyChainAxiom", NS))
+                self.assertFalse(prop.findall("owl:sameAs", NS))
+                self.assertFalse(prop.findall("rdf:type", NS))
+                self.assertFalse(prop.findall("rdfs:subPropertyOf", NS))
+
+
 class Ontology017CandidateTests(unittest.TestCase):
     """Check the prospective amendment without migrating frozen outputs."""
 
     def test_candidate_artifact_hash_and_property_counts(self) -> None:
         """Pin the build candidate, not a claim of completed HermiT validation."""
-        self.assertEqual(hashlib.sha256(OWL_PATH.read_bytes()).hexdigest(), "ac64435ca02a703bdee8168a045a3897d7f6f5be1a8e25e6cdf485c66c85e0fa")
-        root = parse_owl()
+        self.assertEqual(hashlib.sha256((HISTORICAL_017 / "ciroh_ontology.owl").read_bytes()).hexdigest(), "ac64435ca02a703bdee8168a045a3897d7f6f5be1a8e25e6cdf485c66c85e0fa")
+        root = ET.parse(HISTORICAL_017 / "ciroh_ontology.owl").getroot()
         self.assertEqual(len(root.findall("owl:ObjectProperty", NS)), 92)
         self.assertEqual(len(root.findall("owl:DatatypeProperty", NS)), 20)
 
     def test_only_approved_v017_source_changes(self) -> None:
         """Reversing the version and two ranges recovers exact frozen v0.1.6 bytes."""
-        raw = SPEC_PATH.read_bytes()
+        raw = (HISTORICAL_017 / "ontology_spec.yaml").read_bytes()
         self.assertEqual(raw.count(b'version: "0.1.7"'), 1)
         restored = raw.replace(b'version: "0.1.7"', b'version: "0.1.6"')
         for identifier in ("C-C15", "C-DC25"):
@@ -980,9 +1042,9 @@ class Ontology017CandidateTests(unittest.TestCase):
     def test_candidate_version_counts_and_approved_source_delta(self) -> None:
         """Retain the 0.1.6 additions/notes and only the approved 0.1.7 ranges."""
         old = yaml.safe_load((HISTORICAL_015 / "ontology_spec.yaml").read_text())
-        new = load_spec()
+        new = yaml.safe_load((HISTORICAL_017 / "ontology_spec.yaml").read_text())
         self.assertEqual(new["ontology"]["version"], "0.1.7")
-        self.assertEqual(parse_owl().find("owl:Ontology/owl:versionInfo", NS).text, "0.1.7")
+        self.assertEqual(ET.parse(HISTORICAL_017 / "ciroh_ontology.owl").getroot().find("owl:Ontology/owl:versionInfo", NS).text, "0.1.7")
         self.assertEqual((len(new["classes"]), len(new["relations"])), (77, 130))
         for section, additions in (("classes", {"A-D13"}), ("relations", {"C-D27", "C-D28", "C-D29"})):
             before = {x["id"]: x for x in old[section]}
@@ -1008,7 +1070,7 @@ class Ontology017CandidateTests(unittest.TestCase):
 
     def test_previous_generated_iris_and_branches_remain(self) -> None:
         """Preserve prior OWL entities, imports, subclass and property branches."""
-        old = ET.parse(HISTORICAL_015 / "ciroh_ontology.owl").getroot()
+        old = ET.parse(HISTORICAL_017 / "ciroh_ontology.owl").getroot()
         new = parse_owl()
         current = {e.get(RDF_ABOUT): e for e in new if e.get(RDF_ABOUT) is not None}
         for entity in old:

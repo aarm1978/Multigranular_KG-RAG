@@ -2,11 +2,7 @@
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 
-**Current semantic version:** 0.1.7, formally validated and frozen following
-researcher-confirmed manual HermiT classification. See §13 for the exact artifact
-hash, approved range extensions, validation result and limitations. The v0.1.6
-record in §12 and all earlier authorities remain historical and unchanged.
-This freeze does not migrate extraction, production, or evaluation authorities.
+**Current semantic version:** 0.1.8, formalized following structural verification and researcher-reported manual HermiT classification. See §14 for artifact hashes and validation limits; §13 retains the v0.1.7 record.
 
 **Purpose.** This document records the *formalization* phase: how the validated
 conceptual schema was translated into a machine-readable OWL/RDF ontology, the
@@ -789,3 +785,61 @@ correctness, extraction completeness or accuracy, source-level evidence validity
 identity alignment, or consistency of every instance graph. No extraction pipeline,
 production queue, provider artifact, or historical output is migrated by this freeze.
 The OWL was not regenerated and the builder was not modified during finalization.
+
+
+## 14. Ontology v0.1.8 — Step 14 alignment formalization (2026-11-16)
+
+The researcher-supplied `ontology_spec.yaml` is authoritative. The existing
+`build_ontology.py` was executed unchanged to generate `ciroh_ontology.owl`.
+
+| ID | Change | Boundary |
+|---|---|---|
+| D-16 | Add Paper and DatasetResource to the consolidatesTo range; domain remains owl:Thing | Strict same-referent occurrence-to-canonical linking. Independent source-local spans or authoritative identifiers may support it; direct cross-artifact citation is not required. Preserve containing-resource/reference-target roles and provenance. |
+| D-27 | isVersionOf: ComputationalModel → ComputationalModel; reuse anchor dcterms:isVersionOf | Nonidentity release-to-specific-general-model correspondence; not transitive. Underspecified mentions do not establish a family anchor. |
+| D-28 | isVariantOf: Algorithm → Algorithm; CIROH property | Nonidentity variant/specialization, explicitly evidenced and directed; neither release versioning nor OWL class subsumption. |
+
+No Workflow range extension, new class, identity equivalence or production graph
+migration is introduced. D-27/D-28 have status E and `consol: false`. The existing
+builder records reuse anchors as annotations; D-27's anchor does not assert OWL
+property equivalence or import additional DCMI axioms.
+
+### 14.1 Structure and backward compatibility
+
+There are **77 source class declarations, 132 source relation declarations,
+53 minted CIROH classes, 22 referenced external classes, 94 object properties,
+20 datatype properties and 6 direct OWL imports**. The focused suite passed
+**49 tests** during build/structural verification and was rerun during formalization.
+It checks exact preservation of v0.1.7 source declarations except the authorized
+D-16 range/evidence/note changes, the two new signatures, retained generated IRIs
+and branches, and byte-deterministic generation. Exact v0.1.7 YAML and OWL are
+preserved in `tests/fixtures/ontology/v0.1.7/`; older fixtures remain unchanged.
+Existing instance graphs and extraction/model authorities are not migrated.
+
+### 14.2 Researcher-reported manual HermiT verification
+
+On **2026-11-16**, the researcher reported that **HermiT in Protégé 5.6.5**
+completed classification in **37,504 ms**, with **no reported errors or observed
+unsatisfiable classes**. This records the researcher's manual result, not a
+reasoner run by Codex. The HermiT version and a complete import-closure audit
+were not supplied. **No separate OWL 2 DL profile check was performed or claimed.**
+Reasoner classification does not validate scientific identity, source evidence,
+model accuracy or production instance-graph correctness.
+
+The pending local catalog changes preserve the researcher's import configuration:
+`http://www.essepuntato.it/2010/06/literalreification/` and
+`http://purl.org/spar/literal` resolve to `imports/literal.xml`. The existing
+P-Plan mapping remains. The supplied Literal document is retained unchanged,
+including its third-party axioms; this is local import resolution, not an added
+CIROH relation or proof of complete third-party resolution.
+
+### 14.3 Formalized artifact hashes
+
+These hashes identify the local files retained at formalization. They were computed
+by Codex; no separately supplied hash attestation of the manual session is implied.
+
+| File | SHA-256 |
+|---|---|
+| `src/ontology/ontology_spec.yaml` | `bf129bc9937e2e25a8988847315445875e369ee6d518dea3651ad5e55a5dbf77` |
+| `src/ontology/ciroh_ontology.owl` | `07ee34ea844b791d6e261263bebe4adb0665176c185bf8eff99329bd03c6b913` |
+| `src/ontology/catalog-v001.xml` | `2a3f631ee12ec8745339ec3dadd2b8a8ce6aff12e6948d038f3de6b35a8cf7bc` |
+| `src/ontology/imports/literal.xml` | `853bc5d52c211238971afcdb743b6158565879119239f7f22f7ed0925ea3c462` |

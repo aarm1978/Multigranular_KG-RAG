@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <catalog prefer="public" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
     <uri id="P-Plan local import" name="http://purl.org/net/p-plan" uri="imports/p-plan.owl"/>
+    <uri id="Literal Reification local import" name="http://www.essepuntato.it/2010/06/literalreification/" uri="imports/literal.xml"/>
+    <uri id="SPAR Literal local import" name="http://purl.org/spar/literal" uri="imports/literal.xml"/>
     <group id="Folder Repository, directory=, recursive=true, Auto-Update=true, version=2" prefer="public" xml:base="">
-        <uri id="Automatically generated entry, Timestamp=1784848114093" name="http://purl.org/net/p-plan" uri="imports/p-plan.owl"/>
-        <uri id="Automatically generated entry, Timestamp=1784848114093" name="https://w3id.org/ciroh/ontology" uri="ciroh_ontology.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1794852391772" name="http://purl.org/net/p-plan" uri="imports/p-plan.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1794852391772" name="https://w3id.org/ciroh/ontology" uri="ciroh_ontology.owl"/>
     </group>
 </catalog>

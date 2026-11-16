@@ -5,24 +5,27 @@
 > exhaustive human-readable schema with stable IDs; `src/ontology/ontology_spec.yaml`
 > is the current machine-readable authority; and `ontology_formalization.md` records
 > formalization history, exact hashes, generated-artifact counts, and reasoner
-> validation. The current formally frozen ontology release is **0.1.7**.
+> validation. The current formally frozen ontology release is **0.1.8**.
 
-**Current 0.1.7 summary.** The ontology retains 77 source class declarations and
-130 source relation declarations: 53 minted CIROH classes, 22 referenced external
-classes, 92 object properties, 20 datatype properties, and 6 direct OWL imports.
-The only declaration changes from v0.1.6 extend C-C15 `usesDataset` (Repository)
-and C-DC25 `mentionsDataset` (DocumentationPage) to the range
-`DatasetResource | DatasetMention`. Use and weak mention remain distinct; no
-identifier or canonical identity is inferred for an unresolved DatasetMention.
-The generated OWL SHA-256 is
-`ac64435ca02a703bdee8168a045a3897d7f6f5be1a8e25e6cdf485c66c85e0fa`.
-The completed 46-test structural suite passed. The researcher subsequently confirmed
-HermiT classification in Protégé completed successfully in **38,931 ms**, with no
-reported reasoner errors or inconsistencies and zero named unsatisfiable classes
-under `owl:Nothing`. v0.1.7 is formally validated and frozen; see
-`ontology_formalization.md` §13 for the exact validation scope and limitations.
-Historical v0.1.6 and earlier authorities remain intact; extraction and production
-authority migration is separate.
+**Current 0.1.8 summary.** The ontology has 77 source class declarations and
+132 relation declarations: 53 minted CIROH classes, 22 referenced external classes,
+94 object properties, 20 datatype properties and 6 direct OWL imports.
+D-16 strict consolidation now admits Paper and DatasetResource targets, preserving
+source-local evidence and artifact/reference roles. D-27 `isVersionOf` relates a
+ComputationalModel release to its supported general-model referent, with
+`dcterms:isVersionOf` recorded as reuse anchor. D-28 `isVariantOf` relates an
+algorithm variant to its explicitly evidenced base algorithm (direction:
+variant → base algorithm). Both new relations are nonidentity; they neither approve
+mappings nor collapse versions or instances. No new class or Workflow consolidation
+range is introduced.
+
+All other v0.1.7 declarations and historical outputs are preserved. The unchanged
+builder and 49-test structural suite verified the generated artifact. The researcher
+reported HermiT classification in Protégé 5.6.5 on 2026-11-16 completed in 37,504 ms,
+with no reported errors or observed unsatisfiable classes. No separate OWL 2 DL
+profile check is claimed. See `ontology_formalization.md` §14 for hashes, local import
+configuration and validation limits. Extraction and production authority migration
+remain separate.
 
 > **Scope (TBox/ABox).** The schema declares all proposal classes. Instance-level
 > extraction status is `S` (supported-now), `E` (extract where evidence supports it),
