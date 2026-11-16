@@ -13,7 +13,8 @@ from jsonschema import Draft202012Validator
 from src.evaluation import step14_anchor_pilot as pilot
 
 BASE = pilot.BASE
-ROOT = BASE / 'alignment-workflow/prepared-v1'
+SOURCE = BASE / 'alignment-workflow/prepared-v1'
+ROOT = BASE / 'alignment-workflow/prepared-v018'
 SPEC = Path('src/ontology/ontology_spec.yaml')
 r = pilot.diagnostic.r
 require = pilot.require
@@ -21,6 +22,14 @@ live = pilot.live
 transport = pilot.transport
 PRIORITY = {'shared_reference_target_only', 'conceptual_similarity_only'}
 PROMPT = pilot.PROMPT + '''
+Identity may be established jointly by independent source-local evidence at compatible
+granularity; no explicit citation between source artifacts is required. Preserve artifact-to-entity
+mention/use evidence and its source role. For nonidentity entity-to-entity relations, evidence
+may likewise be evaluated jointly across source-local spans, without a direct cross-artifact
+citation, but must establish the specific predicate and direction. Never infer an
+artifact-to-artifact relationship merely because artifacts mention the same entity.
+Every admissible predicate is optional: always abstain if its evidence requirement is unmet.
+
 Also propose directed typed nonidentity relationships only when exact quotations affirm
 that relationship between the named endpoints. Use an allowed signatureID and its stated
 meaning, direction, evidence constraints and domain/range. Similarity or shared reference
@@ -339,6 +348,70 @@ def prepare(root: Path) -> dict:
     return summary
 
 
+def refresh_body(body: dict, spec: dict) -> dict:
+    """Update only instructions, admissible predicates and schema; preserve occurrences exactly."""
+    from copy import deepcopy
+    result=deepcopy(body);payload=json.loads(body['input'])
+    endpoints={e['occurrenceID']:e for e in payload['occurrences']}
+    ids=list(endpoints);hierarchy=ancestors(spec);relations=[]
+    for rel in allowed_relations(ids,endpoints,spec,hierarchy):
+        relations.append(dict(signatureID=rel['id'],id=rel['id'],name=rel['name'],domain=rel['domain'],range=rel['range'],
+            evidenceRequirement=rel.get('evidence',''),meaning=rel.get('note',''),
+            compatibleSubjectClasses=sorted({e['ontologyClass'] for e in endpoints.values() if fits(e['ontologyClass'],rel['domain'],hierarchy)}),
+            compatibleObjectClasses=sorted({e['ontologyClass'] for e in endpoints.values() if fits(e['ontologyClass'],rel['range'],hierarchy)})))
+    payload['allowedPredicates']=relations
+    result['input']=live.encode(payload).decode();result['instructions']=PROMPT
+    result['text']['format']['schema']=response_schema(payload)
+    return result
+
+
+def refresh(source: Path, root: Path) -> dict:
+    """Migrate saved preparation without discovery, selection or upstream evaluation."""
+    require(not root.exists() and root.resolve().is_relative_to((BASE/'alignment-workflow').resolve()),'FRESH_OUTPUT_REQUIRED')
+    manifest=live.load(source/'manifest.json')
+    for name,digest in manifest['outputHashes'].items():
+        require(r.identity.sha(source/name)==digest,'SOURCE_PACKAGE_DRIFT:'+name)
+    spec=yaml.safe_load(SPEC.read_text());require(spec['ontology']['version']=='0.1.8','ONTOLOGY_VERSION')
+    requests=list(r.rows(source/'requests.jsonl'));require(len(requests)==1795,'REQUEST_COUNT_DRIFT')
+    root.mkdir(parents=True)
+    replace={'requests.jsonl','mapping-proposals.jsonl','ontology-signatures.jsonl','ontology-gaps.md','summary.json'}
+    for name in manifest['outputHashes']:
+        if name not in replace:live.write(root/name,(source/name).read_bytes())
+    modified=0;sizes=[];counts=Counter();empty=[];added_options=Counter()
+    with (root/'requests.jsonl').open('xb') as f:
+        for request in requests:
+            before=request['body'];after=refresh_body(before,spec)
+            old_payload=json.loads(before['input']);new_payload=json.loads(after['input'])
+            require(old_payload['occurrences']==new_payload['occurrences'],'EVIDENCE_DRIFT')
+            old_ids={x['id'] for x in old_payload['allowedPredicates']};new_ids={x['id'] for x in new_payload['allowedPredicates']}
+            require(old_ids<=new_ids,'PREDICATE_REMOVAL');added_options.update(new_ids-old_ids);counts.update(new_ids)
+            if not new_ids:empty.append(request['custom_id'])
+            modified+=before!=after;sizes.append(len(live.encode(after)))
+            f.write(live.encode(dict(request,body=after))+b'\n')
+    hierarchy=ancestors(spec);d16=next(x for x in spec['relations'] if x['id']=='D-16');holds=0
+    with (root/'mapping-proposals.jsonl').open('xb') as f:
+        for row in r.rows(source/'mapping-proposals.jsonl'):
+            allowed=all(fits(c,d16['range'],hierarchy) for c in row['savedGroup']['ontologyClass'])
+            row['representationGate']='D-16_signature_compatible' if allowed else 'ontology_range_decision_required'
+            holds+=not allowed;f.write(live.encode(row)+b'\n')
+    with (root/'ontology-signatures.jsonl').open('xb') as f:
+        for rel in spec['relations']:f.write(live.encode(rel)+b'\n')
+    summary=live.load(source/'summary.json')
+    summary.update(ontologyVersion='0.1.8',requestsRetained=len(requests),requestsModified=modified,requestsAdded=0,requestsRemoved=0,
+        newlyAvailablePredicateRequests=dict(added_options),remainingPredicateEmptyUnits=empty,
+        requestsWithoutCompatibleNonidentityPredicate=len(empty),mappingOntologyRangeHolds=holds,
+        approximateInputTokens=[sum(sizes)//5,sum(sizes)//3])
+    live.save(root/'summary.json',summary)
+    (root/'ontology-gaps.md').write_text('# Remaining holds under v0.1.8\n\n'
+        'Workflow consolidation remains outside D-16. D-27 and D-28 availability is not evidence that a relation holds. '
+        'Identity and directed nonidentity relations may use joint source-local evidence; abstention remains available. '
+        'Do not conflate versions, instances, co-use or shared names. No ontology amendments or approvals are generated.\n')
+    pins=dict(manifest['inputHashes']);pins[str(source/'manifest.json')]=r.identity.sha(source/'manifest.json')
+    for path in (SPEC,Path(__file__),Path(pilot.__file__),Path(transport.__file__)):pins[str(path)]=r.identity.sha(path)
+    live.save(root/'manifest.json',dict(inputHashes=pins,outputHashes={str(p.relative_to(root)):r.identity.sha(p) for p in root.iterdir() if p.is_file()}))
+    return summary
+
+
 def verify(root: Path) -> dict:
     """Verify prepared artifacts and active schema/ontology code without replaying upstream."""
     m=live.load(root/'manifest.json')
@@ -410,17 +483,19 @@ def operate(root: Path, mode: str, units: list[str] | None = None, api=None) -> 
 def main() -> None:
     """Default preparation is network-disabled; execution requires an explicit terminal subcommand."""
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('mode',choices=['prepare','verify','validate','live','submit','status','retrieve'])
+    p.add_argument('mode',choices=['refresh','prepare','verify','validate','live','submit','status','retrieve'])
     p.add_argument('--root',type=Path,default=ROOT);p.add_argument('--units',nargs='+')
+    p.add_argument('--source',type=Path,default=SOURCE)
     p.add_argument('--response',type=Path);p.add_argument('--time-limit',type=int,default=25)
     args=p.parse_args()
-    if args.mode in ('prepare','verify','validate'):
+    if args.mode in ('refresh','prepare','verify','validate'):
         def timeout(signum,frame):
             """Stop bounded offline work; an incomplete package cannot be dispatched."""
             raise TimeoutError('OFFLINE_TIME_LIMIT: use a fresh root and --time-limit 0 in researcher terminal')
         signal.signal(signal.SIGALRM,timeout);signal.alarm(args.time_limit)
         with patch.object(socket.socket,'connect',side_effect=RuntimeError('OFFLINE')),patch.object(socket.socket,'connect_ex',side_effect=RuntimeError('OFFLINE')):
-            if args.mode=='prepare':value=prepare(args.root)
+            if args.mode=='refresh':value=refresh(args.source,args.root)
+            elif args.mode=='prepare':value=prepare(args.root)
             else:
                 value=verify(args.root)
                 if args.mode=='validate':

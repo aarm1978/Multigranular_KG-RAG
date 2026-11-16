@@ -22,6 +22,23 @@ def fixture():
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_refresh_preserves_evidence_and_adds_only_applicable_predicates(self):
+        """Version/variant options follow actual types, without changing scientific inputs."""
+        spec=w.yaml.safe_load(w.SPEC.read_text())
+        for cls,expected in [('ProcessBasedModel','D-27'),('Algorithm','D-28'),('Workflow',None)]:
+            body,_=fixture();payload=json.loads(body['input'])
+            for e in payload['occurrences']:e['ontologyClass']=cls
+            payload['allowedPredicates']=[];body['input']=json.dumps(payload)
+            before=json.dumps(body)
+            new=w.refresh_body(body,spec);updated=json.loads(new['input'])
+            self.assertEqual(updated['occurrences'],payload['occurrences'])
+            self.assertEqual(json.dumps(body),before)
+            ids={x['id'] for x in updated['allowedPredicates']}
+            if expected:self.assertIn(expected,ids)
+            else:self.assertEqual(ids,set())
+            self.assertIn('abstention',new['text']['format']['schema']['properties']['assessments']['items']['properties']['category']['enum'])
+            self.assertNotIn('D-16',ids)
+
     def test_existing_hierarchy_and_signature(self):
         spec=w.yaml.safe_load(w.SPEC.read_text());h=w.ancestors(spec)
         self.assertTrue(w.fits('ProcessBasedModel','ComputationalModel',h))

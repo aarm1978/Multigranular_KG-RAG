@@ -76,3 +76,50 @@ python -m unittest discover -s tests -p test_step14_alignment_workflow.py -v
 ```
 
 Skip live to submit the whole package directly. Live and Batch consume identical bodies/schema and reuse the existing `BatchAPI`, credential loader, immutable writers and per-unit dispatch claims. No credential is accessed during offline preparation or verification. A unit attempted in one transport cannot be dispatched in the other. Existing Batch size limits are enforced. Generation POSTs are not retried; interrupted or uncertain execution requires receipt reconciliation, never blind resubmission. Read-only status/retrieval can repeat. Native responses/error files, actual usage, validated hypotheses and separately labeled gaps remain under ignored `execution/`. No command writes identities or production graph mappings.
+
+## v0.1.8 refresh — current execution package
+
+The current default package is `var/study2_step14/alignment-workflow/prepared-v018/`.
+The `prepared-v1` population and all its files remain unchanged. `refresh` verifies
+that package's saved hashes and transforms its requests without running selection,
+candidate discovery, upstream evaluations or the original preparation routine.
+The earlier sections record the v0.1.7 checkpoint, not current predicate availability.
+
+All **1,795 requests are retained and modified** (clarified evidence instructions);
+**zero added or removed**. Original occurrence payloads, quotation aliases, unit IDs,
+routing inventories, decisions and provenance are preserved. Only instructions,
+admissible ontology signatures, response schemas, representation gates and derived
+summary/manifest files change. D-27 becomes available in **984 requests**, D-28 in
+**104**. **W01566 and W01572** remain predicate-empty Workflow cases. Ten artifact
+mapping range holds resolve under D-16; the Workflow mapping remains held. None
+of these changes approves identities or establishes a relation's scientific validity.
+
+Identity may use independent source-local spans without cross-artifact citations.
+Artifact-to-entity mention/use evidence retains its artifact role. Nonidentity
+entity-to-entity relations may use jointly evaluated source-local spans, but must
+support the specific predicate and direction. Shared mentions do not establish an
+artifact-to-artifact relation. Co-occurrence, similarity, version numbers alone and
+predicate availability do not force an edge; abstention remains valid. D-27/D-28
+use the exact v0.1.8 signatures and evidence requirements, not a universal family
+or variant rule. The original acceptance and evaluation gates remain in force.
+
+Approximate totals: **4.16–6.93 million input tokens**, **1.80–8.98 million output
+tokens**. These retain the existing coarse estimation method, not exact counts.
+
+```bash
+# Offline refresh (already performed; destination must be fresh)
+python -m src.evaluation.step14_alignment_workflow refresh
+# Offline verification of the current package
+python -m src.evaluation.step14_alignment_workflow verify
+# Later researcher-terminal execution, using unchanged transport infrastructure
+python -m src.evaluation.step14_alignment_workflow live --units W00001
+python -m src.evaluation.step14_alignment_workflow submit
+python -m src.evaluation.step14_alignment_workflow status
+python -m src.evaluation.step14_alignment_workflow retrieve
+```
+
+The historical `prepare` routine is not the v0.1.8 migration entry point; use
+`refresh`, optionally with `--source` and a fresh `--root`. No execution records
+are copied or provider calls made by refresh. Do not dispatch both package versions.
+The refresh passed eight focused synthetic tests and offline verification, including
+exact evidence preservation and applicability of new predicates.
