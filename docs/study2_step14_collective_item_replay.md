@@ -1,0 +1,20 @@
+# Step 14 collective item replay v4
+
+Contract `collective-item-replay/0.4.0` applies the same offline checks to the original pilot, stress pilot and five Batch shards. The comparison baseline is collective validation v3, including its offline replay of the first pilot. Each decoded assessment, typed relation and ontology gap keeps its original array index, model-authored object and receipt hash. Repeated membership in different windows counts as separate predictions.
+
+The reader verifies the frozen preparation manifests and the v2 coverage gate. It resolves per-request aliases and source artifact references and compares each cited quotation with the original selected evidence at its recorded index. Each Batch output body is compared with its retrieved native result under the same custom ID. Live results rely on the saved local receipts. The manifest pins the bytes used in replay. Provider completion, decoding, full-schema errors, unknown citations, duplicate partition assignments and omitted aliases have separate unit-level fields. An omitted occurrence has no invented assignment. A duplicated occurrence holds each assessment claiming it. Independent items retain their own checks.
+
+* **Assessments.** Strict identity needs a complete, same-class and inventory-compatible group, direct evidence owned by every member, a granularity explanation and the existing identifier/granularity compatibility checks. All contradictory citations and external strict-identity citations require review. Capture metadata alone cannot resolve scientific versions. A singleton distinct assessment needs its own supporting citation. An abstention may explain a comparison using another occurrence's evidence. The ledger preserves the authored evidence field and records ownership independently. A contradiction cited from a distinct singleton's own evidence requires review because its target is ambiguous.
+* **Typed relations.** Subject and object retain their original direction. Both must fit the offered ontology v0.1.8 signature and have their own supporting evidence. Additional identified sources supply context. A predicate's semantic direction and applicability to a specific release still require scientific assessment. In particular, v4 conservatively routes every D-27 proposal to review because endpoint ownership and ontology class alone cannot verify the release-to-general-model roles.
+* **Ontology gaps.** A multi-occurrence observation needs distinct supported members and a meaning. External context with ambiguous roles requires review. A singleton remains an unresolved observation about a possible missing endpoint or relationship. Its meaning and uncertainty stay attached to the original occurrence.
+
+The separate reconciliation screen compares exact strict memberships sharing occurrences. It flags protected mappings or historical approvals, competing groups, an opposed pair within a group, or a held identical membership. Opposition includes local distinct assessments and proposed version/variant relations. A distinct singleton supplies comparison context only within its original request. The screen neither selects among competing scopes nor unions them. Permission to enter later policy evaluation is limited to mechanically admissible strict items passing this screen. All other Step 14 evidence and policy gates and independent human evaluation still apply. Free-text uncertainty, semantic adequacy of the quotations, release specificity and final identity eligibility require subsequent evaluation.
+
+Run from the repository root:
+
+```bash
+python -m src.evaluation.step14_collective_item_replay replay
+python -m src.evaluation.step14_collective_item_replay verify
+```
+
+Replay publishes a fresh ignored directory at `var/study2_step14/collective-adjudication/v4/`. The item ledger holds dispositions, the unit summaries record attribution and strict-validator results, and the summary cross-tabulates v4 status by category and previous v3 status. Reason counts can overlap. To reproduce independently, supply a fresh directory with `--output` and compare the manifest and output hashes.
