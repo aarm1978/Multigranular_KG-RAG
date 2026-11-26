@@ -24,6 +24,7 @@ BUILDER_PATH = PROJECT_ROOT / "src/ontology/build_ontology.py"
 INVENTORY_PATH = PROJECT_ROOT / "docs/ontology_inventory.md"
 HISTORICAL_015 = PROJECT_ROOT / "tests/fixtures/ontology/v0.1.5"
 HISTORICAL_017 = PROJECT_ROOT / "tests/fixtures/ontology/v0.1.7"
+HISTORICAL_018 = PROJECT_ROOT / "tests/fixtures/ontology/v0.1.8"
 HUB_OUTPUT_PATH = PROJECT_ROOT / "data/interim/documents/ciroh_hub_nodes_edges.json"
 FROZEN_OUTPUT_HASHES = {
     PROJECT_ROOT / "data/interim/papers/publication_nodes_edges.json": "675049dae5c3dfed6f492ad0aa79e27fc1a9b37d0ecbc13ab3cf1a69cdb8efaf",
@@ -921,15 +922,42 @@ class OntologyFormalizationPatchTests(unittest.TestCase):
             )
 
 
+class Ontology019StructuralTests(unittest.TestCase):
+    def test_exact_source_delta(self) -> None:
+        """Pin the predecessor and compare every YAML declaration."""
+        raw = (HISTORICAL_018 / "ontology_spec.yaml").read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), "bf129bc9937e2e25a8988847315445875e369ee6d518dea3651ad5e55a5dbf77")
+        expected = yaml.safe_load(raw)
+        expected["ontology"]["version"] = "0.1.9"
+        next(r for r in expected["relations"] if r["id"] == "D-16")["range"].extend(["Repository", "Workflow"])
+        self.assertEqual(load_spec(), expected)
+
+    def test_exact_generated_delta(self) -> None:
+        """Reverse the authorized changes and compare all OWL declarations and IRIs."""
+        raw = (HISTORICAL_018 / "ciroh_ontology.owl").read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), "07ee34ea844b791d6e261263bebe4adb0665176c185bf8eff99329bd03c6b913")
+        current = parse_owl()
+        version = current.find("owl:Ontology/owl:versionInfo", NS)
+        self.assertEqual(version.text, "0.1.9")
+        version.text = "0.1.8"
+        prop = entity_for_inventory_id(current, "D-16")
+        members = prop.find("rdfs:range/owl:Class/owl:unionOf", NS)
+        for name in ("Repository", "Workflow"):
+            member = next(m for m in members if m.get(RDF_ABOUT) == "#" + name)
+            members.remove(member)
+        self.assertEqual(ET.canonicalize(ET.tostring(current), strip_text=True),
+                         ET.canonicalize(ET.tostring(ET.fromstring(raw)), strip_text=True))
+
+
 class Ontology018StructuralTests(unittest.TestCase):
     """Check the researcher-supplied additive amendment without invoking a reasoner."""
 
     def test_exact_v017_preservation_and_authorized_delta(self) -> None:
         """All old declarations survive, except the explicitly extended D-16 metadata."""
         old = yaml.safe_load((HISTORICAL_017 / "ontology_spec.yaml").read_text())
-        new = load_spec()
+        new = yaml.safe_load((HISTORICAL_018 / "ontology_spec.yaml").read_text())
         self.assertEqual(new["ontology"]["version"], "0.1.8")
-        self.assertEqual(parse_owl().find("owl:Ontology/owl:versionInfo", NS).text, "0.1.8")
+        self.assertEqual(ET.parse(HISTORICAL_018 / "ciroh_ontology.owl").getroot().find("owl:Ontology/owl:versionInfo", NS).text, "0.1.8")
         self.assertEqual(new["classes"], old["classes"])
         before = {r["id"]: r for r in old["relations"]}
         after = {r["id"]: r for r in new["relations"]}
@@ -944,12 +972,12 @@ class Ontology018StructuralTests(unittest.TestCase):
             self.assertEqual(retained, declaration, key)
         for key in set(old)-{"ontology", "relations"}:
             self.assertEqual(new[key], old[key], key)
-        self.assertEqual(len(parse_owl().findall("owl:ObjectProperty", NS)), 94)
-        self.assertEqual(len(parse_owl().findall("owl:DatatypeProperty", NS)), 20)
+        self.assertEqual(len(ET.parse(HISTORICAL_018 / "ciroh_ontology.owl").getroot().findall("owl:ObjectProperty", NS)), 94)
+        self.assertEqual(len(ET.parse(HISTORICAL_018 / "ciroh_ontology.owl").getroot().findall("owl:DatatypeProperty", NS)), 20)
 
     def test_d16_extended_generated_range(self) -> None:
         """Only the two approved artifact classes extend strict consolidation."""
-        prop = entity_for_inventory_id(parse_owl(), "D-16")
+        prop = entity_for_inventory_id(ET.parse(HISTORICAL_018 / "ciroh_ontology.owl").getroot(), "D-16")
         expected = {"ComputationalModel", "Tool", "Variable", "Concept", "HydrologicFeature",
                     "EvaluationMetric", "Parameter", "Algorithm", "DatasetResource", "Paper"}
         self.assertEqual(property_expression_members(prop, "domain"), {"Thing"})

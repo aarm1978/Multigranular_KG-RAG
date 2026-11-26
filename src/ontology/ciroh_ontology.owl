@@ -14,7 +14,7 @@
   <owl:imports rdf:resource="http://www.w3.org/2004/02/skos/core"/>
   <owl:imports rdf:resource="http://purl.org/net/p-plan"/>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts</rdfs:comment>
-  <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.1.8</owl:versionInfo>
+  <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.1.9</owl:versionInfo>
   <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Generated from src/ontology/ontology_spec.yaml by build_ontology.py.</rdfs:comment>
 </owl:Ontology>
 
@@ -137,6 +137,8 @@
         <rdf:Description rdf:about="#Algorithm"/>
         <rdf:Description rdf:about="#DatasetResource"/>
         <rdf:Description rdf:about="#Paper"/>
+        <rdf:Description rdf:about="#Repository"/>
+        <rdf:Description rdf:about="#Workflow"/>
       </owl:unionOf>
     </owl:Class>
   </rdfs:range>

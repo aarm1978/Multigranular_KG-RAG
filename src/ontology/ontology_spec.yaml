@@ -20,7 +20,7 @@ ontology:
   iri: "https://w3id.org/ciroh/ontology#"
   prefix: ciroh
   title: "Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts"
-  version: "0.1.8"
+  version: "0.1.9"
 
 # -----------------------------------------------------------------------------
 # Namespaces / imports (v0.1 §3.1).
@@ -556,7 +556,7 @@ relations:
   # ---- Global cross-artifact relations unique to Table D (not already a module C row) ----
   - {id: D-17, name: generatedBy, domain: DatasetResource, range: Repository, anchor: "prov:wasGeneratedBy", evidence: "explicit metadata/README (det/quote)", type: cross, status: S, status_note: "S explicit · F inferred"}
   - {id: D-16, name: consolidatesTo, domain: owl:Thing,
-     range: [ComputationalModel, Tool, Variable, Concept, HydrologicFeature, EvaluationMetric, Parameter, Algorithm, DatasetResource, Paper],
+     range: [ComputationalModel, Tool, Variable, Concept, HydrologicFeature, EvaluationMetric, Parameter, Algorithm, DatasetResource, Paper, Repository, Workflow],
      anchor: "ciroh:",
      evidence: "independent source-local evidence spans or matching authoritative identifiers (e.g., DOI, HydroShare ID, geoconnex); resolve containing-resource versus referenced-target roles",
      type: [cross, same], consol: true, status: S,

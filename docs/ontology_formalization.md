@@ -2,7 +2,9 @@
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 
-**Current semantic version:** 0.1.8, formalized following structural verification and researcher-reported manual HermiT classification. See §14 for artifact hashes and validation limits; §13 retains the v0.1.7 record.
+**Current build:** v0.1.9, pending manual HermiT validation. D-16 adds Repository and Workflow to its range. Its domain, evidence requirements and strict identity semantics are unchanged.
+
+**Last formally frozen version:** 0.1.8, formalized following structural verification and researcher-reported manual HermiT classification. See §14 for artifact hashes and validation limits; §13 retains the v0.1.7 record.
 
 **Purpose.** This document records the *formalization* phase: how the validated
 conceptual schema was translated into a machine-readable OWL/RDF ontology, the
@@ -843,3 +845,9 @@ by Codex; no separately supplied hash attestation of the manual session is impli
 | `src/ontology/ciroh_ontology.owl` | `07ee34ea844b791d6e261263bebe4adb0665176c185bf8eff99329bd03c6b913` |
 | `src/ontology/catalog-v001.xml` | `2a3f631ee12ec8745339ec3dadd2b8a8ce6aff12e6948d038f3de6b35a8cf7bc` |
 | `src/ontology/imports/literal.xml` | `853bc5d52c211238971afcdb743b6158565879119239f7f22f7ed0925ea3c462` |
+
+## 15. v0.1.9 structural build pending manual HermiT validation
+
+The unchanged builder generated OWL SHA-256 `cf318846d977f894dad1caa07d390e2ac2253bd2a6f8ecd1e1e43058891dc89a` from YAML SHA-256 `6df101620e6931195b1fe5eb665ff15293f702004ca155c3cdba65d63c2dd2b5`. The regression fixture under `tests/fixtures/ontology/v0.1.8/` preserves the preceding YAML and OWL.
+
+All 51 ontology regression tests passed, including structural compatibility and deterministic regeneration. Manual HermiT classification is pending.

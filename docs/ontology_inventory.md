@@ -1,6 +1,8 @@
 # Ontology Inventory — Study 2 (Phase 1 closure)
 
-**Current semantic version:** 0.1.8 — 77 source class declarations and 132 source relation declarations. The 49-test structural suite passed. Researcher-reported HermiT classification in Protégé 5.6.5 on 2026-11-16 completed in 37,504 ms, with no reported errors or observed unsatisfiable classes. No separate OWL 2 DL profile check is claimed. OWL SHA-256: `07ee34ea844b791d6e261263bebe4adb0665176c185bf8eff99329bd03c6b913`. See `ontology_formalization.md` §14; historical release records remain intact.
+**Current build:** v0.1.9, pending manual HermiT validation. D-16 adds Repository and Workflow to its range. Its domain, evidence requirements and strict identity semantics are unchanged.
+
+**Last formally frozen version:** 0.1.8 — 77 source class declarations and 132 source relation declarations. The 49-test structural suite passed. Researcher-reported HermiT classification in Protégé 5.6.5 on 2026-11-16 completed in 37,504 ms, with no reported errors or observed unsatisfiable classes. No separate OWL 2 DL profile check is claimed. OWL SHA-256: `07ee34ea844b791d6e261263bebe4adb0665176c185bf8eff99329bd03c6b913`. See `ontology_formalization.md` §14; historical release records remain intact.
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 **Companion to `Study2_Ontology_v0.1.md` (concepts + namespaces §3.1). Vocabulary reuse verified (validation 1); schema fit-checked on 6 real artifacts (validation 2, Etapa A) — GO, with the schema-change log below applied.**
@@ -431,7 +433,7 @@ reverse from a repository; no duplicate `implementsModel` inverse is declared.
 | D-13 | `dependsOnRepository` | `Repository` → `Repository` | same | `ciroh:` (no standard); library deps use `schema:softwareRequirements` | `github.com` links/dep files | — | S/E |
 | D-14 | `forkedFrom` | `Repository` → `Repository` | same | `ciroh:` | `fork` flag (det); parent via README/Binder badge | — | flag S · **parent E** |
 | D-15 | `references` (doc→doc) | `DocumentationPage` → `DocumentationPage` | same | `dcterms:references` | internal/relative links (det) | — | S |
-| D-16 | **`consolidatesTo`** | **`owl:Thing` → `ComputationalModel`/`Tool`/`Variable`/`Concept`/`HydrologicFeature`/`EvaluationMetric`/`Parameter`/`Algorithm`/`DatasetResource`/`Paper`** | cross+same | `ciroh:` | independent source-local spans or matching authoritative identifiers; resolve containing-resource versus referenced-target roles | strict identity mechanism | S |
+| D-16 | **`consolidatesTo`** | **`owl:Thing` → `ComputationalModel`/`Tool`/`Variable`/`Concept`/`HydrologicFeature`/`EvaluationMetric`/`Parameter`/`Algorithm`/`DatasetResource`/`Paper`/`Repository`/`Workflow`** | cross+same | `ciroh:` | independent source-local spans or matching authoritative identifiers; resolve containing-resource versus referenced-target roles | strict identity mechanism | S |
 | D-17 | `generatedBy` | `DatasetResource` → `Repository` | cross | `prov:wasGeneratedBy` | explicit metadata/README (det/quote) | — | S explicit · F inferred |
 | D-18 | `studiesFeature`/`referencesFeature` | `Paper`/`Dataset`/`Doc` → `HydrologicFeature` | cross+same | `ciroh:` | geoconnex URI (det) + prose | yes | S/E |
 | D-19 | `announces`/`references` | `DocumentationPage`(release-note/blog) → PR(`Repository`)/page/`Tool` | cross | `ciroh:` | dated entry + PR/page links (det) | — | S |
