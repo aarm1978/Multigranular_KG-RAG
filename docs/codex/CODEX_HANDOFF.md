@@ -1,5 +1,9 @@
 # CODEX_HANDOFF.md
 
+## Step 14 pre-production adjudication closed
+
+The [final relation closure](../study2_step14_relation_closure.md) records the scoped NWM supersession and the final unsampled populations. The 2,195 disjoint identity groups cover 8,911 occurrences, and the 104 distinct directed relation predictions retain their original evidence. Independent human evaluation remains pending.
+
 ## Ontology v0.1.9 formally frozen (2026-11-26)
 
 The researcher authorized the freeze after manual HermiT classification passed. The [formalization record, §15](../ontology_formalization.md) identifies the verified OWL and records the inferred-hierarchy inspection. The Step 14 identity-closure package below retains its original v0.1.8 representation assessment.
