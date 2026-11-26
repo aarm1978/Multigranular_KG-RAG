@@ -1,8 +1,8 @@
 # Ontology Inventory — Study 2 (Phase 1 closure)
 
-**Current build:** v0.1.9, pending manual HermiT validation. D-16 adds Repository and Workflow to its range. Its domain, evidence requirements and strict identity semantics are unchanged.
+**Formally frozen release:** v0.1.9 (2026-11-26). The researcher confirmed the manual HermiT gate passed and authorized the freeze. D-16 adds Repository and Workflow to its range. Its domain, evidence requirements and strict identity semantics are unchanged.
 
-**Last formally frozen version:** 0.1.8 — 77 source class declarations and 132 source relation declarations. The 49-test structural suite passed. Researcher-reported HermiT classification in Protégé 5.6.5 on 2026-11-16 completed in 37,504 ms, with no reported errors or observed unsatisfiable classes. No separate OWL 2 DL profile check is claimed. OWL SHA-256: `07ee34ea844b791d6e261263bebe4adb0665176c185bf8eff99329bd03c6b913`. See `ontology_formalization.md` §14; historical release records remain intact.
+**Previous frozen release:** 0.1.8 — 77 source class declarations and 132 source relation declarations. The 49-test structural suite passed. Researcher-reported HermiT classification in Protégé 5.6.5 on 2026-11-16 completed in 37,504 ms, with no reported errors or observed unsatisfiable classes. No separate OWL 2 DL profile check is claimed. OWL SHA-256: `07ee34ea844b791d6e261263bebe4adb0665176c185bf8eff99329bd03c6b913`. See `ontology_formalization.md` §14; historical release records remain intact.
 
 **Multi-Granular Knowledge Graph for Heterogeneous CIROH Artifacts**
 **Companion to `Study2_Ontology_v0.1.md` (concepts + namespaces §3.1). Vocabulary reuse verified (validation 1); schema fit-checked on 6 real artifacts (validation 2, Etapa A) — GO, with the schema-change log below applied.**

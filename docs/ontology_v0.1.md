@@ -5,7 +5,7 @@
 > exhaustive human-readable schema with stable IDs; `src/ontology/ontology_spec.yaml`
 > is the current machine-readable authority; and `ontology_formalization.md` records
 > formalization history, exact hashes, generated-artifact counts, and reasoner
-> validation. The current formally frozen ontology release is **0.1.8**.
+> validation. The current formally frozen ontology release is **0.1.9**.
 
 **Current 0.1.8 summary.** The ontology has 77 source class declarations and
 132 relation declarations: 53 minted CIROH classes, 22 referenced external classes,
