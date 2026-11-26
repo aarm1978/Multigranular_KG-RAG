@@ -1,5 +1,9 @@
 # CODEX_HANDOFF.md
 
+## Step 14 identity adjudication closed (2026-11-26)
+
+The [identity closure](../study2_step14_identity_closure.md) records 2,166 automatic proposals covering 8,813 occurrences and 29 protected researcher approvals covering 99. All 157 conflict components have terminal dispositions. The ignored package at `var/study2_step14/identity-closure/v1/` records 45 supersessions and the D-16 representation holds. The next workstream is typed-relation assessment using the consolidated relation inputs. Production graph writes and independent evaluation remain pending.
+
 ## Prospective Step 14 policy amendment (2026-11-12)
 
 The [automatic identity acceptance amendment](../study2_step14_automatic_identity_acceptance_v0.1.md)
