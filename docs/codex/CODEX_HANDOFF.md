@@ -1,5 +1,9 @@
 # CODEX_HANDOFF.md
 
+## Bounded residual identity extension closed
+
+The [residual closure and final relation Batch](../study2_step14_residual_relations.md) records 2,117 disjoint identity groups, including four preserved scopes with explicit production consistency holds. The final 2,492 relation cases are prepared for researcher-terminal execution. The earlier pre-production population below remains the comparison baseline.
+
 ## Step 14 pre-production adjudication closed
 
 The [final relation closure](../study2_step14_relation_closure.md) records the scoped NWM supersession and the final unsampled populations. The 2,195 disjoint identity groups cover 8,911 occurrences, and the 104 distinct directed relation predictions retain their original evidence. Independent human evaluation remains pending.
