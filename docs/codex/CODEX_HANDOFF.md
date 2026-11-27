@@ -1,5 +1,9 @@
 # CODEX_HANDOFF.md
 
+## Final Step 14 offline alignment closure (2026-11-27)
+
+The [final alignment package](../study2_step14_final_alignment.md) closes the residual Batch and preserves the v2 membership overlay. The unsampled populations contain 2,084 automatic identity groups and 221 directed relation predictions. All 29 historical approvals remain separate. Two terminal mechanical failures are recorded. The next research decision concerns the independent human evaluation protocol.
+
 ## Bounded residual identity extension closed
 
 The [residual closure and final relation Batch](../study2_step14_residual_relations.md) records 2,117 disjoint identity groups, including four preserved scopes with explicit production consistency holds. The researcher subsequently excluded those four memberships from prospective consolidation. Use `residual-relations/v2` for dispatch. It contains 2,520 cases in 897 requests and projects against 2,113 groups covering 9,908 occurrences. The earlier pre-production population below remains the comparison baseline.
