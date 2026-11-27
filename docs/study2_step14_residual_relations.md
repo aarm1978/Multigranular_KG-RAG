@@ -1,6 +1,8 @@
 # Residual identity closure and final relation Batch
 
-The ignored package is `var/study2_step14/residual-relations/v1/`. The consumer verifies the original submission, provider bodies, 262 per-unit raw responses, exact partitions and saved item-level receipts. The prior relation closure remains the comparison baseline. The new ledger contains 2,088 automatic groups covering 9,820 occurrences and 29 protected exact approvals covering 99 occurrences. No confirmatory sample has been drawn.
+The dispatch package is now v2. The v1 comparison and its original preparation counts follow; see the prospective overlay below.
+
+The ignored v1 package is `var/study2_step14/residual-relations/v1/`. The consumer verifies the original submission, provider bodies, 262 per-unit raw responses, exact partitions and saved item-level receipts. The prior relation closure remains the comparison baseline. The new ledger contains 2,088 automatic groups covering 9,820 occurrences and 29 protected exact approvals covering 99 occurrences. No confirmatory sample has been drawn.
 
 ## Membership decisions
 
@@ -41,21 +43,29 @@ All 104 previous typed predictions were reprojected from their cited occurrences
 
 The planning estimate is 1,818,455 input and 801,200 output tokens, approximately USD 6.28 at the prior Batch rates (USD 1.25 and 5 per million). At the summed output caps of 4,376,576 tokens and estimated input usage, the scenario costs USD 24.16. Actual usage will come from provider receipts.
 
+## Prospective membership overlay and dispatch package
+
+The researcher excluded the four automatic memberships flagged in v1 from prospective consolidation. The eleven source occurrences keep their original IDs. The exclusion leaves their pairwise scientific identity undetermined. The overlay records each exact historical group, its authority and the assessments supporting its consistency hold. Historical assignment and supersession ledgers retain their v1 meaning; the v2 group ledger governs prospective projection.
+
+The resulting 2,113 groups cover 9,908 occurrences, including 2,084 automatic groups (9,809 occurrences) and 29 exact historical approvals (99 occurrences). Of the 2,492 v1 cases, 2,466 preserve their original pair and all support. The 26 affected cases yield 41 distinct pairs from original endpoint witnesses. Thirteen original validated pairs lose identity representation and enter relation consideration with their earlier recommendations and source evidence. All 54 retained predictions carry forward unchanged.
+
+The v2 Batch contains 2,520 cases in 897 requests in one shard. Estimated input is 1,825,547 tokens and expected output is 809,400 tokens. Estimated Batch cost is USD 6.33, or USD 24.37 with the full 4,417,536-token output allowance and estimated input usage. The local package includes the membership overlay, the v1-to-v2 case projection audit, and the additional original pair keys.
+
 ## Researcher terminal
 
 From the repository root in the Step 14 environment:
 
 ```sh
-python -m pytest -q tests/test_step14_residual_relations.py tests/test_step14_residual_alignment.py tests/test_step14_final_relations.py
-python -m src.evaluation.step14_residual_relations verify
+python -m pytest -q tests/test_step14_representation_overlay.py tests/test_step14_residual_relations.py
+python -m src.evaluation.step14_residual_relations verify --root var/study2_step14/residual-relations/v2
 ```
 
-For separately authorized execution, submit the single shard once, check status and retrieve after it reaches a terminal state:
+Submit the v2 shard once when authorized. Retrieve after the Batch reaches a terminal state.
 
 ```sh
-python -m src.evaluation.step14_residual_relations submit --shard 1
-python -m src.evaluation.step14_residual_relations status --shard 1
-python -m src.evaluation.step14_residual_relations retrieve --shard 1
+python -m src.evaluation.step14_residual_relations submit --root var/study2_step14/residual-relations/v2 --shard 1
+python -m src.evaluation.step14_residual_relations status --root var/study2_step14/residual-relations/v2 --shard 1
+python -m src.evaluation.step14_residual_relations retrieve --root var/study2_step14/residual-relations/v2 --shard 1
 ```
 
-A fresh offline reproduction uses `python -m src.evaluation.step14_residual_relations prepare --root var/study2_step14/residual-relations/v1-replay`.
+A fresh offline reproduction uses `python -m src.evaluation.step14_representation_overlay --root var/study2_step14/residual-relations/v2-replay`.

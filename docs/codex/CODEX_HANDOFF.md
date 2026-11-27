@@ -2,7 +2,7 @@
 
 ## Bounded residual identity extension closed
 
-The [residual closure and final relation Batch](../study2_step14_residual_relations.md) records 2,117 disjoint identity groups, including four preserved scopes with explicit production consistency holds. The final 2,492 relation cases are prepared for researcher-terminal execution. The earlier pre-production population below remains the comparison baseline.
+The [residual closure and final relation Batch](../study2_step14_residual_relations.md) records 2,117 disjoint identity groups, including four preserved scopes with explicit production consistency holds. The researcher subsequently excluded those four memberships from prospective consolidation. Use `residual-relations/v2` for dispatch. It contains 2,520 cases in 897 requests and projects against 2,113 groups covering 9,908 occurrences. The earlier pre-production population below remains the comparison baseline.
 
 ## Step 14 pre-production adjudication closed
 
