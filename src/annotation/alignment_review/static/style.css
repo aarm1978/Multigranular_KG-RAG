@@ -1,0 +1,13 @@
+:root{font-family:"Source Sans 3",system-ui,sans-serif;color:#183732;background:#f9faf6;font-size:16px}
+*{box-sizing:border-box}body{margin:0}header{display:flex;justify-content:space-between;align-items:center;gap:1rem;background:#163e39;color:white;padding:1rem clamp(1rem,4vw,4rem)}header strong{font-size:1.25rem}header span{display:inline-block;margin-left:1rem;font-size:.9rem}nav{display:flex;gap:.5rem;align-items:center}
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(18rem,22rem);gap:3rem;max-width:90rem;margin:auto;padding:2rem clamp(1rem,4vw,4rem) 5rem}
+aside{align-self:start;position:sticky;top:1rem;max-height:95vh;overflow:auto}form,#welcome,.artifact{background:white;border:1px solid #cbd7cf;border-radius:8px;padding:1.25rem}
+#welcome{max-width:38rem;margin:5rem auto}h1,h2,h3,p{overflow-wrap:anywhere}h1{font:2.2rem Georgia,serif;margin:.35rem 0 .75rem}h2{font-size:1.2rem}h3{margin:.1rem 0 .4rem}
+.eyebrow,small,#counts,#description,summary,.meta{color:#47645e}.eyebrow{font-weight:bold}.artifact{margin-bottom:1rem}section.member{border-top:1px solid #dbe1da;margin-top:1rem;padding-top:.8rem}
+blockquote{margin:.5rem 0;padding:.65rem 1rem;background:#f1f5ef;border-left:3px solid #628c7b;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.55;scroll-margin:2rem}
+details{margin:.4rem 0}summary{cursor:pointer}.context{white-space:pre-wrap;overflow-wrap:anywhere}.meta{font-size:.88rem;margin:.3rem 0}a{color:#165c52;overflow-wrap:anywhere}
+fieldset{border:0;margin:.8rem 0;padding:0}legend{font-weight:600}.choice{display:block;border-bottom:1px solid #dbe1da;padding:.55rem 0;cursor:pointer}.choice small{display:block;padding-left:1.6rem}label{display:block;margin:.4rem 0}
+input:not([type=radio]),textarea{width:100%;padding:.55rem;border:1px solid #95ada3;border-radius:4px;font:inherit}button{font:inherit;cursor:pointer;border:1px solid #859e94;border-radius:5px;background:white;color:#183732;padding:.5rem .8rem}.primary{background:#155e50;color:white}button:disabled{opacity:.5;cursor:default}
+.buttons{display:flex;gap:.5rem;margin:1rem 0}#clear{border:none;text-decoration:underline;font-size:.9rem}
+footer{position:fixed;bottom:0;left:0;right:0;background:#edf3ec;color:#183732;text-align:center;padding:.3rem}#end{font-size:.9rem;color:#47645e}[hidden]{display:none!important}
+@media(max-width:800px){main{display:flex;flex-direction:column;gap:1rem}aside{position:static;max-height:none}header{flex-wrap:wrap}header span{margin:0 .3rem}}
