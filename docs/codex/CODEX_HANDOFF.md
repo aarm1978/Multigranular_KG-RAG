@@ -1,5 +1,9 @@
 # CODEX_HANDOFF.md
 
+## Exact source-local extraction derivative and revised frames
+
+The [offline extraction deduplication and reprojection](../study2_step14_extraction_deduplication.md) produces the pre-evaluation derivative under `var/study2_step14/deduplicated-alignment/v1/`. The revised unsampled frames contain 1,629 automatic semantic identity proposals and 221 typed relations. The 29 historical approval records retain their exact authority. Two overlapping projected proposals remain held. The existing exploratory pilot and final-alignment/v1 remain reproducible against their original inputs.
+
 ## Final Step 14 offline alignment closure (2026-11-27)
 
 The [final alignment package](../study2_step14_final_alignment.md) closes the residual Batch and preserves the v2 membership overlay. The unsampled populations contain 2,084 automatic identity groups and 221 directed relation predictions. All 29 historical approvals remain separate. Two terminal mechanical failures are recorded. The next research decision concerns the independent human evaluation protocol.
