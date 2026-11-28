@@ -275,3 +275,118 @@ def test_projected_referents_keep_direction_and_cited_witnesses():
     frame["support"][0]["citedEndpoints"].reverse()
     with pytest.raises(ValueError, match="endpoint drift"):
         prep.describe_endpoints(case, frame, groups, provenance)
+
+
+def test_representatives_keep_exact_contexts_and_each_source_pointer():
+    from src.annotation.alignment_review.projected import representative_view
+
+    originals = {}
+    # The first two addresses are copies. A different artifact repeats the same span.
+    for i, (art, offset) in enumerate([(0, 10), (0, 10), (1, 90), (1, 112)]):
+        o = source(art, ["river"])
+        o["occurrenceID"] = f"private-{i}"
+        o["evidenceReferences"][0]["startOffsetInDocument"] = offset
+        originals[o["occurrenceID"]] = o
+    f = dict(
+        groupID="private-group",
+        ontologyClass="Tool",
+        identityScope="between_families",
+        occurrenceIDs=list(originals),
+    )
+    c, mapping, _ = build(f, originals)
+    for i, (m, b) in enumerate(zip(c["occurrences"], mapping["members"].values())):
+        before = "The " if i < 3 else "the "
+        m["evidence"][0]["context"] = [before, " here"]
+        b["evidence"][0]["context"] = [before, " here"]
+    reps = {k: k for k in originals}
+    reps["private-1"] = "private-0"
+    assert representative_view(c, mapping, reps) == 4
+    assert len(c["occurrences"]) == 3 and len(c["contexts"]) == 2
+    assert all(len(m["evidence"]) == 1 for m in c["occurrences"])
+    assert [m["evidence"][0]["contextID"] for m in c["occurrences"]] == [
+        "X1",
+        "X1",
+        "X2",
+    ]
+    for b in mapping["extractions"].values():
+        o = originals[b["occurrenceID"]]
+        m = next(m for m in c["occurrences"] if m["id"] == b["displayAlias"])
+        e = m["evidence"][b["evidence"][0]["displayEvidenceIndex"]]
+        assert m["versions"] == o["versions"]
+        assert (
+            e["location"]["startOffsetInDocument"]
+            == o["evidenceReferences"][0]["startOffsetInDocument"]
+        )
+        assert b["source"]["recordSha256"] == prep.token(o)
+        assert b["evidence"][0]["pointer"] == "/evidenceReferences/0"
+        ctx = c["contexts"][e["contextID"]]
+        text = ctx["before"] + c["excerpts"][ctx["quote"]] + ctx["after"]
+        assert text[e["quoteStartInContext"] : e["quoteEndInContext"]] == "river"
+    assert "private-" not in json.dumps(c)
+
+
+def test_projected_citations_resolve_only_the_original_directed_witness():
+    from src.annotation.alignment_review.projected import (
+        validate_sides,
+        representative_view,
+    )
+
+    rows = [source(i, [f"original witness {i}"]) for i in range(2)]
+    evidence = []
+    for i, o in enumerate(rows, 1):
+        e = o["evidenceReferences"][0]
+        text = e["evidenceText"]
+        evidence.append(
+            dict(
+                binding=dict(
+                    occurrenceID=o["occurrenceID"],
+                    source=dict(
+                        file="private/ledger", line=i, recordSha256=prep.token(o)
+                    ),
+                    quote=dict(
+                        literalExcerpt=text,
+                        quoteStart=0,
+                        quoteEnd=len(text),
+                        fullQuoteSha256=prep.digest(text),
+                        reference=dict(
+                            jsonPointer="/evidenceReferences/0",
+                            evidenceRecordSha256=prep.token(e),
+                        ),
+                    ),
+                )
+            )
+        )
+    support = dict(
+        signature="S",
+        citedEndpoints=[["private-1"], ["private-0"]],
+        projectedCitedOccurrences=[["retained-copy"], ["private-0"]],
+        evidence=evidence,
+    )
+    frame = dict(
+        predicate="hasComponent",
+        subject="group",
+        object="private-0",
+        endpointClasses=["Tool", "Tool"],
+        evidenceScope="within_artifact",
+        support=[support],
+    )
+    reps = {"private-1": "retained-copy", "private-0": "private-0"}
+    validate_sides(frame, reps, {"retained-copy": "group"})
+    c, mapping, _ = build(
+        frame, {o["occurrenceID"]: o for o in rows}, {"S": dict(name="hasComponent")}
+    )
+    representative_view(c, mapping, reps)
+    end = c["endpoints"][0]["occurrences"][0]
+    assert mapping["representatives"][end] == "retained-copy"
+    m = next(m for m in c["occurrences"] if m["id"] == end)
+    assert (
+        c["excerpts"][m["evidence"][0]["relationEvidence"][0]] == "original witness 1"
+    )
+    with pytest.raises(ValueError, match="membership drift"):
+        validate_sides(frame, reps, {"retained-copy": "different-group"})
+    support["projectedCitedOccurrences"].reverse()
+    with pytest.raises(ValueError, match="representative drift"):
+        validate_sides(frame, reps, {})
+    support["evidence"].pop()
+    with pytest.raises(ValueError, match="original citation"):
+        validate_sides(frame, reps, {})

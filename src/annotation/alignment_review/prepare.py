@@ -162,11 +162,14 @@ def wider_context(originals):
     return units
 
 
-def build_case(cid, frame, originals, provenance, signatures, units):
+def build_case(cid, frame, originals, provenance, signatures, units, *, source_ids=None):
     """Build an allowlisted public view and private reversible evidence index."""
     sides, cites = citations(frame)
     identity = "groupID" in frame
     ids = frame["occurrenceIDs"] if identity else sorted(set(cites).union(*sides))
+    if source_ids is not None:
+        require(identity, "explicit source rows only apply to identity cases")
+        ids = source_ids
     require(len(ids) == len(set(ids)) and ids, "invalid case membership")
     occurrences, artifacts, excerpts, private = [], {}, {}, {}
     scope = frame["identityScope" if identity else "evidenceScope"]
@@ -224,6 +227,16 @@ def build_case(cid, frame, originals, provenance, signatures, units):
                 "name",
                 "resourceId",
                 "literalName",
+                "displayName",
+                "role",
+                "softwareName",
+                "versionExpression",
+                "dateReleased",
+                "defaultBranch",
+                "description",
+                "identifier",
+                "identifierValue",
+                "resourceType",
                 "year",
             )
             if attrs.get(k)
@@ -242,6 +255,10 @@ def build_case(cid, frame, originals, provenance, signatures, units):
                     "sourceField",
                     "startLine",
                     "endLine",
+                    "startOffsetInUnit",
+                    "endOffsetInUnit",
+                    "startOffsetInAuthority",
+                    "endOffsetInAuthority",
                     "startOffsetInDocument",
                     "endOffsetInDocument",
                     "version",
@@ -329,7 +346,7 @@ def build_case(cid, frame, originals, provenance, signatures, units):
     )
 
 
-def describe_endpoints(case, frame, groups, provenance):
+def describe_endpoints(case, frame, groups, provenance, *, representatives=None):
     """Describe each projected referent using source labels and preserve its directed witnesses."""
     sides, _ = citations(frame)
     for key, size, witnesses, endpoint in zip(
@@ -339,6 +356,8 @@ def describe_endpoints(case, frame, groups, provenance):
         case["endpoints"],
     ):
         members = groups[key]["occurrenceIDs"] if key in groups else [key]
+        if representatives is not None:
+            witnesses = {representatives[oid] for oid in witnesses}
         require(
             len(members) == size and witnesses.issubset(members),
             "directed endpoint drift",
@@ -390,6 +409,12 @@ def prepare(output, evaluator, selection=None):
             describe_endpoints(case, f, groups, provenance)
         public["cases"].append(case)
         stats.append(counts)
+    return publish(output, public, private, stats, root)
+
+
+def publish(output, public, private, stats, root):
+    """Publish the portable reviewer and private bindings together under a fresh path."""
+    require(not output.exists(), "output already exists")
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=output.parent) as tmp:
         stage = Path(tmp) / "bundle"

@@ -11,6 +11,7 @@ function link(parent, text, href) {
   const a = add(parent, "a", text);
   a.href = href;
   if (!href.startsWith("#")) { a.target = "_blank"; a.rel = "noopener noreferrer"; }
+  return a;
 }
 let state, token, unit, editing = false, moving = false, reachedEnd = false;
 let queue = Promise.resolve(), lastClock = performance.now(), lastInput = lastClock, active = 0;
@@ -80,7 +81,7 @@ function quote(parent, id, seen) {
   q.id=id; q.setAttribute("aria-label","Original excerpt "+id);
 }
 function renderEvidence() {
-  const root=el("evidence"), seen=new Set();
+  const root=el("evidence"), seen=new Set(), contexts=new Map();
   root.replaceChildren();
   for(const art of unit.artifacts) {
     const section=add(root,"section",null,"artifact");
@@ -104,7 +105,18 @@ function renderEvidence() {
           add(block,"p","Cited relation evidence · "+e.relationEvidence.join(", "),"meta");
           for(const q of e.relationEvidence.filter(q=>q!==e.quote))quote(block,q,seen);
         }
-        if(e.context) {
+        if(e.contextID) {
+          const id=e.contextID, context=unit.contexts[id];
+          if(contexts.has(id)) {
+            const a=link(block,"See surrounding source text "+id,"#"+id);
+            a.onclick=()=>{contexts.get(id).open=true;};
+          } else {
+            const d=add(block,"details");d.id=id;contexts.set(id,d);
+            add(d,"summary","Surrounding source text "+id);
+            const body=add(d,"p",context.before,"context");
+            link(body," ["+context.quote+"] ","#"+context.quote);body.append(context.after);
+          }
+        } else if(e.context) {
           const d=add(block,"details");add(d,"summary","Surrounding source text");
           const body=add(d,"p",e.context[0],"context");
           link(body," ["+e.quote+"] ","#"+e.quote);body.append(e.context[1]);
@@ -138,14 +150,14 @@ async function load() {
   el("phase").textContent="Phase "+(identity?"1 · Identity":"2 · Typed relation")+"  /  "+unit.id+"  /  Case "+(pos+1)+" of "+ids.length;
   el("hypothesis").textContent=identity?unit.label:unit.endpoints[0].label+" → "+unit.predicate+" → "+unit.endpoints[1].label;
   el("description").textContent=identity?"Proposed common referent · "+unit.ontologyClass:
-    unit.endpoints.map((end,i)=>(i?"Object":"Subject")+" · "+end.ontologyClass+" · "+end.size+" source occurrence"+(end.size===1?"":"s")+" · cited here: "+end.occurrences.join(", ")).join("   →   ");
+    unit.endpoints.map((end,i)=>(i?"Object":"Subject")+" · "+end.ontologyClass+" · "+end.size+" "+(unit.memberUnit || "source occurrence")+(end.size===1?"":"s")+" · cited here: "+end.occurrences.join(", ")).join("   →   ");
   el("definition").replaceChildren();
   for(const def of unit.definitions || []) {
     add(el("definition"),"h2",unit.predicate+" · Ontology v0.1.9");
     add(el("definition"),"p",[].concat(def.domain).join(" / ")+" → "+[].concat(def.range).join(" / "));
     add(el("definition"),"p",def.note);add(el("definition"),"p",def.evidence);
   }
-  el("counts").textContent=unit.occurrences.length+" occurrences · "+unit.artifacts.length+" source artifacts";
+  el("counts").textContent=unit.occurrences.length+" "+(unit.memberUnit ? unit.memberUnit+"s" : "occurrences")+" · "+unit.artifacts.length+" source artifacts";
   renderEvidence();
   let draft=JSON.parse(localStorage.getItem(draftKey()) || "null");
   // A crash can leave an unacknowledged local edit from the immediately preceding visit.
